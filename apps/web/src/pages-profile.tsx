@@ -27,6 +27,15 @@ function noticeText(n: Notice): string {
   }
 }
 
+// Where a notification takes you when clicked; null keeps the row a plain, non-clickable article.
+function noticeTarget(n: Notice): string | null {
+  const p = n.payload ?? {};
+  if (n.type === 'inquiry.new' || n.type === 'inquiry.reply') return p.threadId ? `/inquiries/${p.threadId}` : null;
+  if (n.type === 'listing.decision' || n.type === 'listing.suspended') return p.listingId ? `/listings/${p.listingId}` : null;
+  if (n.type === 'affiliation.decision') return '/profile';
+  return null;
+}
+
 export function Profile() {
   const { me, reload, logout } = useMe();
   const [name, setName] = useState('');
@@ -128,6 +137,14 @@ export function Notifications() {
 
   const unread = (rows ?? []).filter(r => !r.readAt).length;
 
+  // Fire-and-forget: the row navigates immediately; a failed mark-read just leaves it unread.
+  const markOne = (id: number) => {
+    api(`/notifications/${id}/read`, { method: 'POST', body: {} }).then(() => {
+      setRows(rs => rs?.map(r => r.id === id ? { ...r, readAt: r.readAt ?? new Date().toISOString() } : r) ?? null);
+      syncUnread();
+    }).catch(() => {});
+  };
+
   return <>
     <div className="page-head">
       <div>
@@ -148,13 +165,18 @@ export function Notifications() {
     {rows !== null && rows.length === 0 && !err && <p className="muted">Nothing yet. You will hear here when a reviewer decides on your listing, someone replies to an inquiry, or your affiliation is verified.</p>}
 
     {rows !== null && rows.length > 0 && <div>
-      {rows.map(n => <article key={n.id} className={`notif ${n.readAt ? '' : 'unread'}`}>
-        <span className={`dot ${n.readAt ? 'read' : ''}`} aria-hidden="true" />
-        <div style={{ flex: 1 }}>
-          <p>{noticeText(n)}</p>
-          <time dateTime={n.createdAt}>{timeAgo(n.createdAt)}</time>{!n.readAt && <span className="muted"> · unread</span>}
-        </div>
-      </article>)}
+      {rows.map(n => {
+        const to = noticeTarget(n);
+        const row = <>
+          <span className={`dot ${n.readAt ? 'read' : ''}`} aria-hidden="true" />
+          <div style={{ flex: 1 }}>
+            <p>{noticeText(n)}</p>
+            <time dateTime={n.createdAt}>{timeAgo(n.createdAt)}</time>{!n.readAt && <span className="muted"> · unread</span>}
+          </div></>;
+        return to
+          ? <Link key={n.id} to={to} className={`notif ${n.readAt ? '' : 'unread'}`} onClick={() => !n.readAt && markOne(n.id)}>{row}</Link>
+          : <article key={n.id} className={`notif ${n.readAt ? '' : 'unread'}`}>{row}</article>;
+      })}
     </div>}
   </>;
 }

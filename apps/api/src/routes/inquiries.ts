@@ -30,9 +30,12 @@ r.get('/', async (req, res) => {
 
 r.post('/', async (req, res) => {
   const b = z.object({ listingId: z.number().int(), body: z.string().trim().min(1).max(1000) }).parse(req.body);
-  const l = await prisma.listing.findFirst({ where: { id: b.listingId, status: 'published' }, include: { seller: true } });
+  const l = await prisma.listing.findFirst({ where: {
+    id: b.listingId, status: 'published', deletedAt: null, seller: { approvalStatus: 'approved' },
+  }, include: { seller: true } });
   if (!l) throw new HttpError(404, 'not_found');
   if (l.seller.ownerUserId === req.user!.id) throw new HttpError(400, 'own_listing');
+  if (l.availabilityState !== 'available') throw new HttpError(409, 'listing_unavailable');
   const t = await prisma.inquiryThread.upsert({
     where: { listingId_buyerUserId: { listingId: l.id, buyerUserId: req.user!.id } },
     create: { listingId: l.id, buyerUserId: req.user!.id, sellerProfileId: l.sellerProfileId }, update: {},

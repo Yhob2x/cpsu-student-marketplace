@@ -11,7 +11,7 @@ const scope = (u: Express.Request['user']) => { const c = reviewCampusIds(u!); r
 
 r.get('/review-queue', async (req, res) => {
   const [listings, affiliations] = await Promise.all([
-    prisma.listing.findMany({ where: { status: 'pending_review', ...scope(req.user) }, include: { category: true, seller: true, media: true, campus: true }, orderBy: { updatedAt: 'asc' } }),
+    prisma.listing.findMany({ where: { status: 'pending_review', deletedAt: null, ...scope(req.user) }, include: { category: true, seller: true, media: true, campus: true }, orderBy: { updatedAt: 'asc' } }),
     prisma.affiliation.findMany({ where: { verificationStatus: 'pending', ...scope(req.user) }, include: { user: { select: { id: true, displayName: true, email: true } }, campus: true }, orderBy: { id: 'asc' } }),
   ]);
   res.json({ listings: listings.map(l => ({ id: l.id, title: l.title, description: l.description, price: Number(l.price), type: l.type, flags: l.flags ?? [],
@@ -23,6 +23,7 @@ r.post('/listings/:id/decision', async (req, res) => {
   const b = z.object({ decision: z.enum(['approved', 'changes_requested', 'rejected']), reason: z.string().trim().min(5).max(1000) }).parse(req.body);
   const l = await prisma.listing.findUnique({ where: { id: Number(req.params.id) }, include: { seller: true } });
   if (!l || !canReview(req.user!, l.campusId)) throw new HttpError(404, 'not_found'); // out-of-scope looks like not found
+  if (l.deletedAt) throw new HttpError(409, 'listing_deleted');
   if (l.status !== 'pending_review') throw new HttpError(409, 'not_pending');
   const flags = (l.flags as string[] | null) ?? [];
   if (b.decision === 'approved' && flags.includes('academic_integrity_concern') && b.reason.length < 20)
@@ -53,6 +54,7 @@ r.post('/listings/:id/suspend', async (req, res) => {
   const b = z.object({ reason: z.string().trim().min(5).max(500) }).parse(req.body);
   const l = await prisma.listing.findUnique({ where: { id: Number(req.params.id) }, include: { seller: true } });
   if (!l || !canReview(req.user!, l.campusId)) throw new HttpError(404, 'not_found');
+  if (l.deletedAt) throw new HttpError(409, 'listing_deleted');
   await prisma.listing.update({ where: { id: l.id }, data: { status: 'suspended' } });
   await audit(req.user!.id, 'listing.suspend', 'listing', l.id, { reason: b.reason });
   await notify(l.seller.ownerUserId, 'listing.suspended', { listingId: l.id, reason: b.reason });
@@ -74,10 +76,10 @@ r.get('/analytics/overview', async (req, res) => {
   for (const c of campuses) {
     const [stores, published, flagged, inquiries, services] = await Promise.all([
       prisma.sellerProfile.count({ where: { campusId: c.id, approvalStatus: 'approved' } }),
-      prisma.listing.count({ where: { campusId: c.id, status: 'published' } }),
-      prisma.listing.count({ where: { campusId: c.id, status: 'pending_review' } }),
+      prisma.listing.count({ where: { campusId: c.id, status: 'published', deletedAt: null, availabilityState: 'available' } }),
+      prisma.listing.count({ where: { campusId: c.id, status: 'pending_review', deletedAt: null } }),
       prisma.inquiryThread.count({ where: { listing: { campusId: c.id } } }),
-      prisma.listing.count({ where: { campusId: c.id, status: 'published', type: 'service' } }),
+      prisma.listing.count({ where: { campusId: c.id, status: 'published', type: 'service', deletedAt: null, availabilityState: 'available' } }),
     ]);
     const s = (n: number) => (n > 0 && n < MIN_COUNT ? `<${MIN_COUNT}` : n);
     out.push({ campus: c.code, activeStorefronts: s(stores), publishedListings: s(published), serviceListings: s(services), pendingReview: flagged, inquiries: s(inquiries) });

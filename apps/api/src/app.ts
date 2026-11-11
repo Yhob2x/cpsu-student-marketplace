@@ -17,7 +17,10 @@ export function createApp() {
   const app = express();
   app.set('trust proxy', 1);
   app.use(helmet({ crossOriginResourcePolicy: { policy: 'cross-origin' } }));
-  app.use(cors({ origin: env.CORS_ORIGINS.split(','), credentials: true }));
+  // Expo's web target runs on 8081. Allow it in development only; production keeps the configured allowlist untouched.
+  const origins = env.CORS_ORIGINS.split(',');
+  if (env.NODE_ENV !== 'production') origins.push('http://localhost:8081', 'http://127.0.0.1:8081');
+  app.use(cors({ origin: origins, credentials: true }));
   app.use(express.json({ limit: '100kb' }));
   app.use(cookieParser());
   app.use(rateLimit({ windowMs: 60_000, limit: 300 }));

@@ -1,0 +1,12 @@
+Starting project at C:\Users\acer\Downloads\cpsu-student-marketplace\apps\mobile
+Metro is running in CI mode, reloads are disabled. Remove CI=true to enable watch mode.
+Starting Metro Bundler
+The following packages should be updated for best compatibility with the installed expo version:
+  react-native@0.76.5 - expected version: 0.76.9
+Your project may not work correctly until you install the expected versions of the packages.
+Waiting on http://localhost:8081
+Logs for your project will appear below.
+Web Bundled 793ms apps\mobile\index.js (354 modules)
+Web Bundled 20ms apps\mobile\index.js (1 module)
+Web Bundled 22ms apps\mobile\index.js (1 module)
+Web Bundled 30ms apps\mobile\index.js (1 module)

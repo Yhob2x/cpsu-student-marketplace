@@ -11,6 +11,9 @@
 "db:deploy": "bunx prisma migrate deploy",
 "db:seed": "bun prisma/seed.ts",
 "test": "bun test",
+"test:integration": "bun test/run-integration.ts",
+"db:integrity-preflight": "bun scripts/integrity-preflight.ts --audit-only",
+"db:restore-rehearsal": "bun scripts/verify-integrity-restore.ts --isolated-restore",
 "typecheck": "bunx prisma generate && bunx tsc -p . --noEmit"
   },
   "dependencies": {

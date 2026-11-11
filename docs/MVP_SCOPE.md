@@ -16,7 +16,7 @@ scope conflicts in §4. Nothing in §4 has been reconciled — each one needs th
 | MVP-006 | Service listings | **Partial** | Same table with `type=service`, rate + basis, service categories. Missing delete and service-specific availability. |
 | MVP-007 | Listing image uploads | **Done** | Up to 6 JPEG/PNG/WebP ≤ 3 MB, ownership-checked, access-controlled serving. |
 | MVP-008 | Marketplace categories | **Partial** | Read-only seeded catalog whose names differ from the blueprint's lists. No admin CRUD. |
-| MVP-009 | Search and filtering | **Partial** | Keyword, category, campus, type, price range, pagination. Missing condition filter and both sorts. |
+| MVP-009 | Search and filtering | **Partial** | Keyword, category, campus, type, min/max price, pagination, and all three sorts (newest, price ascending/descending) exposed in Explore with a result count and clear-filters. Missing only the condition filter, which requires the `condition` column (C4). |
 | MVP-010 | Recently added listings | **Done** | Home section from the newest feed. |
 | MVP-011 | Popular listings | **Partial** | Most-saved top 8. No views or inquiry-activity signal. |
 | MVP-012 | Favorites | **Partial** | Add/remove/list, idempotent. Missing own-listing block and availability-change display. |
@@ -58,6 +58,8 @@ typing indicator, mobile app. These are stricter or larger than the blueprint an
 without approval.
 
 ## 4. Conflicts requiring owner approval
+
+**Decision update (2026-11-11): C4 APPROVED.** The project owner authorized product condition `new/like_new/good/fair`, availability `available/reserved/sold` (sold is final), soft delete, condition search, and owner-favorite restrictions. Preserve null conditions on legacy items; require condition before product review submission. See `MASTER_BLUEPRINT.md` PART XIII approved change record. C1/C1a/C2/C3/C5/C6/C7 remain open. The historical C4 row below is retained for audit traceability.
 
 | # | Conflict | Blueprint says | Code does | Impact if unresolved | Recommended resolution |
 |---|---|---|---|---|---|

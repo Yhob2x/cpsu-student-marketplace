@@ -1136,6 +1136,21 @@ Any proposed modification to the approved blueprint must follow this process:
 
 Never silently modify approved requirements.
 
+## Approved change record — C4 listing condition and availability (2026-11-11)
+
+**Decision:** Project owner explicitly approved C4 and authorized Stage 1 development migration deployment and WP2 implementation. This resolves **C4 only**; C1, C1a, C2, C3, C5, C6 and C7 remain separately gated.
+
+- **Affected MVP modules:** 02 Product Listings, 03 Student Services, 04 Search, 05 Favorites, 06 Messaging; additional integrity and testing under PART VII/X.
+- **Scope:** Existing MVP listing completeness, not an expansion into payments, verified sales, shipping or transactions.
+- **Condition:** Product-only enum `new | like_new | good | fair`; required when a product is *submitted for review*. Service conditions remain null. Existing products can remain condition-null until the seller updates them, without inventing historical condition data.
+- **Availability:** Dedicated enum `available | reserved | sold`, independent of moderation `Listing.status`. New discovery and inquiries include only `available`; direct published detail and historical conversations may display reserved/sold with accurate labeling. An owner can set availability on a published listing; `sold` is terminal, so a different item requires a new listing.
+- **Deletion:** Seller-only soft deletion via `deletedAt`. Active discovery and new inquiries hide deleted items. Messages, moderation, reports, saves and audit history remain in storage subject to future approved privacy/retention policy.
+- **Favorites:** Owners cannot save their own listings. Unavailable listings cannot receive new saves; existing favorites remain removable.
+- **Database:** Additive migrations; retain legacy `availability` for compatibility; canonical `availabilityState`; no destructive backfill. Stage 1 retains 19 restrictive FK constraints and listing discovery index. Foreign-key deletion behavior remains subject to institutional retention/privacy review before production deployment.
+- **Security:** Owner checks, reviewer scope, audit changes, request validation, no access to other sellers' private listings.
+- **Implementation verification:** Integration tests, API/web/mobile typechecks, web build; record any incomplete QA without claiming launch readiness.
+- **Deployment:** This approval covers the local **development database only**; production requires a separate gate. Changes must not overwrite unrelated uncommitted work.
+
 ---
 
 # PART XIV. FINAL MASTER INSTRUCTION TO AI

@@ -1,5 +1,25 @@
 # Development log
 
+**2026-11-11 — WP2:** User approved C4 and local development migration plan. Found Stage 1/WP2 migrations and active API work already present when inspected; preserved existing uncommitted changes. Added web/mobile controls for item condition and availability, seller soft-delete, own-favorite restrictions, and condition filtering/pagination. Added three WP2 integration cases; 17/17 passed; five unit tests and typechecks/build passed. Current data audit: 21 available listings; 13 legacy products have unset conditions. Created a retained post-migration backup, not a pre-migration recovery point. See `docs/WP2_IMPLEMENTATION_REPORT.md`.
+
+**2026-11-11 — Stage 1 restore rehearsal:** MariaDB logical dump of the local development database was successfully restored into a new disposable database (20 tables/402 rows; identical per-table content hashes). Candidate SQL applied there, preserving all rows; temp DB/dump cleaned. No active schema/migration changes; `docs/STAGE1_RESTORE_DRILL_REPORT.md`. Next: owner approval of FK delete semantics and predeployment backup, then WP2 C4 decision.
+
+**2026-11-11 — Stage 1 approved isolation work:** Candidate Prisma schema validated; 19 FK additions plus a discovery index applied successfully on a fresh disposable synthetic-fixture DB; 19-table row counts unchanged and invalid FK/forbidden audit actor delete checks passed. Candidate sandbox deleted. Deployment/retention policy approvals remain open. See `docs/STAGE1_SANDBOX_MIGRATION_RESULTS.md`.
+
+## 2026-11-11 — Stage 1 database integrity preflight (no schema change)
+
+- Ran SELECT-only integrity scan against local development `cpsu_marketplace`. All 19 audited relationships lack FK declarations, with 0 orphan references at scan time; composite discovery index absent.
+- Added guarded repeatable `bun run db:integrity-preflight` command and detailed migration approval dossier at `docs/STAGE1_DATABASE_INTEGRITY_APPROVAL.md`.
+- Re-ran integration suite 14/14, unit suite 5/5, and API typecheck clean. No schema migrations applied or old migrations edited.
+- **Awaiting approval:** FK deletion semantics, data retention, composite index, backup restore validation and controlled Prisma migration. WP2 still blocked by governance C4.
+
+## 2026-11-11 — Stage 1 isolated integration foundation
+
+- Added opt-in guarded test runner, isolated MySQL test fixtures, 14 HTTP/DB integration cases, and read-only schema integrity audit.
+- Verification: 14 integration cases passed, 5 existing unit tests passed, API typecheck clean. See `docs/STAGE1_TESTING_REPORT.md`.
+- Stage 1 outstanding: owner approval for the discovery index and missing foreign-key migrations. No application schema/route changes; no WP2 implementation.
+
+
 Chronological record of work performed in this repository. Newest first. Each entry states what was inspected, what changed, what was
 verified, and what remains.
 
@@ -94,3 +114,17 @@ log was kept at the time, so this entry describes the resulting state rather tha
 
 **Known at the time:** no transaction module, no password recovery, no admin user management, and test coverage limited to pure helpers.
 Carried into `progress/KNOWN_ISSUES.md`.
+
+### 2026-11-11 — UI UX Pro Max web refinement
+- Completed blueprint-constrained web-only UI/UX improvements to listing card save feedback, focus visibility, form labels, font spacing, authentication form presentation, listing detail gallery, and desktop/mobile listing detail layout.
+- Files modified in this pass: `apps/web/src/main.tsx`, `pages-public.tsx`, `pages-account.tsx`, `styles.css`; see `docs/HALLMARK_UI_UX_FIXES_2026-11-11.md` for rationale and QA.
+- Production frontend build and automated headless browser layout/interaction checks passed at 320, 360, 390, 768, 1024, 1440 pixels. No data or backend change.
+- Follow-up remains manual screen-reader, physical-device and authenticated end-to-end workflow QA.
+
+### 2026-11-11 — Storefront-inspired light theme (UI UX Pro Max)
+
+- Implemented an approved web-only single light theme: white surfaces, pale neutral listing/photo panels, and dark forest-green navigation, banners, actions, and footer. Removed Auto/Light/Dark control and system dark overrides. The UI reference inspired visual design only; no unapproved commercial e-commerce features were added.
+- Existing files modified in this pass: apps/web/index.html; apps/web/src/main.tsx; apps/web/src/pages-public.tsx; apps/web/src/styles.css. New file: apps/web/src/storefront-theme.css.
+- Kept all existing search, authentication, saved-listing, messaging, listing management and moderation logic. Fixed category rail initially showing the last categories after async load by removing a redundant final tile, while retaining the View all link.
+- Production web build passed. Browser QA at 320, 360, 390, 768, 1024 and 1440 px under simulated dark OS preference found the page stays light with no dark toggle or horizontal overflow. Card price rows aligned and the heart retained a 44px touch target. Guest save still opened sign-in.
+- Backend, database, credentials and native Expo app untouched. Screen-reader, real-device, and full authenticated workflow checks remain release QA items.

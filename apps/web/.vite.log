@@ -1,0 +1,784 @@
+$ vite
+
+  [32m[1mVITE[22m v6.4.6[39m  [2mready in [0m[1m218[22m[2m[0m ms[22m
+
+  [32m➜[39m  [1mLocal[22m:   [36mhttp://localhost:[1m5173[22m/[39m
+[2m  [32m➜[39m  [1mNetwork[22m[2m: use [22m[1m--host[22m[2m to expose[22m
+[2m4:27:05 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages-public.tsx[22m
+[2m4:27:08 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages-public.tsx[22m
+[2m4:27:31 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/styles.css[22m
+[2m4:27:33 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/styles.css[22m
+[2m4:27:35 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/styles.css[22m
+[2m4:27:38 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/styles.css[22m
+[2m4:29:40 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/styles.css[22m
+[2m4:29:43 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/styles.css[22m
+[2m4:34:23 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages-public.tsx[22m
+[2m4:35:39 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/styles.css[22m
+[2m4:37:01 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/styles.css[22m
+[2m4:43:04 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/styles.css[22m
+[2m4:43:06 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/styles.css[22m
+[2m4:43:09 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/styles.css[22m
+[2m4:43:12 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/styles.css[22m
+[2m4:43:15 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/styles.css[22m
+[2m4:47:31 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/styles.css[22m
+[2m4:47:34 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/styles.css[22m
+[2m4:47:36 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/styles.css[22m
+[2m4:47:39 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/styles.css[22m
+[2m4:47:42 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/styles.css[22m
+[2m4:47:45 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/styles.css[22m
+[2m4:47:48 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/styles.css[22m
+[2m4:47:51 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/styles.css[22m
+[2m4:47:53 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/styles.css[22m
+[2m4:47:56 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/styles.css[22m
+[2m4:48:01 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/styles.css[22m
+[2m4:48:03 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/styles.css[22m
+[2m4:48:15 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/styles.css[22m
+[2m4:48:18 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/styles.css[22m
+[2m4:48:20 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/styles.css[22m
+[2m4:49:21 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/styles.css[22m
+[2m4:50:15 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/styles.css[22m
+[2m4:57:48 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages-public.tsx[22m
+[2m4:58:14 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages-public.tsx[22m
+[2m4:58:17 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages-public.tsx[22m
+[2m4:58:19 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages-public.tsx[22m
+[2m4:58:21 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages-public.tsx[22m
+[2m4:58:23 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages-public.tsx[22m
+[2m4:58:26 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages-public.tsx[22m
+[2m4:58:28 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages-public.tsx[22m
+[2m4:58:30 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages-public.tsx[22m
+[2m4:58:33 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages-public.tsx[22m
+[2m4:59:04 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages-account.tsx[22m
+[2m4:59:08 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages-account.tsx[22m
+[2m4:59:10 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages-account.tsx[22m
+[2m4:59:12 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/main.tsx[22m
+[2m4:59:13 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [33mhmr invalidate [39m[2m/src/main.tsx[22m Could not Fast Refresh ("useMe" export is incompatible). Learn more at https://github.com/vitejs/vite-plugin-react/tree/main/packages/plugin-react#consistent-components-exports
+[2m4:59:13 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages-profile.tsx, /src/pages-public.tsx, /src/pages-account.tsx[22m
+[2m4:59:13 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [33mhmr invalidate [39m[2m/src/main.tsx[22m Could not Fast Refresh ("useMe" export is incompatible). Learn more at https://github.com/vitejs/vite-plugin-react/tree/main/packages/plugin-react#consistent-components-exports
+[2m4:59:13 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages-profile.tsx, /src/pages-public.tsx, /src/pages-account.tsx[22m
+[2m4:59:13 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [33mhmr invalidate [39m[2m/src/main.tsx[22m Could not Fast Refresh ("useMe" export is incompatible). Learn more at https://github.com/vitejs/vite-plugin-react/tree/main/packages/plugin-react#consistent-components-exports
+[2m4:59:13 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages-profile.tsx, /src/pages-public.tsx, /src/pages-account.tsx[22m
+[2m4:59:59 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/styles.css[22m
+[2m5:00:05 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/styles.css[22m
+[2m5:00:08 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/styles.css[22m
+[2m5:00:11 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/styles.css[22m
+[2m5:00:22 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/styles.css[22m
+[2m5:00:25 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/styles.css[22m
+[2m5:00:27 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/styles.css[22m
+[2m5:00:30 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/styles.css[22m
+[2m5:00:33 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/styles.css[22m
+[2m5:00:36 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/styles.css[22m
+[2m5:00:38 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/styles.css[22m
+[2m5:00:41 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/styles.css[22m
+[2m5:02:52 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages-account.tsx[22m
+[2m5:06:27 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages-public.tsx[22m
+[2m5:06:27 PM[22m [31m[1m[vite][22m[39m [31mInternal server error: C:\Users\acer\Downloads\cpsu-student-marketplace\apps\web\src\pages-public.tsx: Expected corresponding JSX closing tag for <div>. (330:2)
+
+[0m [90m 328 |[31m       {note [33m&&[31m [33m<[31m[33mp[31m role[33m=[31m[32m"status"[31m[33m>[31m{note}[33m<[31m[33m/[31m[33mp[31m[33m>[31m}{err [33m&&[31m [33m<[31m[33mp[31m className[33m=[31m[32m"err"[31m role[33m=[31m[32m"alert"[31m[33m>[31m{err}[33m<[31m[33m/[31m[33mp[31m[33m>[31m}
+ [90m 329 |[31m     [33m<[31m[33m/[31m[33mdiv[31m[33m>[31m
+[31m[1m>[22m[31m[90m 330 |[31m   [33m<[31m[33m/[31m[33marticle[31m[33m>[31m[33m;[31m
+ [90m     |[31m   [31m[1m^[22m[31m
+ [90m 331 |[31m }
+ [90m 332 |[31m
+ [90m 333 |[31m [36mexport[31m [36mfunction[31m [33mStorePage[31m() {[0m[39m
+  Plugin: [35mvite:react-babel[39m
+  File: [36mC:/Users/acer/Downloads/cpsu-student-marketplace/apps/web/src/pages-public.tsx[39m:330:2
+[33m  328|        {note && <p role="status">{note}</p>}{err && <p className="err" role="alert">{err}</p>}
+  329|      </div>
+  330|    </article>;
+     |    ^
+  331|  }
+  332|  [39m
+      at constructor (C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:368:19)
+      at TypeScriptParserMixin.raise (C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:6630:19)
+      at TypeScriptParserMixin.jsxParseElementAt (C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:4748:16)
+      at TypeScriptParserMixin.jsxParseElementAt (C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:4719:32)
+      at TypeScriptParserMixin.jsxParseElement (C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:4770:17)
+      at TypeScriptParserMixin.parseExprAtom (C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:4780:19)
+      at TypeScriptParserMixin.parseExprSubscripts (C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:8066:23)
+      at TypeScriptParserMixin.parseUpdate (C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:8051:21)
+      at TypeScriptParserMixin.parseMaybeUnary (C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:8031:23)
+      at TypeScriptParserMixin.parseMaybeUnary (C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:13725:18)
+      at TypeScriptParserMixin.parseMaybeUnaryOrPrivate (C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:7877:61)
+      at TypeScriptParserMixin.parseExprOps (C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:7882:23)
+      at TypeScriptParserMixin.parseMaybeConditional (C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:7859:23)
+      at TypeScriptParserMixin.parseMaybeAssign (C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:7807:21)
+      at C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:13663:39
+      at TypeScriptParserMixin.tryParse (C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:6996:20)
+      at TypeScriptParserMixin.parseMaybeAssign (C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:13663:18)
+      at TypeScriptParserMixin.parseExpressionBase (C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:7755:23)
+      at C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:7751:39
+      at TypeScriptParserMixin.allowInAnd (C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:9421:16)
+      at TypeScriptParserMixin.parseExpression (C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:7751:17)
+      at TypeScriptParserMixin.parseReturnStatement (C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:10172:28)
+      at TypeScriptParserMixin.parseStatementContent (C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:9815:21)
+      at TypeScriptParserMixin.parseStatementContent (C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:13387:18)
+      at TypeScriptParserMixin.parseStatementLike (C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:9784:17)
+      at TypeScriptParserMixin.parseStatementListItem (C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:9764:17)
+      at TypeScriptParserMixin.parseBlockOrModuleBlockBody (C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:10346:61)
+      at TypeScriptParserMixin.parseBlockBody (C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:10339:10)
+      at TypeScriptParserMixin.parseBlock (C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:10327:10)
+      at TypeScriptParserMixin.parseFunctionBody (C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:9095:24)
+      at TypeScriptParserMixin.parseFunctionBodyAndFinish (C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:9081:10)
+      at TypeScriptParserMixin.parseFunctionBodyAndFinish (C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:13051:18)
+      at C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:10476:12
+      at TypeScriptParserMixin.withSmartMixTopicForbiddingContext (C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:9403:14)
+      at TypeScriptParserMixin.parseFunction (C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:10475:10)
+      at TypeScriptParserMixin.parseFunctionStatement (C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:10155:17)
+      at TypeScriptParserMixin.parseStatementContent (C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:9808:21)
+      at TypeScriptParserMixin.parseStatementContent (C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:13387:18)
+      at TypeScriptParserMixin.parseStatementLike (C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:9784:17)
+      at TypeScriptParserMixin.parseStatementListItem (C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:9764:17)
+      at TypeScriptParserMixin.parseExportDeclaration (C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:10966:17)
+      at TypeScriptParserMixin.parseExportDeclaration (C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:13517:85)
+      at TypeScriptParserMixin.maybeParseExportDeclaration (C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:10922:31)
+      at TypeScriptParserMixin.parseExport (C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:10841:29)
+      at TypeScriptParserMixin.parseExport (C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:13264:20)
+      at TypeScriptParserMixin.parseStatementContent (C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:9896:27)
+      at TypeScriptParserMixin.parseStatementContent (C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:13387:18)
+      at TypeScriptParserMixin.parseStatementLike (C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:9784:17)
+      at TypeScriptParserMixin.parseModuleItem (C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:9761:17)
+      at TypeScriptParserMixin.parseBlockOrModuleBlockBody (C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:10346:36)
+[2m5:06:27 PM[22m [31m[1m[vite][22m[39m [31mInternal server error: C:\Users\acer\Downloads\cpsu-student-marketplace\apps\web\src\pages-public.tsx: Expected corresponding JSX closing tag for <div>. (330:2)
+
+[0m [90m 328 |[31m       {note [33m&&[31m [33m<[31m[33mp[31m role[33m=[31m[32m"status"[31m[33m>[31m{note}[33m<[31m[33m/[31m[33mp[31m[33m>[31m}{err [33m&&[31m [33m<[31m[33mp[31m className[33m=[31m[32m"err"[31m role[33m=[31m[32m"alert"[31m[33m>[31m{err}[33m<[31m[33m/[31m[33mp[31m[33m>[31m}
+ [90m 329 |[31m     [33m<[31m[33m/[31m[33mdiv[31m[33m>[31m
+[31m[1m>[22m[31m[90m 330 |[31m   [33m<[31m[33m/[31m[33marticle[31m[33m>[31m[33m;[31m
+ [90m     |[31m   [31m[1m^[22m[31m
+ [90m 331 |[31m }
+ [90m 332 |[31m
+ [90m 333 |[31m [36mexport[31m [36mfunction[31m [33mStorePage[31m() {[0m[39m
+  Plugin: [35mvite:react-babel[39m
+  File: [36mC:/Users/acer/Downloads/cpsu-student-marketplace/apps/web/src/pages-public.tsx[39m:330:2
+[33m  328|        {note && <p role="status">{note}</p>}{err && <p className="err" role="alert">{err}</p>}
+  329|      </div>
+  330|    </article>;
+     |    ^
+  331|  }
+  332|  [39m
+      at constructor (C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:368:19)
+      at TypeScriptParserMixin.raise (C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:6630:19)
+      at TypeScriptParserMixin.jsxParseElementAt (C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:4748:16)
+      at TypeScriptParserMixin.jsxParseElementAt (C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:4719:32)
+      at TypeScriptParserMixin.jsxParseElement (C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:4770:17)
+      at TypeScriptParserMixin.parseExprAtom (C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:4780:19)
+      at TypeScriptParserMixin.parseExprSubscripts (C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:8066:23)
+      at TypeScriptParserMixin.parseUpdate (C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:8051:21)
+      at TypeScriptParserMixin.parseMaybeUnary (C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:8031:23)
+      at TypeScriptParserMixin.parseMaybeUnary (C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:13725:18)
+      at TypeScriptParserMixin.parseMaybeUnaryOrPrivate (C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:7877:61)
+      at TypeScriptParserMixin.parseExprOps (C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:7882:23)
+      at TypeScriptParserMixin.parseMaybeConditional (C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:7859:23)
+      at TypeScriptParserMixin.parseMaybeAssign (C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:7807:21)
+      at C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:13663:39
+      at TypeScriptParserMixin.tryParse (C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:6996:20)
+      at TypeScriptParserMixin.parseMaybeAssign (C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:13663:18)
+      at TypeScriptParserMixin.parseExpressionBase (C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:7755:23)
+      at C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:7751:39
+      at TypeScriptParserMixin.allowInAnd (C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:9421:16)
+      at TypeScriptParserMixin.parseExpression (C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:7751:17)
+      at TypeScriptParserMixin.parseReturnStatement (C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:10172:28)
+      at TypeScriptParserMixin.parseStatementContent (C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:9815:21)
+      at TypeScriptParserMixin.parseStatementContent (C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:13387:18)
+      at TypeScriptParserMixin.parseStatementLike (C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:9784:17)
+      at TypeScriptParserMixin.parseStatementListItem (C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:9764:17)
+      at TypeScriptParserMixin.parseBlockOrModuleBlockBody (C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:10346:61)
+      at TypeScriptParserMixin.parseBlockBody (C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:10339:10)
+      at TypeScriptParserMixin.parseBlock (C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:10327:10)
+      at TypeScriptParserMixin.parseFunctionBody (C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:9095:24)
+      at TypeScriptParserMixin.parseFunctionBodyAndFinish (C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:9081:10)
+      at TypeScriptParserMixin.parseFunctionBodyAndFinish (C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:13051:18)
+      at C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:10476:12
+      at TypeScriptParserMixin.withSmartMixTopicForbiddingContext (C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:9403:14)
+      at TypeScriptParserMixin.parseFunction (C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:10475:10)
+      at TypeScriptParserMixin.parseFunctionStatement (C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:10155:17)
+      at TypeScriptParserMixin.parseStatementContent (C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:9808:21)
+      at TypeScriptParserMixin.parseStatementContent (C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:13387:18)
+      at TypeScriptParserMixin.parseStatementLike (C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:9784:17)
+      at TypeScriptParserMixin.parseStatementListItem (C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:9764:17)
+      at TypeScriptParserMixin.parseExportDeclaration (C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:10966:17)
+      at TypeScriptParserMixin.parseExportDeclaration (C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:13517:85)
+      at TypeScriptParserMixin.maybeParseExportDeclaration (C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:10922:31)
+      at TypeScriptParserMixin.parseExport (C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:10841:29)
+      at TypeScriptParserMixin.parseExport (C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:13264:20)
+      at TypeScriptParserMixin.parseStatementContent (C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:9896:27)
+      at TypeScriptParserMixin.parseStatementContent (C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:13387:18)
+      at TypeScriptParserMixin.parseStatementLike (C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:9784:17)
+      at TypeScriptParserMixin.parseModuleItem (C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:9761:17)
+      at TypeScriptParserMixin.parseBlockOrModuleBlockBody (C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:10346:36)
+[2m5:06:27 PM[22m [31m[1m[vite][22m[39m [31m[2m(client)[22m[39m Pre-transform error: C:\Users\acer\Downloads\cpsu-student-marketplace\apps\web\src\pages-public.tsx: Expected corresponding JSX closing tag for <div>. (330:2)
+
+[0m [90m 328 |[39m       {note [33m&&[39m [33m<[39m[33mp[39m role[33m=[39m[32m"status"[39m[33m>[39m{note}[33m<[39m[33m/[39m[33mp[39m[33m>[39m}{err [33m&&[39m [33m<[39m[33mp[39m className[33m=[39m[32m"err"[39m role[33m=[39m[32m"alert"[39m[33m>[39m{err}[33m<[39m[33m/[39m[33mp[39m[33m>[39m}
+ [90m 329 |[39m     [33m<[39m[33m/[39m[33mdiv[39m[33m>[39m
+[31m[1m>[22m[39m[90m 330 |[39m   [33m<[39m[33m/[39m[33marticle[39m[33m>[39m[33m;[39m
+ [90m     |[39m   [31m[1m^[22m[39m
+ [90m 331 |[39m }
+ [90m 332 |[39m
+ [90m 333 |[39m [36mexport[39m [36mfunction[39m [33mStorePage[39m() {[0m
+  Plugin: [35mvite:react-babel[39m
+  File: [36mC:/Users/acer/Downloads/cpsu-student-marketplace/apps/web/src/pages-public.tsx[39m:330:2
+[33m  328|        {note && <p role="status">{note}</p>}{err && <p className="err" role="alert">{err}</p>}
+  329|      </div>
+  330|    </article>;
+     |    ^
+  331|  }
+  332|  [39m
+[2m5:06:27 PM[22m [31m[1m[vite][22m[39m [31m[2m(client)[22m[39m Pre-transform error: C:\Users\acer\Downloads\cpsu-student-marketplace\apps\web\src\pages-public.tsx: Expected corresponding JSX closing tag for <div>. (330:2)
+
+[0m [90m 328 |[39m       {note [33m&&[39m [33m<[39m[33mp[39m role[33m=[39m[32m"status"[39m[33m>[39m{note}[33m<[39m[33m/[39m[33mp[39m[33m>[39m}{err [33m&&[39m [33m<[39m[33mp[39m className[33m=[39m[32m"err"[39m role[33m=[39m[32m"alert"[39m[33m>[39m{err}[33m<[39m[33m/[39m[33mp[39m[33m>[39m}
+ [90m 329 |[39m     [33m<[39m[33m/[39m[33mdiv[39m[33m>[39m
+[31m[1m>[22m[39m[90m 330 |[39m   [33m<[39m[33m/[39m[33marticle[39m[33m>[39m[33m;[39m
+ [90m     |[39m   [31m[1m^[22m[39m
+ [90m 331 |[39m }
+ [90m 332 |[39m
+ [90m 333 |[39m [36mexport[39m [36mfunction[39m [33mStorePage[39m() {[0m
+  Plugin: [35mvite:react-babel[39m
+  File: [36mC:/Users/acer/Downloads/cpsu-student-marketplace/apps/web/src/pages-public.tsx[39m:330:2
+[33m  328|        {note && <p role="status">{note}</p>}{err && <p className="err" role="alert">{err}</p>}
+  329|      </div>
+  330|    </article>;
+     |    ^
+  331|  }
+  332|  [39m
+[2m5:06:27 PM[22m [31m[1m[vite][22m[39m [31mInternal server error: C:\Users\acer\Downloads\cpsu-student-marketplace\apps\web\src\pages-public.tsx: Expected corresponding JSX closing tag for <div>. (330:2)
+
+[0m [90m 328 |[31m       {note [33m&&[31m [33m<[31m[33mp[31m role[33m=[31m[32m"status"[31m[33m>[31m{note}[33m<[31m[33m/[31m[33mp[31m[33m>[31m}{err [33m&&[31m [33m<[31m[33mp[31m className[33m=[31m[32m"err"[31m role[33m=[31m[32m"alert"[31m[33m>[31m{err}[33m<[31m[33m/[31m[33mp[31m[33m>[31m}
+ [90m 329 |[31m     [33m<[31m[33m/[31m[33mdiv[31m[33m>[31m
+[31m[1m>[22m[31m[90m 330 |[31m   [33m<[31m[33m/[31m[33marticle[31m[33m>[31m[33m;[31m
+ [90m     |[31m   [31m[1m^[22m[31m
+ [90m 331 |[31m }
+ [90m 332 |[31m
+ [90m 333 |[31m [36mexport[31m [36mfunction[31m [33mStorePage[31m() {[0m[39m
+  Plugin: [35mvite:react-babel[39m
+  File: [36mC:/Users/acer/Downloads/cpsu-student-marketplace/apps/web/src/pages-public.tsx[39m:330:2
+[33m  328|        {note && <p role="status">{note}</p>}{err && <p className="err" role="alert">{err}</p>}
+  329|      </div>
+  330|    </article>;
+     |    ^
+  331|  }
+  332|  [39m
+      at constructor (C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:368:19)
+      at TypeScriptParserMixin.raise (C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:6630:19)
+      at TypeScriptParserMixin.jsxParseElementAt (C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:4748:16)
+      at TypeScriptParserMixin.jsxParseElementAt (C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:4719:32)
+      at TypeScriptParserMixin.jsxParseElement (C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:4770:17)
+      at TypeScriptParserMixin.parseExprAtom (C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:4780:19)
+      at TypeScriptParserMixin.parseExprSubscripts (C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:8066:23)
+      at TypeScriptParserMixin.parseUpdate (C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:8051:21)
+      at TypeScriptParserMixin.parseMaybeUnary (C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:8031:23)
+      at TypeScriptParserMixin.parseMaybeUnary (C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:13725:18)
+      at TypeScriptParserMixin.parseMaybeUnaryOrPrivate (C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:7877:61)
+      at TypeScriptParserMixin.parseExprOps (C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:7882:23)
+      at TypeScriptParserMixin.parseMaybeConditional (C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:7859:23)
+      at TypeScriptParserMixin.parseMaybeAssign (C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:7807:21)
+      at C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:13663:39
+      at TypeScriptParserMixin.tryParse (C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:6996:20)
+      at TypeScriptParserMixin.parseMaybeAssign (C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:13663:18)
+      at TypeScriptParserMixin.parseExpressionBase (C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:7755:23)
+      at C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:7751:39
+      at TypeScriptParserMixin.allowInAnd (C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:9421:16)
+      at TypeScriptParserMixin.parseExpression (C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:7751:17)
+      at TypeScriptParserMixin.parseReturnStatement (C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:10172:28)
+      at TypeScriptParserMixin.parseStatementContent (C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:9815:21)
+      at TypeScriptParserMixin.parseStatementContent (C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:13387:18)
+      at TypeScriptParserMixin.parseStatementLike (C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:9784:17)
+      at TypeScriptParserMixin.parseStatementListItem (C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:9764:17)
+      at TypeScriptParserMixin.parseBlockOrModuleBlockBody (C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:10346:61)
+      at TypeScriptParserMixin.parseBlockBody (C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:10339:10)
+      at TypeScriptParserMixin.parseBlock (C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:10327:10)
+      at TypeScriptParserMixin.parseFunctionBody (C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:9095:24)
+      at TypeScriptParserMixin.parseFunctionBodyAndFinish (C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:9081:10)
+      at TypeScriptParserMixin.parseFunctionBodyAndFinish (C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:13051:18)
+      at C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:10476:12
+      at TypeScriptParserMixin.withSmartMixTopicForbiddingContext (C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:9403:14)
+      at TypeScriptParserMixin.parseFunction (C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:10475:10)
+      at TypeScriptParserMixin.parseFunctionStatement (C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:10155:17)
+      at TypeScriptParserMixin.parseStatementContent (C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:9808:21)
+      at TypeScriptParserMixin.parseStatementContent (C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:13387:18)
+      at TypeScriptParserMixin.parseStatementLike (C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:9784:17)
+      at TypeScriptParserMixin.parseStatementListItem (C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:9764:17)
+      at TypeScriptParserMixin.parseExportDeclaration (C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:10966:17)
+      at TypeScriptParserMixin.parseExportDeclaration (C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:13517:85)
+      at TypeScriptParserMixin.maybeParseExportDeclaration (C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:10922:31)
+      at TypeScriptParserMixin.parseExport (C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:10841:29)
+      at TypeScriptParserMixin.parseExport (C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:13264:20)
+      at TypeScriptParserMixin.parseStatementContent (C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:9896:27)
+      at TypeScriptParserMixin.parseStatementContent (C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:13387:18)
+      at TypeScriptParserMixin.parseStatementLike (C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:9784:17)
+      at TypeScriptParserMixin.parseModuleItem (C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:9761:17)
+      at TypeScriptParserMixin.parseBlockOrModuleBlockBody (C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:10346:36)
+[2m5:06:28 PM[22m [31m[1m[vite][22m[39m [31mInternal server error: C:\Users\acer\Downloads\cpsu-student-marketplace\apps\web\src\pages-public.tsx: Expected corresponding JSX closing tag for <div>. (330:2)
+
+[0m [90m 328 |[31m       {note [33m&&[31m [33m<[31m[33mp[31m role[33m=[31m[32m"status"[31m[33m>[31m{note}[33m<[31m[33m/[31m[33mp[31m[33m>[31m}{err [33m&&[31m [33m<[31m[33mp[31m className[33m=[31m[32m"err"[31m role[33m=[31m[32m"alert"[31m[33m>[31m{err}[33m<[31m[33m/[31m[33mp[31m[33m>[31m}
+ [90m 329 |[31m     [33m<[31m[33m/[31m[33mdiv[31m[33m>[31m
+[31m[1m>[22m[31m[90m 330 |[31m   [33m<[31m[33m/[31m[33marticle[31m[33m>[31m[33m;[31m
+ [90m     |[31m   [31m[1m^[22m[31m
+ [90m 331 |[31m }
+ [90m 332 |[31m
+ [90m 333 |[31m [36mexport[31m [36mfunction[31m [33mStorePage[31m() {[0m[39m
+  Plugin: [35mvite:react-babel[39m
+  File: [36mC:/Users/acer/Downloads/cpsu-student-marketplace/apps/web/src/pages-public.tsx[39m:330:2
+[33m  328|        {note && <p role="status">{note}</p>}{err && <p className="err" role="alert">{err}</p>}
+  329|      </div>
+  330|    </article>;
+     |    ^
+  331|  }
+  332|  [39m
+      at constructor (C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:368:19)
+      at TypeScriptParserMixin.raise (C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:6630:19)
+      at TypeScriptParserMixin.jsxParseElementAt (C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:4748:16)
+      at TypeScriptParserMixin.jsxParseElementAt (C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:4719:32)
+      at TypeScriptParserMixin.jsxParseElement (C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:4770:17)
+      at TypeScriptParserMixin.parseExprAtom (C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:4780:19)
+      at TypeScriptParserMixin.parseExprSubscripts (C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:8066:23)
+      at TypeScriptParserMixin.parseUpdate (C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:8051:21)
+      at TypeScriptParserMixin.parseMaybeUnary (C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:8031:23)
+      at TypeScriptParserMixin.parseMaybeUnary (C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:13725:18)
+      at TypeScriptParserMixin.parseMaybeUnaryOrPrivate (C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:7877:61)
+      at TypeScriptParserMixin.parseExprOps (C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:7882:23)
+      at TypeScriptParserMixin.parseMaybeConditional (C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:7859:23)
+      at TypeScriptParserMixin.parseMaybeAssign (C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:7807:21)
+      at C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:13663:39
+      at TypeScriptParserMixin.tryParse (C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:6996:20)
+      at TypeScriptParserMixin.parseMaybeAssign (C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:13663:18)
+      at TypeScriptParserMixin.parseExpressionBase (C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:7755:23)
+      at C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:7751:39
+      at TypeScriptParserMixin.allowInAnd (C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:9421:16)
+      at TypeScriptParserMixin.parseExpression (C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:7751:17)
+      at TypeScriptParserMixin.parseReturnStatement (C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:10172:28)
+      at TypeScriptParserMixin.parseStatementContent (C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:9815:21)
+      at TypeScriptParserMixin.parseStatementContent (C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:13387:18)
+      at TypeScriptParserMixin.parseStatementLike (C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:9784:17)
+      at TypeScriptParserMixin.parseStatementListItem (C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:9764:17)
+      at TypeScriptParserMixin.parseBlockOrModuleBlockBody (C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:10346:61)
+      at TypeScriptParserMixin.parseBlockBody (C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:10339:10)
+      at TypeScriptParserMixin.parseBlock (C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:10327:10)
+      at TypeScriptParserMixin.parseFunctionBody (C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:9095:24)
+      at TypeScriptParserMixin.parseFunctionBodyAndFinish (C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:9081:10)
+      at TypeScriptParserMixin.parseFunctionBodyAndFinish (C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:13051:18)
+      at C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:10476:12
+      at TypeScriptParserMixin.withSmartMixTopicForbiddingContext (C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:9403:14)
+      at TypeScriptParserMixin.parseFunction (C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:10475:10)
+      at TypeScriptParserMixin.parseFunctionStatement (C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:10155:17)
+      at TypeScriptParserMixin.parseStatementContent (C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:9808:21)
+      at TypeScriptParserMixin.parseStatementContent (C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:13387:18)
+      at TypeScriptParserMixin.parseStatementLike (C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:9784:17)
+      at TypeScriptParserMixin.parseStatementListItem (C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:9764:17)
+      at TypeScriptParserMixin.parseExportDeclaration (C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:10966:17)
+      at TypeScriptParserMixin.parseExportDeclaration (C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:13517:85)
+      at TypeScriptParserMixin.maybeParseExportDeclaration (C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:10922:31)
+      at TypeScriptParserMixin.parseExport (C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:10841:29)
+      at TypeScriptParserMixin.parseExport (C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:13264:20)
+      at TypeScriptParserMixin.parseStatementContent (C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:9896:27)
+      at TypeScriptParserMixin.parseStatementContent (C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:13387:18)
+      at TypeScriptParserMixin.parseStatementLike (C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:9784:17)
+      at TypeScriptParserMixin.parseModuleItem (C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:9761:17)
+      at TypeScriptParserMixin.parseBlockOrModuleBlockBody (C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:10346:36)
+[2m5:06:30 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages-public.tsx[22m
+[2m5:06:30 PM[22m [31m[1m[vite][22m[39m [31m[2m(client)[22m[39m Pre-transform error: C:\Users\acer\Downloads\cpsu-student-marketplace\apps\web\src\pages-public.tsx: Expected corresponding JSX closing tag for <div>. (331:2)
+
+[0m [90m 329 |[39m       {note [33m&&[39m [33m<[39m[33mp[39m role[33m=[39m[32m"status"[39m[33m>[39m{note}[33m<[39m[33m/[39m[33mp[39m[33m>[39m}{err [33m&&[39m [33m<[39m[33mp[39m className[33m=[39m[32m"err"[39m role[33m=[39m[32m"alert"[39m[33m>[39m{err}[33m<[39m[33m/[39m[33mp[39m[33m>[39m}
+ [90m 330 |[39m     [33m<[39m[33m/[39m[33mdiv[39m[33m>[39m
+[31m[1m>[22m[39m[90m 331 |[39m   [33m<[39m[33m/[39m[33marticle[39m[33m>[39m[33m;[39m
+ [90m     |[39m   [31m[1m^[22m[39m
+ [90m 332 |[39m }
+ [90m 333 |[39m
+ [90m 334 |[39m [36mexport[39m [36mfunction[39m [33mStorePage[39m() {[0m
+  Plugin: [35mvite:react-babel[39m
+  File: [36mC:/Users/acer/Downloads/cpsu-student-marketplace/apps/web/src/pages-public.tsx[39m:331:2
+[33m  329|        {note && <p role="status">{note}</p>}{err && <p className="err" role="alert">{err}</p>}
+  330|      </div>
+  331|    </article>;
+     |    ^
+  332|  }
+  333|  [39m
+[2m5:06:30 PM[22m [31m[1m[vite][22m[39m [31m[2m(client)[22m[39m Pre-transform error: C:\Users\acer\Downloads\cpsu-student-marketplace\apps\web\src\pages-public.tsx: Expected corresponding JSX closing tag for <div>. (331:2)
+
+[0m [90m 329 |[39m       {note [33m&&[39m [33m<[39m[33mp[39m role[33m=[39m[32m"status"[39m[33m>[39m{note}[33m<[39m[33m/[39m[33mp[39m[33m>[39m}{err [33m&&[39m [33m<[39m[33mp[39m className[33m=[39m[32m"err"[39m role[33m=[39m[32m"alert"[39m[33m>[39m{err}[33m<[39m[33m/[39m[33mp[39m[33m>[39m}
+ [90m 330 |[39m     [33m<[39m[33m/[39m[33mdiv[39m[33m>[39m
+[31m[1m>[22m[39m[90m 331 |[39m   [33m<[39m[33m/[39m[33marticle[39m[33m>[39m[33m;[39m
+ [90m     |[39m   [31m[1m^[22m[39m
+ [90m 332 |[39m }
+ [90m 333 |[39m
+ [90m 334 |[39m [36mexport[39m [36mfunction[39m [33mStorePage[39m() {[0m
+  Plugin: [35mvite:react-babel[39m
+  File: [36mC:/Users/acer/Downloads/cpsu-student-marketplace/apps/web/src/pages-public.tsx[39m:331:2
+[33m  329|        {note && <p role="status">{note}</p>}{err && <p className="err" role="alert">{err}</p>}
+  330|      </div>
+  331|    </article>;
+     |    ^
+  332|  }
+  333|  [39m
+[2m5:06:30 PM[22m [31m[1m[vite][22m[39m [31mInternal server error: C:\Users\acer\Downloads\cpsu-student-marketplace\apps\web\src\pages-public.tsx: Expected corresponding JSX closing tag for <div>. (331:2)
+
+[0m [90m 329 |[31m       {note [33m&&[31m [33m<[31m[33mp[31m role[33m=[31m[32m"status"[31m[33m>[31m{note}[33m<[31m[33m/[31m[33mp[31m[33m>[31m}{err [33m&&[31m [33m<[31m[33mp[31m className[33m=[31m[32m"err"[31m role[33m=[31m[32m"alert"[31m[33m>[31m{err}[33m<[31m[33m/[31m[33mp[31m[33m>[31m}
+ [90m 330 |[31m     [33m<[31m[33m/[31m[33mdiv[31m[33m>[31m
+[31m[1m>[22m[31m[90m 331 |[31m   [33m<[31m[33m/[31m[33marticle[31m[33m>[31m[33m;[31m
+ [90m     |[31m   [31m[1m^[22m[31m
+ [90m 332 |[31m }
+ [90m 333 |[31m
+ [90m 334 |[31m [36mexport[31m [36mfunction[31m [33mStorePage[31m() {[0m[39m
+  Plugin: [35mvite:react-babel[39m
+  File: [36mC:/Users/acer/Downloads/cpsu-student-marketplace/apps/web/src/pages-public.tsx[39m:331:2
+[33m  329|        {note && <p role="status">{note}</p>}{err && <p className="err" role="alert">{err}</p>}
+  330|      </div>
+  331|    </article>;
+     |    ^
+  332|  }
+  333|  [39m
+      at constructor (C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:368:19)
+      at TypeScriptParserMixin.raise (C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:6630:19)
+      at TypeScriptParserMixin.jsxParseElementAt (C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:4748:16)
+      at TypeScriptParserMixin.jsxParseElementAt (C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:4719:32)
+      at TypeScriptParserMixin.jsxParseElementAt (C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:4719:32)
+      at TypeScriptParserMixin.jsxParseElement (C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:4770:17)
+      at TypeScriptParserMixin.parseExprAtom (C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:4780:19)
+      at TypeScriptParserMixin.parseExprSubscripts (C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:8066:23)
+      at TypeScriptParserMixin.parseUpdate (C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:8051:21)
+      at TypeScriptParserMixin.parseMaybeUnary (C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:8031:23)
+      at TypeScriptParserMixin.parseMaybeUnary (C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:13725:18)
+      at TypeScriptParserMixin.parseMaybeUnaryOrPrivate (C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:7877:61)
+      at TypeScriptParserMixin.parseExprOps (C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:7882:23)
+      at TypeScriptParserMixin.parseMaybeConditional (C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:7859:23)
+      at TypeScriptParserMixin.parseMaybeAssign (C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:7807:21)
+      at C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:13663:39
+      at TypeScriptParserMixin.tryParse (C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:6996:20)
+      at TypeScriptParserMixin.parseMaybeAssign (C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:13663:18)
+      at TypeScriptParserMixin.parseExpressionBase (C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:7755:23)
+      at C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:7751:39
+      at TypeScriptParserMixin.allowInAnd (C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:9421:16)
+      at TypeScriptParserMixin.parseExpression (C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:7751:17)
+      at TypeScriptParserMixin.parseReturnStatement (C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:10172:28)
+      at TypeScriptParserMixin.parseStatementContent (C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:9815:21)
+      at TypeScriptParserMixin.parseStatementContent (C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:13387:18)
+      at TypeScriptParserMixin.parseStatementLike (C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:9784:17)
+      at TypeScriptParserMixin.parseStatementListItem (C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:9764:17)
+      at TypeScriptParserMixin.parseBlockOrModuleBlockBody (C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:10346:61)
+      at TypeScriptParserMixin.parseBlockBody (C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:10339:10)
+      at TypeScriptParserMixin.parseBlock (C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:10327:10)
+      at TypeScriptParserMixin.parseFunctionBody (C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:9095:24)
+      at TypeScriptParserMixin.parseFunctionBodyAndFinish (C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:9081:10)
+      at TypeScriptParserMixin.parseFunctionBodyAndFinish (C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:13051:18)
+      at C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:10476:12
+      at TypeScriptParserMixin.withSmartMixTopicForbiddingContext (C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:9403:14)
+      at TypeScriptParserMixin.parseFunction (C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:10475:10)
+      at TypeScriptParserMixin.parseFunctionStatement (C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:10155:17)
+      at TypeScriptParserMixin.parseStatementContent (C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:9808:21)
+      at TypeScriptParserMixin.parseStatementContent (C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:13387:18)
+      at TypeScriptParserMixin.parseStatementLike (C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:9784:17)
+      at TypeScriptParserMixin.parseStatementListItem (C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:9764:17)
+      at TypeScriptParserMixin.parseExportDeclaration (C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:10966:17)
+      at TypeScriptParserMixin.parseExportDeclaration (C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:13517:85)
+      at TypeScriptParserMixin.maybeParseExportDeclaration (C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:10922:31)
+      at TypeScriptParserMixin.parseExport (C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:10841:29)
+      at TypeScriptParserMixin.parseExport (C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:13264:20)
+      at TypeScriptParserMixin.parseStatementContent (C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:9896:27)
+      at TypeScriptParserMixin.parseStatementContent (C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:13387:18)
+      at TypeScriptParserMixin.parseStatementLike (C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:9784:17)
+      at TypeScriptParserMixin.parseModuleItem (C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:9761:17)
+[2m5:06:30 PM[22m [31m[1m[vite][22m[39m [31mInternal server error: C:\Users\acer\Downloads\cpsu-student-marketplace\apps\web\src\pages-public.tsx: Expected corresponding JSX closing tag for <div>. (331:2)
+
+[0m [90m 329 |[31m       {note [33m&&[31m [33m<[31m[33mp[31m role[33m=[31m[32m"status"[31m[33m>[31m{note}[33m<[31m[33m/[31m[33mp[31m[33m>[31m}{err [33m&&[31m [33m<[31m[33mp[31m className[33m=[31m[32m"err"[31m role[33m=[31m[32m"alert"[31m[33m>[31m{err}[33m<[31m[33m/[31m[33mp[31m[33m>[31m}
+ [90m 330 |[31m     [33m<[31m[33m/[31m[33mdiv[31m[33m>[31m
+[31m[1m>[22m[31m[90m 331 |[31m   [33m<[31m[33m/[31m[33marticle[31m[33m>[31m[33m;[31m
+ [90m     |[31m   [31m[1m^[22m[31m
+ [90m 332 |[31m }
+ [90m 333 |[31m
+ [90m 334 |[31m [36mexport[31m [36mfunction[31m [33mStorePage[31m() {[0m[39m
+  Plugin: [35mvite:react-babel[39m
+  File: [36mC:/Users/acer/Downloads/cpsu-student-marketplace/apps/web/src/pages-public.tsx[39m:331:2
+[33m  329|        {note && <p role="status">{note}</p>}{err && <p className="err" role="alert">{err}</p>}
+  330|      </div>
+  331|    </article>;
+     |    ^
+  332|  }
+  333|  [39m
+      at constructor (C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:368:19)
+      at TypeScriptParserMixin.raise (C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:6630:19)
+      at TypeScriptParserMixin.jsxParseElementAt (C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:4748:16)
+      at TypeScriptParserMixin.jsxParseElementAt (C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:4719:32)
+      at TypeScriptParserMixin.jsxParseElementAt (C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:4719:32)
+      at TypeScriptParserMixin.jsxParseElement (C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:4770:17)
+      at TypeScriptParserMixin.parseExprAtom (C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:4780:19)
+      at TypeScriptParserMixin.parseExprSubscripts (C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:8066:23)
+      at TypeScriptParserMixin.parseUpdate (C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:8051:21)
+      at TypeScriptParserMixin.parseMaybeUnary (C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:8031:23)
+      at TypeScriptParserMixin.parseMaybeUnary (C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:13725:18)
+      at TypeScriptParserMixin.parseMaybeUnaryOrPrivate (C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:7877:61)
+      at TypeScriptParserMixin.parseExprOps (C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:7882:23)
+      at TypeScriptParserMixin.parseMaybeConditional (C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:7859:23)
+      at TypeScriptParserMixin.parseMaybeAssign (C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:7807:21)
+      at C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:13663:39
+      at TypeScriptParserMixin.tryParse (C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:6996:20)
+      at TypeScriptParserMixin.parseMaybeAssign (C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:13663:18)
+      at TypeScriptParserMixin.parseExpressionBase (C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:7755:23)
+      at C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:7751:39
+      at TypeScriptParserMixin.allowInAnd (C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:9421:16)
+      at TypeScriptParserMixin.parseExpression (C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:7751:17)
+      at TypeScriptParserMixin.parseReturnStatement (C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:10172:28)
+      at TypeScriptParserMixin.parseStatementContent (C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:9815:21)
+      at TypeScriptParserMixin.parseStatementContent (C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:13387:18)
+      at TypeScriptParserMixin.parseStatementLike (C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:9784:17)
+      at TypeScriptParserMixin.parseStatementListItem (C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:9764:17)
+      at TypeScriptParserMixin.parseBlockOrModuleBlockBody (C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:10346:61)
+      at TypeScriptParserMixin.parseBlockBody (C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:10339:10)
+      at TypeScriptParserMixin.parseBlock (C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:10327:10)
+      at TypeScriptParserMixin.parseFunctionBody (C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:9095:24)
+      at TypeScriptParserMixin.parseFunctionBodyAndFinish (C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:9081:10)
+      at TypeScriptParserMixin.parseFunctionBodyAndFinish (C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:13051:18)
+      at C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:10476:12
+      at TypeScriptParserMixin.withSmartMixTopicForbiddingContext (C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:9403:14)
+      at TypeScriptParserMixin.parseFunction (C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:10475:10)
+      at TypeScriptParserMixin.parseFunctionStatement (C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:10155:17)
+      at TypeScriptParserMixin.parseStatementContent (C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:9808:21)
+      at TypeScriptParserMixin.parseStatementContent (C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:13387:18)
+      at TypeScriptParserMixin.parseStatementLike (C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:9784:17)
+      at TypeScriptParserMixin.parseStatementListItem (C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:9764:17)
+      at TypeScriptParserMixin.parseExportDeclaration (C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:10966:17)
+      at TypeScriptParserMixin.parseExportDeclaration (C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:13517:85)
+      at TypeScriptParserMixin.maybeParseExportDeclaration (C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:10922:31)
+      at TypeScriptParserMixin.parseExport (C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:10841:29)
+      at TypeScriptParserMixin.parseExport (C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:13264:20)
+      at TypeScriptParserMixin.parseStatementContent (C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:9896:27)
+      at TypeScriptParserMixin.parseStatementContent (C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:13387:18)
+      at TypeScriptParserMixin.parseStatementLike (C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:9784:17)
+      at TypeScriptParserMixin.parseModuleItem (C:\Users\acer\Downloads\cpsu-student-marketplace\node_modules\@babel\parser\lib\index.js:9761:17)
+[2m5:06:33 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages-public.tsx[22m
+[2m5:06:50 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/styles.css[22m
+[2m5:06:53 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/styles.css[22m
+[2m5:06:56 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/styles.css[22m
+[2m5:18:02 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/main.tsx[22m
+[2m5:18:02 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mpage reload [39m[2mindex.html[22m
+[2m5:18:02 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages-public.tsx[22m
+[2m5:18:02 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/styles.css[22m
+[2m5:18:02 PM[22m [31m[1m[vite][22m[39m [31mInternal server error: Failed to resolve import "./storefront-theme.css" from "src/main.tsx". Does the file exist?[39m
+  Plugin: [35mvite:import-analysis[39m
+  File: [36mC:/Users/acer/Downloads/cpsu-student-marketplace/apps/web/src/main.tsx[39m:11:7
+[33m  26 |  import { Admin } from "./pages-admin";
+  27 |  import "./styles.css";
+  28 |  import "./storefront-theme.css";
+     |          ^
+  29 |  const Ctx = createContext(null);
+  30 |  export const useMe = () => {[39m
+      at TransformPluginContext._formatLog (file:///C:/Users/acer/Downloads/cpsu-student-marketplace/apps/web/node_modules/vite/dist/node/chunks/dep-Cohbwjf9.js:42852:41)
+      at TransformPluginContext.error (file:///C:/Users/acer/Downloads/cpsu-student-marketplace/apps/web/node_modules/vite/dist/node/chunks/dep-Cohbwjf9.js:42849:16)
+      at normalizeUrl (file:///C:/Users/acer/Downloads/cpsu-student-marketplace/apps/web/node_modules/vite/dist/node/chunks/dep-Cohbwjf9.js:40826:23)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async file:///C:/Users/acer/Downloads/cpsu-student-marketplace/apps/web/node_modules/vite/dist/node/chunks/dep-Cohbwjf9.js:40945:37
+      at async Promise.all (index 13)
+      at async TransformPluginContext.transform (file:///C:/Users/acer/Downloads/cpsu-student-marketplace/apps/web/node_modules/vite/dist/node/chunks/dep-Cohbwjf9.js:40872:7)
+      at async EnvironmentPluginContainer.transform (file:///C:/Users/acer/Downloads/cpsu-student-marketplace/apps/web/node_modules/vite/dist/node/chunks/dep-Cohbwjf9.js:42647:18)
+      at async loadAndTransform (file:///C:/Users/acer/Downloads/cpsu-student-marketplace/apps/web/node_modules/vite/dist/node/chunks/dep-Cohbwjf9.js:36059:27)
+      at async viteTransformMiddleware (file:///C:/Users/acer/Downloads/cpsu-student-marketplace/apps/web/node_modules/vite/dist/node/chunks/dep-Cohbwjf9.js:37556:24)
+[2m5:18:02 PM[22m [31m[1m[vite][22m[39m [31m[2m(client)[22m[39m Pre-transform error: Failed to resolve import "./storefront-theme.css" from "src/main.tsx". Does the file exist?
+  Plugin: [35mvite:import-analysis[39m
+  File: [36mC:/Users/acer/Downloads/cpsu-student-marketplace/apps/web/src/main.tsx[39m:11:7
+[33m  26 |  import { Admin } from "./pages-admin";
+  27 |  import "./styles.css";
+  28 |  import "./storefront-theme.css";
+     |          ^
+  29 |  const Ctx = createContext(null);
+  30 |  export const useMe = () => {[39m
+[2m5:18:02 PM[22m [31m[1m[vite][22m[39m [31m[2m(client)[22m[39m Pre-transform error: Failed to resolve import "./storefront-theme.css" from "src/main.tsx". Does the file exist?
+  Plugin: [35mvite:import-analysis[39m
+  File: [36mC:/Users/acer/Downloads/cpsu-student-marketplace/apps/web/src/main.tsx[39m:11:7
+[33m  26 |  import { Admin } from "./pages-admin";
+  27 |  import "./styles.css";
+  28 |  import "./storefront-theme.css";
+     |          ^
+  29 |  const Ctx = createContext(null);
+  30 |  export const useMe = () => {[39m
+[2m5:18:02 PM[22m [31m[1m[vite][22m[39m [31mInternal server error: Failed to resolve import "./storefront-theme.css" from "src/main.tsx". Does the file exist?[39m
+  Plugin: [35mvite:import-analysis[39m
+  File: [36mC:/Users/acer/Downloads/cpsu-student-marketplace/apps/web/src/main.tsx[39m:11:7
+[33m  26 |  import { Admin } from "./pages-admin";
+  27 |  import "./styles.css";
+  28 |  import "./storefront-theme.css";
+     |          ^
+  29 |  const Ctx = createContext(null);
+  30 |  export const useMe = () => {[39m
+      at TransformPluginContext._formatLog (file:///C:/Users/acer/Downloads/cpsu-student-marketplace/apps/web/node_modules/vite/dist/node/chunks/dep-Cohbwjf9.js:42852:41)
+      at TransformPluginContext.error (file:///C:/Users/acer/Downloads/cpsu-student-marketplace/apps/web/node_modules/vite/dist/node/chunks/dep-Cohbwjf9.js:42849:16)
+      at normalizeUrl (file:///C:/Users/acer/Downloads/cpsu-student-marketplace/apps/web/node_modules/vite/dist/node/chunks/dep-Cohbwjf9.js:40826:23)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async file:///C:/Users/acer/Downloads/cpsu-student-marketplace/apps/web/node_modules/vite/dist/node/chunks/dep-Cohbwjf9.js:40945:37
+      at async Promise.all (index 13)
+      at async TransformPluginContext.transform (file:///C:/Users/acer/Downloads/cpsu-student-marketplace/apps/web/node_modules/vite/dist/node/chunks/dep-Cohbwjf9.js:40872:7)
+      at async EnvironmentPluginContainer.transform (file:///C:/Users/acer/Downloads/cpsu-student-marketplace/apps/web/node_modules/vite/dist/node/chunks/dep-Cohbwjf9.js:42647:18)
+      at async loadAndTransform (file:///C:/Users/acer/Downloads/cpsu-student-marketplace/apps/web/node_modules/vite/dist/node/chunks/dep-Cohbwjf9.js:36059:27)
+[2m5:18:02 PM[22m [31m[1m[vite][22m[39m [31mInternal server error: Failed to resolve import "./storefront-theme.css" from "src/main.tsx". Does the file exist?[39m
+  Plugin: [35mvite:import-analysis[39m
+  File: [36mC:/Users/acer/Downloads/cpsu-student-marketplace/apps/web/src/main.tsx[39m:11:7
+[33m  26 |  import { Admin } from "./pages-admin";
+  27 |  import "./styles.css";
+  28 |  import "./storefront-theme.css";
+     |          ^
+  29 |  const Ctx = createContext(null);
+  30 |  export const useMe = () => {[39m
+      at TransformPluginContext._formatLog (file:///C:/Users/acer/Downloads/cpsu-student-marketplace/apps/web/node_modules/vite/dist/node/chunks/dep-Cohbwjf9.js:42852:41)
+      at TransformPluginContext.error (file:///C:/Users/acer/Downloads/cpsu-student-marketplace/apps/web/node_modules/vite/dist/node/chunks/dep-Cohbwjf9.js:42849:16)
+      at normalizeUrl (file:///C:/Users/acer/Downloads/cpsu-student-marketplace/apps/web/node_modules/vite/dist/node/chunks/dep-Cohbwjf9.js:40826:23)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async file:///C:/Users/acer/Downloads/cpsu-student-marketplace/apps/web/node_modules/vite/dist/node/chunks/dep-Cohbwjf9.js:40945:37
+      at async Promise.all (index 13)
+      at async TransformPluginContext.transform (file:///C:/Users/acer/Downloads/cpsu-student-marketplace/apps/web/node_modules/vite/dist/node/chunks/dep-Cohbwjf9.js:40872:7)
+      at async EnvironmentPluginContainer.transform (file:///C:/Users/acer/Downloads/cpsu-student-marketplace/apps/web/node_modules/vite/dist/node/chunks/dep-Cohbwjf9.js:42647:18)
+      at async loadAndTransform (file:///C:/Users/acer/Downloads/cpsu-student-marketplace/apps/web/node_modules/vite/dist/node/chunks/dep-Cohbwjf9.js:36059:27)
+[2m5:18:02 PM[22m [31m[1m[vite][22m[39m [31mInternal server error: Failed to resolve import "./storefront-theme.css" from "src/main.tsx". Does the file exist?[39m
+  Plugin: [35mvite:import-analysis[39m
+  File: [36mC:/Users/acer/Downloads/cpsu-student-marketplace/apps/web/src/main.tsx[39m:11:7
+[33m  26 |  import { Admin } from "./pages-admin";
+  27 |  import "./styles.css";
+  28 |  import "./storefront-theme.css";
+     |          ^
+  29 |  const Ctx = createContext(null);
+  30 |  export const useMe = () => {[39m
+      at TransformPluginContext._formatLog (file:///C:/Users/acer/Downloads/cpsu-student-marketplace/apps/web/node_modules/vite/dist/node/chunks/dep-Cohbwjf9.js:42852:41)
+      at TransformPluginContext.error (file:///C:/Users/acer/Downloads/cpsu-student-marketplace/apps/web/node_modules/vite/dist/node/chunks/dep-Cohbwjf9.js:42849:16)
+      at normalizeUrl (file:///C:/Users/acer/Downloads/cpsu-student-marketplace/apps/web/node_modules/vite/dist/node/chunks/dep-Cohbwjf9.js:40826:23)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async file:///C:/Users/acer/Downloads/cpsu-student-marketplace/apps/web/node_modules/vite/dist/node/chunks/dep-Cohbwjf9.js:40945:37
+      at async Promise.all (index 13)
+      at async TransformPluginContext.transform (file:///C:/Users/acer/Downloads/cpsu-student-marketplace/apps/web/node_modules/vite/dist/node/chunks/dep-Cohbwjf9.js:40872:7)
+      at async EnvironmentPluginContainer.transform (file:///C:/Users/acer/Downloads/cpsu-student-marketplace/apps/web/node_modules/vite/dist/node/chunks/dep-Cohbwjf9.js:42647:18)
+      at async loadAndTransform (file:///C:/Users/acer/Downloads/cpsu-student-marketplace/apps/web/node_modules/vite/dist/node/chunks/dep-Cohbwjf9.js:36059:27)
+[2m5:18:02 PM[22m [31m[1m[vite][22m[39m [31mInternal server error: Failed to resolve import "./storefront-theme.css" from "src/main.tsx". Does the file exist?[39m
+  Plugin: [35mvite:import-analysis[39m
+  File: [36mC:/Users/acer/Downloads/cpsu-student-marketplace/apps/web/src/main.tsx[39m:11:7
+[33m  26 |  import { Admin } from "./pages-admin";
+  27 |  import "./styles.css";
+  28 |  import "./storefront-theme.css";
+     |          ^
+  29 |  const Ctx = createContext(null);
+  30 |  export const useMe = () => {[39m
+      at TransformPluginContext._formatLog (file:///C:/Users/acer/Downloads/cpsu-student-marketplace/apps/web/node_modules/vite/dist/node/chunks/dep-Cohbwjf9.js:42852:41)
+      at TransformPluginContext.error (file:///C:/Users/acer/Downloads/cpsu-student-marketplace/apps/web/node_modules/vite/dist/node/chunks/dep-Cohbwjf9.js:42849:16)
+      at normalizeUrl (file:///C:/Users/acer/Downloads/cpsu-student-marketplace/apps/web/node_modules/vite/dist/node/chunks/dep-Cohbwjf9.js:40826:23)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async file:///C:/Users/acer/Downloads/cpsu-student-marketplace/apps/web/node_modules/vite/dist/node/chunks/dep-Cohbwjf9.js:40945:37
+      at async Promise.all (index 13)
+      at async TransformPluginContext.transform (file:///C:/Users/acer/Downloads/cpsu-student-marketplace/apps/web/node_modules/vite/dist/node/chunks/dep-Cohbwjf9.js:40872:7)
+      at async EnvironmentPluginContainer.transform (file:///C:/Users/acer/Downloads/cpsu-student-marketplace/apps/web/node_modules/vite/dist/node/chunks/dep-Cohbwjf9.js:42647:18)
+      at async loadAndTransform (file:///C:/Users/acer/Downloads/cpsu-student-marketplace/apps/web/node_modules/vite/dist/node/chunks/dep-Cohbwjf9.js:36059:27)
+[2m5:18:02 PM[22m [31m[1m[vite][22m[39m [31m[2m(client)[22m[39m Pre-transform error: Failed to resolve import "./storefront-theme.css" from "src/main.tsx". Does the file exist?
+  Plugin: [35mvite:import-analysis[39m
+  File: [36mC:/Users/acer/Downloads/cpsu-student-marketplace/apps/web/src/main.tsx[39m:11:7
+[33m  26 |  import { Admin } from "./pages-admin";
+  27 |  import "./styles.css";
+  28 |  import "./storefront-theme.css";
+     |          ^
+  29 |  const Ctx = createContext(null);
+  30 |  export const useMe = () => {[39m
+[2m5:18:02 PM[22m [31m[1m[vite][22m[39m [31m[2m(client)[22m[39m Pre-transform error: Failed to resolve import "./storefront-theme.css" from "src/main.tsx". Does the file exist?
+  Plugin: [35mvite:import-analysis[39m
+  File: [36mC:/Users/acer/Downloads/cpsu-student-marketplace/apps/web/src/main.tsx[39m:11:7
+[33m  26 |  import { Admin } from "./pages-admin";
+  27 |  import "./styles.css";
+  28 |  import "./storefront-theme.css";
+     |          ^
+  29 |  const Ctx = createContext(null);
+  30 |  export const useMe = () => {[39m
+[2m5:18:02 PM[22m [31m[1m[vite][22m[39m Pre-transform error: Failed to resolve import "./storefront-theme.css" from "src/main.tsx". Does the file exist?
+  Plugin: [35mvite:import-analysis[39m
+  File: [36mC:/Users/acer/Downloads/cpsu-student-marketplace/apps/web/src/main.tsx[39m:11:7
+[33m  26 |  import { Admin } from "./pages-admin";
+  27 |  import "./styles.css";
+  28 |  import "./storefront-theme.css";
+     |          ^
+  29 |  const Ctx = createContext(null);
+  30 |  export const useMe = () => {[39m
+[2m5:18:02 PM[22m [31m[1m[vite][22m[39m [31mInternal server error: Failed to resolve import "./storefront-theme.css" from "src/main.tsx". Does the file exist?[39m
+  Plugin: [35mvite:import-analysis[39m
+  File: [36mC:/Users/acer/Downloads/cpsu-student-marketplace/apps/web/src/main.tsx[39m:11:7
+[33m  26 |  import { Admin } from "./pages-admin";
+  27 |  import "./styles.css";
+  28 |  import "./storefront-theme.css";
+     |          ^
+  29 |  const Ctx = createContext(null);
+  30 |  export const useMe = () => {[39m
+      at TransformPluginContext._formatLog (file:///C:/Users/acer/Downloads/cpsu-student-marketplace/apps/web/node_modules/vite/dist/node/chunks/dep-Cohbwjf9.js:42852:41)
+      at TransformPluginContext.error (file:///C:/Users/acer/Downloads/cpsu-student-marketplace/apps/web/node_modules/vite/dist/node/chunks/dep-Cohbwjf9.js:42849:16)
+      at normalizeUrl (file:///C:/Users/acer/Downloads/cpsu-student-marketplace/apps/web/node_modules/vite/dist/node/chunks/dep-Cohbwjf9.js:40826:23)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async file:///C:/Users/acer/Downloads/cpsu-student-marketplace/apps/web/node_modules/vite/dist/node/chunks/dep-Cohbwjf9.js:40945:37
+      at async Promise.all (index 13)
+      at async TransformPluginContext.transform (file:///C:/Users/acer/Downloads/cpsu-student-marketplace/apps/web/node_modules/vite/dist/node/chunks/dep-Cohbwjf9.js:40872:7)
+      at async EnvironmentPluginContainer.transform (file:///C:/Users/acer/Downloads/cpsu-student-marketplace/apps/web/node_modules/vite/dist/node/chunks/dep-Cohbwjf9.js:42647:18)
+      at async loadAndTransform (file:///C:/Users/acer/Downloads/cpsu-student-marketplace/apps/web/node_modules/vite/dist/node/chunks/dep-Cohbwjf9.js:36059:27)
+      at async viteTransformMiddleware (file:///C:/Users/acer/Downloads/cpsu-student-marketplace/apps/web/node_modules/vite/dist/node/chunks/dep-Cohbwjf9.js:37556:24)
+[2m5:18:02 PM[22m [31m[1m[vite][22m[39m [31mInternal server error: Failed to resolve import "./storefront-theme.css" from "src/main.tsx". Does the file exist?[39m
+  Plugin: [35mvite:import-analysis[39m
+  File: [36mC:/Users/acer/Downloads/cpsu-student-marketplace/apps/web/src/main.tsx[39m:11:7
+[33m  26 |  import { Admin } from "./pages-admin";
+  27 |  import "./styles.css";
+  28 |  import "./storefront-theme.css";
+     |          ^
+  29 |  const Ctx = createContext(null);
+  30 |  export const useMe = () => {[39m
+      at TransformPluginContext._formatLog (file:///C:/Users/acer/Downloads/cpsu-student-marketplace/apps/web/node_modules/vite/dist/node/chunks/dep-Cohbwjf9.js:42852:41)
+      at TransformPluginContext.error (file:///C:/Users/acer/Downloads/cpsu-student-marketplace/apps/web/node_modules/vite/dist/node/chunks/dep-Cohbwjf9.js:42849:16)
+      at normalizeUrl (file:///C:/Users/acer/Downloads/cpsu-student-marketplace/apps/web/node_modules/vite/dist/node/chunks/dep-Cohbwjf9.js:40826:23)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async file:///C:/Users/acer/Downloads/cpsu-student-marketplace/apps/web/node_modules/vite/dist/node/chunks/dep-Cohbwjf9.js:40945:37
+      at async Promise.all (index 13)
+      at async TransformPluginContext.transform (file:///C:/Users/acer/Downloads/cpsu-student-marketplace/apps/web/node_modules/vite/dist/node/chunks/dep-Cohbwjf9.js:40872:7)
+      at async EnvironmentPluginContainer.transform (file:///C:/Users/acer/Downloads/cpsu-student-marketplace/apps/web/node_modules/vite/dist/node/chunks/dep-Cohbwjf9.js:42647:18)
+      at async loadAndTransform (file:///C:/Users/acer/Downloads/cpsu-student-marketplace/apps/web/node_modules/vite/dist/node/chunks/dep-Cohbwjf9.js:36059:27)
+      at async viteTransformMiddleware (file:///C:/Users/acer/Downloads/cpsu-student-marketplace/apps/web/node_modules/vite/dist/node/chunks/dep-Cohbwjf9.js:37556:24)
+[2m5:18:03 PM[22m [31m[1m[vite][22m[39m [31mInternal server error: Failed to resolve import "./storefront-theme.css" from "src/main.tsx". Does the file exist?[39m
+  Plugin: [35mvite:import-analysis[39m
+  File: [36mC:/Users/acer/Downloads/cpsu-student-marketplace/apps/web/src/main.tsx[39m:11:7
+[33m  26 |  import { Admin } from "./pages-admin";
+  27 |  import "./styles.css";
+  28 |  import "./storefront-theme.css";
+     |          ^
+  29 |  const Ctx = createContext(null);
+  30 |  export const useMe = () => {[39m
+      at TransformPluginContext._formatLog (file:///C:/Users/acer/Downloads/cpsu-student-marketplace/apps/web/node_modules/vite/dist/node/chunks/dep-Cohbwjf9.js:42852:41)
+      at TransformPluginContext.error (file:///C:/Users/acer/Downloads/cpsu-student-marketplace/apps/web/node_modules/vite/dist/node/chunks/dep-Cohbwjf9.js:42849:16)
+      at normalizeUrl (file:///C:/Users/acer/Downloads/cpsu-student-marketplace/apps/web/node_modules/vite/dist/node/chunks/dep-Cohbwjf9.js:40826:23)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async file:///C:/Users/acer/Downloads/cpsu-student-marketplace/apps/web/node_modules/vite/dist/node/chunks/dep-Cohbwjf9.js:40945:37
+      at async Promise.all (index 13)
+      at async TransformPluginContext.transform (file:///C:/Users/acer/Downloads/cpsu-student-marketplace/apps/web/node_modules/vite/dist/node/chunks/dep-Cohbwjf9.js:40872:7)
+      at async EnvironmentPluginContainer.transform (file:///C:/Users/acer/Downloads/cpsu-student-marketplace/apps/web/node_modules/vite/dist/node/chunks/dep-Cohbwjf9.js:42647:18)
+      at async loadAndTransform (file:///C:/Users/acer/Downloads/cpsu-student-marketplace/apps/web/node_modules/vite/dist/node/chunks/dep-Cohbwjf9.js:36059:27)
+[2m5:18:03 PM[22m [31m[1m[vite][22m[39m Pre-transform error: Failed to resolve import "./storefront-theme.css" from "src/main.tsx". Does the file exist?
+  Plugin: [35mvite:import-analysis[39m
+  File: [36mC:/Users/acer/Downloads/cpsu-student-marketplace/apps/web/src/main.tsx[39m:11:7
+[33m  26 |  import { Admin } from "./pages-admin";
+  27 |  import "./styles.css";
+  28 |  import "./storefront-theme.css";
+     |          ^
+  29 |  const Ctx = createContext(null);
+  30 |  export const useMe = () => {[39m
+[2m5:18:03 PM[22m [31m[1m[vite][22m[39m Pre-transform error: Failed to resolve import "./storefront-theme.css" from "src/main.tsx". Does the file exist?
+  Plugin: [35mvite:import-analysis[39m
+  File: [36mC:/Users/acer/Downloads/cpsu-student-marketplace/apps/web/src/main.tsx[39m:11:7
+[33m  26 |  import { Admin } from "./pages-admin";
+  27 |  import "./styles.css";
+  28 |  import "./storefront-theme.css";
+     |          ^
+  29 |  const Ctx = createContext(null);
+  30 |  export const useMe = () => {[39m
+[2m5:18:03 PM[22m [31m[1m[vite][22m[39m [31mInternal server error: Failed to resolve import "./storefront-theme.css" from "src/main.tsx". Does the file exist?[39m
+  Plugin: [35mvite:import-analysis[39m
+  File: [36mC:/Users/acer/Downloads/cpsu-student-marketplace/apps/web/src/main.tsx[39m:11:7
+[33m  26 |  import { Admin } from "./pages-admin";
+  27 |  import "./styles.css";
+  28 |  import "./storefront-theme.css";
+     |          ^
+  29 |  const Ctx = createContext(null);
+  30 |  export const useMe = () => {[39m
+      at TransformPluginContext._formatLog (file:///C:/Users/acer/Downloads/cpsu-student-marketplace/apps/web/node_modules/vite/dist/node/chunks/dep-Cohbwjf9.js:42852:41)
+      at TransformPluginContext.error (file:///C:/Users/acer/Downloads/cpsu-student-marketplace/apps/web/node_modules/vite/dist/node/chunks/dep-Cohbwjf9.js:42849:16)
+      at normalizeUrl (file:///C:/Users/acer/Downloads/cpsu-student-marketplace/apps/web/node_modules/vite/dist/node/chunks/dep-Cohbwjf9.js:40826:23)
+      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+      at async file:///C:/Users/acer/Downloads/cpsu-student-marketplace/apps/web/node_modules/vite/dist/node/chunks/dep-Cohbwjf9.js:40945:37
+      at async Promise.all (index 13)
+      at async TransformPluginContext.transform (file:///C:/Users/acer/Downloads/cpsu-student-marketplace/apps/web/node_modules/vite/dist/node/chunks/dep-Cohbwjf9.js:40872:7)
+      at async EnvironmentPluginContainer.transform (file:///C:/Users/acer/Downloads/cpsu-student-marketplace/apps/web/node_modules/vite/dist/node/chunks/dep-Cohbwjf9.js:42647:18)
+      at async loadAndTransform (file:///C:/Users/acer/Downloads/cpsu-student-marketplace/apps/web/node_modules/vite/dist/node/chunks/dep-Cohbwjf9.js:36059:27)
+      at async viteTransformMiddleware (file:///C:/Users/acer/Downloads/cpsu-student-marketplace/apps/web/node_modules/vite/dist/node/chunks/dep-Cohbwjf9.js:37556:24)
+[2m5:20:10 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages-profile.tsx, /src/pages-public.tsx, /src/pages-account.tsx[22m
+[2m5:23:57 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/pages-public.tsx[22m
+[2m5:27:40 PM[22m [36m[1m[vite][22m[39m [90m[2m(client)[22m[39m [32mhmr update [39m[2m/src/storefront-theme.css[22m

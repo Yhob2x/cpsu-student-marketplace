@@ -14,7 +14,7 @@ There is no OpenAPI document; this file is the contract of record and must chang
 | Validation | Zod at the boundary; failures return `400 validation_error` with `issues`. |
 | Pagination | `page` (≥1, default 1), `pageSize` (1–50, default 20); list responses are `{ total, page, pageSize, items }`. |
 | Rate limits | 300 req/min/IP globally; `/auth/*` 30 per 15 min when `NODE_ENV=production`. |
-| CORS | `CORS_ORIGINS` allowlist, credentials enabled. |
+| CORS | `CORS_ORIGINS` allowlist, credentials enabled. In development the Expo web origins (`:8081`) are added automatically; production uses the allowlist only. |
 | Media | `/media/:id` streams the file with `X-Content-Type-Options: nosniff`. |
 
 ## 2. Health
@@ -40,7 +40,7 @@ There is no OpenAPI document; this file is the contract of record and must chang
 |---|---|---|---|
 | GET | `/campuses` | none | Active campuses: `id`, `code`, `name`. |
 | GET | `/categories` | none | `id`, `parentId`, `name`, `listingType`. Seeded only. |
-| GET | `/listings` | none | `q` (≤80), `categoryId`, `campusId`, `type`, `sellerType`, `minPrice`, `maxPrice`, `page`, `pageSize`. Published + approved store only. Order: `createdAt desc` (no `sort` yet). |
+| GET | `/listings` | none | `q` (≤80), `categoryId`, `campusId`, `type`, `sellerType`, `minPrice`, `maxPrice`, `sort` (`newest` default, `price_asc`, `price_desc`), `page`, `pageSize`. Published + approved store only. An unknown `sort` value is a `400 validation_error`. |
 | GET | `/listings/popular` | none | Up to 8 published listings ordered by saved count (those with ≥1 save). |
 | GET | `/listings/:id` | optional | Published listings are public. A draft is visible only to its owner or a reviewer in scope; anyone else gets `404`. Owners/reviewers also receive `status`. |
 | GET | `/seller-profiles/:id` | none | Approved store only: name, description, type, campus, badge text, published listings. |

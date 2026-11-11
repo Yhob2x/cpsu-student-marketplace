@@ -25,7 +25,8 @@ const upload = multer({
 const listingBody = z.object({
   type: z.enum(['physical_product', 'service']), categoryId: z.number().int(), title: z.string().trim().min(3).max(120),
   description: z.string().trim().min(10).max(3000), price: z.number().positive().max(1_000_000), priceBasis: z.string().max(40).default('per item'),
-  availability: z.string().max(40).default('available'), handoffNote: z.string().max(200).optional(),
+  condition: z.enum(['new', 'like_new', 'good', 'fair']).nullable().optional(),
+  handoffNote: z.string().max(200).optional(),
 });
 
 async function verifiedCampus(userId: number) {
@@ -52,6 +53,9 @@ r.get('/listings', async (req, res) =>
 
 r.post('/listings', async (req, res) => {
   const b = listingBody.parse(req.body);
+  if (b.type === 'service' && b.condition != null) throw new HttpError(400, 'condition_not_applicable');
+  if (req.body && ('availability' in req.body || 'availabilityState' in req.body || 'deletedAt' in req.body))
+    throw new HttpError(400, 'invalid_availability_update');
   const store = await prisma.sellerProfile.findFirst({ where: { ownerUserId: req.user!.id, approvalStatus: 'approved' } });
   if (!store) throw new HttpError(403, 'no_approved_store');
   const l = await prisma.listing.create({ data: { ...b, sellerProfileId: store.id, campusId: store.campusId, status: 'draft' } });
@@ -60,15 +64,22 @@ r.post('/listings', async (req, res) => {
 
 r.patch('/listings/:id', async (req, res) => {
   const l = await ownListing(req.user!.id, Number(req.params.id));
+  if (l.deletedAt) throw new HttpError(409, 'listing_deleted');
   if (['pending_review', 'suspended', 'rejected'].includes(l.status)) throw new HttpError(409, 'not_editable');
+  if (req.body && ('availability' in req.body || 'availabilityState' in req.body || 'deletedAt' in req.body))
+    throw new HttpError(400, 'invalid_availability_update');
   const patch = listingBody.partial().parse(req.body);
-  // Material edits to a published listing pull it back out of public view until re-reviewed.
+  const type = patch.type ?? l.type;
+  if (type === 'service' && patch.condition != null) throw new HttpError(400, 'condition_not_applicable');
+  // Product condition is a material detail; changes to approved listings require review again.
   const status = l.status === 'published' && isMaterialChange(patch) ? 'draft' : l.status;
-  res.json(await prisma.listing.update({ where: { id: l.id }, data: { ...patch, status } }));
+  res.json(await prisma.listing.update({ where: { id: l.id },
+    data: { ...patch, ...(type === 'service' && { condition: null }), status } }));
 });
 
 r.post('/listings/:id/media', upload.single('image'), async (req, res) => {
   const l = await ownListing(req.user!.id, Number(req.params.id));
+  if (l.deletedAt) { if (req.file) fs.unlink(req.file.path, () => {}); throw new HttpError(409, 'listing_deleted'); }
   if (!req.file) throw new HttpError(400, 'invalid_image', 'JPEG, PNG or WebP up to 3 MB');
   if (l.media.length >= 6) { fs.unlink(req.file.path, () => {}); throw new HttpError(409, 'too_many_images'); }
   const m = await prisma.listingMedia.create({ data: { listingId: l.id, mediaPath: path.basename(req.file.path), mimeType: req.file.mimetype, position: l.media.length } });
@@ -77,13 +88,68 @@ r.post('/listings/:id/media', upload.single('image'), async (req, res) => {
 
 r.post('/listings/:id/submit', async (req, res) => {
   const l = await ownListing(req.user!.id, Number(req.params.id));
+  if (l.deletedAt) throw new HttpError(409, 'listing_deleted');
   if (!['draft', 'changes_requested'].includes(l.status)) throw new HttpError(409, 'not_submittable');
   if (!await verifiedCampus(req.user!.id)) throw new HttpError(403, 'affiliation_not_verified');
   const { flags } = await evaluateListing(l, l.media.length);
   if (flags.includes('restricted_prohibited')) throw new HttpError(422, 'category_prohibited', 'This category is not allowed on this campus.');
   if (flags.includes('invalid_price') || flags.includes('missing_images')) throw new HttpError(422, 'incomplete_listing', flags.join(','));
+  if (l.type === 'physical_product' && !l.condition) throw new HttpError(422, 'condition_required', 'Choose an item condition before submitting for review.');
+  if (l.availabilityState !== 'available') throw new HttpError(409, 'listing_unavailable');
   const updated = await prisma.listing.update({ where: { id: l.id }, data: { status: 'pending_review', flags } });
   await audit(req.user!.id, 'listing.submit', 'listing', l.id, { flags });
   res.json(updated);
 });
+
+// Change availability without changing moderation status. Sold is terminal: a
+// new product listing must be created if a distinct item is later offered.
+r.patch('/listings/:id/availability', async (req, res) => {
+  const { availability } = z.object({
+    availability: z.enum(['available', 'reserved', 'sold']),
+  }).strict().parse(req.body);
+  const l = await ownListing(req.user!.id, Number(req.params.id));
+  if (l.deletedAt) throw new HttpError(409, 'listing_deleted');
+  if (l.status !== 'published') throw new HttpError(409, 'not_published');
+  if (l.availabilityState === 'sold' && availability !== 'sold') throw new HttpError(409, 'sold_is_final');
+  if (l.availabilityState === availability) return res.json(l);
+
+  const updated = await prisma.$transaction(async tx => {
+    const result = await tx.listing.updateMany({ where: {
+      id: l.id, deletedAt: null, status: 'published', availabilityState: l.availabilityState,
+    }, data: { availabilityState: availability, availability } });
+    if (result.count !== 1) throw new HttpError(409, 'listing_changed');
+    await tx.auditLog.create({ data: {
+      actorUserId: req.user!.id, action: 'listing.availability_changed', targetType: 'listing',
+      targetId: l.id, metadata: { from: l.availabilityState, to: availability },
+    } });
+    return tx.listing.findUniqueOrThrow({ where: { id: l.id } });
+  });
+  const saves = await prisma.savedListing.findMany({
+    where: { listingId: l.id, userId: { not: req.user!.id } }, select: { userId: true },
+  });
+  if (saves.length) await prisma.notification.createMany({
+    data: saves.map(s => ({ userId: s.userId, type: 'listing.availability_changed',
+      payload: { listingId: l.id, title: l.title, availability } })),
+  });
+  res.json(updated);
+});
+
+// Soft deletion hides a listing but retains media, reports, reviews, saved
+// references, audit records, and existing conversation history.
+r.delete('/listings/:id', async (req, res) => {
+  const l = await ownListing(req.user!.id, Number(req.params.id));
+  if (l.deletedAt) return res.status(204).end();
+  await prisma.$transaction(async tx => {
+    const updated = await tx.listing.updateMany({
+      where: { id: l.id, deletedAt: null }, data: { deletedAt: new Date() },
+    });
+    if (updated.count !== 1) throw new HttpError(409, 'listing_changed');
+    await tx.auditLog.create({ data: {
+      actorUserId: req.user!.id, action: 'listing.soft_deleted', targetType: 'listing',
+      targetId: l.id, metadata: { status: l.status, availability: l.availabilityState },
+    } });
+  });
+  res.status(204).end();
+});
+
 export default r;

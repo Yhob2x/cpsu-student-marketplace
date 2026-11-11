@@ -1,5 +1,11 @@
 # Database design
 
+**Development migration update (2026-11-11):** Local Prisma now reports four applied migrations, including `20261111160700_stage1_integrity` (19 FKs and discovery index) and `20261111161500_wp2_listing_states` (canonical enum `availabilityState`, nullable enum `condition`, `deletedAt` soft delete). Legacy availability column remains for compatibility. 21 existing listings are available; 13 products lack condition and must provide it before resubmission. See `docs/WP2_IMPLEMENTATION_REPORT.md`.
+
+**Stage 1 safety evidence (2026-11-11):** A real local development-data backup/restore rehearsal verified 20 tables (402 rows), identical content checksums, and successful application of the 19-FK plus one index candidate against a disposable restored copy. Canonical schema and active migrations are unchanged; see `docs/STAGE1_RESTORE_DRILL_REPORT.md`.
+
+**2026-11-11 read-only database check:** The live local development schema was audited using `bun run db:integrity-preflight`. It has 19 missing FK constraints among 19 selected candidates, 0 orphan references across those checks, and no four-column discovery index. This expands the earlier ten-relationship *test database* audit. See `docs/STAGE1_DATABASE_INTEGRITY_APPROVAL.md` for migration readiness; none of the changes are approved or applied.
+
 **Source of truth for the schema:** `apps/api/prisma/schema.prisma`.
 **Migrations:** `apps/api/prisma/migrations/20261110063101_init` and `20261110090354_message_status` (adds `deliveredAt`, `seenAt`).
 **Engine:** MySQL 8, `utf8mb4_unicode_ci`. All tables use an auto-increment integer surrogate key.

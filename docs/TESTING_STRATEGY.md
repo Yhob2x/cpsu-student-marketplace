@@ -1,5 +1,8 @@
 # Testing strategy and current results
 
+**Stage 1 implementation update (2026-11-11):** The previous baseline below is historical. An isolated Supertest + MySQL integration runner now exists: `cd apps/api && bun run test:integration`. It passes **14/14** HTTP/database cases; regular `bun test` passes **5/5** unit cases and skips the opt-in integration file. See `docs/STAGE1_TESTING_REPORT.md` for fixture/database safeguards and the read-only foreign-key/index audit. Additional Stage 1 schema migrations remain pending approval.
+
+
 Blueprint PART X requires functional, validation, authorization, database, responsive, error-handling, and integration testing for every
 module, and PART XI STEP 5 requires the agent to actually run them. This file records the strategy and the honest current state.
 

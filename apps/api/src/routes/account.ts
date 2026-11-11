@@ -29,17 +29,30 @@ r.post('/notifications/read', async (req, res) => {
   await prisma.notification.updateMany({ where: { userId: req.user!.id, readAt: null }, data: { readAt: new Date() } });
   res.status(204).end();
 });
+r.post('/notifications/:id/read', async (req, res) => {
+  const id = Number(req.params.id);
+  if (!Number.isInteger(id)) throw new HttpError(400, 'invalid_id');
+  // updateMany scoped to the owner: another student's notification simply matches nothing.
+  await prisma.notification.updateMany({ where: { id, userId: req.user!.id, readAt: null }, data: { readAt: new Date() } });
+  res.status(204).end();
+});
 
 r.get('/saved', async (req, res) => {
   const rows = await prisma.savedListing.findMany({
-    where: { userId: req.user!.id, listing: { status: 'published' } },
+    where: { userId: req.user!.id, listing: { status: 'published', deletedAt: null,
+      seller: { approvalStatus: 'approved' } } },
     include: { listing: { include: { category: true, campus: true, seller: true, media: true } } }, orderBy: { createdAt: 'desc' },
   });
   res.json(rows.map(s => publicListing(s.listing)));
 });
 r.put('/saved/:listingId', async (req, res) => {
   const listingId = Number(req.params.listingId);
-  if (!await prisma.listing.findFirst({ where: { id: listingId, status: 'published' } })) throw new HttpError(404, 'not_found');
+  const listing = await prisma.listing.findFirst({ where: {
+    id: listingId, status: 'published', deletedAt: null, seller: { approvalStatus: 'approved' },
+  }, include: { seller: true } });
+  if (!listing) throw new HttpError(404, 'not_found');
+  if (listing.seller.ownerUserId === req.user!.id) throw new HttpError(400, 'own_listing');
+  if (listing.availabilityState !== 'available') throw new HttpError(409, 'listing_unavailable');
   await prisma.savedListing.upsert({ where: { userId_listingId: { userId: req.user!.id, listingId } }, create: { userId: req.user!.id, listingId }, update: {} });
   res.status(204).end();
 });

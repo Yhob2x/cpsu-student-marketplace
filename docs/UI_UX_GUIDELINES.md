@@ -3,44 +3,53 @@
 Blueprint PART VIII is the requirement. This file records the tokens, components, navigation, and accessibility behavior that exist, so new
 work reuses them instead of inventing parallel patterns (RULE 07).
 
-## 1. Design direction
+## 1. Design direction — approved white / forest green storefront (11 November 2026)
 
-A friendly, low-chrome community marketplace: warm paper background, deep green action color, one amber accent reserved for price tags and
-attention. No gradients, no decorative illustration, no dashboard widgets. Web and mobile share the same palette and type intent, but not
-component code.
+The web interface uses one **light-only** theme based on the approved storefront reference: predominantly white
+backgrounds, soft neutral product surfaces, clean listing cards, restrained typography, and **deep forest green instead
+of black** on the announcement bar, primary actions, active navigation, seller call-to-action, and footer.
+The design is minimalist, mobile-first, and student-focused — not a shoe shop. No carts, discounts, star ratings,
+delivery claims, payment, fabricated testimonials, or newsletter signup have been added.
 
-## 2. Tokens
+Implementation: core colors in apps/web/src/styles.css, reference-inspired presentation overrides in
+apps/web/src/storefront-theme.css, and real marketplace content in apps/web/src/pages-public.tsx.
+The web uses a single color scheme: light. The former Auto/Light/Dark toggle, OS-based dark CSS overrides,
+persisted theme-loading script, and dark-specific browser metadata have been removed.
+The native Expo app was not modified by this web-specific request and retains its existing theme support.
 
-**Web** — CSS custom properties in `apps/web/src/styles.css`, with a full dark override under `prefers-color-scheme: dark`.
+## 2. Design tokens — current web
 
-| Token | Light | Dark | Use |
-|---|---|---|---|
-| `--ink` | `#1b2838` | `#eef2ef` | body text, header background |
-| `--ink-soft` | `#52606f` | `#a9b5b0` | secondary text (`.muted`) |
-| `--chalk` | `#f4f6f3` | `#121a17` | page background |
-| `--paper` | `#ffffff` | `#1a2420` | cards, panels, inputs |
-| `--leaf` | `#1d6b50` | `#5fc29c` | primary action, links |
-| `--leaf-dark` | `#124a37` | `#8fdcbc` | reserved |
-| `--mango` | `#f5a623` | `#f5a623` | price tag, focus ring |
-| `--mango-soft` | `#fdebc6` | `#3a2f14` | image placeholder, own message bubble, flags |
-| `--line` | `#d9dfd9` | `#2e3b36` | borders |
-| `--danger` | `#b3261e` | `#ff8a80` | destructive actions, errors |
-| `--font-display` | Bricolage Grotesque → system-ui | same | h1–h3, brand, price tag |
-| `--font-body` | Public Sans → system-ui | same | everything else |
+| Token | Hex value | Purpose |
+|---|---|---|
+| --forest | #073B2A | Dark green strip, banners, footer |
+| --pine, --leaf | #10543A | Actions and links |
+| --sage | #527866 | Supporting greenery |
+| --mint | #D5E8DA | Soft green accent |
+| --gold, --mango | #E0BB46 | Price chips and limited functional emphasis |
+| --ink | #122A1F | Deep green-black text |
+| --ink-soft | #4B6356 | Secondary text |
+| --chalk, --paper | #FFFFFF | Page and card backgrounds |
+| --mango-soft | #EDF4EF | Pale green interaction backgrounds |
+| --line | #DCE6DE | Thin neutral borders |
+| --on-leaf | #FFFFFF | Labels on primary actions |
+| --danger | #A12A1C | Validation and destructive actions |
+| --focus-green | #086043 | Keyboard focus on light surfaces |
+| --surface-soft | #F5F7F5 | Category cards and filters |
+| --surface-neutral | #F2F4F2 | Hero and product placeholders |
 
-**Mobile** — `apps/mobile/src/theme.ts` exposes `useTheme()` returning `{ ink, soft, bg, card, line, leaf, mango, danger, onLeaf }` for light
-and dark. Note: mobile has **no** `mangoSoft` token; existing screens hard-code `#fdebc6` for the image placeholder and the own-message bubble,
-which is the one place mobile drifts from the web palette.
+Typefaces remain Plus Jakarta Sans for headings and Inter for body text, with system fallbacks.
+Dark-green sections use light keyboard focus outlines. No new dependencies or APIs were introduced.
 
 ## 3. Layout
 
 | Concern | Web | Mobile |
 |---|---|---|
 | Max content width | `.wrap` 1100 px, 1 rem gutters | full width, 12–16 px padding |
-| Listing grid | `.grid` auto-fill min 220 px; `.rail` horizontal scroll-snap 230 px cards | `FlatList` rows, 84 px thumbnail |
-| Sticky navigation | fixed `.tabbar` (mobile-first) + top header with inline links | bottom tab navigator |
+| Listing grid | `.grid` auto-fill min 220 px; `.rail` horizontal scroll-snap 230 px cards with category badge and price tag | two-column `ListingCard` grid (`CardGrid` for sections, `numColumns={2}` for lists) |
+| Navigation | five-item fixed bottom tab bar on widths ≤ 860 px; desktop uses a masthead and primary nav row | bottom tab navigator |
+| Top header | Announcement strip (`--forest`) + light masthead (brand, centred search, activity icons, theme control) + nav row with an "All listings" pill; below 860 px the strip, search, icon row and nav row collapse so the tab bar carries navigation | `Masthead`: strip, brand row and a search entry that opens Explore |
 | Safe areas | `env(safe-area-inset-*)` on header and tab bar | `SafeAreaProvider` |
-| Breakpoints | none defined; layout is fluid (`clamp()` for h1) | n/a |
+| Breakpoints | fluid typography, tested at 320, 360, 390, 768, 1024 and 1440 px | n/a |
 | Admin | same shell, stacked panels | none (no admin in the mobile app) |
 
 ## 4. Components to reuse
@@ -49,7 +58,7 @@ which is the one place mobile drifts from the web palette.
 |---|---|---|
 | Button | `.btn`, `.btn.ghost`, `.btn.danger`, `:disabled` at 55% opacity | `Btn` (`kind="ghost"`, 48 px min height) |
 | Input | `.input`/`select`/`textarea` base styles, 44 px min height | `Field` wrapper |
-| Card | `.card` + `.card .img` + `.card .body` | `ListingRow` |
+| Card | `.card` + `.card .img` (category badge) + `.card .body` + `.card-foot` (price tag + arrow) | `ListingCard` (photo, badge, seller, campus, price tag, arrow) |
 | Price | `.tag` (notched clip-path label) | inline amber chip |
 | Status badge | `.status` + status modifier (`published`, `pending_review`, `rejected`, `suspended`) | plain text status |
 | Flag chip | `.flag` | none |
@@ -59,11 +68,21 @@ which is the one place mobile drifts from the web palette.
 | Empty state | `.muted` sentence naming the next action | `Empty` component |
 | Message bubble | `.msg` / `.msg.mine` | inline mirror of the same shape |
 | Category chip | `.chip` | `Chip` (shared by Home and Explore) |
+| Section head | `.sec-head` — title + "See all" link | `SectionHead` |
+| Category rail | `.cat-rail` / `.cat` / `.cat-ico` circular tile | `CatTile` in a horizontal `ScrollView` |
+| Hero | `.hero`, `.hero-art`, `.shot`, `.hero-sticker`, `.hero-trust` | `Hero` card with a single browse action |
+| Promo tile | `.promo`, `.promo-a|b|c` | `Promo` (stacked, colour passed as `tone`) |
+| Seller call to action | `.cta-band` + `.btn.gold` | forest panel with a gold `Pressable` |
+| Trust strip | `.trust`, four icon items | four `✓` lines |
+| Footer | `.site-foot`, `.foot-grid`, `.foot-base` | `SiteFooter` (brand, blurb, links, copyright) |
 | Page header | `.page-head` (title + supporting line + trailing action) | inline heading |
 | Notification row | `.notif`, `.notif.unread`, `.dot` | inline card with a colored border when unread |
 | Unread badge | `.nav-badge` in the header "Alerts" link | count text inside Profile |
 | Profile layout | `.profile-grid` (auto-fit 290 px), `.facts`, `.quick` | stacked sections |
 | Labelled field | `label.field` | `Field` + adjacent `Text` |
+| Filter grid | `.filters` (auto-fit 150 px, `align-items: end`) with one `.field` per control | `Chip` row |
+| Result bar | `.results` — live-region count on the left, sort `.field` on the right | count implied by the list |
+| Empty state | `.empty` dashed panel with a heading, one sentence, and a reset action | `Empty` component |
 
 **Missing shared components** the blueprint asks for (§8.3): modal dialog, table, and a toast/feedback primitive (success and errors are
 currently inline `role="status"` / `role="alert"` text). Do not add a UI kit dependency without approval; extend the CSS layer.
@@ -72,8 +91,8 @@ currently inline `role="status"` / `role="alert"` text). Do not add a UI kit dep
 
 | Required | Web | Mobile |
 |---|---|---|
-| Home | Header brand + tab | Home tab: intro, search entry, category chips, recently added, student services |
-| Explore | Tab | Explore tab: search + category chips |
+| Home | Header brand + tab; hero, category rail, top picks, promo tiles, fresh listings, student services, how it works, seller CTA, trust strip, footer | Home tab, same order: masthead + search entry, hero, category rail, two-column rails, promos, services, how it works, CTA, trust strip, footer |
+| Explore | Tab; filter grid (campus, category, type, min/max price), live result count, three sort orders, clear-filters, purposeful empty state | Explore tab: search + category chips |
 | Sell / Offer | "Sell" tab → `/dashboard` | **Absent** — publishing stays web-only (KI-027) |
 | Messages | "Messages" tab → `/inquiries` | Messages tab |
 | Profile | Profile tab → `/profile`: identity, affiliation, account settings, links | Profile tab: identity, notifications, my listings, saved, sign out |

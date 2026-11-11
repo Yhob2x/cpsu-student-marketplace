@@ -1,0 +1,325 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserStatus {
+  active
+  suspended
+}
+
+enum VerificationStatus {
+  unverified
+  pending
+  verified
+  rejected
+  suspended
+}
+
+enum Role {
+  campus_reviewer
+  university_admin
+  system_admin
+  establishment
+}
+
+enum SellerType {
+  student
+  establishment
+}
+
+enum ApprovalStatus {
+  pending
+  approved
+  rejected
+  suspended
+}
+
+enum ListingType {
+  physical_product
+  service
+}
+
+enum ListingStatus {
+  draft
+  pending_review
+  changes_requested
+  published
+  rejected
+  suspended
+}
+
+enum ReviewDecision {
+  approved
+  changes_requested
+  rejected
+}
+
+enum PolicyAction {
+  review
+  prohibit
+}
+
+enum InquiryStatus {
+  open
+  closed
+}
+
+enum HandoffMethod {
+  campus_pickup
+  scheduled_meeting
+  seller_delivery
+  off_campus
+  digital_delivery
+  appointment
+}
+
+enum HandoffStatus {
+  proposed
+  agreed
+  completed
+  cancelled
+  not_confirmed
+}
+
+enum ReportStatus {
+  open
+  reviewing
+  resolved
+  dismissed
+}
+
+model Campus {
+  id     Int     @id @default(autoincrement())
+  code   String  @unique
+  name   String
+  active Boolean @default(true)
+
+  affiliations Affiliation[]
+  listings     Listing[]
+}
+
+model Category {
+  id              Int         @id @default(autoincrement())
+  parentId        Int?
+  name            String
+  listingType     ListingType
+  policyRiskLevel Int         @default(0)
+
+  listings Listing[]
+}
+
+model User {
+  id           Int        @id @default(autoincrement())
+  email        String     @unique
+  displayName  String
+  passwordHash String
+  status       UserStatus @default(active)
+
+  affiliations   Affiliation[]
+  roles          UserRole[]
+  sellerProfiles SellerProfile[]
+  inquiryMessages InquiryMessage[]
+}
+
+model Affiliation {
+  id                 Int                 @id @default(autoincrement())
+  userId             Int
+  campusId           Int
+  verificationStatus VerificationStatus   @default(pending)
+  verifiedAt         DateTime?
+  expirationAt       DateTime?
+
+  user   User   @relation(fields: [userId], references: [id])
+  campus Campus @relation(fields: [campusId], references: [id])
+
+  @@unique([userId, campusId])
+}
+
+model UserRole {
+  id       Int   @id @default(autoincrement())
+  userId   Int
+  role     Role
+  campusId Int?
+
+  user User @relation(fields: [userId], references: [id])
+}
+
+model Session {
+  id               Int       @id @default(autoincrement())
+  userId           Int
+  refreshTokenHash String    @unique
+  device           String    @default("")
+  expiresAt        DateTime
+  revokedAt        DateTime?
+  createdAt        DateTime  @default(now())
+}
+
+model CampusPolicy {
+  id            Int      @id @default(autoincrement())
+  campusId      Int
+  version       Int      @default(1)
+  effectiveDate DateTime
+  approvedBy    String
+  documentRef   String
+
+  restrictedCategories RestrictedCategory[]
+
+  @@unique([campusId, version])
+}
+
+model RestrictedCategory {
+  id              Int          @id @default(autoincrement())
+  campusId        Int
+  categoryId      Int
+  policyAction    PolicyAction @default(review)
+  policyVersionId Int?
+
+  policy CampusPolicy? @relation(fields: [policyVersionId], references: [id])
+
+  @@unique([campusId, categoryId])
+}
+
+model SellerProfile {
+  id              Int            @id @default(autoincrement())
+  ownerUserId     Int
+  campusId        Int
+  storeName       String
+  description     String         @db.Text
+  sellerType      SellerType     @default(student)
+  approvalStatus  ApprovalStatus @default(pending)
+  createdAt       DateTime       @default(now())
+
+  owner          User            @relation(fields: [ownerUserId], references: [id])
+  listings       Listing[]
+  inquiryThreads InquiryThread[]
+}
+
+model Listing {
+  id             Int           @id @default(autoincrement())
+  sellerProfileId Int
+  campusId       Int
+  categoryId     Int
+  type           ListingType
+  title          String
+  description    String         @db.Text
+  price          Decimal        @db.Decimal(10, 2)
+  priceBasis     String         @default("per item")
+  currency       String         @default("PHP")
+  availability   String         @default("available")
+  handoffNote    String?        @db.VarChar(200)
+  status         ListingStatus @default(draft)
+  flags          Json?
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+
+  seller        SellerProfile   @relation(fields: [sellerProfileId], references: [id])
+  campus        Campus          @relation(fields: [campusId], references: [id])
+  category      Category        @relation(fields: [categoryId], references: [id])
+  media         ListingMedia[]
+  threads       InquiryThread[]
+  savedListings SavedListing[]
+}
+
+model ListingMedia {
+  id        Int    @id @default(autoincrement())
+  listingId Int
+  mediaPath String
+  mimeType  String
+  position  Int    @default(0)
+
+  listing Listing @relation(fields: [listingId], references: [id])
+}
+
+model ListingReview {
+  id              Int            @id @default(autoincrement())
+  listingId       Int
+  reviewerId      Int
+  decision        ReviewDecision
+  reason          String         @db.Text
+  policyVersionId Int?
+  createdAt       DateTime       @default(now())
+}
+
+model InquiryThread {
+  id              Int           @id @default(autoincrement())
+  listingId       Int
+  buyerUserId     Int
+  sellerProfileId Int
+  status          InquiryStatus @default(open)
+  createdAt       DateTime      @default(now())
+
+  listing  Listing         @relation(fields: [listingId], references: [id])
+  seller   SellerProfile   @relation(fields: [sellerProfileId], references: [id])
+  messages InquiryMessage[]
+
+  @@unique([listingId, buyerUserId])
+}
+
+model InquiryMessage {
+  id           Int      @id @default(autoincrement())
+  threadId     Int
+  authorUserId Int
+  body         String   @db.Text
+  deliveredAt  DateTime?
+  seenAt       DateTime?
+  createdAt    DateTime @default(now())
+
+  thread InquiryThread @relation(fields: [threadId], references: [id])
+  author User          @relation(fields: [authorUserId], references: [id])
+}
+
+model Handoff {
+  id              Int           @id @default(autoincrement())
+  inquiryThreadId Int           @unique
+  method          HandoffMethod
+  timeWindow      String
+  generalLocation String
+  status          HandoffStatus @default(proposed)
+  createdAt       DateTime      @default(now())
+}
+
+model SavedListing {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  listingId Int
+  createdAt DateTime @default(now())
+
+  listing Listing @relation(fields: [listingId], references: [id])
+
+  @@unique([userId, listingId])
+}
+
+model Report {
+  id                 Int          @id @default(autoincrement())
+  reporterUserId     Int
+  listingId          Int?
+  sellerProfileId    Int?
+  reason             String       @db.Text
+  status             ReportStatus @default(open)
+  assignedReviewerId Int?
+  createdAt          DateTime     @default(now())
+}
+
+model AuditLog {
+  id          Int      @id @default(autoincrement())
+  actorUserId Int?
+  action      String
+  targetType  String
+  targetId   Int?
+  metadata    Json?
+  createdAt   DateTime @default(now())
+}
+
+model Notification {
+  id        Int       @id @default(autoincrement())
+  userId    Int
+  type      String
+  payload   Json?
+  readAt    DateTime?
+  createdAt DateTime  @default(now())
+}

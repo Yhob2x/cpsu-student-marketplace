@@ -1,0 +1,14 @@
+[Unit]
+Description=CPSU Student Marketplace API
+After=network.target mysql.service
+
+[Service]
+WorkingDirectory=/opt/cpsu-student-marketplace/apps/api
+EnvironmentFile=/etc/cpsu-marketplace.env
+ExecStart=/usr/bin/node dist/index.js
+Restart=on-failure
+User=marketplace
+NoNewPrivileges=true
+
+[Install]
+WantedBy=multi-user.target

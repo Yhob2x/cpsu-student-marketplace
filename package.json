@@ -1,0 +1,14 @@
+{
+  "name": "cpsu-student-marketplace",
+  "private": true,
+  "version": "1.0.0",
+  "workspaces": ["apps/*"],
+"scripts": {
+  "api": "bun --filter @cpsu/api dev",
+  "web": "bun --filter @cpsu/web dev",
+  "mobile": "bun --filter @cpsu/mobile start",
+  "db:migrate": "bun --filter @cpsu/api db:migrate",
+  "db:seed": "bun --filter @cpsu/api db:seed",
+  "test": "bun --filter @cpsu/api test"
+}
+}

@@ -25,6 +25,14 @@ function Field(p: React.ComponentProps<typeof TextInput>) {
 }
 const Empty = ({ text }: { text: string }) => { const t = useTheme(); return <Text style={{ color: t.soft, padding: 24, textAlign: 'center' }}>{text}</Text>; };
 
+// Category filter chip, shared by Home and Explore so both surfaces look the same.
+function Chip({ label, active, onPress }: { label: string; active: boolean; onPress: () => void }) {
+  const t = useTheme();
+  return <Pressable onPress={onPress} accessibilityRole="button" accessibilityState={{ selected: active }}
+    style={{ minHeight: 44, justifyContent: 'center', paddingHorizontal: 14, borderRadius: 22, borderWidth: 1, borderColor: t.leaf, backgroundColor: active ? t.leaf : 'transparent' }}>
+    <Text style={{ color: active ? t.onLeaf : t.leaf, fontWeight: '600' }}>{label}</Text></Pressable>;
+}
+
 function ListingRow({ l, onPress }: { l: any; onPress: () => void }) {
   const t = useTheme();
   return <Pressable onPress={onPress} accessibilityRole="button" accessibilityLabel={`${l.title}, ${peso(l.price)}`}
@@ -41,29 +49,72 @@ function ListScreen({ path, empty, nav, query }: { path: string; empty: string; 
   const load = async () => { setBusy(true); try { const r = await api(path + (query ? `${path.includes('?') ? '&' : '?'}q=${encodeURIComponent(query)}` : '')); setRows(r.items ?? r); setErr(''); } catch (e) { setErr(explain(e)); } setBusy(false); };
   useEffect(() => { const id = setTimeout(load, 250); return () => clearTimeout(id); }, [path, query]);
   if (!rows && !err) return <ActivityIndicator style={{ marginTop: 40 }} />;
-  return <FlatList data={rows ?? []} keyExtractor={l => String(l.id)} contentContainerStyle={{ padding: 12 }}
+  return <FlatList style={{ backgroundColor: t.bg }} data={rows ?? []} keyExtractor={l => String(l.id)} contentContainerStyle={{ padding: 12 }}
     refreshControl={<RefreshControl refreshing={busy} onRefresh={load} />}
     ListEmptyComponent={<Empty text={err || empty} />}
     renderItem={({ item }) => <ListingRow l={item} onPress={() => nav.navigate('Listing', { id: item.id })} />} />;
 }
 
-function Explore({ navigation }: any) {
+// Home: the landing surface the blueprint asks for first — search entry, categories, newest, services.
+function Home({ navigation }: any) {
+  const t = useTheme();
+  const [recent, setRecent] = useState<any[] | null>(null);
+  const [services, setServices] = useState<any[]>([]);
+  const [cats, setCats] = useState<any[]>([]);
+  const [err, setErr] = useState('');
+  const heading = { color: t.ink, fontSize: 18, fontWeight: '700' as const, marginTop: 16, marginBottom: 4 };
+
+  const load = async () => {
+    try {
+      const [a, b, c] = await Promise.all([api('/listings?pageSize=12'), api('/listings?type=service&pageSize=6'), api('/categories')]);
+      setRecent(a.items); setServices(b.items); setCats(c); setErr('');
+    } catch (e) { setErr(explain(e)); setRecent([]); }
+  };
+  useEffect(() => { load(); }, []);
+
+  if (recent === null && !err) return <ActivityIndicator style={{ marginTop: 40 }} />;
+
+  return <FlatList style={{ backgroundColor: t.bg }} data={recent ?? []} keyExtractor={l => String(l.id)} contentContainerStyle={{ padding: 12 }}
+    ListHeaderComponent={<View>
+      <Text style={{ color: t.ink, fontSize: 24, fontWeight: '800' }}>Made and offered by CPSU students</Text>
+      <Text style={{ color: t.soft, marginTop: 4 }}>Browse goods, pre-loved items and student services. Payment and pickup are arranged directly with the seller.</Text>
+      <Pressable onPress={() => navigation.navigate('Explore')} accessibilityRole="button" accessibilityLabel="Search listings"
+        style={{ minHeight: 48, justifyContent: 'center', paddingHorizontal: 12, marginTop: 12, borderRadius: 8, borderWidth: 1, borderColor: t.line, backgroundColor: t.card }}>
+        <Text style={{ color: t.soft }}>Search products and services</Text>
+      </Pressable>
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ flexGrow: 0, marginTop: 12 }} contentContainerStyle={{ gap: 8 }}>
+        {cats.map(c => <Chip key={c.id} label={c.name} active={false} onPress={() => navigation.navigate('Explore', { categoryId: c.id })} />)}
+      </ScrollView>
+      <Text style={heading}>Recently added</Text>
+    </View>}
+    ListEmptyComponent={<Empty text={err || 'No listings yet — check back soon.'} />}
+    renderItem={({ item }) => <ListingRow l={item} onPress={() => navigation.navigate('Listing', { id: item.id })} />}
+    ListFooterComponent={services.length > 0 ? <View>
+      <Text style={heading}>Student services</Text>
+      {services.map(s => <ListingRow key={s.id} l={s} onPress={() => navigation.navigate('Listing', { id: s.id })} />)}
+    </View> : null} />;
+}
+
+function Explore({ navigation, route }: any) {
   const t = useTheme(); const [q, setQ] = useState('');
-  return <View style={{ flex: 1, backgroundColor: t.bg }}><View style={{ padding: 12, paddingBottom: 0 }}><Field placeholder="Search listings" value={q} onChangeText={setQ} accessibilityLabel="Search listings" /></View>
-    <ListScreen path="/listings" query={q} nav={navigation} empty="No listings match yet. Try another search." /></View>;
-}
-function Categories({ navigation }: any) {
-  const t = useTheme(); const [cats, setCats] = useState<any[]>([]); const [sel, setSel] = useState<number | null>(null);
+  const [cats, setCats] = useState<any[]>([]); const [cat, setCat] = useState<number | null>(route?.params?.categoryId ?? null);
   useEffect(() => { api('/categories').then(setCats).catch(() => {}); }, []);
+  useEffect(() => { if (route?.params?.categoryId) setCat(route.params.categoryId); }, [route?.params?.categoryId]);
   return <View style={{ flex: 1, backgroundColor: t.bg }}>
-    <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ flexGrow: 0 }} contentContainerStyle={{ padding: 12, gap: 8 }}>
-      {cats.map(c => <Pressable key={c.id} onPress={() => setSel(c.id)} accessibilityRole="button" accessibilityState={{ selected: sel === c.id }}
-        style={{ minHeight: 44, justifyContent: 'center', paddingHorizontal: 14, borderRadius: 22, borderWidth: 1, borderColor: t.leaf, backgroundColor: sel === c.id ? t.leaf : 'transparent' }}>
-        <Text style={{ color: sel === c.id ? t.onLeaf : t.leaf, fontWeight: '600' }}>{c.name}</Text></Pressable>)}
-    </ScrollView>
-    {sel ? <ListScreen path={`/listings?categoryId=${sel}`} nav={navigation} empty="Nothing in this category yet." /> : <Empty text="Pick a category to browse." />}</View>;
+    <View style={{ padding: 12, paddingBottom: 0, gap: 8 }}>
+      <Field placeholder="Search listings" value={q} onChangeText={setQ} accessibilityLabel="Search listings" />
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ flexGrow: 0 }} contentContainerStyle={{ gap: 8 }}>
+        <Chip label="All" active={cat === null} onPress={() => setCat(null)} />
+        {cats.map(c => <Chip key={c.id} label={c.name} active={cat === c.id} onPress={() => setCat(cat === c.id ? null : c.id)} />)}
+      </ScrollView>
+    </View>
+    <ListScreen path={cat ? `/listings?categoryId=${cat}` : '/listings'} query={q} nav={navigation} empty="No listings match yet. Try another search or category." />
+  </View>;
 }
-const Saved = ({ navigation }: any) => <ListScreen path="/saved" nav={navigation} empty="Nothing saved yet. Tap Save on a listing to keep it here." />;
+
+const Saved = ({ navigation }: any) => <View style={{ flex: 1 }}>
+  <ListScreen path="/saved" nav={navigation} empty="Nothing saved yet. Tap Save on a listing to keep it here." />
+</View>;
 
 function Listing({ route, navigation }: any) {
   const t = useTheme(); const { me } = useContext(Auth); const [l, setL] = useState<any>(null); const [body, setBody] = useState(''); const [note, setNote] = useState('');
@@ -78,8 +129,8 @@ function Listing({ route, navigation }: any) {
     <Text style={{ color: t.soft }}>Sold by {l.seller.storeName} at {l.campus.name}. Payment and handoff are arranged directly with the seller.</Text>
     {me ? <>
       <Field placeholder="Is this still available?" value={body} onChangeText={setBody} multiline style={{ minHeight: 80 }} accessibilityLabel="Message to seller" />
-      <Btn label="Send inquiry" disabled={!body.trim()} onPress={() => act(async () => { await api('/inquiries', { listingId: l.id, body }); setBody(''); }, 'Message sent. Continue in Inquiries.')} />
-      <Btn kind="ghost" label="Save" onPress={() => act(() => api(`/saved/${l.id}`, undefined, 'PUT'), 'Saved.')} />
+      <Btn label="Send inquiry" disabled={!body.trim()} onPress={() => act(async () => { await api('/inquiries', { listingId: l.id, body }); setBody(''); }, 'Message sent. Continue in Messages.')} />
+      <Btn kind="ghost" label="Save" onPress={() => act(() => api(`/saved/${l.id}`, undefined, 'PUT'), 'Saved. Find it under Profile, Saved listings.')} />
       <Btn kind="ghost" label="Report listing" onPress={() => act(() => api('/reports', { listingId: l.id, reason: 'Reported from the mobile app for review' }), 'Report sent to a campus reviewer.')} />
     </> : <Btn label="Sign in to message the seller" onPress={() => navigation.navigate('Auth')} />}
     {!!note && <Text accessibilityLiveRegion="polite" style={{ color: t.ink }}>{note}</Text>}
@@ -98,7 +149,7 @@ function Inquiries({ navigation }: any) {
 function Thread({ route }: any) {
   const t = useTheme(); const [d, setD] = useState<any>(null); const [body, setBody] = useState('');
   const load = () => api(`/inquiries/${route.params.id}/messages`).then(setD).catch(() => {});
-  useEffect(() => { load(); const t = setInterval(load, 3000); return () => clearInterval(t); }, []);
+  useEffect(() => { load(); const timer = setInterval(load, 3000); return () => clearInterval(timer); }, []);
   if (!d) return <ActivityIndicator style={{ marginTop: 40 }} />;
   return <View style={{ flex: 1, backgroundColor: t.bg }}>
     <FlatList data={d.messages} keyExtractor={m => String(m.id)} contentContainerStyle={{ padding: 12 }}
@@ -124,26 +175,59 @@ function AuthScreen({ navigation }: any) {
     <Btn kind="ghost" label={reg ? 'I already have an account' : 'Create an account'} onPress={() => setReg(!reg)} /></ScrollView>;
 }
 
-// Seller tools: status and entry points. Listing creation with photos is done on the web dashboard in this first version.
+// Same wording as the web notification centre, so one event reads identically on both clients.
+function notifText(n: any): string {
+  const p = n.payload ?? {};
+  switch (n.type) {
+    case 'inquiry.new': return `New inquiry about ${p.listingTitle ?? 'your listing'}.`;
+    case 'inquiry.reply': return `New reply about ${p.listingTitle ?? 'your listing'}.`;
+    case 'affiliation.decision': return p.decision === 'verified' ? 'Your CPSU affiliation was verified.' : `Your affiliation was rejected${p.reason ? `: ${p.reason}` : '.'}`;
+    case 'listing.decision': return `${p.title ? `"${p.title}" ` : 'Your listing '}${({ approved: 'was approved', changes_requested: 'needs changes', rejected: 'was rejected' } as any)[p.decision] ?? 'was reviewed'}.${p.reason ? ` Reason: ${p.reason}` : ''}`;
+    case 'listing.suspended': return `A listing of yours was suspended.${p.reason ? ` Reason: ${p.reason}` : ''}`;
+    default: return 'Marketplace update.';
+  }
+}
+
 function Profile({ navigation }: any) {
-  const t = useTheme(); const { me, out } = useContext(Auth); const [mine, setMine] = useState<any[]>([]);
-  useEffect(() => { if (me?.storeId) api('/seller/listings').then(setMine).catch(() => {}); }, [me]);
+  const t = useTheme(); const { me, out } = useContext(Auth); const [mine, setMine] = useState<any[]>([]); const [notifs, setNotifs] = useState<any[]>([]);
+  const heading = { color: t.ink, fontSize: 18, fontWeight: '700' as const, marginTop: 16, marginBottom: 4 };
+  const loadNotifs = () => api('/notifications').then(setNotifs).catch(() => {});
+  useEffect(() => { if (me?.storeId) api('/seller/listings').then(setMine).catch(() => {}); if (me) loadNotifs(); }, [me]);
   if (!me) return <Gate nav={navigation} />;
+  const unread = notifs.filter(n => !n.readAt).length;
+  const markAll = async () => { await api('/notifications/read', {}).catch(() => {}); loadNotifs(); };
   return <ScrollView style={{ backgroundColor: t.bg }} contentContainerStyle={{ padding: 16, gap: 10 }}>
     <Text style={{ color: t.ink, fontSize: 22, fontWeight: '800' }}>{me.displayName}</Text>
     {me.affiliations.map(a => <Text key={a.id} style={{ color: t.soft }}>{a.campus.name}: {a.status}</Text>)}
-    <Text style={{ color: t.ink, fontSize: 18, fontWeight: '700', marginTop: 12 }}>My listings</Text>
-    {!me.storeId && <Text style={{ color: t.soft }}>You can open a store once a campus reviewer verifies your affiliation.</Text>}
+
+    <View style={{ flexDirection: 'row', alignItems: 'baseline', justifyContent: 'space-between' }}><Text style={heading}>Notifications</Text>
+      {unread > 0 && <Pressable onPress={markAll} accessibilityRole="button" accessibilityLabel={`Mark ${unread} notifications as read`}>
+        <Text style={{ color: t.leaf, fontWeight: '700' }}>Mark all read ({unread})</Text></Pressable>}</View>
+    {notifs.length === 0 && <Text style={{ color: t.soft }}>Nothing yet. Listing decisions and inquiry replies appear here.</Text>}
+    {notifs.slice(0, 6).map(n => <View key={n.id} style={{ padding: 10, backgroundColor: t.card, borderRadius: 8, borderWidth: 1, borderColor: n.readAt ? t.line : t.leaf }}>
+      <Text style={{ color: t.ink }}>{notifText(n)}</Text>
+      <Text style={{ color: t.soft, fontSize: 12 }}>{new Date(n.createdAt).toLocaleDateString()}{n.readAt ? '' : ', unread'}</Text></View>)}
+
+    <Text style={heading}>My listings</Text>
+    {!me.storeId && <Text style={{ color: t.soft }}>Open a store on the website once a campus reviewer verifies your affiliation.</Text>}
     {mine.map(l => <View key={l.id} style={{ padding: 10, backgroundColor: t.card, borderRadius: 8, borderWidth: 1, borderColor: t.line }}>
       <Text style={{ color: t.ink, fontWeight: '600' }}>{l.title}</Text><Text style={{ color: t.soft }}>{l.status.replace('_', ' ')}, {peso(Number(l.price))}</Text></View>)}
-    <Btn kind="ghost" label="Sign out" onPress={out} /></ScrollView>;
+
+    <View style={{ gap: 8, marginTop: 8 }}>
+      <Btn kind="ghost" label="Saved listings" onPress={() => navigation.navigate('Saved')} />
+      <Btn kind="ghost" label="Sign out" onPress={out} />
+    </View>
+    <Text style={{ color: t.soft, fontSize: 12 }}>Publishing listings and replying with photos happens on the website in this version.</Text>
+  </ScrollView>;
 }
 
 function Main() {
   const t = useTheme();
   return <Tabs.Navigator screenOptions={{ tabBarActiveTintColor: t.leaf, tabBarStyle: { backgroundColor: t.card }, headerStyle: { backgroundColor: t.card }, headerTitleStyle: { color: t.ink } }}>
-    <Tabs.Screen name="Explore" component={Explore} /><Tabs.Screen name="Categories" component={Categories} />
-    <Tabs.Screen name="Inquiries" component={Inquiries} /><Tabs.Screen name="Saved" component={Saved} /><Tabs.Screen name="Profile" component={Profile} />
+    <Tabs.Screen name="Home" component={Home} options={{ headerShown: false }} />
+    <Tabs.Screen name="Explore" component={Explore} />
+    <Tabs.Screen name="Inquiries" component={Inquiries} options={{ tabBarLabel: 'Messages', title: 'Messages' }} />
+    <Tabs.Screen name="Profile" component={Profile} />
   </Tabs.Navigator>;
 }
 
@@ -155,6 +239,7 @@ export default function App() {
   return <SafeAreaProvider><Auth.Provider value={{ me, reload, out }}><NavigationContainer>
     <Stack.Navigator><Stack.Screen name="Main" component={Main} options={{ headerShown: false }} />
       <Stack.Screen name="Listing" component={Listing} /><Stack.Screen name="Thread" component={Thread} options={{ title: 'Conversation' }} />
+      <Stack.Screen name="Saved" component={Saved} options={{ title: 'Saved listings' }} />
       <Stack.Screen name="Auth" component={AuthScreen} options={{ title: 'Account', presentation: 'modal' }} /></Stack.Navigator>
   </NavigationContainer><StatusBar style="auto" /></Auth.Provider></SafeAreaProvider>;
 }

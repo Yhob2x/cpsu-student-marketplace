@@ -96,7 +96,9 @@ export function Dashboard() {
 
 export function Inquiries() {
   const [rows, setRows] = useState<any[] | null>(null);
-  useEffect(() => { api('/inquiries').then(setRows); }, []);
+  const { me } = useMe();
+  // User-scoped: wait for the restored session instead of racing it.
+  useEffect(() => { if (me) api('/inquiries').then(setRows).catch(() => setRows([])); }, [me]);
   return <><h1>Inquiries</h1>{rows?.length === 0 && <p className="muted">No conversations yet. Open a listing and send the seller a message.</p>}
     {rows?.map(t => <Link key={t.id} to={`/inquiries/${t.id}`} className="card panel" style={{ display: 'block' }}><h3>{t.listing.title}</h3>
       <p className="muted">{t.role === 'buyer' ? 'You asked' : 'Buyer asked'}: {t.lastMessage?.body}</p></Link>)}</>;
@@ -123,6 +125,7 @@ export function Thread() {
 
 export function Saved() {
   const [rows, setRows] = useState<Listing[] | null>(null);
-  useEffect(() => { api('/saved').then(setRows).catch(() => setRows([])); }, []);
+  const { me } = useMe();
+  useEffect(() => { if (me) api('/saved').then(setRows).catch(() => setRows([])); }, [me]);
   return <><h1>Saved</h1>{rows?.length === 0 && <p className="muted">Nothing saved yet. Use Save on a listing to keep it here.</p>}<div className="grid">{rows?.map(l => <ListingCard key={l.id} l={l} />)}</div></>;
 }

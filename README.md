@@ -3,6 +3,14 @@
 Working MVP of the proposed architecture in `docs/architecture.md` (v1.0, 10 Nov 2026). Not an approved CPSU system: policies, verification method and hosting
 must be confirmed by CPSU first (architecture section 16).
 
+> **Governing specification:** `MASTER_BLUEPRINT.md` (v1.0) is the single source of truth for scope, rules and MVP boundaries.
+> Where this README or the pilot documents disagree with it, the blueprint wins. Current status against its MVP checklist, and the
+> decisions it raises, are tracked in `docs/MVP_SCOPE.md` and `progress/IMPLEMENTATION_STATUS.md`.
+>
+> **Agent instructions:** `CLAUDE.md` holds the development governance (required reading, document authority, MVP protection, and the
+> inspect → analyze → plan → implement → test → document → report procedure). `AGENTS.md` holds the agent rules (first action, security
+> and authorization, database handling, multi-agent safety, completion reporting). Both defer to `MASTER_BLUEPRINT.md`.
+
 | Part | Stack | Where |
 |---|---|---|
 | REST API | Node.js, Express 5, TypeScript, Prisma, MySQL 8, Zod | `apps/api` |

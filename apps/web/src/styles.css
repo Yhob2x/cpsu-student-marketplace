@@ -27,8 +27,9 @@ main { padding: 1.5rem 0 7rem; } /* extra bottom padding clears the fixed tab ba
 .chips { display: flex; flex-wrap: wrap; gap: .5rem; }
 .chip { background: var(--paper); border: 1px solid var(--line); border-radius: 99px; padding: .45rem .9rem; text-decoration: none; color: var(--ink); font-weight: 500; }
 .chip:hover { border-color: var(--leaf); color: var(--leaf); }
-.tabbar { position: fixed; left: 0; right: 0; bottom: 0; background: var(--paper); border-top: 1px solid var(--line); display: flex; justify-content: center; gap: clamp(.5rem, 4vw, 3rem); padding: .35rem 1rem calc(.35rem + env(safe-area-inset-bottom, 0)); z-index: 10; }
-.tabbar a { color: var(--ink-soft); text-decoration: none; font-weight: 600; padding: .5rem .75rem; border-radius: 8px; min-height: 44px; display: inline-flex; align-items: center; }
+/* Five primary destinations (Home, Explore, Sell, Messages, Profile) must fit a 360px phone. */
+.tabbar { position: fixed; left: 0; right: 0; bottom: 0; background: var(--paper); border-top: 1px solid var(--line); display: flex; justify-content: space-around; gap: clamp(.15rem, 1.5vw, 1rem); padding: .35rem .25rem calc(.35rem + env(safe-area-inset-bottom, 0)); z-index: 10; }
+.tabbar a { color: var(--ink-soft); text-decoration: none; font-weight: 600; padding: .5rem .5rem; border-radius: 8px; min-height: 44px; display: inline-flex; align-items: center; }
 .tabbar a.active { color: var(--leaf); }
 .filters { display: flex; flex-wrap: wrap; gap: .5rem; margin: 1rem 0 1.5rem; }
 input, select, textarea, button { font: inherit; color: inherit; }
@@ -48,9 +49,27 @@ textarea { width: 100%; min-height: 96px; }
 .panel { background: var(--paper); border: 1px solid var(--line); border-radius: 10px; padding: 1rem; margin-bottom: 1rem; }
 .row { display: flex; gap: .75rem; flex-wrap: wrap; align-items: center; } .stack { display: grid; gap: .75rem; max-width: 34rem; }
 .status { font-size: .8rem; padding: .1rem .5rem; border-radius: 99px; border: 1px solid var(--line); }
-.status.published { border-color: var(--leaf); color: var(--leaf); } .status.pending_review { border-color: var(--mango); }
-.status.rejected, .status.suspended { border-color: var(--danger); color: var(--danger); }
+.status.published, .status.verified, .status.approved { border-color: var(--leaf); color: var(--leaf); }
+.status.pending_review, .status.pending { border-color: var(--mango); }
+.status.rejected, .status.suspended, .status.cancelled { border-color: var(--danger); color: var(--danger); }
 .flag { background: var(--mango-soft); border-radius: 6px; padding: .1rem .5rem; font-size: .8rem; }
+/* Page header pattern used by Profile and Notifications. */
+.page-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 1rem; flex-wrap: wrap; margin-bottom: 1.25rem; }
+.page-head p { margin: .25rem 0 0; max-width: 55ch; }
+.profile-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(290px, 1fr)); gap: 1rem; align-items: start; }
+.facts { margin: 0 0 .75rem; display: grid; gap: .6rem; } .facts div { display: grid; gap: .1rem; }
+.facts dt { color: var(--ink-soft); font-size: .85rem; } .facts dd { margin: 0; font-weight: 600; overflow-wrap: anywhere; }
+.quick { list-style: none; margin: 0; padding: 0; display: grid; gap: .75rem; }
+.quick li { display: grid; gap: .1rem; } .quick a { font-weight: 600; }
+label.field { display: grid; gap: .35rem; font-weight: 600; font-size: .9rem; }
+/* Notification rows: one tinted dot marks unread, so the badge count and the list agree. */
+.notif { display: flex; gap: .75rem; align-items: flex-start; padding: .75rem 1rem; background: var(--paper); border: 1px solid var(--line); border-radius: 10px; }
+.notif + .notif { margin-top: .5rem; }
+.notif.unread { border-color: var(--leaf); }
+.notif .dot { width: 8px; height: 8px; border-radius: 99px; background: var(--leaf); margin-top: .55rem; flex: 0 0 auto; }
+.notif .dot.read { background: transparent; border: 1px solid var(--line); }
+.notif p { margin: 0 0 .15rem; } .notif time { color: var(--ink-soft); font-size: .8rem; }
+.nav-badge { display: inline-block; min-width: 1.25rem; text-align: center; background: var(--mango); color: #1b2838; border-radius: 99px; font-size: .75rem; font-weight: 700; padding: 0 .3rem; margin-left: .35rem; }
 .err { color: var(--danger); } .muted { color: var(--ink-soft); }
 .msg { max-width: 80%; padding: .5rem .75rem; border-radius: 10px; background: var(--chalk); border: 1px solid var(--line); margin: .35rem 0; }
 .msg.mine { margin-left: auto; background: var(--mango-soft); }

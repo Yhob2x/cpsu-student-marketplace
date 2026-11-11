@@ -1,0 +1,36 @@
+# Known issues
+
+Severity: **critical** blocks MVP or security · **high** blocks launch readiness · **medium** degrades a required feature · **low** hygiene.
+Status: open unless stated. Fixes belong to the work packages in `docs/MVP_SCOPE.md` §5.
+
+| ID | Sev | Issue | Impact | Suggested fix |
+|---|---|---|---|---|
+| KI-001 | critical | No transaction module (MVP-014, MVP-015) | Buyers and sellers cannot request, accept, or track a transaction; "completed" cannot exist, so completion analytics and reviews have no basis | WP3: `transactions` + `transaction_status_logs`, six statuses, participant-only transitions |
+| KI-002 | critical | Administrators cannot suspend or reactivate an account (MVP-020) | A reported or fraudulent student keeps full access; `User.status` is enforced but unreachable | WP5: admin suspend/reactivate with reason, audit, notification; hide suspended sellers' listings from discovery |
+| KI-003 | ~medium~ **partly fixed** | Notifications UI (MVP-016) | **Fixed for the five existing event types**: web notification centre with unread badge; mobile list with mark-all-read. Still missing transaction, availability, and announcement events — those features do not exist yet. | Remaining work follows WP3 (transaction events) and WP6 (announcements) |
+| KI-004 | high | No password recovery (MODULE 01) | A locked-out student needs a manual database edit | WP7: hashed single-use reset token, approved mail transport, revoke sessions on reset |
+| KI-005 | high | No listing delete or mark-as-sold; `availability` is free text and ignored by discovery (MVP-005) | Sold items keep appearing as available, violating a stated discovery rule | WP2: availability enum + sold action + soft delete; filter discovery on availability |
+| KI-006 | high | No `condition` field, so no condition filter (MVP-005, MVP-009) | Buyers cannot judge or filter condition, which the blueprint requires twice | WP2: enum `new`/`like_new`/`good`/`fair`, required for products, filter + display |
+| KI-007 | high | No category administration (MVP-022) | Categories can only change by editing the seed script and redeploying | WP5: CRUD with audit, deactivate instead of delete |
+| KI-008 | high | No audit-log viewer (MVP-024) | Audit rows exist but no administrator can review them, so the requirement "review administrative audit logs" fails | WP5: read endpoint + paginated viewer, campus-scoped |
+| KI-009 | high | Automated tests cover only 5 pure-function cases | No regression protection on authorization, validation, or database behavior; PART X unmet | WP9: Supertest integration suite + fixtures (see `docs/TESTING_STRATEGY.md`) |
+| KI-010 | high | No retention or deletion procedure | Data Privacy Act obligations unmet; messages and media live indefinitely | Decide a schedule with the DPO, then a scheduled purge and account deletion |
+| KI-011 | medium | No user/buyer block or conversation report (MODULE 06) | A student cannot stop unwanted contact; report only accepts a listing or seller from the API, and neither client offers a person report | Add a block table and enforce it on thread creation and messaging; add report targets for a thread and a user |
+| KI-012 | medium | No sort options (MVP-009) | Order is fixed to newest; blueprint requires newest and price | Add a validated `sort` parameter (`newest`, `price_asc`, `price_desc`) |
+| KI-013 | medium | Students can favorite their own listing (MODULE 05) | Inflates the only popularity signal, and contradicts a stated rule | Reject with `400 own_listing` in `PUT /saved/:listingId` |
+| KI-014 | medium | Reports have no UI and no findings field; `reviewing` is never set | Administrators cannot investigate from the product, only via the API | WP5: report list + detail with findings, assign, then resolve |
+| KI-015 | medium | No announcements module (MODULE 09) | Marketplace announcements cannot be published or displayed | WP6: table, routes, admin UI, home banner |
+| KI-016 | medium | Foreign keys and indexes are incomplete (`docs/DATABASE_DESIGN.md` §3) | Orphaned rows are possible for sessions, handoffs, reviews, saved items, reports, notifications; discovery queries cannot use an index | One migration adding the missing relations and a `(status, categoryId, campusId, createdAt)` index — after data cleanup |
+| KI-017 | medium | Upload validation trusts the client-declared MIME type | A crafted file is stored and re-served with `nosniff`, but content is unverified | Re-encode images (also strips EXIF) or verify magic bytes (S3 in `docs/SECURITY_GUIDELINES.md`) |
+| KI-018 | medium | Mobile app has never been executed here; dependencies are not installed | Its screens are unverified; typecheck cannot run | `cd apps/mobile && bun install && bun run typecheck`, then run Expo against the local API |
+| KI-019 | medium | No PWA manifest or service worker | Blueprint names PWA as the platform | Decide C6, then add manifest, icons, and an offline shell that never caches API data |
+| KI-020 | low | Typing indicator lives in an in-memory `Map` | Resets on restart; wrong on multi-instance deployments | Move to the shared cache once one exists, or drop the feature |
+| KI-021 | low | `SellerProfile.campusId` duplicates the owner's verified campus and can drift | A store could stay on a campus after the affiliation expires | Recompute from the affiliation on read, or enforce in a scheduled check |
+| KI-022 | low | `Handoff` is self-reported and reads like a transaction | Users may believe a sale is recorded | Copy already says outcomes are unverified; retire or nest it under WP3 |
+| KI-023 | low | Two package managers and a README that says `npm` while scripts use `bun` | Contributor confusion, divergent lockfiles | Choose bun, delete `package-lock.json`, fix the README |
+| KI-024 | low | `.env.example` omits `PORT`, `CORS_ORIGINS`, `COOKIE_SECURE`, `UPLOAD_DIR` | New environments misconfigure cookies/CORS | Document all variables with safe defaults |
+| KI-025 | low | No git repository in the project folder | No history, no diff, no rollback | `git init` and commit the baseline |
+| KI-026 | low | Guest browsing conflicts with the blueprint's access matrix (C3) | Unclear whether anonymous discovery is intended | Owner decision, then document the matrix row |
+| KI-027 | low | Mobile app has no Sell/Offer entry (PART VI) | Web navigation now matches the blueprint, and mobile has Home, Explore, Messages and Profile, but a student on a phone must switch to the website to publish | Build a native composer after WP2, so `condition` and availability can be captured in one place |
+| KI-028 | low | `Affiliation` has no `createdAt`; notifications have no `(userId, readAt)` index | Minor auditability and inbox performance | Include in the KI-016 migration |
+| KI-029 | **fixed** | Hard reloading a signed-in web page could revoke every session and show `unauthenticated` | Observed in the preview on `/notifications`: mount-time fetch plus session restore both refreshed, the second spent token tripped reuse detection, and both the list and the header badge emptied | Fixed in the UI/UX update: single-flight refresh in `apps/web/src/api.ts`; user-scoped pages wait for the restored session. Re-verified by reloading `/notifications` |

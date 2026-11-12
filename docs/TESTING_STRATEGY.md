@@ -1,5 +1,7 @@
 # Testing strategy and current results
 
+**Current platform update (12 November 2026):** One responsive web/PWA replaces the active Expo mobile workspace. Test the same `apps/web` frontend on desktop and mobile browsers and validate its production PWA shell; the API integration suite uses a dedicated isolated MySQL database. Any Expo-related history below is not a current startup instruction. See `docs/UNIFIED_WEB_PWA_2026-11-12.md`.
+
 **Stage 1 implementation update (2026-11-11):** The previous baseline below is historical. An isolated Supertest + MySQL integration runner now exists: `cd apps/api && bun run test:integration`. It passes **14/14** HTTP/database cases; regular `bun test` passes **5/5** unit cases and skips the opt-in integration file. See `docs/STAGE1_TESTING_REPORT.md` for fixture/database safeguards and the read-only foreign-key/index audit. Additional Stage 1 schema migrations remain pending approval.
 
 
@@ -14,7 +16,7 @@ module, and PART XI STEP 5 requires the agent to actually run them. This file re
 | API typecheck | `bunx tsc -p apps/api/tsconfig.json --noEmit` | **Clean** |
 | Web typecheck | `bunx tsc -p apps/web/tsconfig.json --noEmit` | **Clean** |
 | Schema state | `cd apps/api && bunx prisma migrate status` | **Up to date** (2 migrations applied) |
-| Mobile typecheck | `bunx tsc -p apps/mobile/tsconfig.json --noEmit` | **Not run** — `apps/mobile/node_modules` is absent (Expo deps not installed) |
+| Mobile browser/PWA typecheck | `cd apps/web && bun run build` | Same responsive React frontend as desktop; validate on physical phones before release |
 
 `apps/api/test/permissions.test.ts` covers: campus reviewer limited to their campus, global admin reviewing any campus, system administrator
 denied review, plain student has no scope, and material-change detection.
@@ -76,7 +78,7 @@ bun test                                  # all workspace tests (currently api o
 cd apps/api && bun test                   # API suite
 cd apps/api && bun run typecheck          # prisma generate + tsc
 bunx tsc -p apps/web/tsconfig.json --noEmit
-cd apps/mobile && bun install && bun run typecheck   # requires Expo deps
+cd apps/web && bun run build                 # shared desktop + phone frontend
 cd apps/api && bunx prisma migrate status
 ```
 

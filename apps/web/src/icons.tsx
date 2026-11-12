@@ -4,6 +4,9 @@ import type { ReactNode } from 'react';
 // and is marked aria-hidden: the surrounding text always carries the meaning.
 const PATHS: Record<string, ReactNode> = {
   search: <><circle cx="11" cy="11" r="7" /><path d="m20 20-3.6-3.6" /></>,
+  sliders: <><path d="M4 7h16M4 17h16" /><circle cx="9" cy="7" r="2.2" fill="var(--paper)" /><circle cx="16" cy="17" r="2.2" fill="var(--paper)" /></>,
+  chevronDown: <path d="m6 9 6 6 6-6" />,
+  chevronUp: <path d="m6 15 6-6 6 6" />,
   home: <><path d="m3 10 9-7 9 7v10H3Z" /><path d="M9 20v-7h6v7" /></>,
   plus: <><path d="M12 5v14M5 12h14" /></>,
   tag: <><path d="M20.6 13.4 13.4 20.6a2 2 0 0 1-2.8 0l-6.2-6.2A2 2 0 0 1 3.8 13V4.8a1 1 0 0 1 1-1H13a2 2 0 0 1 1.4.6l6.2 6.2a2 2 0 0 1 0 2.8Z" /><circle cx="8" cy="8" r="1.4" /></>,
@@ -19,6 +22,7 @@ const PATHS: Record<string, ReactNode> = {
   store: <><path d="M4 9.5V20h16V9.5" /><path d="M3 9.5 5 4h14l2 5.5Z" /><path d="M9.5 20v-5h5v5" /></>,
   leaf: <><path d="M20 4c0 9-5.5 14-13 14H4c0-8 5-14 13-14Z" /><path d="M4 20 12 12" /></>,
   check: <path d="m5 12.5 4.5 4.5L19 7" />,
+  checks: <><path d="m2.5 12.5 4.5 4.5L16 7" /><path d="m10 16.5 2.5 2.5L22 8" /></>,
 };
 
 export type IconName = keyof typeof PATHS;

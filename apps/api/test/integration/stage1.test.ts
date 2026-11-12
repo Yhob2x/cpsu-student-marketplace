@@ -174,6 +174,115 @@ if (process.env.CPSU_INTEGRATION_TESTS === '1') {
       expect(closed.status).toBe(409);
     });
 
+    test('message receipts require real recipient retrieval and visible read acknowledgment', async () => {
+      // Own fixture: earlier tests deliberately move the shared published listing to draft.
+      const listing = await prisma.listing.create({ data: {
+        type: 'physical_product', sellerProfileId: fx.store.id, campusId: fx.campusA.id,
+        categoryId: fx.category.id, title: 'Message receipt test listing',
+        description: 'Test-only listing for delivery and read acknowledgments',
+        price: 125, status: 'published',
+      } });
+      // Two media records verify that the thread summary selects the first ordered photo.
+      const secondPhoto = await prisma.listingMedia.create({ data: {
+        listingId: listing.id, mediaPath: 'test-second.jpg', mimeType: 'image/jpeg', position: 2,
+      } });
+      const firstPhoto = await prisma.listingMedia.create({ data: {
+        listingId: listing.id, mediaPath: 'test-first.jpg', mimeType: 'image/jpeg', position: 1,
+      } });
+      const started = await request(app).post('/api/v1/inquiries').set(token(fx.buyer.id))
+        .send({ listingId: listing.id, body: 'Receipt lifecycle initial message' });
+      expect(started.status).toBe(201);
+      const threadId = started.body.id;
+      const first = await prisma.inquiryMessage.findFirstOrThrow({ where: { threadId } });
+      const path = '/api/v1/inquiries/' + threadId;
+
+      const senderView = await request(app).get(path + '/messages').set(token(fx.buyer.id));
+      expect(senderView.status).toBe(200);
+      expect(senderView.body.thread.otherStudentName).toBe(fx.seller.displayName);
+      expect(senderView.body.listing).toMatchObject({
+        id: listing.id, title: listing.title, type: 'physical_product',
+        price: 125, priceBasis: 'per item', condition: null,
+        availability: 'available', imageUrl: `/api/v1/media/${firstPhoto.id}`,
+      });
+      expect(senderView.body.listing.imageUrl).not.toBe(`/api/v1/media/${secondPhoto.id}`);
+      const buyerInbox = await request(app).get('/api/v1/inquiries').set(token(fx.buyer.id));
+      const sellerInbox = await request(app).get('/api/v1/inquiries').set(token(fx.seller.id));
+      expect(buyerInbox.body.find((row: any) => row.id === threadId)?.otherStudentName).toBe(fx.seller.displayName);
+      expect(sellerInbox.body.find((row: any) => row.id === threadId)?.otherStudentName).toBe(fx.buyer.displayName);
+      // Show only the other participant's display name, not their email or credentials.
+      expect(JSON.stringify(buyerInbox.body)).not.toContain(fx.seller.email);
+      expect(JSON.stringify(sellerInbox.body)).not.toContain(fx.buyer.email);
+      expect(senderView.body.messages[0].receipt).toBe('sent');
+      expect(senderView.body.otherActiveInChat).toBe(false);
+      expect((await prisma.inquiryMessage.findUniqueOrThrow({ where: { id: first.id } })).deliveredAt).toBeNull();
+
+      // Presence reports only a participant's recent heartbeat in this conversation.
+      const outsiderPresence = await request(app).post(path + '/presence').set(token(fx.outsider.id)).send({});
+      expect(outsiderPresence.status).toBe(404);
+      const onlineHeartbeat = await request(app).post(path + '/presence').set(token(fx.seller.id)).send({});
+      expect(onlineHeartbeat.status).toBe(204);
+      const senderWithPresence = await request(app).get(path + '/messages').set(token(fx.buyer.id));
+      expect(senderWithPresence.body.otherActiveInChat).toBe(true);
+      // Presence alone does not claim that a message was delivered or seen.
+      expect(senderWithPresence.body.messages[0].receipt).toBe('sent');
+
+      // Reading your own thread as the author does not mark your own message as seen.
+      const selfSeen = await request(app).post(path + '/seen').set(token(fx.buyer.id))
+        .send({ upToId: first.id });
+      expect(selfSeen.status).toBe(204);
+      expect((await prisma.inquiryMessage.findUniqueOrThrow({ where: { id: first.id } })).seenAt).toBeNull();
+
+      const outsider = await request(app).post(path + '/seen').set(token(fx.outsider.id))
+        .send({ upToId: first.id });
+      expect(outsider.status).toBe(404);
+      const invalid = await request(app).post(path + '/seen').set(token(fx.seller.id))
+        .send({ upToId: 'not-a-message-id' });
+      expect(invalid.status).toBe(400);
+
+      const received = await request(app).get(path + '/messages').set(token(fx.seller.id));
+      expect(received.status).toBe(200);
+      expect(received.body.thread.otherStudentName).toBe(fx.buyer.displayName);
+      expect(received.body.listing).toEqual(senderView.body.listing);
+      expect(received.body.messages[0].receipt).toBe('delivered');
+      expect(received.body.messages[0].seenAt).toBeNull();
+      const senderDelivered = await request(app).get(path + '/messages').set(token(fx.buyer.id));
+      expect(senderDelivered.body.messages[0].receipt).toBe('delivered');
+
+      const seen = await request(app).post(path + '/seen').set(token(fx.seller.id))
+        .send({ upToId: first.id });
+      expect(seen.status).toBe(204);
+      const senderRead = await request(app).get(path + '/messages').set(token(fx.buyer.id));
+      expect(senderRead.body.messages[0].receipt).toBe('read');
+
+      // Up-to receipts cannot mark a newer message as read before it was viewed.
+      const reply = await request(app).post(path + '/messages').set(token(fx.buyer.id))
+        .send({ body: 'Second message has not yet been read' });
+      expect(reply.status).toBe(201);
+      const secondId = reply.body.id;
+      await request(app).get(path + '/messages').set(token(fx.seller.id));
+      await request(app).post(path + '/seen').set(token(fx.seller.id)).send({ upToId: first.id });
+      const second = await prisma.inquiryMessage.findUniqueOrThrow({ where: { id: secondId } });
+      expect(second.deliveredAt).not.toBeNull();
+      expect(second.seenAt).toBeNull();
+
+      const inbox = await request(app).get('/api/v1/inquiries').set(token(fx.buyer.id));
+      const preview = inbox.body.find((row: any) => row.id === threadId);
+      expect(preview?.lastMessage?.mine).toBe(true);
+      expect(preview?.lastMessage?.receipt).toBe('delivered');
+      await request(app).post(path + '/seen').set(token(fx.seller.id)).send({ upToId: secondId });
+      const final = await request(app).get(path + '/messages').set(token(fx.buyer.id));
+      expect(final.body.messages.at(-1).receipt).toBe('read');
+
+      // Existing participants retain listing context after unpublishing, but private
+      // media is not exposed through a chat response.
+      await prisma.listing.update({ where: { id: listing.id }, data: { status: 'draft' } });
+      const unpublished = await request(app).get(path + '/messages').set(token(fx.buyer.id));
+      expect(unpublished.status).toBe(200);
+      expect(unpublished.body.listing.title).toBe(listing.title);
+      expect(unpublished.body.listing.availability).toBe('unavailable');
+      expect(unpublished.body.listing.imageUrl).toBeNull();
+    });
+
     test('student cannot access admin; reviewer campus isolation; global admin can review', async () => {
       const student = await request(app).get('/api/v1/admin/review-queue').set(token(fx.buyer.id));
       expect(student.status).toBe(403);

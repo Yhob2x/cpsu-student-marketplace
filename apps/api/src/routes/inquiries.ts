@@ -10,10 +10,22 @@ r.use(requireAuth);
 // shortcut: typing state lives in memory, so it is per API instance and resets on restart
 const typing = new Map<string, number>();
 const TYPING_MS = 5000;
+// Presence is scoped to this conversation, not a claim about a user's global device/app status.
+// A client heartbeats only when the chat tab is foreground and focused; old entries expire.
+const presence = new Map<string, number>();
+const PRESENCE_MS = 25000;
+
+// A receipt represents observed server activity, not an assumed delivery or view.
+const receipt = (m: { deliveredAt: Date | null; seenAt: Date | null }) =>
+  m.seenAt ? 'read' : m.deliveredAt ? 'delivered' : 'sent';
 
 // Participants only: the buyer, or the owner of the listing's store.
 async function participantThread(userId: number, id: number) {
-  const t = await prisma.inquiryThread.findUnique({ where: { id }, include: { seller: true, listing: { include: { media: true } } } });
+  const t = await prisma.inquiryThread.findUnique({ where: { id }, include: {
+    seller: { include: { owner: { select: { displayName: true } } } },
+    buyer: { select: { displayName: true } },
+    listing: { include: { media: true } },
+  } });
   if (!t || (t.buyerUserId !== userId && t.seller.ownerUserId !== userId)) throw new HttpError(404, 'not_found');
   return t;
 }
@@ -22,10 +34,23 @@ r.get('/', async (req, res) => {
   const uid = req.user!.id;
   const rows = await prisma.inquiryThread.findMany({
     where: { OR: [{ buyerUserId: uid }, { seller: { ownerUserId: uid } }] },
-    include: { listing: { select: { id: true, title: true } }, messages: { orderBy: { createdAt: 'desc' }, take: 1 } },
+    include: {
+      listing: { select: { id: true, title: true } },
+      buyer: { select: { displayName: true } },
+      seller: { include: { owner: { select: { displayName: true } } } },
+      messages: { orderBy: { createdAt: 'desc' }, take: 1 },
+    },
     orderBy: { createdAt: 'desc' },
   });
-  res.json(rows.map(t => ({ id: t.id, status: t.status, listing: t.listing, lastMessage: t.messages[0] ?? null, role: t.buyerUserId === uid ? 'buyer' : 'seller' })));
+  res.json(rows.map(t => ({
+    id: t.id, status: t.status, listing: t.listing,
+    // The authorized recipient sees the other participant's display name, never credentials.
+    otherStudentName: t.buyerUserId === uid ? t.seller.owner.displayName : t.buyer.displayName,
+    lastMessage: t.messages[0] ? {
+      ...t.messages[0], mine: t.messages[0].authorUserId === uid, receipt: receipt(t.messages[0]),
+    } : null,
+    role: t.buyerUserId === uid ? 'buyer' : 'seller',
+  })));
 });
 
 r.post('/', async (req, res) => {
@@ -47,12 +72,50 @@ r.post('/', async (req, res) => {
 
 r.get('/:id/messages', async (req, res) => {
   const t = await participantThread(req.user!.id, Number(req.params.id));
+  // Delivered = the recipient's client fetched this conversation. Never mark the sender's own messages.
+  await prisma.inquiryMessage.updateMany({
+    where: { threadId: t.id, authorUserId: { not: req.user!.id }, deliveredAt: null },
+    data: { deliveredAt: new Date() },
+  });
   const messages = await prisma.inquiryMessage.findMany({ where: { threadId: t.id }, orderBy: { createdAt: 'asc' }, include: { author: { select: { displayName: true } } } });
   const handoff = await prisma.handoff.findUnique({ where: { inquiryThreadId: t.id } });
   const other = t.buyerUserId === req.user!.id ? t.seller.ownerUserId : t.buyerUserId;
-  res.json({ thread: { id: t.id, status: t.status, listingId: t.listingId }, messages: messages.map(m => ({
-    id: m.id, body: m.body, createdAt: m.createdAt, mine: m.authorUserId === req.user!.id, author: m.author.displayName })), handoff,
-    typing: (typing.get(`${t.id}:${other}`) ?? 0) > Date.now() });
+  const listingVisible = t.listing.status === 'published' && !t.listing.deletedAt && t.seller.approvalStatus === 'approved';
+  const leadPhoto = listingVisible ? [...t.listing.media].sort((a, b) => a.position - b.position)[0] : undefined;
+  res.json({ thread: {
+    id: t.id, status: t.status, listingId: t.listingId,
+    otherStudentName: t.buyerUserId === req.user!.id ? t.seller.owner.displayName : t.buyer.displayName,
+  }, listing: {
+    id: t.listing.id, title: t.listing.title, type: t.listing.type,
+    price: Number(t.listing.price), priceBasis: t.listing.priceBasis,
+    condition: t.listing.condition,
+    availability: listingVisible ? t.listing.availabilityState : 'unavailable',
+    imageUrl: leadPhoto ? `/api/v1/media/${leadPhoto.id}` : null,
+  }, messages: messages.map(m => ({
+    id: m.id, body: m.body, createdAt: m.createdAt, mine: m.authorUserId === req.user!.id,
+    author: m.author.displayName, receipt: receipt(m), seenAt: m.seenAt })), handoff,
+    typing: (typing.get(`${t.id}:${other}`) ?? 0) > Date.now(),
+    otherActiveInChat: (presence.get(`${t.id}:${other}`) ?? 0) > Date.now() });
+});
+
+// Participant-only presence, in-memory, expires if the conversation is not foregrounded.
+// It never reveals activity outside this particular conversation.
+r.post('/:id/presence', async (req, res) => {
+  const t = await participantThread(req.user!.id, Number(req.params.id));
+  presence.set(`${t.id}:${req.user!.id}`, Date.now() + PRESENCE_MS);
+  res.status(204).end();
+});
+
+// Called only after the client's intersection observer sees the recipient's message in an
+// active, visible thread. The upper bound prevents marking messages further down as read.
+r.post('/:id/seen', async (req, res) => {
+  const t = await participantThread(req.user!.id, Number(req.params.id));
+  const { upToId } = z.object({ upToId: z.number().int().positive() }).parse(req.body);
+  const where = { threadId: t.id, authorUserId: { not: req.user!.id }, id: { lte: upToId } };
+  const now = new Date();
+  await prisma.inquiryMessage.updateMany({ where: { ...where, deliveredAt: null }, data: { deliveredAt: now } });
+  await prisma.inquiryMessage.updateMany({ where: { ...where, seenAt: null }, data: { seenAt: now } });
+  res.status(204).end();
 });
 
 // Heartbeat while the other person is typing; expires on its own after TYPING_MS.

@@ -9,6 +9,9 @@ import { Profile, Notifications } from './pages-profile';
 import { Admin } from './pages-admin';
 import './styles.css';
 import './storefront-theme.css';
+import './message-motion.css';
+import './notifications.css';
+import './mobile-refinements.css';
 
 export type Me = { id: number; email: string; displayName: string; roles: { role: string; campusId: number | null }[];
   affiliations: { id: number; campus: { id: number; name: string }; status: string }[]; storeId: number | null };
@@ -29,8 +32,8 @@ function HeaderSearch() {
     e.preventDefault();
     nav(q.trim() ? `/explore?q=${encodeURIComponent(q.trim())}` : '/explore');
   };
-  return <form className="head-search" role="search" onSubmit={submit}>
-    <input aria-label="Search listings" placeholder="Search products, services and skills…" value={q} onChange={e => setQ(e.target.value)} />
+  return <form className="head-search" role="search" aria-label="Header listing search" onSubmit={submit}>
+    <input aria-label="Search listings" placeholder="Search products, services and skills…" maxLength={80} value={q} onChange={e => setQ(e.target.value)} />
     <button className="btn" aria-label="Search"><Icon name="search" size={18} /></button>
   </form>;
 }
@@ -43,13 +46,13 @@ function SiteFooter() {
         <p>A student-to-student marketplace for Central Philippines State University. Listings are reviewed by campus reviewers;
           payment and handoff are arranged directly between students.</p>
       </div>
-      <nav aria-label="Marketplace"><h3>Marketplace</h3>
+      <nav aria-label="Marketplace"><h2>Marketplace</h2>
         <Link to="/explore">All listings</Link><Link to="/explore?type=physical_product">Products</Link>
         <Link to="/explore?type=service">Student services</Link><Link to="/explore?sort=price_asc">Lowest price first</Link></nav>
-      <nav aria-label="Your account"><h3>Your account</h3>
+      <nav aria-label="Your account"><h2>Your account</h2>
         <Link to="/dashboard">Sell an item</Link><Link to="/saved">Saved listings</Link>
         <Link to="/inquiries">Messages</Link><Link to="/profile">Profile</Link></nav>
-      <nav aria-label="Support"><h3>Support</h3>
+      <nav aria-label="Support"><h2>Support</h2>
         <Link to="/guidelines">Marketplace guidelines</Link><Link to="/guidelines">Reporting a listing</Link>
         <Link to="/register">Create an account</Link><Link to="/login">Sign in</Link></nav>
     </div>
@@ -154,3 +157,13 @@ function Shell() {
   );
 }
 createRoot(document.getElementById('root')!).render(<React.StrictMode><BrowserRouter><Shell /></BrowserRouter></React.StrictMode>);
+
+// Only the production web app installs the offline fallback. API responses and student
+// session data stay network-only; the service worker caches no personalized content.
+if (import.meta.env.PROD && 'serviceWorker' in navigator && window.isSecureContext) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js').catch(() => {
+      // Marketplace still works online if service worker registration is unavailable.
+    });
+  });
+}

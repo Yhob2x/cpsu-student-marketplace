@@ -1,5 +1,7 @@
 # Implementation status
 
+**Platform consolidation (2026-11-12):** The primary interface for desktop, tablets and phones is now **one responsive React/Vite PWA** (`apps/web`), supported by `apps/api`. The prior Expo app and its local uncommitted source are safely archived at `legacy/expo-mobile` and removed from the workspaces. `npm run mobile`/`bun run mobile` and the `extra.apiUrl` setup are no longer required. See `README.md`, `docs/SYSTEM_OVERVIEW.md` and `docs/UNIFIED_WEB_PWA_2026-11-12.md`. Older entries below describe historical work.
+
 **WP2 status (2026-11-11):** C4 approved; local Prisma reports four applied migrations (Stage 1 FK/index + WP2 states included). Product condition, availability management, sold terminal status, soft delete, search filter, favorite restriction, web seller UI, and mobile browse safety are implemented. 17 integration tests, five unit tests, API/web/mobile typechecks and web build pass. Browser/mobile-device acceptance testing outstanding; no production release. Full report: `docs/WP2_IMPLEMENTATION_REPORT.md`.
 
 **Stage 1 restore evidence (2026-11-11):** Full SQL backup and restore of local dev data succeeded in an isolated schema, preserving 402 records across 20 tables. Candidate integrity migration tested successfully on restored data and discarded with the sandbox. Dev/production schema unchanged, migration deployment gate pending. See `docs/STAGE1_RESTORE_DRILL_REPORT.md`.
@@ -72,3 +74,5 @@ Percentages are judgement calls based on the requirement lists in `docs/FUNCTION
 
 `docs/MVP_SCOPE.md` §4 holds eight decisions the owner must make; §5 sequences the work. Nothing in Stages 2–9 should start before those
 decisions are recorded in the blueprint.
+
+**Notifications visual/interaction refinement (2026-11-12):** The unified web PWA notifications centre now has an accessible All/Unread filter, unread summary, Today/Yesterday/Earlier groups, distinct notification cards, direct Mark read controls, and graceful loading/error/empty feedback. This is UI polish on existing API contracts, not completion of still-missing MVP notification event types. Frontend production build and headless browser checks (320–1440px) passed; device/screen-reader acceptance remains outstanding. See `docs/UI_UX_GUIDELINES.md` §14.

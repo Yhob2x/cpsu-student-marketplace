@@ -1,5 +1,37 @@
 # Changelog
 
+## 2026-11-12 — Mobile UI/UX refinement (local only)
+
+- **Home:** Shortened the decorative hero at 320px from 847px to 508px and at 390px from 682px to 394px. Phone/tablet PWA content now reaches categories and listings sooner; desktop artwork stays intact.
+- **Explore:** Mobile All/Products/Services chips, collapsible advanced filters with active count and accurate URL-linked state. One-column controls at 320px stop cramped Campus/Category selection. First visible listing now starts near 529px at 320px and 472px at 390px.
+- **Shared UX:** Refined small-phone listing typography/spacing, 48px mobile bottom tabs, compact auth-card spacing and accessible Messages action. All functionality and forest-green styling preserved.
+- **QA:** Production build, 5 API unit tests, PWA validation and six Axe Home/Explore/Login scans passed. Browser interaction tests covered filters, reset, zoom, and desktop fallback. See `docs/MOBILE_UI_UX_REFINEMENT_2026-11-12.md` and screenshots under `docs/qa/`. Physical phone acceptance is still pending.
+
+
+## 2026-11-12 — PWA mobile finalization (local only)
+
+- **App icon:** Replaced the generic C with a custom cream-C/gold-sparkle/forest-green symbol; retained source SVG and dependency-free PowerShell generator. Separate 192/512px normal + maskable icons and 180px Apple touch icon.
+- **Install metadata:** Short iPhone home-screen name `CPSU Market`, separate manifest maskable icon entries, three Android launcher shortcuts (Explore/Sell/Messages), and refreshed safe static-icon cache version.
+- **Mobile bottom bar:** Preserved Home/Explore/Sell/Messages/Profile and added a subtle selected-tab top marker. Route switching, `aria-current`, keyboard reply behavior, 44px targets, and responsive widths were verified using read-only browser fixtures.
+- **QA:** Added `bun run pwa:check`, a 390px simulated mobile screenshot, and `docs/PWA_MOBILE_FINALIZATION_2026-11-12.md`. Chrome found no manifest/installability errors; Android/iOS physical installation remains blocked pending real-device validation. No production deployment or GitHub push.
+
+
+## 2026-11-12 — Conversation-start listing context (local only)
+
+- **Added:** One compact listing summary at the beginning of each chat history, showing the relevant item's real title, first photo (with fallback), product/service type, price and basis, condition when applicable, availability, and listing ID.
+- **API:** Expanded participant-authorized `GET /inquiries/:id/messages` with a whitelisted `listing` object; private listing media is not exposed after a listing becomes unpublished.
+- **Preserved:** Existing forest-green PWA theme, message read/delivery receipts, date dividers, typing, presence, handoff flow and permissions. No order/shipping/payment functionality or database migration.
+- **QA:** Web build, API TypeScript, 5/5 unit tests, 18/18 isolated API integration tests (130 assertions) and test-database integrity audit passed. Real-device visual and screen-reader checks remain pending; no deployment.
+
+## 2026-11-12 — Unify mobile and web as one responsive PWA
+
+- **Changed:** `apps/web` is the sole mobile/desktop frontend, with installable manifest, icons and a safe offline fallback; `/api/v1` remains same-origin and existing backend permission rules remain authoritative.
+- **Retired:** The separate Expo startup command and device-specific `extra.apiUrl` setup. Preserved the existing Expo source (including local WIP changes) under `legacy/expo-mobile` rather than deleting it.
+- **Updated:** Bun and npm workspace lockfiles, `README.md`, current system overview, security and testing references, and Nginx manifest/service-worker cache headers.
+- **Security:** Removed obsolete Expo `:8081` development CORS exceptions; PWA service worker never caches API responses or private content.
+- **Release gate:** Production deployment remains blocked pending real-device and screen-reader acceptance.
+
+
 **WP2 implementation verification (2026-11-11):** C4 approved and recorded in the blueprint. Local development reports Stage 1 and WP2 migrations applied (4 total). Implemented web seller condition/availability/remove controls, condition filter and pagination; mobile sold/reserved handling; 3 WP2 HTTP regression cases. **17/17 integration tests, 5/5 unit tests; API/web/mobile TypeScript checks and web build passed.** Retained post-migration SQL backup created under the user's private Documents directory. See `docs/WP2_IMPLEMENTATION_REPORT.md`. No production deployment.
 
 **Stage 1 backup/restore drill (2026-11-11):** Added `apps/api/scripts/verify-integrity-restore.ts` and `db:restore-rehearsal` command. Dumped current local development DB to temporary private SQL, restored 20 tables / 402 rows with matching SHA-256 content, applied 19 FKs plus index to restored copy and confirmed no changed rows; temporary SQL/database removed. No deployment migration. See `docs/STAGE1_RESTORE_DRILL_REPORT.md`.
@@ -48,6 +80,10 @@ call to action.
   and the masthead, hero, category rail and rails render as designed.
 - Fixed during verification: "Fresh listings" and "Student services" repeated cards from "Top picks" (on this catalogue the services rail was
   an exact subset), so the services rail drops anything already shown above it and a section with nothing left disappears;
+- The mobile home now matches the web storefront in detail: the hero carries the web copy ("Great finds. Right on campus."), two actions,
+  live listing photos and the "From students" sticker; the category rail has an "Explore by category" heading and "View all" tile styling;
+  promo tiles pass their own filter (services, products) into Explore; cards show a Service/Product tag, category and condition, and a bold
+  price; the seller band gained its eyebrow and the footer its two link groups. Explore accepts a listing type and shows it as a removable chip.
 - Marking a listing sold now asks for confirmation first. Sold is final in v1 (the listing leaves public search and cannot be relisted),
   so a mis-picked option must not end a listing silently; cancelling the prompt leaves the previous availability selected. The mobile
   app has no availability control in this version, so there is nothing to mirror there. and a percentage `maxWidth` on the mobile card is ignored by React Native Web, which squeezed four cards into one row
@@ -226,3 +262,10 @@ Reconstructed from migrations `20261110063101_init` and `20261110090354_message_
 - Nginx, systemd unit, and database+media backup script under `infrastructure/`.
 - Pilot design docs: `docs/architecture.md`, `docs/roles-and-permissions.md`, `docs/campus-policy-rules.md`, `docs/privacy-and-retention.md`.
 - Five authorization unit tests.
+
+## 2026-11-12 — Notifications experience refinements
+
+- **Changed:** `/notifications` now has a forest-green unread summary, All/Unread controls, Today/Yesterday/Earlier groups, distinct notification categories, readable summaries, and separated View/Mark read actions.
+- **Fixed:** Initial loading failures no longer appear as an empty inbox; failed refreshes preserve already loaded notifications. Unknown/unclickable notifications can be marked as read individually. Action and refresh feedback is announced without a toast dependency.
+- **Accessibility:** 44px touch targets, keyboard focus, filter pressed state, one contextual status message, and reduced-motion support.
+- **Verified:** Frontend build; headless responsive and interaction tests at 320–1440px with mock notification payloads. Backend contracts, database, permissions, and production records unchanged; physical-device and screen-reader acceptance remain open.

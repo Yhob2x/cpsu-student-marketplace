@@ -32,7 +32,8 @@ header.top { background: #fff; box-shadow: 0 1px 0 var(--line); }
 .head-search .btn { background: var(--forest); border-radius: 11px; }
 .actions { gap: .15rem; }
 .actions a { min-width: 44px; min-height: 44px; justify-content: center; color: var(--forest); }
-.actions a.active, .actions a:hover { color: var(--forest); background: var(--mango-soft); }
+.actions a.active { color: var(--forest); background: var(--mango-soft); }
+@media (hover: hover) and (pointer: fine) { .actions a:hover { color: var(--forest); background: var(--mango-soft); } }
 .who .signin { min-height: 44px; display: inline-flex; align-items: center; white-space: nowrap; }
 .who .btn { white-space: nowrap; }
 .navrow { border-top: 1px solid var(--surface-stroke); gap: clamp(.9rem, 1.7vw, 1.6rem); }
@@ -40,12 +41,12 @@ header.top { background: #fff; box-shadow: 0 1px 0 var(--line); }
 .navrow > a:not(.all-cats).active { border-bottom-color: var(--forest); color: var(--forest); }
 .all-cats { background: var(--forest); border-radius: 9px; padding: .6rem 1rem; }
 .btn { border-radius: 9px; background: var(--forest); color: white; font-weight: 700; }
-.btn:hover:not(:disabled) { background: var(--leaf); }
+@media (hover: hover) and (pointer: fine) { .btn:hover:not(:disabled) { background: var(--leaf); } }
 .btn.ghost { color: var(--forest); background: transparent; border: 1px solid var(--forest); }
-.btn.ghost:hover:not(:disabled) { background: var(--mango-soft); }
-.btn.danger:hover:not(:disabled) { background: var(--danger); }
+@media (hover: hover) and (pointer: fine) { .btn.ghost:hover:not(:disabled) { background: var(--mango-soft); } }
+@media (hover: hover) and (pointer: fine) { .btn.danger:hover:not(:disabled) { background: var(--danger); } }
 .btn.gold { background: #fff; color: var(--forest); border: 1px solid #fff; }
-.btn.gold:hover:not(:disabled) { background: #e8f3ea; }
+@media (hover: hover) and (pointer: fine) { .btn.gold:hover:not(:disabled) { background: #e8f3ea; } }
 input, select, textarea { border: 1px solid var(--line); border-radius: 9px; background: #fff; }
 input:focus, select:focus, textarea:focus { border-color: var(--leaf); }
 .panel { border-color: var(--surface-stroke); border-radius: 14px; }
@@ -111,7 +112,8 @@ input:focus, select:focus, textarea:focus { border-color: var(--leaf); }
   border-radius: 13px;
   font-size: .79rem; color: var(--forest);
 }
-.cat:hover, .cat:focus-visible { background: #eaf3ec; border-color: #b8d2c1; }
+.cat:focus-visible { background: #eaf3ec; border-color: #b8d2c1; }
+@media (hover: hover) and (pointer: fine) { .cat:hover { background: #eaf3ec; border-color: #b8d2c1; } }
 .cat-ico { width: 48px; height: 48px; border: 0; background: #fff; color: var(--forest); }
 .cat-ico svg { width: 21px; height: 21px; }
 .cat > span:last-child { min-height: 2.5em; }
@@ -121,7 +123,7 @@ input:focus, select:focus, textarea:focus { border-color: var(--leaf); }
 .rail { gap: .9rem; padding: .2rem .15rem .85rem; }
 .rail .product-card { flex-basis: 210px; }
 .product-card { background: transparent; border: 0; box-shadow: none; }
-.product-card:hover { border: 0; transform: none; box-shadow: none; }
+@media (hover: hover) and (pointer: fine) { .product-card:hover { border: 0; transform: none; box-shadow: none; } }
 .product-card .product-photo { border-radius: 12px; background: var(--surface-neutral); }
 .product-card .listing-kind {
   background: #fff; color: var(--forest);
@@ -133,7 +135,7 @@ input:focus, select:focus, textarea:focus { border-color: var(--leaf); }
 .product-card .product-photo .heart-btn[aria-pressed="true"]::before { background: var(--mango); }
 .product-card:focus-within .product-photo { outline-color: var(--focus-green); }
 .product-card .product-photo .heart-btn:focus-visible { outline-color: var(--focus-green); }
-.product-card .body { padding: .75rem .15rem .45rem; gap: .3rem; }
+.product-card .body { padding: .85rem .625rem .55rem; gap: .35rem; }
 .product-card h3 { color: var(--ink); font-weight: 750; line-height: 1.36; }
 .product-card .price { color: var(--forest); font-weight: 800; }
 .product-card .seller, .product-card .product-category, .product-card .card-campus { color: var(--ink-soft); }
@@ -148,7 +150,8 @@ input:focus, select:focus, textarea:focus { border-color: var(--leaf); }
 .auth-form { border-color: var(--surface-stroke); box-shadow: 0 10px 30px rgb(6 44 23 / 4%); }
 .empty { border: 1px solid var(--line); background: var(--surface-soft); }
 .status.pending_review, .status.pending { background: #fffaf0; }
-.notif:hover, a.notif:focus-visible, .inquiry-row:hover, .inquiry-row:focus-visible { background: #f9fbf9; }
+a.notif:focus-visible, .inquiry-row:focus-visible { background: #f9fbf9; }
+@media (hover: hover) and (pointer: fine) { .notif:hover, .inquiry-row:hover { background: #f9fbf9; } }
 .listing-detail-content > .panel { background: #fff; }
 .listing-gallery img, .listing-photo-empty { background: var(--surface-neutral); }
 
@@ -189,8 +192,8 @@ input:focus, select:focus, textarea:focus { border-color: var(--leaf); }
 .site-foot .foot-grid { padding-top: 2.65rem; padding-bottom: 2.3rem; }
 .site-foot strong { color: white; font-size: 1.15rem; letter-spacing: -.025em; }
 .site-foot nav a { color: #d9eadd; }
-.site-foot nav a:hover { color: #fff; }
-.site-foot h3 { color: #d0e7d8; font-weight: 800; letter-spacing: .04em; }
+@media (hover: hover) and (pointer: fine) { .site-foot nav a:hover { color: #fff; } }
+.site-foot h2 { color: #d0e7d8; font-weight: 800; letter-spacing: .04em; }
 .foot-base { border-color: rgb(255 255 255 / 18%); padding-top: 1rem; }
 .site-foot :focus-visible, .cta-band :focus-visible, .strip :focus-visible { outline-color: #fff; }
 .tabbar { box-shadow: 0 -4px 15px rgb(12 57 31 / 7%); }
@@ -223,6 +226,7 @@ input:focus, select:focus, textarea:focus { border-color: var(--leaf); }
   .hero-trust { gap: .55rem 1rem; font-size: .74rem; }
   .cat { width: 120px; min-height: 112px; }
   .rail .product-card { flex-basis: 185px; }
+  .product-card .body { padding: .75rem .5rem .45rem; gap: .3rem; }
   .promos { margin-block: 1.5rem 2rem; }
   .promo { min-height: 134px; padding: 1.15rem; }
   .cta-band .btn.gold { width: 100%; margin-left: 0; }

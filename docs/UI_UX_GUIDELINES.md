@@ -120,10 +120,93 @@ composer yet. The admin area still has no sub-navigation for the sections it doe
 - Every input has a visible label or `aria-label`; every async result is announced (`role="alert"` / `role="status"` /
   `accessibilityLiveRegion`).
 - Contrast: body text on `--paper` and white on `--leaf` pass AA at these values; **verify** any new color pair.
-- Honor `prefers-reduced-motion` (shimmer animation is already disabled) and `prefers-color-scheme` (both themes ship).
+- Honor `prefers-reduced-motion` (shimmer, typing dots, and message entry motion are disabled when requested); the web app intentionally ships one light-only forest-green theme.
 - No hover-only affordances; the mobile layout must work one-handed with the tab bar reachable.
 
 ## 8. Copy conventions
 
 Sentence case for headings and buttons. Prices as `₱` on web (`Intl` en-PH, no decimals) and `PHP …` on mobile. Statuses render with
 `_` replaced by a space. Avoid jargon ("storefront", "handoff" is acceptable in the thread only because it is explained in the guidelines page).
+
+## 9. Listing-card refinement — Phase 2 (12 November 2026)
+
+- **Single reusable card:** `ListingCard` in `apps/web/src/pages-public.tsx` is shared across Home, Explore, Saved, and store pages; keep all listing and save actions unchanged.
+- **Reading space:** card text has 8 px horizontal padding on phones and 10 px on larger viewports, while photos remain frameless and the Product/Service badge and 44 px save target keep their positions.
+- **Long metadata:** category and product condition may wrap into separate lines; seller and campus names retain their one-line truncation and full text in their title attributes.
+- **Prices:** preserve the complete peso amount and allow a meaningful rate basis to wrap below it instead of collapsing into an unreadable suffix.
+- **Images:** absent media keeps “No photo yet”; failed media requests show “Photo unavailable” without a broken-image icon. A changed image URL can render normally even after the previous URL failed.
+- **Enlarged text:** listing-grid columns adapt to text size while preserving normal-size breakpoints of two columns on phones, three on small tablets, four on medium screens, and five on wide screens.
+- **Verification:** production web build and API unit tests pass. Headless Chrome checks at 320, 360, 390, 768, 1024 and 1440 px with long values, max price, failed images, and 200% text size found no horizontal overflow. Physical-device checks remain necessary.
+
+## 10. Mobile interaction polish — Phase 3 (12 November 2026)
+
+- **Touch response:** links and buttons use `touch-action: manipulation` and controls provide immediate `:active` feedback without disabling pinch-to-zoom. Browser tap highlights are suppressed; content text remains selectable and card links retain long-press link actions.
+- **Pointer capability:** hover effects apply only to `(hover: hover) and (pointer: fine)`; keyboard focus states remain independent and visible. Reduced-motion preferences continue to disable decorative transitions.
+- **Safe areas:** the web viewport declares `viewport-fit=cover` and `interactive-widget=resizes-content`. Header/page gutters and mobile tab-bar padding respect available safe-area insets; the light-only forest-green theme remains unchanged.
+- **Footer:** marketplace, account, and support links provide at least 44 px of touch height.
+- **Conversation keyboard:** the reply field sets `enterKeyHint="send"`; the message log stops scroll chaining. While the reply field is focused on narrow screens, the fixed tab bar hides and the message log shrinks. `visualViewport` resize and scroll events reserve extra space and scroll the composer above overlaid mobile keyboards when needed. The behavior does not change message submission or the follow-latest scroll rule.
+- **Checks:** local TypeScript/Vite build, API unit tests, desktop browser breakpoint inspections, touch emulation and a simulated keyboard overlay. Test a real iPhone/Android handset (notch, keyboard open/close, Safari's viewport handling, and long-press) before production deployment.
+
+## 11. Chat motion and truthful receipts — 12 November 2026
+
+- **Server receipt contract:** InquiryMessage already has deliveredAt and seenAt (existing 20261110090354_message_status migration). Message retrieval by the recipient sets deliveredAt. POST /inquiries/:id/seen accepts a validated positive upToId and updates only that recipient's incoming messages at or below the observed ID, after authorization. No migration or new dependency was needed.
+- **Meaning:** Sent = persisted on server; Delivered = recipient fetched the conversation; Read = recipient's visible, focused conversation client acknowledged the message in view. The API does not claim to determine whether the person physically read the words. Closed threads remain readable. No sender can mark their own messages read.
+- **Inbox:** If the most recent message belongs to the current user, show a compact one-check gray Sent, two-check gray Delivered, or two-check forest-green Read status below the preview.
+- **Conversation:** Use one Today/Yesterday/date divider per calendar-day change; use one concise timestamp at the end of each same-sender run, and show the receipt only beneath the user's latest outgoing message. Dark forest-green outgoing bubbles, white incoming bubbles, and matching green send action preserve the light-only palette.
+- **Animation:** New messages only enter upward 12px over 240ms, never reanimate old history on polling; the existing typing heartbeat drives three gently staggered dots. Both motions switch off with prefers-reduced-motion.
+- **Read visibility:** Only incoming messages at least 50% visible within an active, focused thread are acknowledged. Already seen messages are excluded and newer messages beyond upToId are untouched. A missed acknowledgment can retry on later refresh/visibility.
+- **Verification:** Production web build; direct API TypeScript; isolated MySQL integration including sender/recipient/outsider/partial-read lifecycle; headless Chrome at 320, 390, 768, 1440 px. Physical-device and assistive-technology walkthrough remain release QA items.
+
+## 12. Chat alignment, timestamps, contrast, and presence (12 November 2026)
+
+- Chat layout follows physical left/right edges: inbound left, own messages right. Repeated avatar initials and visible sender names are removed from the thread; author and full timestamps remain available to assistive technologies, while the inbox retains its listing avatar.
+- Same-sender runs: **4px** vertical spacing; sender switches: **18px** spacing; bubble corner radius: **20px** with one smaller trailing corner.
+- One **date divider** appears per calendar-day transition. The **single visible timestamp** follows the newest message in a thread; older exact timestamps remain in bubble tooltips and accessible labels.
+- Outgoing bubble and send button use the existing accent green `#10543A`; white bubble text has **8.93:1** measured contrast, exceeding the requested 8.3:1 minimum. Incoming messages stay white. Receipt text remains directly below the latest outgoing message.
+- The header shows **Online** only when the other conversation participant has sent a heartbeat from a visible, focused chat tab within 25 seconds. Without such evidence, show **Not active in chat**, which makes no claim about their status elsewhere. Presence is ephemeral and participant-only; no profile-wide tracking, app-global presence, migration, or new dependency.
+- Sent -> Delivered -> Read transitions remain grounded in server events. Receipt updates get a subtle 240ms fade/slide and new messages retain their 240ms upward entry. Typing dots use the existing typing heartbeat. All animation is disabled by prefers-reduced-motion.
+- Validated in browser at 320/390/768/1440px: no page overflow, exact 4px/18px spacing, 20px radius, one divider/time, correct accent background, and correct Online/Not-active responses; 240ms/0ms motion verified. Physical-device and screen-reader QA remain open.
+
+## 13. Participant names in Messages (12 November 2026)
+
+- **Online** refers to a recent heartbeat from the other participant while their **specific conversation** tab is visible and focused. It does not indicate account login, inbox viewing, or general site activity. Heartbeats recur every 10 seconds and expire after 25 seconds. Typing dots and Sent/Delivered/Read remain independent signals.
+- In the `/inquiries` inbox, use the other participant's **User.displayName** as the primary card title and avatar initials, with the listing title as secondary `About:` context. A last message authored by the viewer is prefixed `You:`. Preserve the buyer/seller role, time, closed status and receipt.
+- In a conversation, use the other student's name as the header title with the accurate chat-scoped presence status underneath. Do not reintroduce repeated names into each message bubble.
+- The API selects the seller owner name for the buyer and buyer name for the seller, based on participant-checked thread relationships. Never disclose unrelated users' names or include email/password details.
+- Browser checks at 320, 390, 768 and 1440px confirmed names, contextual listing, avatar initials, outgoing `You:` prefix, thread heading, and no horizontal overflow. Isolated API integration verified reciprocal name selection and absence of email leakage.
+
+## 14. Notifications feed refinement — 12 November 2026
+
+- Responsive web/PWA route `/notifications` follows the approved single-light white/forest-green theme. Its CSS is isolated in `apps/web/src/notifications.css` and imported after shared styles in `apps/web/src/main.tsx`.
+- Layout: notifications heading + refresh, dark-green unread summary with a bulk mark-read action, two accessible `aria-pressed` filters (All / Unread), and date groups (Today / Yesterday / Earlier). The API returns only the most recent 50, so the page states that limit instead of claiming the complete historical archive.
+- Each row retains the existing backend message, listing, and affiliation notification logic, but presents a clear title, contextual text, time, type icon, and visible New state for unread items. Linked content navigates to its existing destination and attempts mark-read; a separate Mark read button is available without navigation, including for unknown notification types that have no destination.
+- All controls respect 44px minimum target height, visible keyboard focus, semantics, adequate text wrapping and contrast, and reduced-motion settings. No new library, server route, database model, user permission or notification delivery channel was added.
+- Async states: loading skeleton, purpose-specific empty state, filtered-empty state, descriptive load error with retry, retained existing rows after failed refresh, confirmation for successful mark-read operations. Refresh and action buttons expose pending/disabled states; read badge in the shell synchronizes with server after actions.
+- Verification: TypeScript/Vite production build passed. Headless browser evaluated 7 simulated notification types at 320, 360, 390, 768, 1024, 1440px: no horizontal overflow, 44px controls, filters, dated grouping, per-item read, bulk read, error preserving previously loaded records, and successful empty states. Separate checks covered first-load failure/retry, unrelated notification without a link, and mark-read/navigation to a real route path. All browser data was mocked; production marketplace rows were not modified. Physical-device and manual screen-reader checks remain release QA items.
+
+## 15. Conversation-start listing card — 12 November 2026
+
+- Each `/inquiries/:id` conversation shows one compact listing-context card at the **beginning of the message log**, immediately after the first date divider and before the first message. Existing scroll-to-latest behavior is preserved for established conversations.
+- The card uses **real thread listing data**: first photo by media position, listing title, Product/Service type, peso price and optional rate basis, optional product condition, actual availability, and listing ID. No fictional order ID, order total, shipping state, payment or checkout flow is displayed.
+- It uses the approved white/forest-green theme, 4/8px spacing rhythm, shrinkable columns, reserved square image space, full-name semantics and a no-photo/image-failure fallback. The listing link has a 44px hit target; condition is omitted for services.
+- The existing participant-authorized messages API includes a narrowly whitelisted `listing` summary. When a listing is no longer published/approved, the thread remains readable but the card says **Listing unavailable** and the API does not return a private photo URL.
+- Verified: web TypeScript/Vite build, API TypeScript check, five unit tests, 18 isolated MySQL integration tests with 130 assertions, and test DB integrity audit. Device screenshot comparison, browser layout and manual screen-reader acceptance remain open before production approval.
+
+## 16. PWA launcher and bottom navigation — 12 November 2026
+
+- Use the original forest-green/cream/gold CPSU Market C-and-sparkle mark for web/PWA home-screen images. This is **not** an official CPSU crest; institutional branding remains subject to approval.
+- Android requires two icon purposes, `any` and `maskable`, at 192px and 512px; the maskable mark must remain inside the central 80%-diameter safe area. iPhone uses the 180px Apple touch icon and short label **CPSU Market**.
+- The unified responsive app retains the same bottom navigation on phones: **Home, Explore, Sell, Messages, Profile**. Keep it fixed, safe-area aware, with icons, visible labels, 44px+ touch targets, a pale-green selected-tab background, and a subtle forest-green top marker.
+- Use `NavLink`'s `aria-current="page"` for active indication, including nested Messages routes. Hide the bar while the conversation reply textarea is focused so the keyboard cannot cover the input.
+- Tested in local Chrome at 320/360/390/414/768/860/861/1024/1440px, including 200% text at 320px: no clipped labels or horizontal overflow; mobile navigation hidden above 860px. Activated all five routes and verified nested Messages and chat focus transitions using a read-only browser fixture.
+- The offline fallback explains that live listings and messages require a connection. Do not cache API data or authenticated pages. Real iPhone/Android launcher, safe-area and VoiceOver/TalkBack acceptance **remain required**.
+
+## 17. Mobile content-first UX — 12 November 2026
+
+- On phones and tablet widths using the fixed five-item navigation, prioritize marketplace content over the decorative Home collage. Desktop artwork and the forest-green/white theme are unchanged.
+- Home must bring category browsing into view earlier: at 320px the compact hero is approximately 508px tall instead of 847px, at 390px it is approximately 394px rather than 682px. Avoid hiding essential trust, action, or search copy; the art is decorative.
+- Mobile Explore has immediate All / Products / Services buttons, each with `aria-pressed`, using the same URL-filter state as the existing desktop select. Advanced filters are collapsed initially below 640px and the mobile toggle has `aria-expanded`, `aria-controls`, and an active-filter count.
+- Opened advanced fields occupy a full column at 320px, preventing severely abbreviated option labels. Desktop keeps its full-width three-column panel. Reset still clears the URL and restores the type chips.
+- Preserve two-column listing cards on standard phones and allow the existing rem-based grid to collapse for magnified text. Keep readable typography, 44px save controls, and at least 48px app-bottom-tab targets.
+- Browser checks cover 320/360/390/414/560/768/1024px, interaction states, 200% text, no horizontal overflow, and Axe-core on Home/Explore/Login at 320/390px (0 confirmed violations; card contrast computations still require manual review).
+- Do not treat Chrome emulation as real iPhone/Android verification. Physical device keyboard/safe-area, PWA install, and VoiceOver/TalkBack tests remain release blockers.

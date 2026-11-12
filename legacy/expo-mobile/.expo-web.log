@@ -6,7 +6,11 @@ The following packages should be updated for best compatibility with the install
 Your project may not work correctly until you install the expected versions of the packages.
 Waiting on http://localhost:8081
 Logs for your project will appear below.
-Web Bundled 793ms apps\mobile\index.js (354 modules)
-Web Bundled 20ms apps\mobile\index.js (1 module)
+Web Bundled 818ms apps\mobile\index.js (348 modules)
+Web Bundled 16ms apps\mobile\index.js (1 module)
 Web Bundled 22ms apps\mobile\index.js (1 module)
-Web Bundled 30ms apps\mobile\index.js (1 module)
+Web Bundled 14ms apps\mobile\index.js (1 module)
+Web Bundled 20ms apps\mobile\index.js (1 module)
+Web Bundled 34ms apps\mobile\index.js (1 module)
+Web Bundled 22ms apps\mobile\index.js (1 module)
+Web Bundled 26ms apps\mobile\index.js (1 module)

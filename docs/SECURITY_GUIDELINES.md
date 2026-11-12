@@ -14,7 +14,7 @@ Not legal advice — CPSU's data protection officer must review (`docs/privacy-a
 | Refresh tokens | 48 random bytes, stored only as SHA-256 hash, 30-day expiry, rotated on every use | `routes/auth.ts`, `Session` |
 | Token-reuse detection | Presenting a spent refresh token revokes **all** of that user's sessions | `routes/auth.ts` |
 | Cookie hardening | `httpOnly`, `SameSite=Lax`, `Secure` when `COOKIE_SECURE=true`, narrow paths (`/api/v1/auth`, `/api/v1/media`) | `routes/auth.ts` |
-| Mobile secret storage | OS keychain/keystore via `expo-secure-store` | `apps/mobile/src/api.ts` |
+| Unified browser/PWA sessions | HttpOnly refresh cookies and in-memory access token, same as desktop web; no cached private user data | `apps/web/src/api.ts`, `apps/web/public/sw.js` |
 | Authorization | Roles read from the DB per request; no client-supplied role, campus, or owner id is trusted | `src/auth.ts`, `permissions.ts` |
 | IDOR resistance | Ownership joins; out-of-scope resources return `404` | `routes/seller.ts`, `routes/inquiries.ts`, `routes/admin.ts` |
 | SQL injection | Prisma parameterized queries only; no raw SQL | throughout |

@@ -9,12 +9,12 @@ There is no OpenAPI document; this file is the contract of record and must chang
 | Topic | Behavior |
 |---|---|
 | Auth (web) | `Authorization: Bearer <15-min JWT>` held in memory. A rotating refresh token lives in an `httpOnly` cookie scoped to `/api/v1/auth`; a second cookie scoped to `/api/v1/media` lets `<img>` authenticate. |
-| Auth (mobile) | Send `X-Client: mobile`; tokens come back in the JSON body, refresh token stored in the OS keychain/keystore. |
+| Auth (legacy native API contract, not an active client) | The API still recognizes `X-Client: mobile` for future compatibility; the archived Expo prototype used secure device storage. The unified web/PWA uses the cookie-based web contract above. |
 | Authorization | Roles are loaded from MySQL per request. Out-of-scope records return `404`. |
 | Validation | Zod at the boundary; failures return `400 validation_error` with `issues`. |
 | Pagination | `page` (≥1, default 1), `pageSize` (1–50, default 20); list responses are `{ total, page, pageSize, items }`. |
 | Rate limits | 300 req/min/IP globally; `/auth/*` 30 per 15 min when `NODE_ENV=production`. |
-| CORS | `CORS_ORIGINS` allowlist, credentials enabled. In development the Expo web origins (`:8081`) are added automatically; production uses the allowlist only. |
+| CORS | Only the configured `CORS_ORIGINS` allowlist is accepted; credentials enabled. The unified web/PWA uses the same-origin `/api` proxy, so it does not require the former Expo web `:8081` allowance. |
 | Media | `/media/:id` streams the file with `X-Content-Type-Options: nosniff`. |
 
 ## 2. Health
@@ -79,11 +79,13 @@ There is no OpenAPI document; this file is the contract of record and must chang
 
 | Method | Path | Notes |
 |---|---|---|
-| GET | `/inquiries` | Threads where the caller is buyer or the store owner; last message + viewer role. |
+| GET | `/inquiries` | Participant-only threads. Each row includes `otherStudentName` (the other participant's profile display name), listing title, viewer role, and last message with `mine` and `receipt` (`sent`, `delivered`, `read`). Only authorized participants can see the name; no email or credentials are included. |
 | POST | `/inquiries` | `listingId`, `body` (1–1000). Published listings only; `400 own_listing` on your own listing. Creates or reuses the thread and notifies the seller. |
-| GET | `/inquiries/:id/messages` | Participants only. Returns thread summary, messages with `mine`, author name, handoff, and `typing`. |
+| GET | `/inquiries/:id/messages` | Participants only. Returns thread (including `thread.otherStudentName`), `listing` context (`id`, `title`, `type`, numeric `price`, `priceBasis`, `condition`, `availability`, `imageUrl`), messages with `mine`, author name, `receipt`, `seenAt`, handoff and `typing`. `imageUrl` is the first photo ordered by media position; it is `null` and `availability` becomes `unavailable` when the listing is no longer publicly visible. Only participants can fetch this response. On recipient retrieval, previously undelivered incoming messages receive `deliveredAt` (real delivery). Response also includes `otherActiveInChat` from a short-lived, participant-only heartbeat. |
 | POST | `/inquiries/:id/messages` | `body` (1–1000). `409 thread_closed`. Notifies the other party. |
 | POST | `/inquiries/:id/typing` | 5-second heartbeat; in-memory, per instance. |
+| POST | `/inquiries/:id/seen` | Participants only. Body `{ upToId: positive integer }`. Recipient's client calls after the incoming message is visible and the page is active. Sets `seenAt` only on incoming messages in that thread with `id <= upToId`, and ensures `deliveredAt`; `204`, no body. Author cannot acknowledge own messages. Others get `404`. |
+| POST | `/inquiries/:id/presence` | Participants only; 204. Refreshes ephemeral 25-second presence in **this thread**, not global user status. Frontend only heartbeats while the conversation is in a visible, focused tab. Other participants can read `otherActiveInChat` in the thread response. No database migration. |
 | PUT | `/inquiries/:id/handoff` | `method`, `timeWindow` (≤80), `generalLocation` (≤120), `status` (default `proposed`). Upserts one handoff per thread. Self-reported, **not** a transaction record. |
 
 ## 8. Administration — `/admin` (authenticated + review scope)
@@ -107,7 +109,7 @@ report detail/findings, all-listings browser.
 `email_taken` (409), `invalid_campus` (400), `validation_error` (400), `not_editable` (409), `no_approved_store` (403),
 `affiliation_not_verified` (403), `store_exists` (409), `invalid_image` (400), `too_many_images` (409), `not_submittable` (409),
 `category_prohibited` (422), `incomplete_listing` (422), `own_listing` (400), `not_pending` (409), `reason_too_short` (422),
-`thread_closed` (409), `internal_error` (500). Clients map these to plain-language messages (`apps/web/src/api.ts`, `apps/mobile/src/api.ts`).
+`thread_closed` (409), `internal_error` (500). The active web/PWA maps these to plain-language messages in `apps/web/src/api.ts`; the retired native prototype is preserved under `legacy/expo-mobile/src/api.ts`.
 
 ## 10. Before exposing this API publicly
 

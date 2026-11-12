@@ -12,6 +12,9 @@ export function ListingCard({ l }: { l: Listing }) {
   const { me, savedIds, toggleSaved } = useMe();
   const [busy, setBusy] = useState(false);
   const [saveError, setSaveError] = useState('');
+  const [failedImageSrc, setFailedImageSrc] = useState<string | null>(null);
+  const imageSrc = l.images[0];
+  const showImage = Boolean(imageSrc && failedImageSrc !== imageSrc);
   const saved = savedIds.includes(l.id);
   const isOwner = me != null && me.storeId === l.seller.id;
   const canSave = !isOwner && (l.availability === 'available' || saved);
@@ -35,9 +38,9 @@ export function ListingCard({ l }: { l: Listing }) {
     <article className="card product-card">
       <Link to={`/listings/${l.id}`} className="card-link" aria-label={`View ${l.title}`} />
       <div className="img product-photo">
-        {l.images[0]
-          ? <img src={l.images[0]} alt="" loading="lazy" decoding="async" />
-          : <span className="photo-placeholder"><Icon name="tag" size={30} /><span>No photo yet</span></span>}
+        {showImage
+          ? <img src={imageSrc} alt="" loading="lazy" decoding="async" onError={() => setFailedImageSrc(imageSrc)} />
+          : <span className="photo-placeholder"><Icon name="tag" size={30} /><span>{imageSrc ? 'Photo unavailable' : 'No photo yet'}</span></span>}
         <span className="listing-kind">{l.type === 'service' ? 'Service' : 'Product'}</span>
         <button type="button" className="heart-btn" aria-pressed={saved} aria-label={saveLabel}
           title={saveLabel} aria-busy={busy} disabled={busy || !canSave} onClick={flip}>
@@ -108,8 +111,8 @@ export function Home() {
           <Link className="btn" to="/explore">Explore listings <Icon name="arrow" size={17} /></Link>
           <Link className="btn ghost" to="/dashboard">Start selling</Link>
         </div>
-        <form className="search hero-search" role="search" onSubmit={go}>
-          <input aria-label="Search listings" placeholder="Search products, services, skills…" value={q} onChange={e => setQ(e.target.value)} />
+        <form className="search hero-search" role="search" aria-label="Home listing search" onSubmit={go}>
+          <input aria-label="Search listings" placeholder="Search products, services, skills…" maxLength={80} value={q} onChange={e => setQ(e.target.value)} />
           <button className="btn">Search</button>
         </form>
         <div className="hero-trust">
@@ -180,20 +183,45 @@ export function Discover() {
   const [sp, setSp] = useSearchParams();
   // Filters that arrive in the URL (category chips on Home, a shared link) seed the form.
   // Filters named in the URL (header search, footer links, promo tiles) seed the form, price range and sort included.
-  const seed = (p: URLSearchParams): Filters => ({ ...NO_FILTERS,
-    q: p.get('q') ?? '', campusId: p.get('campusId') ?? '', categoryId: p.get('categoryId') ?? '', type: p.get('type') ?? '', condition: p.get('condition') ?? '',
-    minPrice: p.get('minPrice') ?? '', maxPrice: p.get('maxPrice') ?? '', sort: p.get('sort') ?? 'newest' });
+  const seed = (p: URLSearchParams): Filters => {
+    const type = p.get('type') ?? '';
+    const condition = type === 'service' ? '' : (p.get('condition') ?? '');
+    return { ...NO_FILTERS,
+      q: p.get('q') ?? '', campusId: p.get('campusId') ?? '', categoryId: p.get('categoryId') ?? '',
+      type: condition ? 'physical_product' : type, condition,
+      minPrice: p.get('minPrice') ?? '', maxPrice: p.get('maxPrice') ?? '', sort: p.get('sort') ?? 'newest' };
+  };
   const f = seed(sp);
   const [campuses, setCampuses] = useState<any[]>([]); const [cats, setCats] = useState<any[]>([]);
+  const [filterError, setFilterError] = useState(''); const [filtersLoading, setFiltersLoading] = useState(false);
+  const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
   const [items, setItems] = useState<Listing[] | null>(null); const [total, setTotal] = useState<number | null>(null);
   const [error, setError] = useState('');
   const currentPage = Math.max(1, Number(sp.get('page')) || 1);
   const pageCount = Math.ceil((total ?? 0) / 20);
   const navigatePage = (page: number) => { const next = new URLSearchParams(sp); next.set('page', String(page)); setSp(next); };
 
-  useEffect(() => { api('/campuses').then(setCampuses).catch(() => {}); api('/categories').then(setCats).catch(() => {}); }, []);
+  const loadFilterOptions = async () => {
+    setFiltersLoading(true);
+    setFilterError('');
+    const [campusResult, categoryResult] = await Promise.allSettled([
+      api<any[]>('/campuses'), api<any[]>('/categories'),
+    ]);
+    const failures: string[] = [];
+    if (campusResult.status === 'fulfilled') setCampuses(campusResult.value);
+    else failures.push('campus options');
+    if (categoryResult.status === 'fulfilled') setCats(categoryResult.value);
+    else failures.push('category options');
+    if (failures.length) setFilterError(`Could not load ${failures.join(' and ')}. Check your connection and retry.`);
+    setFiltersLoading(false);
+  };
+  useEffect(() => { void loadFilterOptions(); }, []);
   // URL parameters are the source of truth, including when the browser navigates back or forward.
-  const query = sp.toString();
+  // Product condition is never applied to a service search, including stale shared URLs.
+  const queryParams = new URLSearchParams(sp);
+  if (f.condition) queryParams.set('type', 'physical_product');
+  else queryParams.delete('condition');
+  const query = queryParams.toString();
   useEffect(() => {
     let active = true;
     setItems(null); setTotal(null); setError('');
@@ -205,10 +233,14 @@ export function Discover() {
 
   const set = (k: keyof Filters) => (e: { target: { value: string } }) => {
     const next = { ...f, [k]: e.target.value };
+    if (k === 'type' && next.type !== 'physical_product') next.condition = '';
+    if (k === 'condition' && next.condition) next.type = 'physical_product';
     setSp(new URLSearchParams(Object.entries(next).filter(([, v]) => v && v !== 'newest') as [string, string][]), { replace: true });
   };
   const reset = () => setSp(new URLSearchParams(), { replace: true });
   const dirty = (Object.keys(NO_FILTERS) as (keyof Filters)[]).some(k => k !== 'sort' && f[k] !== '');
+  const advancedFilterCount = (['campusId', 'categoryId', 'condition', 'minPrice', 'maxPrice'] as (keyof Filters)[])
+    .filter(k => f[k] !== '').length;
   const skel = <div className="grid listing-grid">{Array.from({ length: 8 }, (_, i) => <div key={i} className="skel card" aria-hidden="true" />)}</div>;
 
   return <>
@@ -217,10 +249,26 @@ export function Discover() {
 
     <div className="explore-toolbar">
       <label className="field explore-search">Search listings
-        <span className="input-icon"><Icon name="search" size={18} /><input placeholder="Title or description" value={f.q} onChange={set('q')} /></span>
+        <span className="input-icon"><Icon name="search" size={18} /><input placeholder="Title or description" maxLength={80} value={f.q} onChange={set('q')} /></span>
       </label>
     </div>
-    <div className="filters filter-panel" role="group" aria-label="Filter listings">
+    <div className="explore-type-chips" role="group" aria-label="Listing type">
+      {([['', 'All'], ['physical_product', 'Products'], ['service', 'Services']] as const).map(([value, label]) =>
+        <button key={value} type="button" aria-pressed={f.type === value}
+          onClick={() => set('type')({ target: { value } })}>{label}</button>)}
+    </div>
+    {filterError && <div className="panel row" role="alert"><span>{filterError}</span>
+      <button type="button" className="btn ghost" disabled={filtersLoading} onClick={() => void loadFilterOptions()}>
+        {filtersLoading ? 'Retrying…' : 'Retry filters'}
+      </button>
+    </div>}
+    <button type="button" className="mobile-filter-toggle" aria-controls="explore-filter-fields"
+      aria-expanded={mobileFiltersOpen} onClick={() => setMobileFiltersOpen(open => !open)}>
+      <Icon name="sliders" size={18} /> <span>{mobileFiltersOpen ? 'Hide filters' : 'More filters'}</span>
+      {advancedFilterCount > 0 && <span className="filter-count">{advancedFilterCount} active</span>}
+      <Icon name={mobileFiltersOpen ? 'chevronUp' : 'chevronDown'} size={18} />
+    </button>
+    <div id="explore-filter-fields" className="filters filter-panel" data-mobile-open={mobileFiltersOpen} role="group" aria-label="Filter listings">
       <label className="field">Campus
         <select value={f.campusId} onChange={set('campusId')}><option value="">All campuses</option>{campuses.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}</select>
       </label>
@@ -231,7 +279,7 @@ export function Discover() {
         <select value={f.type} onChange={set('type')}><option value="">All types</option><option value="physical_product">Products</option><option value="service">Services</option></select>
       </label>
       <label className="field">Condition
-        <select value={f.condition} onChange={set('condition')}><option value="">Any condition</option><option value="new">New</option><option value="like_new">Like new</option><option value="good">Good</option><option value="fair">Fair</option></select>
+        <select value={f.condition} onChange={set('condition')} disabled={f.type === 'service'}><option value="">Any condition</option><option value="new">New</option><option value="like_new">Like new</option><option value="good">Good</option><option value="fair">Fair</option></select>
       </label>
       <label className="field">Min price (₱)
         <input type="number" inputMode="numeric" min={0} step={1} placeholder="Any" value={f.minPrice} onChange={set('minPrice')} />
@@ -262,6 +310,7 @@ export function Discover() {
       <p className="muted">{dirty ? 'One of your filters is too narrow. Clear them and start again, or try another campus.' : 'Nothing is published yet. Check back soon — new listings appear here as soon as a reviewer approves them.'}</p>
       {dirty && <button className="btn ghost" onClick={reset}>Clear filters</button>}
     </div>}
+    {items !== null && items.length > 0 && <h2 className="sr-only">Listing results</h2>}
     <div className="grid listing-grid">{items?.map(l => <ListingCard key={l.id} l={l} />)}</div>
     {pageCount > 1 && <nav className="row" aria-label="Listing pages" style={{ justifyContent: 'center', marginTop: '1rem' }}>
       <button type="button" className="btn ghost" disabled={currentPage <= 1} onClick={() => navigatePage(currentPage - 1)}>Previous</button>

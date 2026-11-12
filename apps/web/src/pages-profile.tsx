@@ -2,6 +2,7 @@ import { FormEvent, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { api, explain, timeAgo } from './api';
 import { useMe } from './main';
+import { Icon, type IconName } from './icons';
 
 type Notice = { id: number; type: string; payload: any; readAt: string | null; createdAt: string };
 
@@ -112,71 +113,236 @@ export function Profile() {
   </>;
 }
 
+type NoticeGroup = 'Today' | 'Yesterday' | 'Earlier';
+type NoticeFilter = 'all' | 'unread';
+
+function notificationGroup(createdAt: string): NoticeGroup {
+  const date = new Date(createdAt);
+  const today = new Date();
+  const dayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+  const yesterday = new Date(dayStart);
+  yesterday.setDate(yesterday.getDate() - 1);
+  if (date >= dayStart) return 'Today';
+  if (date >= yesterday) return 'Yesterday';
+  return 'Earlier';
+}
+
+function notificationKind(n: Notice): { title: string; label: string; icon: IconName; tone: string } {
+  switch (n.type) {
+    case 'inquiry.new': return { title: 'New inquiry', label: 'Messages', icon: 'chat', tone: 'message' };
+    case 'inquiry.reply': return { title: 'New reply', label: 'Messages', icon: 'chat', tone: 'message' };
+    case 'listing.decision': {
+      const decision = n.payload?.decision;
+      const title = decision === 'approved' ? 'Listing approved'
+        : decision === 'changes_requested' ? 'Changes requested'
+        : decision === 'rejected' ? 'Listing rejected' : 'Listing review update';
+      return { title, label: 'Listings', icon: 'tag', tone: decision === 'rejected' ? 'attention' : 'listing' };
+    }
+    case 'listing.suspended':
+      return { title: 'Listing suspended', label: 'Listings', icon: 'flag', tone: 'attention' };
+    case 'affiliation.decision':
+      return {
+        title: n.payload?.decision === 'verified' ? 'Affiliation verified' : 'Affiliation update',
+        label: 'Account', icon: 'shield', tone: 'account',
+      };
+    default: return { title: 'Marketplace update', label: 'Marketplace', icon: 'bell', tone: 'general' };
+  }
+}
+
 export function Notifications() {
   const { syncUnread, me } = useMe();
   const [rows, setRows] = useState<Notice[] | null>(null);
   const [err, setErr] = useState('');
+  const [feedback, setFeedback] = useState('');
+  const [filter, setFilter] = useState<NoticeFilter>('all');
   const [busy, setBusy] = useState(false);
+  const [markingId, setMarkingId] = useState<number | null>(null);
+  const [refreshing, setRefreshing] = useState(false);
 
-  const load = () => api<Notice[]>('/notifications')
-    .then(r => { setRows(r); setErr(''); })
-    .catch(x => { setErr(explain(x)); setRows([]); });
-
-  // Wait for the shell to restore the session; fetching before that returns 401 and spends a refresh token.
-  useEffect(() => { if (me) load(); }, [me?.id]);
-
-  const markAll = async () => {
-    setBusy(true);
-    try {
-      await api('/notifications/read', { method: 'POST', body: {} });
-      await load();
-      await syncUnread();
-      setErr('');
-    } catch (x) { setErr(explain(x)); } finally { setBusy(false); }
+  const noticeError = (error: unknown, fallback: string) => {
+    const explanation = explain(error);
+    return /^[a-z][a-z0-9_]+$/.test(explanation) ? fallback : explanation;
   };
+
+  const load = async (manual = false) => {
+    if (manual) setRefreshing(true);
+    try {
+      const next = await api<Notice[]>('/notifications');
+      setRows(next);
+      setErr('');
+      if (manual) setFeedback('Notifications refreshed.');
+    } catch (x) {
+      // Preserve existing notifications on a refresh failure; never display a false empty state.
+      setErr(noticeError(x, 'Could not load notifications. Check your connection and try again.'));
+    } finally {
+      if (manual) setRefreshing(false);
+    }
+  };
+
+  // Wait until the login session has been restored to avoid an unnecessary token refresh.
+  useEffect(() => { if (me) void load(); }, [me?.id]);
 
   const unread = (rows ?? []).filter(r => !r.readAt).length;
+  const visible = (rows ?? []).filter(r => filter === 'all' || !r.readAt);
+  const groups = (['Today', 'Yesterday', 'Earlier'] as const)
+    .map(label => ({ label, items: visible.filter(n => notificationGroup(n.createdAt) === label) }))
+    .filter(group => group.items.length > 0);
 
-  // Fire-and-forget: the row navigates immediately; a failed mark-read just leaves it unread.
-  const markOne = (id: number) => {
-    api(`/notifications/${id}/read`, { method: 'POST', body: {} }).then(() => {
-      setRows(rs => rs?.map(r => r.id === id ? { ...r, readAt: r.readAt ?? new Date().toISOString() } : r) ?? null);
-      syncUnread();
-    }).catch(() => {});
+  const markAll = async () => {
+    if (busy || markingId !== null || unread === 0) return;
+    setBusy(true);
+    setErr('');
+    setFeedback('');
+    try {
+      await api('/notifications/read', { method: 'POST', body: {} });
+      const readAt = new Date().toISOString();
+      setRows(prev => prev?.map(n => ({ ...n, readAt: n.readAt ?? readAt })) ?? null);
+      await syncUnread();
+      setFeedback('All notifications marked as read.');
+    } catch (x) {
+      setErr(noticeError(x, 'Could not mark notifications as read. Please try again.'));
+    } finally {
+      setBusy(false);
+    }
   };
 
-  return <>
-    <div className="page-head">
+  const markOne = async (id: number) => {
+    if (busy || markingId !== null) return;
+    setMarkingId(id);
+    setErr('');
+    setFeedback('');
+    try {
+      await api('/notifications/' + id + '/read', { method: 'POST', body: {} });
+      const readAt = new Date().toISOString();
+      setRows(prev => prev?.map(n => n.id === id ? { ...n, readAt: n.readAt ?? readAt } : n) ?? null);
+      await syncUnread();
+      setFeedback('Notification marked as read.');
+    } catch (x) {
+      setErr(noticeError(x, 'Could not mark this notification as read. Please try again.'));
+    } finally {
+      setMarkingId(null);
+    }
+  };
+
+  return <section className="notifications-page">
+    <header className="notifications-heading">
       <div>
+        <span className="notifications-eyebrow"><Icon name="bell" size={15} /> YOUR ACTIVITY</span>
         <h1>Notifications</h1>
-        <p className="muted">Review decisions, replies and affiliation updates. This is the only channel in this version.</p>
+        <p className="muted">Messages, listing reviews and CPSU account updates—all in one place.</p>
       </div>
-      <button className="btn ghost" onClick={markAll} disabled={busy || unread === 0}>
-        {busy ? 'Marking…' : unread > 0 ? `Mark all ${unread} as read` : 'All read'}
+      <button type="button" className="notifications-refresh" onClick={() => void load(true)}
+        disabled={refreshing || busy || markingId !== null} aria-label={refreshing ? 'Refreshing notifications' : 'Refresh notifications'}>
+        {refreshing ? 'Refreshing…' : 'Refresh'}
+      </button>
+    </header>
+
+    <div className="notifications-summary">
+      <span className="notifications-summary-icon" aria-hidden="true"><Icon name="bell" size={23} /></span>
+      <div className="notifications-summary-copy">
+        <strong>{rows === null ? (err ? 'Notifications unavailable' : 'Your activity') : unread > 0
+          ? unread + (unread === 1 ? ' unread notification' : ' unread notifications') : 'You’re all caught up'}</strong>
+        <p>{rows === null ? (err ? 'Try again to see your recent activity.' : 'Checking recent activity…')
+          : unread > 0 ? 'See what needs your attention.' : 'No unread updates right now.'}</p>
+      </div>
+      <button type="button" className="btn notifications-mark-all" onClick={() => void markAll()}
+        disabled={rows === null || busy || markingId !== null || unread === 0}>
+        <Icon name="checks" size={17} />
+        {busy ? 'Marking…' : 'Mark all read'}
       </button>
     </div>
 
-    {err && <p className="err" role="alert">{err}</p>}
+    <div className="notifications-toolbar">
+      <div className="notifications-filters" role="group" aria-label="Filter notifications">
+        <button type="button" aria-pressed={filter === 'all'}
+          className={filter === 'all' ? 'is-selected' : ''} onClick={() => setFilter('all')}>
+          All <span>{rows?.length ?? 0}</span>
+        </button>
+        <button type="button" aria-pressed={filter === 'unread'}
+          className={filter === 'unread' ? 'is-selected' : ''} onClick={() => setFilter('unread')}>
+          Unread <span>{unread}</span>
+        </button>
+      </div>
+      <span className="notifications-recent-note">Most recent 50 notifications</span>
+    </div>
 
-    {rows === null && <div aria-hidden="true">
-      {Array.from({ length: 3 }, (_, i) => <div key={i} className="skel" style={{ height: 76, marginBottom: '.5rem' }} />)}
+    {err && <div className="notifications-error" role="alert">
+      <p>{err}</p>
+      <button type="button" className="btn ghost" onClick={() => void load(true)} disabled={refreshing}>
+        Try again
+      </button>
+    </div>}
+    <p className="notifications-feedback" role="status" aria-atomic="true">{feedback}</p>
+
+    {rows === null && !err && <div aria-label="Loading notifications" role="status" className="notifications-loading">
+      <span className="visually-hidden">Loading notifications…</span>
+      {Array.from({ length: 3 }, (_, i) => <div key={i} className="skel notifications-skeleton" />)}
     </div>}
 
-    {rows !== null && rows.length === 0 && !err && <p className="muted">Nothing yet. You will hear here when a reviewer decides on your listing, someone replies to an inquiry, or your affiliation is verified.</p>}
-
-    {rows !== null && rows.length > 0 && <div>
-      {rows.map(n => {
-        const to = noticeTarget(n);
-        const row = <>
-          <span className={`dot ${n.readAt ? 'read' : ''}`} aria-hidden="true" />
-          <div style={{ flex: 1 }}>
-            <p>{noticeText(n)}</p>
-            <time dateTime={n.createdAt}>{timeAgo(n.createdAt)}</time>{!n.readAt && <span className="muted"> · unread</span>}
-          </div></>;
-        return to
-          ? <Link key={n.id} to={to} className={`notif ${n.readAt ? '' : 'unread'}`} onClick={() => !n.readAt && markOne(n.id)}>{row}</Link>
-          : <article key={n.id} className={`notif ${n.readAt ? '' : 'unread'}`}>{row}</article>;
-      })}
+    {rows !== null && rows.length === 0 && !err && <div className="notifications-empty">
+      <span className="notifications-empty-icon" aria-hidden="true"><Icon name="bell" size={28} /></span>
+      <h2>No notifications yet</h2>
+      <p>Your messages, listing decisions and account updates will appear here.</p>
+      <Link className="btn" to="/explore">Explore listings <Icon name="arrow" size={16} /></Link>
     </div>}
-  </>;
+
+    {rows !== null && rows.length > 0 && visible.length === 0 && <div className="notifications-empty">
+      <span className="notifications-empty-icon" aria-hidden="true"><Icon name="check" size={28} /></span>
+      <h2>No unread notifications</h2>
+      <p>You’re all caught up. Your previous updates are still available.</p>
+      <button type="button" className="btn ghost" onClick={() => setFilter('all')}>Show all notifications</button>
+    </div>}
+
+    {groups.length > 0 && <div className="notifications-feed">
+      {groups.map(group => <section className="notifications-group" aria-label={group.label + ' notifications'} key={group.label}>
+        <div className="notifications-group-heading">
+          <h2>{group.label}</h2><span>{group.items.length}</span>
+        </div>
+        <div className="notifications-list">
+          {group.items.map(n => {
+            const to = noticeTarget(n);
+            const kind = notificationKind(n);
+            const absoluteTime = new Date(n.createdAt).toLocaleString('en-PH', {
+              month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit',
+            });
+            const content = <>
+              <span className={'notification-icon tone-' + kind.tone} aria-hidden="true">
+                <Icon name={kind.icon} size={21} />
+              </span>
+              <span className="notification-content">
+                <span className="notification-heading">
+                  <strong>{kind.title}</strong>
+                  <time dateTime={n.createdAt} title={absoluteTime}>{timeAgo(n.createdAt)}</time>
+                </span>
+                <span className="notification-description">{noticeText(n)}</span>
+                <span className="notification-meta">
+                  <span>{kind.label}</span>
+                  {!n.readAt && <span className="notification-new"><span className="notification-new-dot" aria-hidden="true" /> New</span>}
+                </span>
+              </span>
+            </>;
+            return <article className={'notification-item' + (!n.readAt ? ' is-unread' : '')} key={n.id}>
+              {to
+                ? <Link to={to} className="notification-body-link"
+                    onClick={() => { if (!n.readAt) void markOne(n.id); }}>{content}</Link>
+                : <div className="notification-body-static">{content}</div>}
+              <div className="notification-actions">
+                {to && <Link to={to} className="notification-open"
+                  onClick={() => { if (!n.readAt) void markOne(n.id); }}
+                  aria-label={'Open ' + kind.title}>
+                  View <Icon name="arrow" size={16} />
+                </Link>}
+                {!n.readAt && <button type="button" className="notification-mark-one"
+                  onClick={() => void markOne(n.id)}
+                  disabled={busy || markingId !== null}
+                  aria-label={'Mark ' + kind.title + ' as read'}>
+                  {markingId === n.id ? 'Marking…' : 'Mark read'}
+                </button>}
+              </div>
+            </article>;
+          })}
+        </div>
+      </section>)}
+    </div>}
+  </section>;
 }

@@ -1,46 +1,82 @@
 # CPSU Student Marketplace & Services
 
-Working MVP of the proposed architecture in `docs/architecture.md` (v1.0, 10 Nov 2026). Not an approved CPSU system: policies, verification method and hosting
-must be confirmed by CPSU first (architecture section 16).
+A **single mobile-first web application** for CPSU students, sellers and authorized reviewers. The same React/Vite frontend runs in desktop and mobile browsers and can be added to a phone's home screen as a Progressive Web App (PWA). There is **no separate Expo server or mobile app to start**.
 
-> **Governing specification:** `MASTER_BLUEPRINT.md` (v1.0) is the single source of truth for scope, rules and MVP boundaries.
-> Where this README or the pilot documents disagree with it, the blueprint wins. Current status against its MVP checklist, and the
-> decisions it raises, are tracked in `docs/MVP_SCOPE.md` and `progress/IMPLEMENTATION_STATUS.md`.
+> **Governing specification:** `MASTER_BLUEPRINT.md` remains the approved development baseline. The student-verification method, policies and hosting require CPSU authorization before production release.
 >
-> **Agent instructions:** `CLAUDE.md` holds the development governance (required reading, document authority, MVP protection, and the
-> inspect → analyze → plan → implement → test → document → report procedure). `AGENTS.md` holds the agent rules (first action, security
-> and authorization, database handling, multi-agent safety, completion reporting). Both defer to `MASTER_BLUEPRINT.md`.
+> **Project rules:** Follow `AGENTS.md` and `CLAUDE.md`; preserve the approved forest-green theme, published data, authentication, permissions and existing application behavior.
 
-| Part | Stack | Where |
+| Part | Stack | Location |
 |---|---|---|
-| REST API | Node.js, Express 5, TypeScript, Prisma, MySQL 8, Zod | `apps/api` |
-| Web (shoppers, sellers, reviewers) | React, TypeScript, Vite | `apps/web` |
-| iOS and Android | React Native, Expo | `apps/mobile` |
+| Shared mobile + desktop web app / PWA | React, TypeScript, Vite | `apps/web` |
+| REST API | Express, TypeScript, Prisma, MySQL, Zod | `apps/api` |
+| Historical native prototype (inactive) | React Native, Expo | `legacy/expo-mobile` |
 
-## Run it locally
-```bash
-npm install
-cp apps/api/.env.example apps/api/.env      # set DATABASE_URL and a 32+ character JWT_SECRET
-npm -w apps/api run db:migrate -- --name init
-npm run db:seed                              # dev campuses, categories, demo accounts (refuses in production)
-npm run api        # http://localhost:4000
-npm run web        # http://localhost:5173 (proxies /api)
-npm run mobile     # Expo; set extra.apiUrl in apps/mobile/app.json
-npm test
+Both mobile and desktop web use **the same origin and `/api/v1`**. There is no `extra.apiUrl` setup, native client authentication, or duplicated frontend to maintain.
+
+## Run locally on Windows (VS Code / PowerShell)
+
+1. Install dependencies once from the repository root: `bun install`.
+2. Keep your existing `apps/api/.env` settings. On first setup, copy `apps/api/.env.example` to `apps/api/.env`, then provide your own valid MySQL `DATABASE_URL` and `JWT_SECRET`. Do not reset an existing database or change credentials.
+3. Start these two commands in **separate terminals**:
+
+```powershell
+# Terminal 1 — backend API (localhost:4000)
+bun run api
+
+# Terminal 2 — one web frontend for mobile and desktop (localhost:5173)
+bun run web
 ```
-Demo accounts after seeding (password `DevPassword!123`): `seller@`, `buyer@`, `reviewer@`, `admin@` + `dev.test`. The reviewer and admin are for the Cauayan campus.
+
+Open **http://localhost:5173/** on the development computer. The Vite dev server proxies requests from `/api` to `http://localhost:4000` so the web app doesn't need a separately configured API address.
+
+For mobile-browser QA on the same trusted Wi-Fi network, run `cd apps/web; bun run dev --host 0.0.0.0` and open `http://<YOUR-PC-LAN-IP>:5173/` on the phone. Keep the API running locally, and allow the dev port in your firewall only for the trusted test network. **PWA installation and service workers require HTTPS (or localhost)**; remote mobile HTTP testing is for browser layout checks only.
+
+## Install on a phone (after HTTPS deployment)
+
+- Android Chrome: open the deployed site and choose **Install app** or **Add to Home screen**.
+- iPhone Safari: open the deployed site, use **Share → Add to Home Screen**.
+
+The web app uses the same navigation, saved listings, messages, store dashboard, profile, and reviewer tools on all screen sizes. The PWA offers an **offline connection-required page only**. It does not cache student data, API responses or private messages; those require an internet connection.
+
+## PWA icon and mobile navigation QA
+
+The installable PWA uses the original CPSU Market C-and-sparkle icon in forest green, cream and gold. This is not an official university seal. Android receives separate 192px/512px maskable icons; iPhone uses an Apple touch icon and the short home-screen name **CPSU Market**. Phones have five fixed bottom tabs: Home, Explore, Sell, Messages and Profile.
+
+To regenerate and validate the icons from the repository root:
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File scripts/generate-pwa-icons.ps1
+bun run pwa:check
+```
+
+Chrome browser-emulated installation, icon shape and navigation checks are recorded in `docs/PWA_MOBILE_FINALIZATION_2026-11-12.md`. **Actual Android and iPhone installation remains a required release acceptance test.**
+
+## Test
+
+```powershell
+cd apps/web
+bun run build
+# Back at project root:
+cd ../..
+bun run test
+# Optional: isolated integration test database only
+cd apps/api
+bun run test:integration
+```
+
+Do not deploy without completing `docs/DEVICE_ACCESSIBILITY_ACCEPTANCE_2026-11-12.md`, `docs/PWA_MOBILE_FINALIZATION_2026-11-12.md` and other blueprint approval gates.
 
 ## Try the full flow
-1. Sign in as seller, open My store, create a store, add a listing with a photo, Submit for review.
-2. Sign in as reviewer, open Review, read the flags, approve with a reason.
-3. Sign in as buyer, find the listing in Discover, send an inquiry. The seller sees it under Inquiries.
 
-## What is in v1 and what is not
-In: registration with staff-verified affiliation, stores, product and service listings with photos, campus filters and search, flag-then-human review with
-audit log and notifications, inquiry threads and handoff records, reports, saved items, campus analytics with small-count suppression.
-Deferred per the architecture: payments, couriers, real-time chat, push or email notifications, ratings, establishment directory, block-user control,
-shared `packages/contracts`, appeals UI, mobile listing creation (use the web dashboard), mobile admin.
+1. Sign in as a verified seller, open My store, create or edit a listing and submit it for review.
+2. Sign in as an authorized reviewer, open Review, inspect the listing and record a decision with a reason.
+3. Sign in as a buyer, discover the published listing, save it, send an inquiry and follow the conversation.
 
-## Deploy (Ubuntu VPS)
-`infrastructure/nginx/marketplace.conf`, `infrastructure/deploy/cpsu-marketplace-api.service`, and `infrastructure/backup/backup.sh` (database **and** photos).
-Set `NODE_ENV=production`, `COOKIE_SECURE=true`, and keep MySQL off public interfaces.
+Payments, handoffs and confirmations remain arranged directly between students; the marketplace does not process payments.
+
+## Deployment
+
+The self-hosted Nginx config in `infrastructure/nginx/marketplace.conf` serves the **single** `apps/web/dist` frontend and proxies `/api` to Express. Serve the PWA over HTTPS, protect API access, keep database backups, and don't cache API responses or authenticated content in the service worker.
+
+**Legacy note:** The former `apps/mobile` directory was moved intact to `legacy/expo-mobile` to preserve unfinished local work. It is not included in workspaces, dependency installation, startup scripts, or active releases. Historical documentation may still mention it; see `docs/UNIFIED_WEB_PWA_2026-11-12.md`.

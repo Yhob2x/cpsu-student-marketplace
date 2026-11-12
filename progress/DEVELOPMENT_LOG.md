@@ -128,3 +128,34 @@ Carried into `progress/KNOWN_ISSUES.md`.
 - Kept all existing search, authentication, saved-listing, messaging, listing management and moderation logic. Fixed category rail initially showing the last categories after async load by removing a redundant final tile, while retaining the View all link.
 - Production web build passed. Browser QA at 320, 360, 390, 768, 1024 and 1440 px under simulated dark OS preference found the page stays light with no dark toggle or horizontal overflow. Card price rows aligned and the heart retained a 44px touch target. Guest save still opened sign-in.
 - Backend, database, credentials and native Expo app untouched. Screen-reader, real-device, and full authenticated workflow checks remain release QA items.
+
+### 2026-11-12 — Messaging motion, grouping, and real receipts
+
+- Used UI UX Pro Max guidance on reduced motion, motion restraint, and status feedback; inspected existing chat routes, Prisma schema, UI, and migration before editing.
+- Implemented Sent/Delivered/Read receipt API using existing InquiryMessage.deliveredAt and seenAt fields: recipient GET marks delivery; authorized POST /inquiries/:id/seen with upToId marks visible incoming messages read, without marking future messages. Exposed receipt in conversation and inbox preview.
+- Web: 240ms upward entry animation only for newly fetched messages; animated typing dots from the existing typing heartbeat; day dividers and compact per-group timestamps; forest-green sent bubbles/send action, white incoming bubbles, status under latest outgoing message. Reduced-motion CSS disables animation. No changes to payment, inquiry creation, or authorization rules.
+- Modified apps/api/src/routes/inquiries.ts, apps/web/src/pages-account.tsx, apps/web/src/icons.tsx and apps/web/src/main.tsx; added apps/web/src/message-motion.css and guarded integration coverage in apps/api/test/integration/stage1.test.ts. Updated API and UI/UX documentation.
+- No new database migration, production data changes or external dependencies. API unit tests and isolated integration suite pass (18/18, 112 assertions); browser verified 240ms/0ms reduced motion at 320,390,768,1440, no horizontal overflow. Native app unchanged. Manual physical-device and screen-reader QA remains.
+
+### 2026-11-12 — Final conversation-alignment refinement
+
+- Applied requested 4/18/20 chat rhythm: 4px within a message run, 18px between runs, 20px bubble radius, outgoing right/incoming left, and no repeated thread avatars/names. Reduced visual time clutter to one date divider per day and one visible latest-message timestamp; exact older stamps remain accessible.
+- Outgoing bubbles and send action use the existing accent green (#10543A). White text against that background measures 8.93:1 contrast. Receipts are shown below the latest outgoing message and subtly animate on real server state changes, with reduced motion respected.
+- Added ephemeral participant-only 25-second per-thread active-presence heartbeat to apps/api/src/routes/inquiries.ts and foreground-only heartbeat to apps/web/src/pages-account.tsx. Thread response reports otherActiveInChat. It does not infer global online status or persist tracking data.
+- Updated apps/web/src/message-motion.css and guarded isolated integration assertions for presence authorization and receipt truthfulness. No migration, DB credential change, new external dependency, or native-app modification.
+- Production web build and API TypeScript passed; isolated integration suite 18/18 with 117 assertions passed. Headless browser confirmed spacing, radius, left/right positions, single divider/stamp, presence and 240ms motion (0ms reduced motion) at 320, 390, 768 and 1440px. Manual real-device/screen-reader walkthrough still required.
+
+### 2026-11-12 — Show conversation partner's name in Messages
+
+- Explained the existing Online model: chat-scoped focused-tab heartbeat every 10s with 25s expiry, not login-wide presence or inbox activity.
+- Added `otherStudentName` from authorized buyer/seller User.displayName relations to inquiry list and thread payloads in `apps/api/src/routes/inquiries.ts` without schema change.
+- Updated `apps/web/src/pages-account.tsx`: person-first inbox cards (name, matching avatar initials, listing title, preview with optional `You:` prefix), and person name in chat header. Added compact inbox name/listing styles to `apps/web/src/message-motion.css`.
+- Expanded isolated integration assertions for buyer/seller reciprocal names and email non-disclosure. Web build, API typecheck and isolated integration suite (18/18, 123 assertions) passed; headless 320/390/768/1440px inbox/thread checks passed with no horizontal overflow.
+- Existing chat authorization, read receipts, typing and presence logic retained. No database migration, credentials, native-app, or production data changed. Manual screen-reader/physical-device QA remains.
+
+### 2026-11-12 — Notifications page UI/UX enhancement (web PWA)
+
+- Followed MASTER_BLUEPRINT.md Module 08, UI UX Pro Max guidance, and the existing CPSU white/forest-green theme. Used only existing GET /notifications, POST /notifications/read, POST /notifications/:id/read endpoints; preserved backend authorization and notification types.
+- Reworked the Notifications component in apps/web/src/pages-profile.tsx and imported the new scoped apps/web/src/notifications.css from apps/web/src/main.tsx. Added grouped feed, unread summary, filters, contextual icons, per-row read actions, refresh, and differentiated loading/empty/error/success feedback.
+- Confirmed TypeScript/Vite production build, Git diff whitespace check, headless Chrome at 320/360/390/768/1024/1440px, 44px targets, correct filter/read behavior, 503 retry without false empty state, link navigation and mark-read, unknown notification without a link, and empty state. Browser fixtures were mock-only, no production data mutated.
+- No API, Prisma, migration, database credentials, PWA service worker, mobile-archive or external dependency changed. Manual screen-reader/physical-device checks remain open.

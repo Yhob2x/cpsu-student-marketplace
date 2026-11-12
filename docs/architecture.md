@@ -1,6 +1,8 @@
 # CPSU Student Marketplace & Services
 ## Proposed System Architecture — Web, iOS, Android
 
+> **Historical proposal (10 November 2026).** As of 12 November 2026 the implemented MVP uses a **single responsive web/PWA** for desktop and mobile browsers; Expo/React Native is archived, not active. This original three-client proposal is retained for design history only. See `docs/SYSTEM_OVERVIEW.md` and `docs/UNIFIED_WEB_PWA_2026-11-12.md` for the current architecture.
+
 **Document status:** Proposed architecture for discussion; not a statement of existing CPSU policy or implemented functionality.  
 **Version:** 1.0  
 **Date:** 10 November 2026  

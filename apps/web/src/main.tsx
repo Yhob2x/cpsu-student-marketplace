@@ -18,6 +18,7 @@ export type Me = { id: number; email: string; displayName: string; roles: { role
 
 type Session = { me: Me | null; reload: () => Promise<void>; logout: () => Promise<void>; ready: boolean;
   unread: number; syncUnread: () => Promise<void>;
+  queue: number; syncQueue: (known?: number) => Promise<void>;
   savedIds: number[]; toggleSaved: (id: number, saved: boolean) => Promise<boolean> };
 
 const Ctx = createContext<Session>(null!);
@@ -67,6 +68,7 @@ function Shell() {
   const [me, setMe] = useState<Me | null>(null);
   const [ready, setReady] = useState(false);
   const [unread, setUnread] = useState(0);
+  const [queue, setQueue] = useState(0);
   const [savedIds, setSavedIds] = useState<number[]>([]);
 
   const reload = async () => { try { setMe(await api<Me>('/me')); } catch { setMe(null); } };
@@ -89,14 +91,25 @@ function Shell() {
       return true;
     } catch { return false; }
   };
-  useEffect(() => { if (me) { syncUnread(); syncSaved(); } else { setUnread(0); setSavedIds([]); } }, [me]);
+  const isReviewer = me?.roles.some(r => ['campus_reviewer', 'university_admin'].includes(r.role));
+  // Pending affiliations plus listings, so reviewers see the queue depth before opening it.
+  const syncQueue = async (known?: number) => {
+    if (known !== undefined) { setQueue(known); return; }
+    try {
+      const r = await api<{ listings: unknown[]; affiliations: unknown[] }>('/admin/review-queue');
+      setQueue(r.listings.length + r.affiliations.length);
+    } catch { /* keep the previous count */ }
+  };
+  useEffect(() => {
+    if (!me) { setUnread(0); setSavedIds([]); setQueue(0); return; }
+    syncUnread(); syncSaved(); if (isReviewer) syncQueue();
+  }, [me]);
 
   const logout = async () => { await api('/auth/logout', { method: 'POST', body: {} }); setToken(null); setMe(null); };
-  const isReviewer = me?.roles.some(r => ['campus_reviewer', 'university_admin'].includes(r.role));
   const signedOut = ready && !me;
 
   return (
-    <Ctx.Provider value={{ me, reload, logout, ready, unread, syncUnread, savedIds, toggleSaved }}>
+    <Ctx.Provider value={{ me, reload, logout, ready, unread, syncUnread, queue, syncQueue, savedIds, toggleSaved }}>
       <a className="skip-link" href="#main-content">Skip to main content</a>
       <header className="top">
         <div className="strip"><div className="wrap">
@@ -129,7 +142,7 @@ function Shell() {
           <NavLink to="/inquiries">Messages</NavLink>
           <NavLink to="/profile">Profile</NavLink>
           <NavLink to="/guidelines">Guidelines</NavLink>
-          {isReviewer && <NavLink to="/admin">Review</NavLink>}
+          {isReviewer && <NavLink to="/admin" aria-label={queue > 0 ? `Review, ${queue} waiting` : undefined}>Review{queue > 0 && <span className="nav-badge">{queue}</span>}</NavLink>}
         </div>
       </header>
       <main id="main-content" tabIndex={-1}><div className="wrap">

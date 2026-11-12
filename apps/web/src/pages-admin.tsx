@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { api, explain, peso } from './api';
+import { useMe } from './main';
 
 const FLAG_TEXT: Record<string, string> = {
   sensitive_category: 'Sensitive category', restricted_review: 'Campus restriction: review', possible_establishment_overlap: 'May overlap with a campus establishment',
@@ -8,13 +9,14 @@ const FLAG_TEXT: Record<string, string> = {
 };
 
 export function Admin() {
+  const { syncQueue } = useMe();
   const [q, setQ] = useState<any>(null); const [stats, setStats] = useState<any>(null); const [err, setErr] = useState(''); const [reasons, setReasons] = useState<Record<string, string>>({});
   const [pending, setPending] = useState('');
   const [reports, setReports] = useState<any[] | null>(null);
   const [reportsError, setReportsError] = useState('');
   const [statsError, setStatsError] = useState('');
   const load = () => {
-    api('/admin/review-queue').then(r => { setQ(r); setErr(''); }).catch(e => setErr(explain(e)));
+    api('/admin/review-queue').then(r => { setQ(r); setErr(''); syncQueue(r.listings.length + r.affiliations.length); }).catch(e => setErr(explain(e)));
     api('/admin/reports').then(r => { setReports(r); setReportsError(''); }).catch(e => setReportsError(explain(e)));
     api('/admin/analytics/overview').then(r => { setStats(r); setStatsError(''); }).catch(e => setStatsError(explain(e)));
   };

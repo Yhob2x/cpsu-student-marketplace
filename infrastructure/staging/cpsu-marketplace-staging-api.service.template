@@ -1,0 +1,27 @@
+# STAGING TEMPLATE ONLY — not installed, started or deployed.
+# Requires dedicated Linux identity, test-only MySQL, and private env file.
+# Replace __STAGING_BUN_PATH__ with the verified absolute Bun binary path on the staging host.
+[Unit]
+Description=CPSU Marketplace isolated staging API (PWA Web Push acceptance)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=marketplace-staging
+Group=marketplace-staging
+WorkingDirectory=/opt/cpsu-marketplace-staging/apps/api
+EnvironmentFile=/etc/cpsu-marketplace/staging.env
+ExecStart=__STAGING_BUN_PATH__ dist/index.js
+Restart=on-failure
+RestartSec=5
+UMask=0077
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectHome=true
+ProtectSystem=strict
+ReadWritePaths=/var/lib/cpsu-marketplace-staging
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6
+
+[Install]
+WantedBy=multi-user.target

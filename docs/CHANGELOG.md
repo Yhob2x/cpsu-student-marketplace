@@ -1,5 +1,28 @@
 # Changelog
 
+## 2026-11-16 — Push Stage 4 isolated HTTPS staging package (local only)
+
+- Prepared new, **unapplied** Nginx HTTPS, Bun systemd and environment templates under `infrastructure/staging/`; they use placeholders only, prevent API/HTML caching and specify isolated staging credentials, database, OS identity and loopback API access.
+- Added optional `BIND_HOST` to the API configuration/entrypoint. The existing default remains `0.0.0.0` for backward compatibility; staging requires `127.0.0.1` and port 4400 behind Nginx. Existing production Nginx/systemd files were not modified.
+- Added offline safety validator `bun run push:staging:templates` (**15/15 checks passed**) and an explicit deployment/rollback runbook. Staging remains blocked until approved HTTPS domain, monitored VAPID contact, separate staging DB and migrations, consenting device testers and deployment approval are provided.
+- Preserved other uncommitted WP3 transaction work, existing development credentials and live services; no GitHub push, public deployment, production database change or real push delivery.
+- Evidence: `docs/PWA_PUSH_STAGE4_STAGING_PREPARATION_2026-11-16.md`.
+
+
+## 2026-11-16 — Push Stage 3 device readiness (local only)
+
+- Added an explicit **Preview a test alert** action to the signed-in notification settings. Uses the service worker's local `showNotification` only after permission has already been granted; it does **not** send a Web Push, request permission automatically, or write to the database.
+- Added read-only `bun run push:staging:check` to audit local VAPID key consistency and Git exclusion, required staging contact/HTTPS URL, PWA/service-worker assets and accidental private-key inclusion in built web assets. Check correctly blocks release while the development-only localhost VAPID subject and missing approved staging URL remain.
+- Prepared physical Android Chrome and iPhone Safari acceptance steps and an unfilled evidence matrix at `docs/PWA_PUSH_STAGE3_DEVICE_ACCEPTANCE_2026-11-16.md`. No device acceptance, public deployment, notification permission request or real background push delivery was claimed.
+
+## 2026-11-16 — Push Stage 2 local VAPID and HTTPS QA
+
+- Generated and locally retained one matching P-256 VAPID keypair without displaying secrets; restricted the Git-ignored API `.env` ACL and verified its public-key derivation and idempotent setup.
+- Created a seven-day self-signed localhost TLS test certificate (private ACL restricted) and a reproducible local HTTPS gateway. The corrected test-only API launcher explicitly binds `127.0.0.1:4400`, targets the isolated push test database, and suppresses outbound push delivery.
+- Chrome HTTPS QA passed manifest/installability checks, secure-context service worker registration, Push/Notification/Badging API detection, responsive widths 320–1440px, and signed-out notification deep links. Test notification permission remained unrequested; no real Web Push subscription or push delivery tested.
+- Regression: 17 unit tests, 7 isolated push integration tests and 24 isolated marketplace integration tests passed; API TypeScript and production web build passed. A disposable synthetic account and temporary credentials were cleaned up; public/physical device testing remains blocked.
+- Report: `docs/PWA_PUSH_STAGE2_LOCAL_HTTPS_2026-11-16.md`. No GitHub commit, production deployment, key disclosure or development database migration in Stage 2.
+
 ## 2026-11-16 — Push Stage 1 local development database activation
 
 - Following explicit owner approval, used the retained database-and-upload backup script, saving a verified 175,557-byte SQL snapshot plus 22 media files privately outside Git. SHA-256 and expected table structure matched the manifest.

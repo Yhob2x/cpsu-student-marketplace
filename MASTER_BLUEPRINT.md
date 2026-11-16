@@ -1136,6 +1136,20 @@ Any proposed modification to the approved blueprint must follow this process:
 
 Never silently modify approved requirements.
 
+## Approved change record — C5 purchase requests and C1a transaction participation (2026-11-16)
+
+**Decision:** Project owner approved WP3 C5 Approach A with student-only participation under C1a, and authorized test-first implementation **with schema migrations confined to an isolated local test database**. Development and production databases, live credentials, deployment and release remain outside this approval.
+
+- **Eligible participants:** Active, verified CPSU students with no administrative or establishment roles. University/campus reviewers and administrators monitor only, including when they also have a student affiliation. This decision resolves C1a for transaction actions; broader staff marketplace capabilities remain a separate policy question.
+- **Workflow:** Buyer submits a request (pending), active seller accepts or rejects; either participant may negotiate through existing inquiry chat; both independently confirm meetup before status `for_meetup`, then both independently confirm completion before `completed`. Neither chat reads nor a `Handoff` update can silently confirm a transaction.
+- **Rejection/cancellation:** Rejected and withdrawn requests become `cancelled` with a recorded reason/event (no seventh status). Before completion either participant can cancel unilaterally with a required reason and an immutable audit/history entry, including after meetup agreement. `completed` and `cancelled` are terminal.
+- **Inventory:** For physical products, seller acceptance atomically and exclusively changes available → reserved, cancellation releases only its own reservation, and mutual completion marks the listing sold permanently under approved C4. Service listings are not auto-reserved/sold. One active request per buyer/listing inquiry thread; fresh requests allowed after terminal status.
+- **Trust:** Completion is a mutual **self-report**, not CPSU-verified payment, shipment or sale. No integrated payment, escrow, wallet or courier. Existing `Handoff` records remain intact and separate from the canonical transaction status.
+- **Security and storage:** Server-owned participant identity and price snapshot, participant-only transaction access, append-only status logs, conditional transactional status updates, bounded pagination, authorized campus administration monitoring, in-app notifications, isolated test DB regression before any future deployment.
+- **Reference:** `docs/superpowers/specs/2026-11-16-wp3-transaction-design.md` and `docs/superpowers/plans/2026-11-16-wp3-transactions.md`.
+
+---
+
 ## Approved change record — C4 listing condition and availability (2026-11-11)
 
 **Decision:** Project owner explicitly approved C4 and authorized Stage 1 development migration deployment and WP2 implementation. This resolves **C4 only**; C1, C1a, C2, C3, C5, C6 and C7 remain separately gated.

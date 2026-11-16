@@ -82,6 +82,25 @@ export async function enablePush(publicKey: string): Promise<void> {
   }
 }
 
+/**
+ * User-initiated local notification preview for device acceptance.
+ * This does NOT use the Web Push relay or prove background push delivery.
+ */
+export async function previewLocalNotification(): Promise<void> {
+  if (!supportsPush()) throw new Error('Notifications are unavailable on this device or connection.');
+  if (Notification.permission !== 'granted') {
+    throw new Error('Enable notifications on this device before previewing an alert.');
+  }
+  const registration = await navigator.serviceWorker.ready;
+  await registration.showNotification('CPSU Market', {
+    body: 'This is a test notification from CPSU Market.',
+    icon: '/icons/icon-192.png',
+    badge: '/icons/icon-maskable-192.png',
+    tag: 'cpsu-local-device-preview',
+    data: { url: '/notifications' },
+  });
+}
+
 export async function disablePush(): Promise<void> {
   const sub = await currentSubscription();
   if (!sub) return;

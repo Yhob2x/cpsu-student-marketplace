@@ -2,6 +2,9 @@ import { z } from 'zod';
 const schema = z.object({
   NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
   PORT: z.coerce.number().default(4000),
+  // Staging runs behind Nginx; explicit loopback binding prevents direct API exposure.
+  // Default preserves existing local deployments; staging must set BIND_HOST=127.0.0.1.
+  BIND_HOST: z.enum(['127.0.0.1', '0.0.0.0']).default('0.0.0.0'),
   DATABASE_URL: z.string().min(1),
   JWT_SECRET: z.string().min(32),
   CORS_ORIGINS: z.string().default('http://localhost:5173'),

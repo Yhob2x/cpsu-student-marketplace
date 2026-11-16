@@ -52,6 +52,8 @@ Dark-green sections use light keyboard focus outlines. No new dependencies or AP
 | Breakpoints | fluid typography, tested at 320, 360, 390, 768, 1024 and 1440 px | n/a |
 | Admin | same shell, stacked panels | none (no admin in the mobile app) |
 
+Search and Saved use the shared `.listing-grid` with `auto-fill` tracks at its responsive breakpoints. A single result keeps the normal card and photo width instead of stretching across the content area; additional results retain the existing column layout.
+
 ## 4. Components to reuse
 
 | Component | Web | Mobile |

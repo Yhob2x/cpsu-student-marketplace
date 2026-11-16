@@ -31,7 +31,8 @@ const original = readFileSync(envFile, 'utf8');
 const keys = ['VAPID_PUBLIC_KEY','VAPID_PRIVATE_KEY','VAPID_SUBJECT'];
 const read = (key) => {
   const match = original.match(new RegExp('^\\s*' + key + '\\s*=\\s*(.*)$', 'm'));
-  return match ? match[1].trim().replace(/^(["'])(.*)\\1$/, '$2') : '';
+  const value = match ? match[1].trim() : '';
+  return /^["'].*["']$/.test(value) ? value.slice(1, -1) : value;
 };
 const values = Object.fromEntries(keys.map(key => [key, read(key)]));
 if (keys.every(key => values[key])) {

@@ -16,6 +16,11 @@ export function Admin() {
   const [photosReviewed, setPhotosReviewed] = useState<Record<number, boolean>>({});
   const [reports, setReports] = useState<any[] | null>(null);
   const [reportsError, setReportsError] = useState('');
+  const [monitoredTransactions, setMonitoredTransactions] = useState<any[]>([]);
+  const [transactionCount, setTransactionCount] = useState(0);
+  const [transactionPage, setTransactionPage] = useState(1);
+  const [transactionLoading, setTransactionLoading] = useState(false);
+  const [transactionError, setTransactionError] = useState('');
   const [statsError, setStatsError] = useState('');
   const [studentQuery, setStudentQuery] = useState('');
   const [students, setStudents] = useState<any[] | null>(null);
@@ -31,6 +36,16 @@ export function Admin() {
     api('/admin/analytics/overview').then(r => { setStats(r); setStatsError(''); }).catch(e => setStatsError(explain(e)));
   };
   useEffect(load, []);
+  const loadTransactions = async (page = 1) => {
+    setTransactionLoading(true);
+    try {
+      const result = await api<{ items: any[]; total: number }>(`/admin/transactions?page=${page}&pageSize=20`);
+      setMonitoredTransactions(prev => page === 1 ? result.items : [...prev, ...result.items]);
+      setTransactionCount(result.total); setTransactionPage(page); setTransactionError('');
+    } catch (e) { setTransactionError(explain(e)); }
+    finally { setTransactionLoading(false); }
+  };
+  useEffect(() => { void loadTransactions(); }, []);
   const searchStudents = async (query: string) => {
     setStudentsLoading(true);
     try {
@@ -120,6 +135,20 @@ export function Admin() {
       </p></div>
       <button className="btn" disabled={pending === `r${rep.id}`} onClick={() => resolveReport(rep.id, 'resolved')}>Resolve</button>
       <button className="btn ghost" disabled={pending === `r${rep.id}`} onClick={() => resolveReport(rep.id, 'dismissed')}>Dismiss</button></div>)}
+    <section aria-labelledby="admin-transactions-heading">
+      <h2 id="admin-transactions-heading">Transaction monitoring</h2>
+      <p className="muted">Read-only transaction statuses in your authorized campuses. Completed means both students confirmed; payments are not verified. Private messages and payment arrangements are not shown.</p>
+      {transactionError && <p role="alert" className="err">Transactions could not load: {transactionError} <button type="button" className="btn ghost" onClick={() => void loadTransactions(transactionPage)}>Retry</button></p>}
+      {!transactionLoading && !transactionError && monitoredTransactions.length === 0 && <p className="muted">No transactions to monitor.</p>}
+      <div className="stack">{monitoredTransactions.map(t => <div className="panel row" key={t.id} style={{ alignItems: 'flex-start' }}>
+        <div style={{ flex: 1, minWidth: 0 }}><strong>{t.listing.title}</strong>
+          <p className="muted" style={{ margin: '.25rem 0' }}>Transaction #{t.id} · {t.listing.campus.code} · {t.listing.type === 'service' ? 'Service' : 'Product'}</p>
+          <time className="muted" dateTime={t.createdAt}>{new Date(t.createdAt).toLocaleString('en-PH')}</time></div>
+        <span className="tag">{String(t.status).replaceAll('_', ' ')}</span>
+      </div>)}</div>
+      {transactionLoading && <p role="status" className="muted">Loading transaction records…</p>}
+      {!transactionLoading && !transactionError && monitoredTransactions.length < transactionCount && <button type="button" className="btn ghost" onClick={() => void loadTransactions(transactionPage + 1)}>Load more transactions</button>}
+    </section>
     {accountAdmin && <section aria-labelledby="student-management-heading">
       <h2 id="student-management-heading">Student accounts</h2>
       <p className="muted">University administrators can suspend and reactivate student accounts. Suspending a student signs out their active sessions and hides their public listings.</p>

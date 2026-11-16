@@ -83,6 +83,30 @@ r.post('/listings/:id/suspend', async (req, res) => {
   res.json({ id: l.id, status: 'suspended' });
 });
 
+// Campus reviewers can monitor transaction status, but not read participants' chat,
+// payment arrangements or private IDs. Monitoring never mutates a transaction.
+r.get('/transactions', async (req, res) => {
+  const { page, pageSize } = z.object({
+    page: z.coerce.number().int().min(1).max(1000).default(1),
+    pageSize: z.coerce.number().int().min(1).max(30).default(20),
+  }).strict().parse(req.query);
+  const campuses = reviewCampusIds(req.user!);
+  const where: Prisma.TransactionWhereInput = campuses === 'all'
+    ? {} : { listing: { campusId: { in: campuses } } };
+  const [items, total] = await prisma.$transaction([
+    prisma.transaction.findMany({
+      where, orderBy: { id: 'desc' }, skip: (page - 1) * pageSize, take: pageSize,
+      select: { id: true, status: true, createdAt: true, updatedAt: true,
+        listing: { select: { id: true, title: true, type: true,
+          campus: { select: { code: true } } } },
+      },
+    }),
+    prisma.transaction.count({ where }),
+  ]);
+  res.setHeader('Cache-Control', 'no-store');
+  res.json({ items, total, page, pageSize });
+});
+
 r.get('/reports', async (req, res) => res.json(await prisma.report.findMany({
   where: { status: { in: ['open', 'reviewing'] }, ...reportScope(req.user) },
   orderBy: { createdAt: 'asc' }, take: 100,

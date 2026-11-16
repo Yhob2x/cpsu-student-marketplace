@@ -67,6 +67,7 @@ r.post('/listings', async (req, res) => {
 r.patch('/listings/:id', async (req, res) => {
   const l = await ownListing(req.user!.id, Number(req.params.id));
   if (l.deletedAt) throw new HttpError(409, 'listing_deleted');
+  if (l.reservationTransactionId !== null) throw new HttpError(409, 'transaction_reservation_active');
   if (['pending_review', 'suspended', 'rejected'].includes(l.status)) throw new HttpError(409, 'not_editable');
   if (req.body && ('availability' in req.body || 'availabilityState' in req.body || 'deletedAt' in req.body))
     throw new HttpError(400, 'invalid_availability_update');
@@ -75,8 +76,11 @@ r.patch('/listings/:id', async (req, res) => {
   if (type === 'service' && patch.condition != null) throw new HttpError(400, 'condition_not_applicable');
   // Product condition is a material detail; changes to approved listings require review again.
   const status = l.status === 'published' && isMaterialChange(patch) ? 'draft' : l.status;
-  res.json(await prisma.listing.update({ where: { id: l.id },
-    data: { ...patch, ...(type === 'service' && { condition: null }), status } }));
+  const changed = await prisma.listing.updateMany({ where: {
+    id: l.id, reservationTransactionId: null, deletedAt: null, status: l.status,
+  }, data: { ...patch, ...(type === 'service' && { condition: null }), status } });
+  if (!changed.count) throw new HttpError(409, 'listing_changed');
+  res.json(await prisma.listing.findUniqueOrThrow({ where: { id: l.id } }));
 });
 
 // Authorize and check the quota BEFORE accepting any file bytes to avoid
@@ -86,6 +90,7 @@ r.post('/listings/:id/media',
     try {
       const l = await ownListing(req.user!.id, Number(req.params.id));
       if (l.deletedAt) throw new HttpError(409, 'listing_deleted');
+      if (l.reservationTransactionId !== null) throw new HttpError(409, 'transaction_reservation_active');
       if (!['draft', 'changes_requested', 'published'].includes(l.status))
         throw new HttpError(409, 'not_editable');
       if (l.media.length >= 6) throw new HttpError(409, 'too_many_images');
@@ -108,6 +113,7 @@ r.post('/listings/:id/media',
         });
         if (!current) throw new HttpError(404, 'not_found');
         if (current.deletedAt) throw new HttpError(409, 'listing_deleted');
+        if (current.reservationTransactionId !== null) throw new HttpError(409, 'transaction_reservation_active');
         if (!['draft', 'changes_requested', 'published'].includes(current.status))
           throw new HttpError(409, 'not_editable');
         if (current.media.length >= 6) throw new HttpError(409, 'too_many_images');
@@ -159,11 +165,13 @@ r.patch('/listings/:id/availability', async (req, res) => {
   if (l.deletedAt) throw new HttpError(409, 'listing_deleted');
   if (l.status !== 'published') throw new HttpError(409, 'not_published');
   if (l.availabilityState === 'sold' && availability !== 'sold') throw new HttpError(409, 'sold_is_final');
+  if (l.reservationTransactionId !== null && availability !== l.availabilityState) throw new HttpError(409, 'transaction_reservation_active');
   if (l.availabilityState === availability) return res.json(l);
 
   const updated = await prisma.$transaction(async tx => {
     const result = await tx.listing.updateMany({ where: {
       id: l.id, deletedAt: null, status: 'published', availabilityState: l.availabilityState,
+      reservationTransactionId: null,
     }, data: { availabilityState: availability, availability } });
     if (result.count !== 1) throw new HttpError(409, 'listing_changed');
     await tx.auditLog.create({ data: {
@@ -187,9 +195,10 @@ r.patch('/listings/:id/availability', async (req, res) => {
 r.delete('/listings/:id', async (req, res) => {
   const l = await ownListing(req.user!.id, Number(req.params.id));
   if (l.deletedAt) return res.status(204).end();
+  if (l.reservationTransactionId !== null) throw new HttpError(409, 'transaction_reservation_active');
   await prisma.$transaction(async tx => {
     const updated = await tx.listing.updateMany({
-      where: { id: l.id, deletedAt: null }, data: { deletedAt: new Date() },
+      where: { id: l.id, deletedAt: null, reservationTransactionId: null }, data: { deletedAt: new Date() },
     });
     if (updated.count !== 1) throw new HttpError(409, 'listing_changed');
     await tx.auditLog.create({ data: {

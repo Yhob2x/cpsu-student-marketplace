@@ -13,6 +13,9 @@ export function assertIsolatedTestDatabase() {
 export async function resetFixtures(prisma: PrismaClient) {
   assertIsolatedTestDatabase();
   // Dependency order allows foreign-key enforcement to remain ON.
+  await prisma.transactionStatusLog.deleteMany();
+  await prisma.listing.updateMany({ where: { reservationTransactionId: { not: null } }, data: { reservationTransactionId: null } });
+  await prisma.transaction.deleteMany();
   await prisma.inquiryMessage.deleteMany();
   await prisma.handoff.deleteMany();
   await prisma.inquiryThread.deleteMany();

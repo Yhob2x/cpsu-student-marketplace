@@ -131,3 +131,24 @@ report detail/findings, all-listings browser.
 Web Push is **best-effort** and never blocks the existing in-app notification or the creation of a message/review. No recipient names, message contents, review reasons, or listing titles are sent in lock-screen payloads. The PWA service worker only opens approved same-origin app paths. All three `VAPID_*` variables and an approved additive migration are required to activate. Real push-provider delivery is not verified by synthetic integration tests.
 
 For migration, key generation, private data handling and acceptance tests see `docs/PWA_PUSH_NOTIFICATIONS_2026-11-16.md`.
+
+
+## WP3 — Transactions (approved 2026-11-16; local source and isolated TEST database only)
+
+All participant endpoints require an authenticated **active, verified CPSU student** with **no administrator/establishment role**. They do not perform payments, deliveries or verified sale certification. Idempotent active requests and server-side checks prevent duplicate or unauthorized transitions. The root prefix is `/api/v1`.
+
+| Method | Path | Body/query | Behavior |
+|---|---|---|---|
+| POST | `/transactions` | `{ listingId: number }` | Buyer requests published/available listing; creates thread and pending transaction, status 201; retry returns 200 with same active id. |
+| GET | `/transactions?page=1&pageSize=20` | Bounded to 30/page | Participant's own requests/orders, paginated and newest-first. |
+| GET | `/transactions/:id` | — | Buyer/seller only; status, original price, history and optional separate Handoff. Nonparticipant gets 404. |
+| POST | `/transactions/:id/decision` | `{ action:'accept' }` or `{ action:'reject',reason:'10–500 chars' }` | Owning seller only; pending only; acceptance reserves available physical item atomically. |
+| POST | `/transactions/:id/negotiating` | `{}` | Buyer or seller moves accepted → negotiating. |
+| POST | `/transactions/:id/confirm-meetup` | `{}` | Buyer/seller independent acknowledgment. Both required to reach for_meetup. |
+| POST | `/transactions/:id/confirm-completion` | `{}` | Both independently confirm after for_meetup; second advances to completed; physical item becomes sold. |
+| POST | `/transactions/:id/cancel` | `{ reason:'10–500 chars' }` | Either participant before completed/cancelled; append history; release only own physical reservation. |
+| GET | `/admin/transactions?page=1&pageSize=20` | Bounded to 30/page | Read-only, scoped to reviewer authorized campus; global university admin sees all. No chat history, payment details, passwords or student email addresses. |
+
+Transaction notifications include `transaction.requested`, `transaction.accepted`, `transaction.rejected`, `transaction.negotiating`, `transaction.meetup_confirmed`, `transaction.completion_confirmed`, `transaction.cancelled`. Updates and audit logs are stored atomically with every transition. Clients should display conflict HTTP 409 when the item/state changes concurrently.
+
+**Deployment reminder:** Development/production schemas have not received this migration, by explicit owner restriction. Earlier sections describing missing transactions are historical and superseded by this WP3 section for the local code state only.

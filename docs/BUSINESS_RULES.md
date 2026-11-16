@@ -76,7 +76,7 @@ or institutional approval; those carry the module that owns them.
 | Rule | Status | Where |
 |---|---|---|
 | No payments, wallet, escrow, commission, or courier dispatch | Enforced by absence | No such code or schema. UI states payment is arranged directly. |
-| Purchase requests, accept/reject, status history, participant-only updates | Not implemented | Only `Handoff` exists. |
+| Purchase requests, accept/reject, status history, participant-only updates | Implemented locally (test DB only) | `routes/transactions.ts`, `Transaction`, `TransactionStatusLog`; 2-party meetup/completion, guarded inventory, role and affiliation checks, cancellation reasons. No development/production schema migration permitted yet. |
 | Self-reported handoff outcome is not a verified sale | Enforced by language | Analytics note: "Inquiries are not completed sales"; outcome stored on `Handoff.status`. |
 
 ## 7. Moderation and administration (MODULES 09, 10)

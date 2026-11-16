@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { api, ApiError, explain } from './api';
 import { useMe } from './main';
 import {
-  currentSubscription, disablePush, enablePush, isIosWithoutHomeScreen,
+  currentSubscription, disablePush, enablePush, isIosWithoutHomeScreen, previewLocalNotification,
   supportsPush, type PushConfig, type PushPreferences,
 } from './push-client';
 import { Icon } from './icons';
@@ -68,6 +68,16 @@ export function PushSettings() {
     finally { setBusy(false); }
   };
 
+  const previewAlert = async () => {
+    if (busy || !enabled) return;
+    setBusy(true); setError(''); setFeedback('');
+    try {
+      await previewLocalNotification();
+      setFeedback('Test notification requested on this device. Your browser or operating system may suppress the banner.');
+    } catch (e) { setError(describeError(e)); }
+    finally { setBusy(false); }
+  };
+
   const savePreference = async (key: keyof PushPreferences, value: boolean) => {
     if (!preferences || busy) return;
     setBusy(true); setError(''); setFeedback('');
@@ -97,6 +107,8 @@ export function PushSettings() {
           {enabled ? <>
             <span className="push-settings-state"><Icon name="check" size={16} /> Enabled on this device</span>
             <button type="button" className="btn ghost" disabled={busy}
+              onClick={() => void previewAlert()}>Preview a test alert</button>
+            <button type="button" className="btn ghost" disabled={busy}
               onClick={() => void turnOff()}>{busy ? 'Updating…' : 'Disable alerts on this device'}</button>
           </> : <>
             <span className="push-settings-state">Push alerts are off on this device</span>
@@ -116,7 +128,7 @@ export function PushSettings() {
             <span><strong>{item.name}</strong><small>{item.detail}</small></span>
           </label>)}
         </fieldset>}
-        <p className="muted push-privacy">Lock-screen alerts never show private message text, sender names or review reasons. App badges depend on device support. Notifications can be disabled at any time.</p>
+        <p className="muted push-privacy">Lock-screen alerts never show private message text, sender names or review reasons. App badges depend on device support. Notifications can be disabled at any time. The optional test-alert preview checks this device’s local display only; it does not verify background push delivery.</p>
       </>
     }
     {feedback && <p role="status" className="push-settings-feedback">{feedback}</p>}

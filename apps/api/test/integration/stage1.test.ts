@@ -28,12 +28,318 @@ if (process.env.CPSU_INTEGRATION_TESTS === '1') {
       await prisma.$disconnect();
     });
 
+    test('WP3: an authenticated verified student requests a listing and only participants see the pending request', async () => {
+      const listing = await prisma.listing.create({ data: {
+        sellerProfileId: fx.store.id, campusId: fx.campusA.id, categoryId: fx.category.id,
+        type: 'physical_product', title: 'WP3 Request Item', description: 'WP3 synthetic request',
+        price: 180, status: 'published',
+      } });
+      const url = '/api/v1/transactions';
+      expect((await request(app).post(url).send({ listingId: listing.id })).status).toBe(401);
+      expect((await request(app).post(url).set(token(fx.pending.id)).send({ listingId: listing.id })).status).toBe(403);
+      expect((await request(app).post(url).set(token(fx.reviewerA.id)).send({ listingId: listing.id })).status).toBe(403);
+      expect((await request(app).post(url).set(token(fx.seller.id)).send({ listingId: listing.id })).status).toBe(400);
+      const created = await request(app).post(url).set(token(fx.buyer.id)).send({ listingId: listing.id });
+      expect(created.status).toBe(201);
+      expect(created.body).toMatchObject({ status: 'pending', listingId: listing.id, buyerUserId: fx.buyer.id, sellerUserId: fx.seller.id });
+      expect(created.body.price).toBe(180);
+      const again = await request(app).post(url).set(token(fx.buyer.id)).send({ listingId: listing.id });
+      expect(again.status).toBe(200);
+      expect(again.body.id).toBe(created.body.id);
+      const detail = await request(app).get(url + '/' + created.body.id).set(token(fx.seller.id));
+      expect(detail.status).toBe(200);
+      expect(detail.body.history[0]).toMatchObject({ toStatus: 'pending', event: 'requested', actorUserId: fx.buyer.id });
+      expect((await request(app).get(url + '/' + created.body.id).set(token(fx.outsider.id))).status).toBe(404);
+      const mine = await request(app).get(url).set(token(fx.buyer.id));
+      expect(mine.status).toBe(200);
+      expect(mine.body.items.some((t: any) => t.id === created.body.id)).toBe(true);
+      expect((await request(app).get(url).set(token(fx.outsider.id))).body.items.some((t: any) => t.id === created.body.id)).toBe(false);
+    });
+
+    test('WP3: one physical item cannot be accepted by two buyers and only the owning seller decides', async () => {
+      const listing = await prisma.listing.create({ data: {
+        sellerProfileId: fx.store.id, campusId: fx.campusA.id, categoryId: fx.category.id,
+        type: 'physical_product', title: 'WP3 Exclusive Item', description: 'WP3 synthetic reservation',
+        price: 240, status: 'published',
+      } });
+      const url = '/api/v1/transactions';
+      const a = await request(app).post(url).set(token(fx.buyer.id)).send({ listingId: listing.id });
+      const b = await request(app).post(url).set(token(fx.outsider.id)).send({ listingId: listing.id });
+      expect(a.status).toBe(201); expect(b.status).toBe(201);
+      const decision = (id: number) => url + '/' + id + '/decision';
+      expect((await request(app).post(decision(a.body.id)).set(token(fx.buyer.id)).send({ action: 'accept' })).status).toBe(404);
+      expect((await request(app).post(decision(a.body.id)).set(token(fx.otherSeller.id)).send({ action: 'accept' })).status).toBe(404);
+      const accept = await request(app).post(decision(a.body.id)).set(token(fx.seller.id)).send({ action: 'accept' });
+      expect(accept.status).toBe(200);
+      expect(accept.body.status).toBe('accepted');
+      expect((await prisma.listing.findUniqueOrThrow({ where: { id: listing.id } })).availabilityState).toBe('reserved');
+      // A seller must not silently edit the item or add unreviewed photos once it is reserved.
+      expect((await request(app).patch('/api/v1/seller/listings/' + listing.id)
+        .set(token(fx.seller.id)).send({ title: 'Different Item Description' })).status).toBe(409);
+      expect((await request(app).post('/api/v1/seller/listings/' + listing.id + '/media')
+        .set(token(fx.seller.id)).send({})).status).toBe(409);
+      expect((await request(app).post(decision(b.body.id)).set(token(fx.seller.id)).send({ action: 'accept' })).status).toBe(409);
+      expect((await request(app).post(decision(a.body.id)).set(token(fx.seller.id)).send({ action: 'accept' })).status).toBe(409);
+      expect((await request(app).patch('/api/v1/seller/listings/' + listing.id + '/availability').set(token(fx.seller.id))
+        .send({ availability: 'available' })).status).toBe(409);
+      const cancellation = await request(app).post(url + '/' + a.body.id + '/cancel')
+        .set(token(fx.buyer.id)).send({ reason: 'My class schedule changed' });
+      expect(cancellation.status).toBe(200);
+      expect(cancellation.body.status).toBe('cancelled');
+      expect((await prisma.listing.findUniqueOrThrow({ where: { id: listing.id } })).availabilityState).toBe('available');
+      const nowAvailable = await request(app).post(decision(b.body.id)).set(token(fx.seller.id)).send({ action: 'accept' });
+      expect(nowAvailable.status).toBe(200);
+    });
+
+    test('WP3: meetup and completion require both participants, preserve handoff and make sold final', async () => {
+      const listing = await prisma.listing.create({ data: {
+        sellerProfileId: fx.store.id, campusId: fx.campusA.id, categoryId: fx.category.id,
+        type: 'physical_product', title: 'WP3 Mutual Item', description: 'WP3 synthetic completion',
+        price: 310, status: 'published',
+      } });
+      const url = '/api/v1/transactions';
+      const created = await request(app).post(url).set(token(fx.buyer.id)).send({ listingId: listing.id });
+      expect(created.status).toBe(201);
+      const id = created.body.id;
+      const oldHandoff = await prisma.handoff.create({ data: {
+        inquiryThreadId: created.body.inquiryThreadId, method: 'campus_pickup',
+        generalLocation: 'CPSU main lobby', timeWindow: 'Afternoon meeting', status: 'proposed',
+      } });
+      expect((await request(app).post(url + '/' + id + '/confirm-meetup').set(token(fx.buyer.id)).send({})).status).toBe(409);
+      expect((await request(app).post(url + '/' + id + '/decision').set(token(fx.seller.id)).send({ action: 'accept' })).status).toBe(200);
+      expect((await request(app).post(url + '/' + id + '/negotiating').set(token(fx.outsider.id)).send({})).status).toBe(404);
+      expect((await request(app).post(url + '/' + id + '/negotiating').set(token(fx.buyer.id)).send({})).status).toBe(200);
+      const meetup1 = await request(app).post(url + '/' + id + '/confirm-meetup').set(token(fx.buyer.id)).send({});
+      expect(meetup1.status).toBe(200);
+      expect(meetup1.body.status).toBe('negotiating');
+      expect((await request(app).post(url + '/' + id + '/confirm-completion').set(token(fx.buyer.id)).send({})).status).toBe(409);
+      expect((await request(app).post(url + '/' + id + '/confirm-meetup').set(token(fx.buyer.id)).send({})).status).toBe(409);
+      const meetup2 = await request(app).post(url + '/' + id + '/confirm-meetup').set(token(fx.seller.id)).send({});
+      expect(meetup2.status).toBe(200);
+      expect(meetup2.body.status).toBe('for_meetup');
+      const complete1 = await request(app).post(url + '/' + id + '/confirm-completion').set(token(fx.seller.id)).send({});
+      expect(complete1.status).toBe(200);
+      expect(complete1.body.status).toBe('for_meetup');
+      const complete2 = await request(app).post(url + '/' + id + '/confirm-completion').set(token(fx.buyer.id)).send({});
+      expect(complete2.status).toBe(200);
+      expect(complete2.body.status).toBe('completed');
+      expect((await prisma.listing.findUniqueOrThrow({ where: { id: listing.id } })).availabilityState).toBe('sold');
+      expect((await request(app).post(url + '/' + id + '/cancel').set(token(fx.seller.id)).send({ reason: 'Completed transactions cannot be cancelled' })).status).toBe(409);
+      const detail = await request(app).get(url + '/' + id).set(token(fx.buyer.id));
+      expect(detail.body.history.filter((h: any) => h.event === 'meetup_confirmed')).toHaveLength(2);
+      expect(detail.body.history.filter((h: any) => h.event === 'completion_confirmed')).toHaveLength(2);
+      expect(detail.body.history.at(-1).toStatus).toBe('completed');
+      expect(detail.body.handoff.id).toBe(oldHandoff.id);
+      expect((await prisma.handoff.findUniqueOrThrow({ where: { id: oldHandoff.id } })).status).toBe('proposed');
+    });
+
+    test('WP3: seller rejection records reason, and only a verified student may participate', async () => {
+      const l = await prisma.listing.create({ data: {
+        sellerProfileId: fx.store.id, campusId: fx.campusA.id, categoryId: fx.category.id,
+        type: 'physical_product', title: 'WP3 Rejection Item', description: 'Synthetic declined request',
+        price: 111, status: 'published',
+      } });
+      const endpoint = '/api/v1/transactions';
+      const requested = await request(app).post(endpoint).set(token(fx.buyer.id)).send({ listingId: l.id });
+      expect(requested.status).toBe(201);
+      const decision = endpoint + '/' + requested.body.id + '/decision';
+      expect((await request(app).post(decision).set(token(fx.seller.id))
+        .send({ action: 'reject', reason: '' })).status).toBe(400);
+      const denied = await request(app).post(decision).set(token(fx.seller.id))
+        .send({ action: 'reject', reason: 'The listed item is already committed elsewhere' });
+      expect(denied.status).toBe(200);
+      expect(denied.body.status).toBe('cancelled');
+      expect((await prisma.listing.findUniqueOrThrow({ where: { id: l.id } })).availabilityState).toBe('available');
+      const history = await request(app).get(endpoint + '/' + requested.body.id).set(token(fx.buyer.id));
+      expect(history.body.history.at(-1)).toMatchObject({
+        actorUserId: fx.seller.id, event: 'rejected', toStatus: 'cancelled',
+        reason: 'The listed item is already committed elsewhere',
+      });
+      expect((await request(app).post(decision).set(token(fx.seller.id))
+        .send({ action: 'accept' })).status).toBe(409);
+      expect((await request(app).get(endpoint).set(token(fx.globalAdmin.id))).status).toBe(403);
+      // A participant who loses verification cannot continue signing new status events.
+      const newOrder = await request(app).post(endpoint).set(token(fx.buyer.id)).send({ listingId: l.id });
+      expect(newOrder.status).toBe(201);
+      await prisma.affiliation.update({ where: { userId_campusId: { userId: fx.buyer.id, campusId: fx.campusA.id } },
+        data: { verificationStatus: 'pending' } });
+      expect((await request(app).post(endpoint + '/' + newOrder.body.id + '/cancel').set(token(fx.buyer.id))
+        .send({ reason: 'Verification changed during request' })).status).toBe(403);
+      await prisma.affiliation.update({ where: { userId_campusId: { userId: fx.buyer.id, campusId: fx.campusA.id } },
+        data: { verificationStatus: 'verified' } });
+    });
+
+    test('WP3: accepted meetup may be cancelled with a reason and reservation is released for only its owner', async () => {
+      const l = await prisma.listing.create({ data: {
+        sellerProfileId: fx.store.id, campusId: fx.campusA.id, categoryId: fx.category.id,
+        type: 'physical_product', title: 'WP3 Cancel Meetup', description: 'Synthetic withdrawal after meetup',
+        price: 200, status: 'published',
+      } });
+      const endpoint = '/api/v1/transactions';
+      const created = await request(app).post(endpoint).set(token(fx.buyer.id)).send({ listingId: l.id });
+      const id = created.body.id;
+      await request(app).post(endpoint + '/' + id + '/decision').set(token(fx.seller.id)).send({ action: 'accept' });
+      await request(app).post(endpoint + '/' + id + '/confirm-meetup').set(token(fx.buyer.id)).send({});
+      await request(app).post(endpoint + '/' + id + '/confirm-meetup').set(token(fx.seller.id)).send({});
+      expect((await request(app).post(endpoint + '/' + id + '/cancel').set(token(fx.outsider.id))
+        .send({ reason: 'Not a participant in this transaction' })).status).toBe(404);
+      expect((await request(app).post(endpoint + '/' + id + '/cancel').set(token(fx.seller.id))
+        .send({ reason: 'short' })).status).toBe(400);
+      const cancelled = await request(app).post(endpoint + '/' + id + '/cancel').set(token(fx.seller.id))
+        .send({ reason: 'The agreed campus pickup could no longer happen' });
+      expect(cancelled.status).toBe(200);
+      expect(cancelled.body.status).toBe('cancelled');
+      const lAfter = await prisma.listing.findUniqueOrThrow({ where: { id: l.id } });
+      expect(lAfter.availabilityState).toBe('available');
+      expect(lAfter.reservationTransactionId).toBeNull();
+      expect((await request(app).post(endpoint + '/' + id + '/confirm-completion').set(token(fx.buyer.id)).send({})).status).toBe(409);
+    });
+
+    test('WP3: service requests do not reserve or sell the service and can repeat after cancellation', async () => {
+      const category = await prisma.category.create({ data: { listingType: 'service', name: 'WP3 Synthetic Services' } });
+      const l = await prisma.listing.create({ data: {
+        sellerProfileId: fx.store.id, campusId: fx.campusA.id, categoryId: category.id,
+        type: 'service', title: 'WP3 Tutoring Service', description: 'Synthetic tutoring agreement',
+        price: 300, status: 'published',
+      } });
+      const endpoint = '/api/v1/transactions';
+      const one = await request(app).post(endpoint).set(token(fx.buyer.id)).send({ listingId: l.id });
+      expect(one.status).toBe(201);
+      expect((await request(app).post(endpoint + '/' + one.body.id + '/decision')
+        .set(token(fx.seller.id)).send({ action: 'accept' })).status).toBe(200);
+      expect((await prisma.listing.findUniqueOrThrow({ where: { id: l.id } })).availabilityState).toBe('available');
+      const simultaneousBuyer = await request(app).post(endpoint).set(token(fx.outsider.id)).send({ listingId: l.id });
+      expect(simultaneousBuyer.status).toBe(201);
+      expect((await request(app).post(endpoint + '/' + simultaneousBuyer.body.id + '/decision')
+        .set(token(fx.seller.id)).send({ action: 'accept' })).status).toBe(200);
+      await request(app).post(endpoint + '/' + simultaneousBuyer.body.id + '/confirm-meetup').set(token(fx.outsider.id)).send({});
+      await request(app).post(endpoint + '/' + simultaneousBuyer.body.id + '/confirm-meetup').set(token(fx.seller.id)).send({});
+      await request(app).post(endpoint + '/' + simultaneousBuyer.body.id + '/confirm-completion').set(token(fx.outsider.id)).send({});
+      const serviceFinished = await request(app).post(endpoint + '/' + simultaneousBuyer.body.id + '/confirm-completion').set(token(fx.seller.id)).send({});
+      expect(serviceFinished.status).toBe(200);
+      expect(serviceFinished.body.status).toBe('completed');
+      expect((await prisma.listing.findUniqueOrThrow({ where: { id: l.id } })).availabilityState).toBe('available');
+      expect((await request(app).post(endpoint + '/' + one.body.id + '/cancel').set(token(fx.buyer.id))
+        .send({ reason: 'Need a later service appointment date' })).status).toBe(200);
+      const repeated = await request(app).post(endpoint).set(token(fx.buyer.id)).send({ listingId: l.id });
+      expect(repeated.status).toBe(201);
+      expect(repeated.body.id).not.toBe(one.body.id);
+    });
+
+    test('WP3: concurrent attempts to accept the same physical listing have one winner', async () => {
+      const l = await prisma.listing.create({ data: {
+        sellerProfileId: fx.store.id, campusId: fx.campusA.id, categoryId: fx.category.id,
+        type: 'physical_product', title: 'WP3 Concurrent Item', description: 'Synthetic concurrent purchase',
+        price: 390, status: 'published',
+      } });
+      const endpoint = '/api/v1/transactions';
+      const buyer = await request(app).post(endpoint).set(token(fx.buyer.id)).send({ listingId: l.id });
+      const outsider = await request(app).post(endpoint).set(token(fx.outsider.id)).send({ listingId: l.id });
+      const results = await Promise.all([buyer.body.id, outsider.body.id].map(id => request(app)
+        .post(endpoint + '/' + id + '/decision').set(token(fx.seller.id)).send({ action: 'accept' })));
+      expect(results.map(x => x.status).sort((a, b) => a - b)).toEqual([200, 409]);
+      const accepted = results.filter(x => x.status === 200);
+      expect(accepted).toHaveLength(1);
+      expect((await prisma.listing.findUniqueOrThrow({ where: { id: l.id } })).reservationTransactionId).toBe(accepted[0].body.id);
+    });
+
+    test('WP3: admin transaction monitoring is read-only and limited to authorized campuses', async () => {
+      const aListing = await prisma.listing.create({ data: {
+        sellerProfileId: fx.store.id, campusId: fx.campusA.id, categoryId: fx.category.id,
+        type: 'physical_product', title: 'WP3 Admin A', description: 'Synthetic campus A transaction',
+        price: 88, status: 'published',
+      } });
+      const bListing = await prisma.listing.create({ data: {
+        sellerProfileId: fx.storeB.id, campusId: fx.campusB.id, categoryId: fx.category.id,
+        type: 'physical_product', title: 'WP3 Admin B', description: 'Synthetic campus B transaction',
+        price: 99, status: 'published',
+      } });
+      const a = await request(app).post('/api/v1/transactions').set(token(fx.buyer.id)).send({ listingId: aListing.id });
+      const b = await request(app).post('/api/v1/transactions').set(token(fx.buyer.id)).send({ listingId: bListing.id });
+      expect(a.status).toBe(201); expect(b.status).toBe(201);
+      const url = '/api/v1/admin/transactions?pageSize=30';
+      expect((await request(app).get(url).set(token(fx.buyer.id))).status).toBe(403);
+      const campusA = await request(app).get(url).set(token(fx.reviewerA.id));
+      expect(campusA.status).toBe(200);
+      expect(campusA.body.items.some((t: any) => t.id === a.body.id)).toBe(true);
+      expect(campusA.body.items.some((t: any) => t.id === b.body.id)).toBe(false);
+      const campusB = await request(app).get(url).set(token(fx.reviewerB.id));
+      expect(campusB.body.items.some((t: any) => t.id === b.body.id)).toBe(true);
+      expect(campusB.body.items.some((t: any) => t.id === a.body.id)).toBe(false);
+      const university = await request(app).get(url).set(token(fx.globalAdmin.id));
+      expect(university.body.items.some((t: any) => t.id === a.body.id)).toBe(true);
+      expect(university.body.items.some((t: any) => t.id === b.body.id)).toBe(true);
+      expect(JSON.stringify(university.body)).not.toContain(fx.buyer.email);
+      expect(JSON.stringify(university.body)).not.toContain('passwordHash');
+      expect(JSON.stringify(university.body)).not.toContain('inquiryMessages');
+    });
+
+    test('WP3: a suspended listing cannot advance but the buyer can cancel the reservation', async () => {
+      const item = await prisma.listing.create({ data: {
+        sellerProfileId: fx.store.id, campusId: fx.campusA.id, categoryId: fx.category.id,
+        type: 'physical_product', title: 'WP3 Moderated Item',
+        description: 'Synthetic moderated active request', price: 175, status: 'published',
+      } });
+      const base = '/api/v1/transactions';
+      const requestResult = await request(app).post(base).set(token(fx.buyer.id)).send({ listingId: item.id });
+      expect(requestResult.status).toBe(201);
+      const id = requestResult.body.id;
+      expect((await request(app).post(base + '/' + id + '/decision')
+        .set(token(fx.seller.id)).send({ action: 'accept' })).status).toBe(200);
+      expect((await request(app).post('/api/v1/admin/listings/' + item.id + '/suspend')
+        .set(token(fx.reviewerA.id)).send({ reason: 'Suspicious listing under review' })).status).toBe(200);
+      const denied = await request(app).post(base + '/' + id + '/confirm-meetup')
+        .set(token(fx.buyer.id)).send({});
+      expect(denied.status).toBe(409);
+      expect((await prisma.transaction.findUniqueOrThrow({ where: { id } })).status).toBe('accepted');
+      const cancel = await request(app).post(base + '/' + id + '/cancel')
+        .set(token(fx.buyer.id)).send({ reason: 'Listing was suspended by campus review' });
+      expect(cancel.status).toBe(200);
+      expect(cancel.body.status).toBe('cancelled');
+      expect((await prisma.listing.findUniqueOrThrow({ where: { id: item.id } })).status).toBe('suspended');
+    });
+
+    test('WP3: a request cannot target a staff-operated or no-longer-verified seller', async () => {
+      const staffStore = await prisma.sellerProfile.create({ data: {
+        ownerUserId: fx.reviewerA.id, campusId: fx.campusA.id, storeName: 'Synthetic Staff Shop',
+        description: 'Test account created only to enforce transaction roles',
+        approvalStatus: 'approved', sellerType: 'student',
+      } });
+      const staffListing = await prisma.listing.create({ data: {
+        sellerProfileId: staffStore.id, campusId: fx.campusA.id, categoryId: fx.category.id,
+        type: 'physical_product', title: 'Synthetic Staff Item', description: 'Staff participation regression',
+        price: 150, status: 'published',
+      } });
+      const staffRequest = await request(app).post('/api/v1/transactions').set(token(fx.buyer.id))
+        .send({ listingId: staffListing.id });
+      expect(staffRequest.status).toBe(404);
+      expect(await prisma.transaction.count({ where: { listingId: staffListing.id } })).toBe(0);
+
+      const deverifiedSeller = await prisma.user.create({ data: {
+        email: 'deverified-wp3@stage1.invalid', displayName: 'Deverified Test Seller',
+        passwordHash: await hashPassword('TestPassphrase-Stage1-2026!'),
+        affiliations: { create: { campusId: fx.campusA.id, verificationStatus: 'pending' } },
+      } });
+      const staleStore = await prisma.sellerProfile.create({ data: {
+        ownerUserId: deverifiedSeller.id, campusId: fx.campusA.id, storeName: 'Former Student Shop',
+        description: 'Test old approval without current affiliation', approvalStatus: 'approved',
+      } });
+      const staleListing = await prisma.listing.create({ data: {
+        sellerProfileId: staleStore.id, campusId: fx.campusA.id, categoryId: fx.category.id,
+        type: 'service', title: 'Old Service Offer', description: 'No current verification',
+        price: 220, status: 'published',
+      } });
+      expect((await request(app).post('/api/v1/transactions').set(token(fx.buyer.id))
+        .send({ listingId: staleListing.id })).status).toBe(404);
+    });
+
     test('health and discover return live database rows with no draft leakage', async () => {
       const health = await request(app).get('/health');
       expect(health.status).toBe(200);
       const r = await request(app).get('/api/v1/listings');
       expect(r.status).toBe(200);
-      expect(r.body.total).toBe(2);
+      expect(r.body.total).toBeGreaterThanOrEqual(2);
+      expect(r.body.items.some((x: any) => x.id === fx.otherPublished.id)).toBe(true);
       expect(r.body.items.some((x: any) => x.id === fx.draft.id)).toBe(false);
     });
 

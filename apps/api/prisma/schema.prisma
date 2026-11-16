@@ -101,6 +101,16 @@ enum HandoffStatus {
   not_confirmed
 }
 
+// C5 approved: canonical mutually confirmed self-reported transactions.
+enum TransactionStatus {
+  pending
+  accepted
+  negotiating
+  for_meetup
+  completed
+  cancelled
+}
+
 enum ReportStatus {
   open
   reviewing
@@ -158,6 +168,9 @@ model User {
   pushSubscriptions     PushSubscription[]
   pushPreference        PushPreference?
   auditLogs             AuditLog[]
+  buyingTransactions    Transaction[] @relation("TransactionBuyer")
+  sellingTransactions   Transaction[] @relation("TransactionSeller")
+  transactionEvents     TransactionStatusLog[] @relation("TransactionEventActor")
 
 }
 
@@ -262,6 +275,7 @@ model Listing {
   availabilityState AvailabilityState @default(available)
   condition      ListingCondition?
   deletedAt      DateTime?
+  reservationTransactionId Int? @unique
   handoffNote    String?        @db.VarChar(200)
   status         ListingStatus @default(draft)
   flags          Json?
@@ -276,6 +290,8 @@ model Listing {
   savedListings SavedListing[]
   listingReviews ListingReview[]
   reports        Report[] @relation("ReportListing")
+  transactions   Transaction[] @relation("TransactionListing")
+  reservedBy     Transaction? @relation("TransactionReservation", fields: [reservationTransactionId], references: [id], onDelete: Restrict, onUpdate: Cascade)
   @@index([status, categoryId, campusId, createdAt], map: "Listing_discovery_idx")
 
 }
@@ -317,6 +333,7 @@ model InquiryThread {
   messages InquiryMessage[]
   buyer   User     @relation(fields: [buyerUserId], references: [id], onDelete: Restrict, onUpdate: Cascade)
   handoff Handoff?
+  transactions Transaction[]
 
 
   @@unique([listingId, buyerUserId])
@@ -345,6 +362,53 @@ model Handoff {
   createdAt       DateTime      @default(now())
   thread InquiryThread @relation(fields: [inquiryThreadId], references: [id], onDelete: Restrict, onUpdate: Cascade)
 
+}
+
+// TransactionStatusLog is append-only application history, not a claim of verified payment.
+model Transaction {
+  id                        Int      @id @default(autoincrement())
+  inquiryThreadId           Int
+  activeThreadId            Int?     @unique // NULL when terminal; permits repeat service requests.
+  listingId                 Int
+  buyerUserId               Int
+  sellerUserId              Int
+  status                    TransactionStatus @default(pending)
+  price                     Decimal @db.Decimal(10, 2)
+  currency                  String  @default("PHP") @db.VarChar(3)
+  buyerMeetupConfirmedAt    DateTime?
+  sellerMeetupConfirmedAt   DateTime?
+  buyerCompletionConfirmedAt DateTime?
+  sellerCompletionConfirmedAt DateTime?
+  createdAt                 DateTime @default(now())
+  updatedAt                 DateTime @updatedAt
+
+  thread     InquiryThread @relation(fields: [inquiryThreadId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  listing    Listing @relation("TransactionListing", fields: [listingId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  buyer      User @relation("TransactionBuyer", fields: [buyerUserId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  seller     User @relation("TransactionSeller", fields: [sellerUserId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  reservation Listing? @relation("TransactionReservation")
+  history    TransactionStatusLog[]
+
+  @@index([buyerUserId, status, createdAt])
+  @@index([sellerUserId, status, createdAt])
+  @@index([listingId, status])
+  @@index([inquiryThreadId, createdAt])
+}
+
+model TransactionStatusLog {
+  id            Int @id @default(autoincrement())
+  transactionId Int
+  actorUserId   Int
+  fromStatus    TransactionStatus?
+  toStatus      TransactionStatus
+  event         String @db.VarChar(40)
+  reason        String? @db.VarChar(500)
+  createdAt     DateTime @default(now())
+
+  transaction Transaction @relation(fields: [transactionId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  actor       User @relation("TransactionEventActor", fields: [actorUserId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+
+  @@index([transactionId, id])
 }
 
 model SavedListing {

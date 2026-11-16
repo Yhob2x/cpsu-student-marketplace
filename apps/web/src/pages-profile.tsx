@@ -25,6 +25,13 @@ function noticeText(n: Notice): string {
       return `${title} ${DECISION[p.decision] ?? 'was reviewed'}.${p.reason ? ` Reason: ${p.reason}` : ''}`;
     case 'listing.suspended':
       return `A listing of yours was suspended by a reviewer.${p.reason ? ` Reason: ${p.reason}` : ''}`;
+    case 'transaction.requested': return 'A student sent you a purchase or service request.';
+    case 'transaction.accepted': return 'The seller accepted your request.';
+    case 'transaction.rejected': return 'The seller rejected your request. Review the transaction history.';
+    case 'transaction.negotiating': return 'The other student marked your transaction as being discussed.';
+    case 'transaction.meetup_confirmed': return 'The other student confirmed meetup arrangements. Your confirmation may still be needed.';
+    case 'transaction.completion_confirmed': return 'The other student reported completion. Both confirmations are required.';
+    case 'transaction.cancelled': return 'The other student cancelled the transaction. Review the recorded reason.';
     default: return 'Marketplace update.';
   }
 }
@@ -35,6 +42,8 @@ function noticeTarget(n: Notice): string | null {
   if (n.type === 'inquiry.new' || n.type === 'inquiry.reply') return p.threadId ? `/inquiries/${p.threadId}` : null;
   if (n.type === 'listing.decision' || n.type === 'listing.suspended') return p.listingId ? `/listings/${p.listingId}` : null;
   if (n.type === 'affiliation.decision') return '/profile';
+  if (n.type.startsWith('transaction.') && Number.isSafeInteger(p.transactionId) && p.transactionId > 0)
+    return `/transactions/${p.transactionId}`;
   return null;
 }
 
@@ -91,6 +100,7 @@ export function Profile() {
           <li><Link to="/dashboard">My listings</Link><span className="muted">{me.storeId ? 'Manage your drafts, reviews and listings' : 'Open a store once your affiliation is verified'}</span></li>
           <li><Link to="/saved">Favorites</Link><span className="muted">Listings you saved for later</span></li>
           <li><Link to="/inquiries">Messages</Link><span className="muted">Conversations with buyers and sellers</span></li>
+          <li><Link to="/transactions">My transactions</Link><span className="muted">Purchase requests, arrangements and mutual completion records</span></li>
           <li><Link to="/notifications">Notifications</Link><span className="muted">Review decisions, replies and affiliation updates</span></li>
         </ul>
       </section>

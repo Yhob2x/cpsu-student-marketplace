@@ -3,7 +3,7 @@
 **Date:** 16 November 2026  
 **Project:** CPSU Student Marketplace  
 **Scope:** Local React/Vite PWA, Express API and MySQL, one codebase for desktop/Android/iPhone.  
-**Status:** Implemented; **Stage 1 local development migration applied 16 November 2026 after a verified retained backup**. Not activated for real students or deployed. See `docs/PWA_PUSH_STAGE1_LOCAL_ACTIVATION_2026-11-16.md`.  
+**Status:** Implemented. **Stage 1** applied the local development push migration after a retained backup. **Stage 2** stored persistent VAPID keys privately and verified an isolated localhost HTTPS PWA in Chrome. **No public deployment, real push delivery, or physical Android/iPhone acceptance**. See `docs/PWA_PUSH_STAGE1_LOCAL_ACTIVATION_2026-11-16.md` and `docs/PWA_PUSH_STAGE2_LOCAL_HTTPS_2026-11-16.md`.
 **Governing specification:** `MASTER_BLUEPRINT.md` Module 08. Push is classed as a *future-phase* delivery channel by the blueprint; the project owner explicitly authorized developing this enhancement now. Institutional/privacy approval is still required before production launch.
 
 ## Architecture
@@ -35,14 +35,8 @@ No sender names, message bodies, listing titles, private review reasons, student
 **Do not put the private VAPID key in ChatGPT, Git, client code, screenshots or publicly reachable files.**
 
 1. Back up the *development* database. The push migration is additive and does not delete existing rows.
-2. On your own computer, from `apps/api`, run `bun scripts/generate-vapid-keys.mjs`. This prints a new public/private keypair **only to your local terminal**. Generate once, store securely and keep it persistent. Changing VAPID keys invalidates existing subscriptions.
-3. In the untracked `apps/api/.env`, add:
-   ```text
-   VAPID_PUBLIC_KEY="<your generated public key>"
-   VAPID_PRIVATE_KEY="<your generated private key>"
-   VAPID_SUBJECT="mailto:<an actual monitored contact email>"
-   ```
-   Choose a real contact email; Apple may reject invalid VAPID subjects. Do not expose the private key as a Vite `VITE_*` variable.
+2. **Stage 2 completed local key generation** with `bun scripts/setup-local-vapid.mjs --development`. Do **not** rerun the old key-printing generator: the persistent local keys are already in the ignored `apps/api/.env` with restricted Windows ACL. Verify non-secret readiness using `bun scripts/verify-local-vapid.mjs`. Never paste the private key in a chat, public file or issue tracker.
+3. The current local `apps/api/.env` contains `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, and **development-only** `VAPID_SUBJECT="https://localhost:8443/"`. Before *any public* HTTPS staging or production use, securely change **only** the subject to an approved, monitored `mailto:<your-project-contact>` or real HTTPS contact URL and retain the same private/public pair. Browser push services may reject an inappropriate contact subject. Never expose the private key as a Vite `VITE_*` variable.
 4. **Local development migration completed with owner approval on 16 November 2026.** The reviewed additive migration `20261116094000_pwa_push_notifications` is already applied to backed-up `cpsu_marketplace`. Do not rerun it unnecessarily. **Production deployment is not authorized**. See the Stage 1 activation report for backup and verification evidence.
 5. Restart the API and production PWA served over HTTPS. Navigate to **Notifications → Phone and desktop alerts** while signed in and choose **Enable alerts**. Browser permission must come from this user action. On iPhone/iPad, install the PWA with Safari **Add to Home Screen** and launch that installed app first.
 6. Choose Messages, Listing reviews and Account verification toggles. Use **Disable alerts on this device** to revoke the endpoint on the server and unsubscribe locally.

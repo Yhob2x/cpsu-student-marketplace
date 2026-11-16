@@ -9,14 +9,14 @@ export function Login() {
   const nav = useNavigate(); const location = useLocation(); const { reload } = useMe(); const [err, setErr] = useState('');
   // Deep links from push notifications return only to explicitly allowed in-app paths.
   const requested = new URLSearchParams(location.search).get('next') ?? '';
-  const next = /^\/(inquiries\/\d+|notifications|profile)$/.test(requested) ? requested : '/';
+  const next = /^\/(inquiries\/\d+|transactions(?:\/\d+)?|notifications|profile)$/.test(requested) ? requested : '/';
   const go = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault(); const d = Object.fromEntries(new FormData(e.currentTarget));
     try { const r = await api('/auth/login', { body: d }); setToken(r.accessToken); await reload(); nav(next, { replace: true }); } catch (x) { setErr(explain(x)); }
   };
   return <form className="stack auth-form" onSubmit={go}><h1>Sign in</h1>
     <label className="field">Email
-      <input name="email" type="email" placeholder="Your CPSU email" autoComplete="email" required />
+      <input name="email" type="email" placeholder="Your email address" autoComplete="email" required />
     </label>
     <label className="field">Password
       <input name="password" type="password" autoComplete="current-password" required />

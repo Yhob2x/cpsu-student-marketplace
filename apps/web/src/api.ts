@@ -54,7 +54,15 @@ const MESSAGES: Record<string, string> = {
   photo_review_required: 'Inspect every listing photo and confirm the content rules before approving.',
   store_exists: 'You already have a store.', own_listing: 'This is your own listing.', validation_error: 'Please check the highlighted fields.',
   rate_limited: 'Too many attempts. Wait a few minutes and try again.',
-  not_found: 'That item is no longer available.',
+  student_verification_required: 'Purchase requests require an active, verified student account without an administrative role.',
+  listing_unavailable: 'This listing is no longer available for a new request.',
+  listing_under_review: 'This listing is no longer published. You can cancel the transaction or contact the campus reviewer.',
+  transaction_reservation_active: 'An active purchase request has reserved this item. Resolve or cancel that transaction first.',
+  invalid_transaction_state: 'This action is no longer available at the current transaction stage. Refresh the transaction.',
+  already_confirmed_or_changed: 'You already confirmed this step, or the transaction changed. Refresh to see the latest status.',
+  concurrent_transaction_conflict: 'Someone else updated this item at the same time. Refresh and try again.',
+  reservation_changed: 'This reservation changed while you were updating it. No transaction state was changed.',
+  not_found: 'That record is unavailable or you do not have permission to view it.',
 };
 
 export const explain = (e: unknown) => e instanceof ApiError ? (MESSAGES[e.code] ?? e.message) : 'Something went wrong. Check your connection and try again.';

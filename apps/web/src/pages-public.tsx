@@ -322,6 +322,7 @@ export function Discover() {
 
 export function ListingDetail() {
   const { id } = useParams(); const { me, savedIds, toggleSaved } = useMe();
+  const navigate = useNavigate();
   const [l, setL] = useState<Listing | null>(null); const [body, setBody] = useState(''); const [note, setNote] = useState(''); const [err, setErr] = useState('');
   const [busy, setBusy] = useState(false); const [reporting, setReporting] = useState(false); const [reason, setReason] = useState('');
   useEffect(() => { api(`/listings/${id}`).then(setL).catch(e => setErr(explain(e))); }, [id]);
@@ -331,7 +332,16 @@ export function ListingDetail() {
   const saved = savedIds.includes(l.id);
   const isOwner = me?.storeId === l.seller.id;
   const isAvailable = l.availability === 'available';
+  const canRequest = Boolean(me && me.roles.length === 0 && me.affiliations.some(a => a.status === 'verified'));
   const send = async () => { setBusy(true); try { const r = await api('/inquiries', { body: { listingId: l.id, body } }); setBody(''); setNote(`Message sent. Continue in Inquiries (thread ${r.id}).`); setErr(''); } catch (e) { setErr(explain(e)); } finally { setBusy(false); } };
+  const requestTransaction = async () => {
+    setBusy(true); setErr('');
+    try {
+      const created = await api<{ id: number }>('/transactions', { body: { listingId: l.id } });
+      navigate(`/transactions/${created.id}`);
+    } catch (e) { setErr(explain(e)); }
+    finally { setBusy(false); }
+  };
   const save = async () => {
     setBusy(true);
     try {
@@ -366,11 +376,15 @@ export function ListingDetail() {
       <h2>Ask the seller</h2>
       {!isAvailable && <p className="muted" role="status">This listing is {l.availability}. New inquiries are disabled.</p>}
       {isOwner && <p className="muted">This is your own listing.</p>}
+      {me && !isOwner && !canRequest && <p className="muted">Purchase requests require a verified student account without administrative or establishment roles. Messaging remains separate.</p>}
       <p className="muted">Payment and handoff are arranged directly between you and the seller. The marketplace does not hold money or deliver items.</p>
       {me ? <><label className="field">Your message to the seller
         <textarea value={body} onChange={e => setBody(e.target.value)} maxLength={1000} placeholder="Is this still available? Where can we meet on campus?" />
       </label>
         <div className="row"><button className="btn" disabled={busy || !body.trim() || !isAvailable || isOwner} onClick={send}>Send inquiry</button>
+          <button type="button" className="btn" disabled={busy || !isAvailable || isOwner || !canRequest} onClick={() => void requestTransaction()}>
+            {l.type === 'service' ? 'Request service' : 'Request item'}
+          </button>
           {l.images.length === 0 && !isOwner && (isAvailable || saved) && heart}
           <button className="btn ghost" disabled={busy} onClick={() => { setReporting(!reporting); setErr(''); }}>Report</button></div>
         {reporting && <div className="stack">

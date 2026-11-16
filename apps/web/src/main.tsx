@@ -8,6 +8,7 @@ import { Icon } from './icons';
 import { Login, Register, Dashboard, Inquiries, Thread, Saved } from './pages-account';
 import { Profile, Notifications } from './pages-profile';
 import { Admin } from './pages-admin';
+import { Transactions, TransactionDetail } from './pages-transactions';
 import './styles.css';
 import './storefront-theme.css';
 import './message-motion.css';
@@ -54,7 +55,7 @@ function SiteFooter() {
         <Link to="/explore?type=service">Student services</Link><Link to="/explore?sort=price_asc">Lowest price first</Link></nav>
       <nav aria-label="Your account"><h2>Your account</h2>
         <Link to="/dashboard">Sell an item</Link><Link to="/saved">Saved listings</Link>
-        <Link to="/inquiries">Messages</Link><Link to="/profile">Profile</Link></nav>
+        <Link to="/inquiries">Messages</Link><Link to="/transactions">My transactions</Link><Link to="/profile">Profile</Link></nav>
       <nav aria-label="Support"><h2>Support</h2>
         <Link to="/guidelines">Marketplace guidelines</Link><Link to="/guidelines">Reporting a listing</Link>
         <Link to="/register">Create an account</Link><Link to="/login">Sign in</Link></nav>
@@ -162,6 +163,7 @@ function Shell() {
           <NavLink to="/explore">Explore</NavLink>
           <NavLink to="/dashboard">Sell</NavLink>
           <NavLink to="/inquiries">Messages</NavLink>
+          <NavLink to="/transactions">Transactions</NavLink>
           <NavLink to="/profile">Profile</NavLink>
           <NavLink to="/guidelines">Guidelines</NavLink>
           {isReviewer && <NavLink to="/admin" aria-label={queue > 0 ? `Review, ${queue} waiting` : undefined}>Review{queue > 0 && <span className="nav-badge">{queue}</span>}</NavLink>}
@@ -175,6 +177,8 @@ function Shell() {
           <Route path="/dashboard" element={signedOut ? <Navigate to="/login" /> : <Dashboard />} />
           <Route path="/inquiries" element={signedOut ? <Navigate to="/login" /> : <Inquiries />} />
           <Route path="/inquiries/:id" element={!ready ? <p role="status">Checking session…</p> : signedOut ? <Navigate to={`/login?next=${encodeURIComponent(window.location.pathname)}`} replace /> : <Thread />} /><Route path="/saved" element={<Saved />} />
+          <Route path="/transactions" element={!ready ? <p role="status">Checking session…</p> : signedOut ? <Navigate to="/login?next=%2Ftransactions" replace /> : <Transactions />} />
+          <Route path="/transactions/:id" element={!ready ? <p role="status">Checking session…</p> : signedOut ? <Navigate to={`/login?next=${encodeURIComponent(window.location.pathname)}`} replace /> : <TransactionDetail />} />
           <Route path="/profile" element={signedOut ? <Navigate to="/login?next=%2Fprofile" /> : <Profile />} />
           <Route path="/notifications" element={signedOut ? <Navigate to="/login?next=%2Fnotifications" /> : <Notifications />} />
           <Route path="/admin" element={ready && !isReviewer ? <Navigate to="/" /> : <Admin />} />

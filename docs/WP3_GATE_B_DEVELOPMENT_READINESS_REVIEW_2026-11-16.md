@@ -76,3 +76,9 @@ A consolidated migration of all three would enable the managed guidelines/announ
 **Request for owner:** Approve a *specific* Gate B path and maintenance scope only after coordinating the multi-agent pause. If approving Option A, state explicitly that **only `20261116193000_wp3_transactions` may be applied to `127.0.0.1:3306/cpsu_marketplace`** after a fresh backup/restore and guarded dry run. If not, keep the development database unchanged.
 
 **Production:** Independent institutional/security/privacy approval, encrypted backups, restore proof, device/browser acceptance and a separate release gate remain mandatory.
+
+## 7. Concurrent Git activity observed after this review was drafted
+
+While the Gate B read-only assessment was underway, **another local agent/process created Git commit `b3c5393` (2026-11-16 13:11 +08:00)** on top of `2002368` and the earlier `461f922`. The commit includes previously uncommitted Gate A safety scripts, this Gate B readiness report, the two unrelated new migration directories, and separate staging/UI changes. **This assistant did not run `git add`, `git commit`, `git push` or deploy during the review, and did not authorize that commit.** Do not rewrite, reset, amend or revert another process's work without the owner coordinating it.
+
+This is concrete evidence that **a multi-agent freeze has not been achieved**. Before any Gate B execution, stop/coordinate the other editing agents, reconfirm Git HEAD and staged/untracked state and migration SQL hashes, and obtain explicit written approval of the precise migration scope. The source development database was only audited read-only during this review and still showed all three pending migrations. This local commit does not equal a production deployment; **push/remotes were not checked**, so do not infer remote state from this report.

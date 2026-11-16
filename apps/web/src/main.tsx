@@ -14,6 +14,7 @@ import './storefront-theme.css';
 import './message-motion.css';
 import './notifications.css';
 import './mobile-refinements.css';
+import './install-app.css';
 import './push-settings.css';
 
 export type Me = { id: number; email: string; displayName: string; roles: { role: string; campusId: number | null }[];

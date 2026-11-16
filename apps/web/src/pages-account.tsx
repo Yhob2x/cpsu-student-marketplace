@@ -4,6 +4,7 @@ import { api, explain, peso, setToken, timeAgo } from './api';
 import { useMe } from './main';
 import { ListingCard, Listing } from './pages-public';
 import { Icon } from './icons';
+import { hasNewIncomingMessage, messageReceiveSoundEnabled, playMessageReceiveSound, prepareMessageReceiveSound, setMessageReceiveSoundEnabled, unlockMessageReceiveSound } from './message-receive-sound';
 
 export function Login() {
   const nav = useNavigate(); const location = useLocation(); const { reload } = useMe(); const [err, setErr] = useState('');
@@ -235,19 +236,78 @@ function messageDayLabel(iso: string) {
 export function Inquiries() {
   const [rows, setRows] = useState<any[] | null>(null);
   const [error, setError] = useState('');
+  const [receiveSoundOn, setReceiveSoundOn] = useState(messageReceiveSoundEnabled);
+  const knownMessageIdsRef = useRef<Set<number>>(new Set());
+  const inboxLoadedRef = useRef(false);
+  const foregroundRef = useRef(false);
+  const requestRef = useRef(0);
   const { me } = useMe();
-  // User-scoped: wait for the restored session instead of racing it.
-  const load = () => api('/inquiries').then(r => { setRows(r); setError(''); }).catch(x => setError(explain(x)));
-  useEffect(() => { if (me) load(); }, [me?.id]);
-  return <section className="messages-page">
+  // Poll only while this inbox is mounted. Do not sound on first history load,
+  // own messages, repeated results, or the first catch-up after backgrounding.
+  const load = async () => {
+    const request = ++requestRef.current;
+    try {
+      const next = await api<any[]>('/inquiries');
+      if (request !== requestRef.current) return;
+      const focused = document.visibilityState === 'visible' && document.hasFocus();
+      const latest = next.flatMap(t => t.lastMessage ? [{ id: t.lastMessage.id, mine: t.lastMessage.mine }] : []);
+      if (hasNewIncomingMessage(latest, knownMessageIdsRef.current,
+        inboxLoadedRef.current, focused && foregroundRef.current)) playMessageReceiveSound();
+      for (const message of latest) knownMessageIdsRef.current.add(message.id);
+      inboxLoadedRef.current = true;
+      foregroundRef.current = focused;
+      setRows(next); setError('');
+    } catch (e) {
+      if (request === requestRef.current) setError(explain(e));
+    }
+  };
+  useEffect(() => {
+    if (!me) return;
+    knownMessageIdsRef.current.clear();
+    inboxLoadedRef.current = false;
+    foregroundRef.current = document.visibilityState === 'visible' && document.hasFocus();
+    prepareMessageReceiveSound();
+    const onBlur = () => { foregroundRef.current = false; };
+    const onVisibility = () => { if (document.visibilityState !== 'visible') foregroundRef.current = false; };
+    window.addEventListener('blur', onBlur);
+    document.addEventListener('visibilitychange', onVisibility);
+    void load();
+    const timer = window.setInterval(() => { if (!document.hidden) void load(); }, 5000);
+    return () => {
+      requestRef.current++;
+      window.clearInterval(timer);
+      window.removeEventListener('blur', onBlur);
+      document.removeEventListener('visibilitychange', onVisibility);
+    };
+  }, [me?.id]);
+  return <section className="messages-page"
+    onPointerDownCapture={() => unlockMessageReceiveSound()}
+    onKeyDownCapture={e => { if (e.key === 'Enter' || e.key === ' ') unlockMessageReceiveSound(); }}>
     <div className="page-head messages-heading">
       <div><h1>Messages</h1><p className="muted">Your conversations with other CPSU students about listings.</p></div>
-      <Link className="btn ghost" to="/explore">Browse listings</Link>
+      <div className="messages-audio-actions">
+        <button type="button" className="btn ghost conversation-sound-toggle"
+          aria-label={receiveSoundOn ? 'Mute incoming message sound' : 'Enable incoming message sound'}
+          aria-pressed={receiveSoundOn}
+          onClick={() => {
+            const enabled = !receiveSoundOn;
+            setReceiveSoundOn(enabled);
+            setMessageReceiveSoundEnabled(enabled);
+            if (enabled) unlockMessageReceiveSound();
+          }}>
+          <Icon name="bell" size={17} /> {receiveSoundOn ? 'Sound on' : 'Sound off'}
+        </button>
+        {receiveSoundOn && <button type="button" className="btn ghost"
+          aria-label="Play test incoming message sound"
+          onClick={() => { unlockMessageReceiveSound(); playMessageReceiveSound(); }}>Test sound</button>}
+        <Link className="btn ghost" to="/explore">Browse listings</Link>
+      </div>
     </div>
     {rows === null && !error && <p className="muted" role="status">Loading conversations…</p>}
-    {error && <div className="empty" role="alert"><h2>Messages could not load</h2><p className="muted">{error}</p><button type="button" className="btn" onClick={load}>Try again</button></div>}
+    {error && rows === null && <div className="empty" role="alert"><h2>Messages could not load</h2><p className="muted">{error}</p><button type="button" className="btn" onClick={load}>Try again</button></div>}
+    {error && rows !== null && <p className="err" role="alert">Could not refresh messages: {error} <button type="button" className="btn ghost" onClick={load}>Retry</button></p>}
     {rows?.length === 0 && !error && <div className="empty"><h2>No conversations yet</h2><p className="muted">Explore listings and send a seller a question to start a conversation.</p><Link className="btn" to="/explore">Explore listings</Link></div>}
-    {!error && <div className="inquiry-list">{rows?.map(t => <Link key={t.id} to={`/inquiries/${t.id}`} className="inquiry-row">
+    {rows !== null && rows.length > 0 && <div className="inquiry-list">{rows.map(t => <Link key={t.id} to={`/inquiries/${t.id}`} className="inquiry-row">
       <span className="avatar" aria-hidden="true">{initials(t.otherStudentName || 'Student')}</span>
       <span className="inq-main">
         <span className="inq-top"><strong>{t.otherStudentName || 'Student'}</strong>
@@ -327,6 +387,7 @@ export function Thread() {
   const [loadError, setLoadError] = useState('');
   const [sendError, setSendError] = useState('');
   const [busy, setBusy] = useState(false);
+  const [receiveSoundOn, setReceiveSoundOn] = useState(messageReceiveSoundEnabled);
   const logRef = useRef<HTMLDivElement>(null);
   const followLatest = useRef(true);
   const refreshRef = useRef<() => Promise<void>>(async () => {});
@@ -334,6 +395,8 @@ export function Thread() {
   const pageRef = useRef<HTMLElement>(null);
   const composerRef = useRef<HTMLFormElement>(null);
   const syncKeyboardRef = useRef<() => void>(() => {});
+
+  useEffect(() => { prepareMessageReceiveSound(); }, []);
 
   // On phones whose keyboard overlays (rather than resizes) the layout viewport,
   // reserve scroll space and bring the reply field above the visible keyboard.
@@ -344,7 +407,15 @@ export function Thread() {
       const editing = document.activeElement?.id === 'conversation-reply';
       const keyboardSpace = editing ? Math.max(0, window.innerHeight - viewport.height - viewport.offsetTop) : 0;
       pageRef.current?.style.setProperty('--chat-keyboard-space', `${Math.round(keyboardSpace)}px`);
-      if (editing && keyboardSpace > 100 && composerRef.current) {
+      // On mobile, fit the entire conversation into the visible viewport when
+      // Safari overlays the keyboard. Never rely on scrolling the whole page.
+      if (window.matchMedia('(max-width: 860px)').matches) {
+        if (editing && keyboardSpace > 100) {
+          document.body.style.setProperty('--chat-visible-height', `${Math.round(viewport.height)}px`);
+        } else {
+          document.body.style.removeProperty('--chat-visible-height');
+        }
+      } else if (editing && keyboardSpace > 100 && composerRef.current) {
         const bottom = composerRef.current.getBoundingClientRect().bottom;
         const visibleBottom = viewport.offsetTop + viewport.height;
         if (bottom > visibleBottom - 8) window.scrollBy({ top: Math.ceil(bottom - visibleBottom + 12), behavior: 'auto' });
@@ -356,6 +427,7 @@ export function Thread() {
     return () => {
       viewport.removeEventListener('resize', sync);
       viewport.removeEventListener('scroll', sync);
+      document.body.style.removeProperty('--chat-visible-height');
       syncKeyboardRef.current = () => {};
     };
   }, []);
@@ -363,6 +435,12 @@ export function Thread() {
   useEffect(() => {
     let active = true;
     let newestRequest = 0;
+    // Suppress catch-up ringing on first focus after the chat was backgrounded.
+    let continuouslyForeground = document.visibilityState === 'visible' && document.hasFocus();
+    const onBlur = () => { continuouslyForeground = false; };
+    const onVisibility = () => { if (document.visibilityState !== 'visible') continuouslyForeground = false; };
+    window.addEventListener('blur', onBlur);
+    document.addEventListener('visibilitychange', onVisibility);
     followLatest.current = true;
     firstFetchRef.current = false;
     messageIdsRef.current.clear();
@@ -375,6 +453,12 @@ export function Thread() {
       try {
         const next = await api(`/inquiries/${id}/messages`);
         if (active && request === newestRequest) {
+          // Only NEW incoming messages ring: never the first history load,
+          // outgoing sends, repeated polls, or background/refocus catch-up.
+          const focused = document.visibilityState === 'visible' && document.hasFocus();
+          if (hasNewIncomingMessage(next.messages, messageIdsRef.current,
+            firstFetchRef.current, focused && continuouslyForeground)) playMessageReceiveSound();
+          continuouslyForeground = focused;
           // Animate only messages arriving after the first history load.
           for (const message of next.messages) {
             if (firstFetchRef.current && !messageIdsRef.current.has(message.id)) newlyArrivedRef.current.add(message.id);
@@ -391,7 +475,12 @@ export function Thread() {
     refreshRef.current = refresh;
     void refresh();
     const timer = window.setInterval(() => { if (!document.hidden) void refresh(); }, 3000);
-    return () => { active = false; newestRequest++; clearInterval(timer); refreshRef.current = async () => {}; };
+    return () => {
+      active = false; newestRequest++; clearInterval(timer);
+      window.removeEventListener('blur', onBlur);
+      document.removeEventListener('visibilitychange', onVisibility);
+      refreshRef.current = async () => {};
+    };
   }, [id]);
 
   // Foreground chat presence only. A background or unfocused tab never sends a heartbeat.
@@ -418,11 +507,24 @@ export function Thread() {
     };
   }, [id, d?.thread?.id, d?.thread?.status]);
 
-  // Keep new messages in view unless someone has scrolled up to read an older part of the thread.
+  // Follow the newest message AND typing state only while the student is at
+  // the latest end of the chat; never pull them away from older messages.
   useEffect(() => {
     const log = logRef.current;
     if (log && followLatest.current) log.scrollTop = log.scrollHeight;
-  }, [d?.thread?.id, d?.messages?.length]);
+  }, [d?.thread?.id, d?.messages?.length, d?.typing]);
+
+  // Keyboard, browser chrome and device rotation can change the log height
+  // without adding a message. Keep the latest row anchored unless reading back.
+  useEffect(() => {
+    const log = logRef.current;
+    if (!log || typeof ResizeObserver === 'undefined') return;
+    const observer = new ResizeObserver(() => {
+      if (followLatest.current) log.scrollTop = log.scrollHeight;
+    });
+    observer.observe(log);
+    return () => observer.disconnect();
+  }, [d?.thread?.id]);
 
   // Read receipts are only acknowledged for incoming messages at least half visible
   // in the active conversation. Scrolling never marks messages farther down as read.
@@ -476,6 +578,7 @@ export function Thread() {
   const send = async () => {
     const message = body.trim();
     if (busy || !message || !d || d.thread.status === 'closed') return;
+    // Sending a message must be silent. Only newly received messages ring.
     setBusy(true); setSendError('');
     try {
       await api(`/inquiries/${id}/messages`, { body: { body: message } });
@@ -503,7 +606,9 @@ export function Thread() {
   const closed = d.thread.status === 'closed';
   const lastMineId = [...d.messages].reverse().find((m: any) => m.mine)?.id;
   const otherStudentName = d.thread.otherStudentName || 'Other student';
-  return <section className="conversation-page" ref={pageRef}>
+  return <section className="conversation-page" ref={pageRef}
+    onPointerDownCapture={() => unlockMessageReceiveSound()}
+    onKeyDownCapture={e => { if (e.key === 'Enter' || e.key === ' ') unlockMessageReceiveSound(); }}>
     <Link to="/inquiries" className="conversation-back">← Back to messages</Link>
     <div className={`conversation-heading ${closed ? 'is-closed' : ''}`}>
       <div className="conversation-heading-info">
@@ -515,6 +620,14 @@ export function Thread() {
         </p>}
       </div>
       <div className="conversation-actions">
+        {!closed && <button type="button" className="btn ghost conversation-sound-toggle"
+          aria-pressed={receiveSoundOn} aria-label={receiveSoundOn ? 'Mute incoming message sound' : 'Enable incoming message sound'}
+          onClick={() => { const enabled = !receiveSoundOn; setReceiveSoundOn(enabled); setMessageReceiveSoundEnabled(enabled); if (enabled) unlockMessageReceiveSound(); }}>
+          <Icon name="bell" size={17} /> {receiveSoundOn ? 'Sound on' : 'Sound off'}
+        </button>}
+        {!closed && receiveSoundOn && <button type="button" className="btn ghost conversation-sound-preview"
+          onClick={() => { unlockMessageReceiveSound(); playMessageReceiveSound(); }}
+          aria-label="Play test incoming message sound">Test sound</button>}
         {closed && <span className="status closed">Closed</span>}
         <Link className="btn ghost" to={`/listings/${d.thread.listingId}`}>View listing <Icon name="arrow" size={16} /></Link>
       </div>
@@ -552,10 +665,6 @@ export function Thread() {
           </div>
         </div>;
       })}
-      {d.typing && !closed && <div className="typing-indicator" role="status" aria-label="The other student is typing">
-        <span className="typing-dots" aria-hidden="true"><span /><span /><span /></span>
-        <span>Typing…</span>
-      </div>}
     </div>
     {d.handoff && <aside className="handoff-panel">
       <Icon name="pin" size={19} />
@@ -564,6 +673,11 @@ export function Thread() {
         <span className="status">{d.handoff.status.replaceAll('_', ' ')}</span>
       </div>
     </aside>}
+    {d.typing && !closed && <div className="typing-indicator conversation-typing-dock" role="status"
+      aria-label={`${otherStudentName} is typing`}>
+      <span className="typing-dots" aria-hidden="true"><span /><span /><span /></span>
+      <span>{otherStudentName} is typing…</span>
+    </div>}
     {closed ? <div className="conversation-closed" role="status">This conversation is closed. You can still read the messages above.</div>
       : <form className="chat-bar conversation-composer" ref={composerRef} onSubmit={e => { e.preventDefault(); void send(); }}>
         <label className="conversation-reply-label" htmlFor="conversation-reply">Your message</label>

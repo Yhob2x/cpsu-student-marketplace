@@ -4,6 +4,7 @@ import { api, explain, timeAgo } from './api';
 import { useMe } from './main';
 import { Icon, type IconName } from './icons';
 import { PushSettings } from './push-settings';
+import { InstallApp } from './install-app';
 
 type Notice = { id: number; type: string; payload: any; readAt: string | null; createdAt: string };
 
@@ -78,6 +79,7 @@ export function Profile() {
     </div>
 
     <div className="profile-grid">
+      <InstallApp variant="panel" />
       <section className="panel">
         <h2>Your account</h2>
         <dl className="facts">

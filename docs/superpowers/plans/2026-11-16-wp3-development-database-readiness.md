@@ -10,12 +10,12 @@
 
 **Spec:** `docs/superpowers/specs/2026-11-16-wp3-transaction-design.md`; `MASTER_BLUEPRINT.md` PART XIII C5/C1a; `AGENTS.md`.
 
-**Gate A final verification (2026-11-16): PASSED.** The user authorized a retained backup and isolated rehearsal only. The retained SQL and all 22 uploads were verified, and a disposable restored database was compared with the backup itself. A temporary Prisma migration tree included exactly five applied migrations plus WP3; two other agents' pending migrations were excluded without modifying the repository. WP3 applied successfully to the sandbox, seven foreign keys and original rows were validated, and the sandbox was removed. See `docs/WP3_GATE_A_BACKUP_AND_REHEARSAL_2026-11-16.md`. **Gate B, development/production migrations, commits, pushes and deployment remain unauthorized.**
+**Gate A verification and Gate B review (2026-11-16):** Gate A PASSED: the retained SQL/22 uploads were verified, the original 22 tables restored, and the pinned WP3-only migration passed in a disposable sandbox, which was removed. Two later source migrations were preserved and excluded from the isolated test. **Gate B readiness review is recorded in `docs/WP3_GATE_B_DEVELOPMENT_READINESS_REVIEW_2026-11-16.md`.** Live development now has eight migration directories, **five applied and three pending**. The user has **not authorized Gate B**, any development/production migration, commit, push or deploy.
 
 ## Current verified baseline (read-only inspection)
 
 - Repository `C:\Users\acer\Downloads\cpsu-student-marketplace`; at inspection HEAD `461f922`. Many unrelated tracked/untracked edits are present, including Web Push UI/staging/graph data; never overwrite, discard, stage, commit or push them.
-- `cd apps/api && bunx prisma migrate status` confirmed connection to local `cpsu_marketplace` at `127.0.0.1:3306`: **6 migration directories; only `20261116193000_wp3_transactions` pending**. The earlier `20261116094000_pwa_push_notifications` is already applied. If status changes, STOP and re-plan.
+- `cd apps/api && bunx prisma migrate status` reconfirmed local `cpsu_marketplace` at `127.0.0.1:3306`: **8 migration directories, 5 applied, 3 pending**: `20261116193000_wp3_transactions`, `20261116220000_managed_student_content`, and `20261116221000_pending_announcement_edits`. The earlier `20261116094000_pwa_push_notifications` is already applied. Never run the project's unscoped Prisma migration command against development: it would apply unapproved additional migrations.
 - `bunx prisma validate`: PASS. WP3 migration has additive `Listing.reservationTransactionId`, `Transaction`, `TransactionStatusLog`, indexes and seven FK constraints; no table/data drop statements were seen.
 - WP3 migration SQL SHA-256 at inspection: `F14FD1971E96BE0F42A4618415D4B94EFBD2D70AD5736D41784ADC14E3B133D5`. Do not silently modify an already-tested migration.
 - Working native CLI paths exist: `C:\xampp\mysql\bin\mysqldump.exe`, `mysql.exe`; client reports MariaDB 10.11.16.
@@ -54,7 +54,7 @@
 **Interfaces:** Inputs are current local `DATABASE_URL` and migration directories; output is a signed-off, redacted readiness record.
 
 - [ ] Step 1. Check device identity, Git HEAD and `git status --short`; preserve every existing diff. Expected: no unexpected target change and no writes.
-- [ ] Step 2. In `apps/api`, run `bunx prisma migrate status`, `bunx prisma validate`; no `migrate dev` or `deploy`. Expected: `cpsu_marketplace` at loopback; exactly one pending migration named `20261116193000_wp3_transactions`.
+- [ ] Step 2. In `apps/api`, run `bunx prisma migrate status`, `bunx prisma validate`; no `migrate dev` or `deploy`. Expected: `cpsu_marketplace` at loopback; **five applied plus exactly three known pending migrations** (WP3, managed content, pending announcement edits). Any change in the exact inventory or hashes is a STOP.
 - [ ] Step 3. Compare `Get-FileHash prisma/migrations/20261116193000_wp3_transactions/migration.sql -Algorithm SHA256` with the pinned SHA-256 above. Expected: exact match or STOP.
 - [ ] Step 4. Run `bun scripts/integrity-preflight.ts --audit-only` (read-only) and check all listed FK/integrity assertions. Inspect `_prisma_migrations` status using read-only Prisma commands; if drift, failed migration or orphan exists: STOP.
 - [ ] Step 5. Record active service processes and a maintenance window; no service stop until separate authorization.
@@ -94,11 +94,11 @@ Expected: `RESTORE PASS` and `WP3 FORWARD-MIGRATION PASS`, with count/hash match
 
 **Files:** Existing `apps/api/prisma/migrations/20261116193000_wp3_transactions/migration.sql`; do not change it.
 
-- [ ] Step 1. Capture fresh pre-change Git status, source DB identification, migration status, selected row counts, and WP3 SQL checksum. Confirm no schema changes since backup rehearsal and no extra pending migration.
+- [ ] Step 1. Capture fresh pre-change Git status, source DB identification, migration status, selected row counts, and WP3 SQL checksum. Confirm the **exact three expected pending migrations**; if more are present, STOP. Record the two out-of-scope migrations to be excluded by a WP3-only execution strategy, subject to specific owner approval.
 - [ ] Step 2. Stop local API, web dev server and any scheduled write jobs; confirm no active transactions, uploads or other agent migrations. Take a **fresh retained backup** immediately before deployment and verify it can restore (old backup is not enough if data changed).
 - [ ] Step 3. Reconfirm owner Approval B *specifically* covers `20261116193000_wp3_transactions` on `127.0.0.1:3306/cpsu_marketplace`.
-- [ ] Step 4. In `apps/api`, use **`bunx prisma migrate deploy`**, only after confirming it will execute exactly the one pending WP3 migration. Expected: exit 0, exactly WP3 applied. If not, STOP; do not try `migrate reset`, `db push` or hand-edit `_prisma_migrations`.
-- [ ] Step 5. Run `bunx prisma migrate status` and read-only integrity checks; expected: no pending migration, `Transaction`/history tables and reservation FK present, previous row counts unchanged, no orphan references, Push tables preserved.
+- [ ] Step 4. **Do not execute unscoped `bunx prisma migrate deploy` using the current repository**: it would apply all three pending migrations. Under a *new explicit Gate B Option A approval*, create and test a **separate, guard-checked WP3-only development runner** with a temporary six-migration Prisma tree (five approved applied + pinned WP3) and strict `--schema` path / target-DB guards. Deploy exactly WP3 to local development only after the fresh backup/restore and multi-agent maintenance freeze. Otherwise STOP. Do not run `migrate reset`, `db push` or hand-edit `_prisma_migrations`.
+- [ ] Step 5. Run `bunx prisma migrate status` using the pinned WP3-only temporary schema and read-only integrity checks. Expected: WP3 applied, all seven FKs/indexes present, original rows and Push tables preserved. The original eight-directory repository may **still have the other two unapproved pending migrations**; that is intentional for Option A and must be reported, not auto-fixed.
 - [ ] Step 6. Regenerate Prisma Client when no API process holds the Windows query-engine DLL: `bunx prisma generate`; run `bunx tsc -p . --noEmit` and web `bun run build` before restarting services.
 - [ ] Step 7. Restore local API/web services with only development endpoints and push delivery still disabled; inspect health and server logs without printing private data. If validation fails, stop service and move to the recovery gate instead of partially activating users.
 
@@ -137,4 +137,4 @@ Expected: local development DB is migrated and functioning *only after* Approval
 | Browser QA using synthetic data | **NOT EXECUTED** | Approved isolated test environment / maintenance window |
 | Production DB, release, Git push | **OUT OF SCOPE** | Separate institutional gates |
 
-**Recommended next action:** Gate A evidence is ready for review. Before seeking Gate B, coordinate a genuine multi-agent migration freeze, review the three now-pending development migrations and the WP3-only activation strategy, prepare a maintenance window, and require a new fresh retained backup plus restore evidence. Only a *new explicit Gate B approval* may authorize the local development migration. Production remains separate.
+**Recommended next action:** Read `docs/WP3_GATE_B_DEVELOPMENT_READINESS_REVIEW_2026-11-16.md`, choose **Option A: WP3-only local activation (recommended)** or **Option B: separately authorize all three pending migrations**, coordinate a genuine multi-agent freeze and maintenance window, and obtain a fresh independently restored backup. Then give **separate explicit Gate B approval** identifying exactly which migration(s) may touch the local development DB. Production remains separate.

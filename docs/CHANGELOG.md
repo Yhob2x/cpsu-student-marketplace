@@ -1,5 +1,19 @@
 # Changelog
 
+## 2026-11-16 — Incoming messages ring; outgoing messages silent
+
+- Reversed the chat sound behavior: **sending is silent**, while a **new incoming** student message detected in an active foreground conversation or Messages inbox rings once with the original ~580ms bell tone. First-load history, repeat polls, outgoing messages and background catch-up do not trigger audio.
+- Added receive-sound on/off and Test sound in both inbox and conversation, silent audio unlock on user interaction for iPhone Safari, sound preference persistence and error-resilient inbox polling. No background notification permission or push delivery activation.
+- Focused audio tests (8) and web production build pass; physical iPhone verification remains pending. See `docs/IPHONE_MESSAGE_RECEIVE_SOUND_2026-11-16.md`.
+
+
+## 2026-11-16 — Original 'ting' notification send sound
+
+- Refined the immediate send-tap sound into an **original ~580ms single-strike glass-bell 'ting'** with fading overtones, styled after the user's Zedge 'iPhone'/'ting' reference without reusing the actual audio recording. It uses a locally generated/preloaded WAV for iPhone Safari with corresponding Web Audio fallback. The sound confirms tapping Send, **not** server delivery; API errors and receipts stay authoritative.
+- Retained the per-browser Sound on/off toggle and added **Test sound** without posting a message. Muting stops current audio; sound failures never interrupt chat; no incoming push/notification sound is implied.
+- Passed six focused audio unit tests, including waveform attack/decay checks, and the TypeScript/Vite web production build. Manual physical-iPhone playback remains to be confirmed. Details: `docs/IPHONE_MESSAGE_SEND_SOUND_2026-11-16.md`.
+
+
 ## 2026-11-16 — Push Stage 6 staging release preflight (local only)
 
 - Added a **read-only**, fail-closed staging release checker (`bun run push:staging:preflight`), a placeholder-only non-secret approval manifest, and eight automated tests. The validator inventories six Prisma migrations and checks every one for explicit staging approval; it also blocks mixed uncommitted source and accidental push activation.

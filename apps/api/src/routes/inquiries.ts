@@ -24,7 +24,11 @@ async function participantThread(userId: number, id: number) {
   const t = await prisma.inquiryThread.findUnique({ where: { id }, include: {
     seller: { include: { owner: { select: { displayName: true, status: true } } } },
     buyer: { select: { displayName: true } },
-    listing: { include: { media: true } },
+    listing: { select: {
+      id: true, title: true, type: true, price: true, priceBasis: true,
+      condition: true, availabilityState: true, status: true, deletedAt: true,
+      media: { select: { id: true, position: true } },
+    } },
   } });
   if (!t || (t.buyerUserId !== userId && t.seller.ownerUserId !== userId)) throw new HttpError(404, 'not_found');
   return t;
@@ -57,7 +61,10 @@ r.post('/', async (req, res) => {
   const b = z.object({ listingId: z.number().int(), body: z.string().trim().min(1).max(1000) }).parse(req.body);
   const l = await prisma.listing.findFirst({ where: {
     id: b.listingId, status: 'published', deletedAt: null, seller: { approvalStatus: 'approved', owner: { status: 'active' } },
-  }, include: { seller: true } });
+  }, select: {
+    id: true, title: true, sellerProfileId: true, availabilityState: true,
+    seller: { select: { ownerUserId: true } },
+  } });
   if (!l) throw new HttpError(404, 'not_found');
   if (l.seller.ownerUserId === req.user!.id) throw new HttpError(400, 'own_listing');
   if (l.availabilityState !== 'available') throw new HttpError(409, 'listing_unavailable');

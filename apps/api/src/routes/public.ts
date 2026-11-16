@@ -18,7 +18,19 @@ export const publicListing = (l: any) => ({
   seller: l.seller && { id: l.seller.id, storeName: l.seller.storeName, sellerType: l.seller.sellerType },
   images: (l.media ?? []).sort((a: any, b: any) => a.position - b.position).map((m: any) => `/api/v1/media/${m.id}`),
 });
-const include = { category: true, campus: true, seller: { include: { owner: { select: { status: true } } } }, media: true } as const;
+// Keep public reads compatible with the development schema until the separately
+// approved WP3 migration adds Listing.reservationTransactionId.
+const publicListingSelect = {
+  id: true, sellerProfileId: true, campusId: true, type: true, title: true,
+  description: true, price: true, priceBasis: true, currency: true,
+  availabilityState: true, condition: true, deletedAt: true,
+  handoffNote: true, status: true, createdAt: true,
+  category: { select: { id: true, name: true } },
+  campus: { select: { id: true, code: true, name: true } },
+  seller: { select: { id: true, storeName: true, sellerType: true,
+    approvalStatus: true, owner: { select: { status: true } } } },
+  media: { select: { id: true, position: true } },
+} satisfies Prisma.ListingSelect;
 
 r.get('/campuses', async (_q, res) => res.json(await prisma.campus.findMany({ where: { active: true }, select: { id: true, code: true, name: true } })));
 r.get('/categories', async (_q, res) => res.json(await prisma.category.findMany({ select: { id: true, parentId: true, name: true, listingType: true } })));
@@ -69,7 +81,7 @@ r.get('/listings', async (req, res) => {
     : { createdAt: 'desc' as const };
   const [total, rows] = await Promise.all([
     prisma.listing.count({ where }),
-    prisma.listing.findMany({ where, include, orderBy, skip: (q.page - 1) * q.pageSize, take: q.pageSize }),
+    prisma.listing.findMany({ where, select: publicListingSelect, orderBy, skip: (q.page - 1) * q.pageSize, take: q.pageSize }),
   ]);
   res.json({ total, page: q.page, pageSize: q.pageSize, items: rows.map(publicListing) });
 });
@@ -80,12 +92,12 @@ r.get('/listings/popular', async (_q, res) => {
     status: 'published', availabilityState: 'available', deletedAt: null,
     seller: { approvalStatus: 'approved', owner: { status: 'active' } }, savedListings: { some: {} },
   },
-    include, orderBy: { savedListings: { _count: 'desc' } }, take: 8 });
+    select: publicListingSelect, orderBy: { savedListings: { _count: 'desc' } }, take: 8 });
   res.json({ items: rows.map(publicListing) });
 });
 
 r.get('/listings/:id', async (req, res) => {
-  const l = await prisma.listing.findUnique({ where: { id: Number(req.params.id) }, include });
+  const l = await prisma.listing.findUnique({ where: { id: Number(req.params.id) }, select: publicListingSelect });
   if (!l) throw new HttpError(404, 'not_found');
   const u = req.user;
   const owner = u && (await prisma.sellerProfile.findFirst({ where: { id: l.sellerProfileId, ownerUserId: u.id } }));
@@ -98,7 +110,7 @@ r.get('/listings/:id', async (req, res) => {
 r.get('/seller-profiles/:id', async (req, res) => {
   const s = await prisma.sellerProfile.findFirst({
     where: { id: Number(req.params.id), approvalStatus: 'approved', owner: { status: 'active' } },
-    include: { listings: { where: { status: 'published', deletedAt: null, availabilityState: 'available' }, include } },
+    include: { listings: { where: { status: 'published', deletedAt: null, availabilityState: 'available' }, select: publicListingSelect } },
   });
   if (!s) throw new HttpError(404, 'not_found');
   res.json({ id: s.id, storeName: s.storeName, description: s.description, sellerType: s.sellerType, campusId: s.campusId,

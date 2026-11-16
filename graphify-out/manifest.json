@@ -978,15 +978,15 @@
     "semantic_hash": ""
   },
   "apps/api/src/routes/inquiries.ts": {
-    "mtime": 1794796313.2824981,
-    "seen": 1794797953.4896483,
-    "ast_hash": "5e6ad7c735f03c828d337f629fd3d7fb",
+    "mtime": 1794806129.8279586,
+    "seen": 1794806317.8590693,
+    "ast_hash": "25dcdd0a7b0e22de33364eb68520ea76",
     "semantic_hash": ""
   },
   "apps/api/src/routes/public.ts": {
-    "mtime": 1794803337.436112,
-    "seen": 1794803387.0891645,
-    "ast_hash": "68879bb8d18f938ab94193a12f34f865",
+    "mtime": 1794805942.8431504,
+    "seen": 1794806317.859072,
+    "ast_hash": "8125d7703662467125cee5ad6af57a64",
     "semantic_hash": ""
   },
   "apps/api/src/routes/push.ts": {
@@ -1104,21 +1104,21 @@
     "semantic_hash": ""
   },
   "apps/web/src/icons.tsx": {
-    "mtime": 1794469707.0795417,
-    "seen": 1794797953.4896777,
-    "ast_hash": "3f4dcd8dddbb18f57114c9f5030f9394",
+    "mtime": 1794807004.9337835,
+    "seen": 1794807219.6405072,
+    "ast_hash": "9a60bce1e028775bf86c107ce372e184",
     "semantic_hash": ""
   },
   "apps/web/src/main.tsx": {
-    "mtime": 1794798588.342069,
-    "seen": 1794799378.5352304,
-    "ast_hash": "17bb9ee26b770adb48e2c446fbda0917",
+    "mtime": 1794807011.8818088,
+    "seen": 1794807219.6405141,
+    "ast_hash": "1e1832bfb2ef9f24873d8eacb02dd682",
     "semantic_hash": ""
   },
   "apps/web/src/pages-account.tsx": {
-    "mtime": 1794798590.7412186,
-    "seen": 1794799378.535233,
-    "ast_hash": "b203e8344b4394c143bf2ec95d933bf0",
+    "mtime": 1794809062.7752328,
+    "seen": 1794809117.1732006,
+    "ast_hash": "7138b42ee3926a18a25080aee0303925",
     "semantic_hash": ""
   },
   "apps/web/src/pages-admin.tsx": {
@@ -1128,15 +1128,15 @@
     "semantic_hash": ""
   },
   "apps/web/src/pages-profile.tsx": {
-    "mtime": 1794798853.097082,
-    "seen": 1794799378.5352378,
-    "ast_hash": "aad19c34362c3f2676901208ba404896",
+    "mtime": 1794807022.9416108,
+    "seen": 1794807219.640874,
+    "ast_hash": "bde3ff92a86cc929a40067ced2211029",
     "semantic_hash": ""
   },
   "apps/web/src/pages-public.tsx": {
-    "mtime": 1794801707.2587452,
-    "seen": 1794801841.1195164,
-    "ast_hash": "d0cfaf3fe1a4f9883a0e029391b26d50",
+    "mtime": 1794807020.4375663,
+    "seen": 1794807219.6408765,
+    "ast_hash": "3302582cceedf43be0493ce1709deac3",
     "semantic_hash": ""
   },
   "apps/web/src/push-client.ts": {
@@ -2754,9 +2754,9 @@
     "semantic_hash": ""
   },
   "docs/CHANGELOG.md": {
-    "mtime": 1794801138.9210522,
-    "seen": 1794801841.1683302,
-    "ast_hash": "f6655e2bbd3ab40355fe75805242ef6c",
+    "mtime": 1794808483.1087894,
+    "seen": 1794809117.220763,
+    "ast_hash": "3809e2bc7555b45ba82797e9f02b46e9",
     "semantic_hash": ""
   },
   "docs/CONTENT_MODERATION_SECURITY_2026-11-16.md": {
@@ -2892,9 +2892,9 @@
     "semantic_hash": ""
   },
   "docs/UI_UX_GUIDELINES.md": {
-    "mtime": 1794801911.2292116,
-    "seen": 1794801990.4680314,
-    "ast_hash": "ac77739288a5440a7290dade8dfc3409",
+    "mtime": 1794808471.5417514,
+    "seen": 1794809117.2258363,
+    "ast_hash": "785b71f62be0f7f26ba6f64d211bdc31",
     "semantic_hash": ""
   },
   "docs/UNIFIED_WEB_PWA_2026-11-12.md": {
@@ -3192,9 +3192,9 @@
     "semantic_hash": ""
   },
   "docs/superpowers/plans/2026-11-16-wp3-development-database-readiness.md": {
-    "mtime": 1794804599.8841631,
-    "seen": 1794804639.6144564,
-    "ast_hash": "274fdcd93f7762ab6dc8cbe7d001c455",
+    "mtime": 1794805895.0318837,
+    "seen": 1794806317.9153771,
+    "ast_hash": "f2d2f7f6bd586266f6a8fd0065f0bd85",
     "semantic_hash": ""
   },
   "docs/MANAGED_STUDENT_CONTENT_2026-11-16.md": {
@@ -3207,6 +3207,126 @@
     "mtime": 1794803812.6025841,
     "seen": 1794804639.5498018,
     "ast_hash": "e9e0e3d834665ab0363c0cc0464fdbda",
+    "semantic_hash": ""
+  },
+  "apps/api/scripts/wp3-gate-b-readonly-policy.ts": {
+    "mtime": 1794806159.9811456,
+    "seen": 1794806317.8563175,
+    "ast_hash": "5cf99e65c62e3ded7faf485bd3b50d63",
+    "semantic_hash": ""
+  },
+  "apps/api/scripts/wp3-gate-b-readonly-preflight.ts": {
+    "mtime": 1794806201.7152333,
+    "seen": 1794806317.8563213,
+    "ast_hash": "d810dcf67126349396e66616b291a970",
+    "semantic_hash": ""
+  },
+  "apps/api/test/wp3-gate-b-readonly-preflight.test.ts": {
+    "mtime": 1794806120.211342,
+    "seen": 1794806317.8620012,
+    "ast_hash": "48be0a2b51e783b324f400e4d8e2eb9f",
+    "semantic_hash": ""
+  },
+  "docs/PUBLIC_LISTING_SCHEMA_COMPAT_2026-11-16.md": {
+    "mtime": 1794806187.0620272,
+    "seen": 1794806317.9110558,
+    "ast_hash": "770664d1f7ff2001c99cc31fd4c59e67",
+    "semantic_hash": ""
+  },
+  "docs/WP3_GATE_B_DEVELOPMENT_READINESS_REVIEW_2026-11-16.md": {
+    "mtime": 1794805973.8810997,
+    "seen": 1794806317.9144022,
+    "ast_hash": "92629e48b11ddc2b48cdb1bd7e97300e",
+    "semantic_hash": ""
+  },
+  "docs/WP3_GATE_B_READ_ONLY_PREFLIGHT_2026-11-16.md": {
+    "mtime": 1794806295.6419487,
+    "seen": 1794806317.9144049,
+    "ast_hash": "50c0ace53cb7eef4853f299e90a7a5f1",
+    "semantic_hash": ""
+  },
+  "apps/web/test/message-send-sound.test.ts": {
+    "mtime": 1794808371.5983193,
+    "seen": 1794809117.1747763,
+    "ast_hash": "0655ec267c4cd56d15c9b3372a18a857",
+    "semantic_hash": ""
+  },
+  "docs/MOBILE_CHAT_VIEWPORT_2026-11-16.md": {
+    "mtime": 1794806622.5017285,
+    "seen": 1794806648.142293,
+    "ast_hash": "5f29fa540b44eb97786602904d9c17ac",
+    "semantic_hash": ""
+  },
+  "apps/web/src/install-app.tsx": {
+    "mtime": 1794807145.1098526,
+    "seen": 1794807219.6405113,
+    "ast_hash": "8ff58a973670dd7b1b50528e0b4f4728",
+    "semantic_hash": ""
+  },
+  "docs/IPHONE_MESSAGE_SEND_SOUND_2026-11-16.md": {
+    "mtime": 1794808460.436571,
+    "seen": 1794809117.221924,
+    "ast_hash": "ba4126f351010814703b529ec38caaae",
+    "semantic_hash": ""
+  },
+  "docs/PWA_INSTALL_APP_CTA_2026-11-16.md": {
+    "mtime": 1794807171.0400708,
+    "seen": 1794807219.6898386,
+    "ast_hash": "5c26d189c1a97326c464cd963d2b4f21",
+    "semantic_hash": ""
+  },
+  "apps/api/scripts/wp3-gate-b-activation-safety.ts": {
+    "mtime": 1794808563.0435843,
+    "seen": 1794809117.1650927,
+    "ast_hash": "83f1badce5635913fcc14976f6f0ef0e",
+    "semantic_hash": ""
+  },
+  "apps/api/test/run-iphone-lan-pwa-api.ts": {
+    "mtime": 1794808392.598699,
+    "seen": 1794809117.1711273,
+    "ast_hash": "3dfc3f117f34e015e1e06d64ba721e51",
+    "semantic_hash": ""
+  },
+  "apps/api/test/wp3-gate-b-activation-safety.test.ts": {
+    "mtime": 1794808574.62831,
+    "seen": 1794809117.1716297,
+    "ast_hash": "9749def8634d20d0983404690e6f809b",
+    "semantic_hash": ""
+  },
+  "apps/web/src/message-receive-sound.ts": {
+    "mtime": 1794808976.743232,
+    "seen": 1794809117.1731973,
+    "ast_hash": "6f046f4ba7c39e19d60c7ee2c21a07cc",
+    "semantic_hash": ""
+  },
+  "scripts/iphone-lan-https-gateway.mjs": {
+    "mtime": 1794808377.5445664,
+    "seen": 1794809117.177179,
+    "ast_hash": "f33fd5d25a31f012c64ecc50a30013a6",
+    "semantic_hash": ""
+  },
+  "scripts/setup-iphone-lan-https.ps1": {
+    "mtime": 1794808564.844788,
+    "seen": 1794809117.1776774,
+    "ast_hash": "b178f96e4561ec0dd16ad3a8e7247229",
+    "semantic_hash": ""
+  },
+  "scripts/start-iphone-lan-https.ps1": {
+    "mtime": 1794808967.266594,
+    "seen": 1794809117.1778457,
+    "ast_hash": "9afae65498f569840eeeebfeeebf7ff7",
+    "semantic_hash": ""
+  },
+  "scripts/verify-iphone-lan-https.mjs": {
+    "mtime": 1794808762.190448,
+    "seen": 1794809117.1781824,
+    "ast_hash": "04dd313269b5c07d751a01cdc533d8c1",
+    "semantic_hash": ""
+  },
+  "docs/IPHONE_LOCAL_HTTPS_WIFI_QA_2026-11-16.md": {
+    "mtime": 1794809051.1905968,
+    "seen": 1794809117.2219207,
+    "ast_hash": "9f6401bc15a18cdd9a9b9c0bc247055c",
     "semantic_hash": ""
   },
   "package-lock.json": {

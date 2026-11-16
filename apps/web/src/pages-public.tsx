@@ -3,6 +3,7 @@ import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { api, explain, peso } from './api';
 import { useMe } from './main';
 import { Icon } from './icons';
+import { InstallApp } from './install-app';
 
 export type Listing = { id: number; type: string; title: string; description: string; price: number; priceBasis: string; availability: string; condition?: 'new' | 'like_new' | 'good' | 'fair' | null;
   handoffNote?: string; category: { name: string }; campus: { code: string; name: string }; seller: { id: number; storeName: string }; images: string[]; status?: string };
@@ -128,6 +129,8 @@ export function Home() {
         <span className="hero-sticker"><b>From students</b><small>for the CPSU community</small></span>
       </div>
     </section>
+
+    <InstallApp />
 
     <StudentAnnouncements />
 

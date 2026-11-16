@@ -62,12 +62,13 @@ or institutional approval; those carry the module that owns them.
 
 | Rule | Status | Where |
 |---|---|---|
-| Only authenticated users can message | Enforced | `requireAuth` on the inquiries router. |
+| Only active, non-staff student accounts can message | Enforced | `requireStudent` on the inquiries router. Verified affiliation eligibility for messaging remains a separate CPSU policy decision. |
 | A conversation is tied to one listing and one buyer | Enforced | Unique `(listingId, buyerUserId)`. |
 | Only participants can read or write a thread | Enforced | `participantThread()`; others get `404`. |
 | Sellers cannot inquire on their own listing | Enforced | `400 own_listing`. |
 | Only published listings can receive inquiries | Enforced | `POST /inquiries` filters `status:'published'`. |
-| Closed threads reject new messages | Enforced (data) | `status = 'closed'` → `409`; nothing sets it. |
+| Participants can end a conversation (listing-scoped, for both parties) | Enforced in source (integration acceptance pending) | `POST /inquiries/:id/close` requires `participantThread`, atomically marks `closed` and audits the actor. Does not globally block a student. |
+| Closed threads reject new messages | Enforced in source (real concurrent-DB acceptance pending) | Both inquiry message entry paths re-check inside Prisma `Serializable` transactions before insert; a closed thread returns `409 thread_closed`. |
 | Messages are bounded to 1000 characters | Enforced | Zod. |
 | Block users / report a conversation | Not implemented | — |
 

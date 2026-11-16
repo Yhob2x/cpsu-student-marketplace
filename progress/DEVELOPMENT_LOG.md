@@ -171,3 +171,9 @@ The owner chose dedicated staff-only reviewer logins. Added global university ad
 
 ## 2026-11-16 — Security and User-Flow Closure, Package A
 Implemented login/register submission locks, guest Saved redirect with safe return, recoverable logout error feedback, and direct seller reporting from public store profiles. No schema, migration, firewall, credentials, deployment or student records changed. Fresh web tests 27/27; API unit 63 pass/4 opt-in skipped; web build, PWA check and guest Chrome Saved redirect smoke passed. Authenticated seller-report acceptance, real-device QA and institutional security/privacy gates remain open. See `docs/SECURITY_USER_FLOW_CLOSURE_A_2026-11-16.md`.
+
+## 2026-11-16 — Package B1: Conversation ending / safety guard
+Added participant-only, audited `POST /inquiries/:id/close` using the existing InquiryThread status; closed-thread messaging denied in both new inquiry and existing message routes. Added explicit `End chat` confirmation, safe messaging, compact short-iPhone controls and readable thread_closed error. No schema change or deployment; see `docs/CONVERSATION_SAFETY_B1_2026-11-16.md` and the B2 approval-gated design. Full integration/concurrency/iPhone acceptance remains pending.
+
+### 2026-11-16 — Package B1 concurrency hardening
+Both inquiry message entry paths and close now use Prisma/MySQL `Serializable` transactions to serialize status checks against closure; rejected messages do not create a notification. Added mocked-transaction regression checks for closed/missing threads. Full fresh API suite 69 pass, 4 opt-in skips; web suite 31 pass; TypeScript and Vite build pass; PWA validation pass. No DB migration or student-data writes. Real concurrent two-account database and iPhone acceptance remain release gates. See `docs/CONVERSATION_SAFETY_B1_2026-11-16.md`.

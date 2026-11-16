@@ -388,6 +388,9 @@
     white-space: nowrap;
   }
   .conversation-actions .btn svg { width: 15px; height: 15px; flex: 0 0 auto; }
+  /* Keep three primary actions within a short iPhone width. The sound preview remains
+     available from the Messages inbox instead of crowding the chat safety action. */
+  .conversation-actions .conversation-sound-preview { display: none; }
   .conversation-page > .typing-indicator.conversation-typing-dock {
     min-height: 36px;
     padding: .2rem .5rem;
@@ -677,4 +680,69 @@
   .results ~ .grid.listing-grid:has(> .product-card:nth-child(3)) {
     touch-action: pan-x pan-y;
   }
+}
+
+/* Desktop horizontal browsing: grab-to-drag only on genuinely scrollable
+   listing rails, categories and photo galleries. Native touch stays intact. */
+@media (hover: hover) and (pointer: fine) {
+  .browse-drag-scroll[data-browse-draggable="true"] {
+    cursor: grab;
+  }
+  .browse-drag-scroll[data-browse-draggable="true"] .card-link,
+  .browse-drag-scroll[data-browse-draggable="true"] .cat,
+  .browse-drag-scroll[data-browse-draggable="true"] .product-gallery-slide {
+    cursor: grab;
+  }
+  .browse-drag-scroll.browse-is-dragging,
+  .browse-drag-scroll.browse-is-dragging .card-link,
+  .browse-drag-scroll.browse-is-dragging .cat,
+  .browse-drag-scroll.browse-is-dragging .product-gallery-slide {
+    cursor: grabbing !important;
+  }
+  .browse-drag-scroll.browse-is-dragging {
+    user-select: none;
+    -webkit-user-select: none;
+    scroll-behavior: auto !important;
+    scroll-snap-type: none !important;
+  }
+  .browse-drag-scroll.browse-is-dragging img { -webkit-user-drag: none; }
+
+  /* On desktop, Home has genuine horizontal strips. Show the same
+     navigation controls below each row, only if the row can scroll. */
+  .mobile-browse-controls {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: .8rem;
+    min-height: 48px;
+    margin: .15rem 0 1rem;
+    color: var(--ink-soft);
+  }
+  .mobile-browse-hint { font-size: .8rem; line-height: 1.4; font-weight: 600; }
+  .mobile-browse-buttons { display: flex; gap: .5rem; flex: 0 0 auto; }
+  .mobile-browse-arrow {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    padding: 0;
+    border: 1px solid var(--surface-stroke);
+    border-radius: 11px;
+    color: var(--forest);
+    background: var(--paper);
+    cursor: pointer;
+  }
+  .mobile-browse-arrow:disabled { opacity: .32; cursor: not-allowed; }
+  .mobile-browse-arrow:not(:disabled):hover { background: var(--mango-soft); }
+  .mobile-browse-arrow:focus-visible {
+    outline: 3px solid var(--focus-green);
+    outline-offset: 2px;
+  }
+  .mobile-browse-prev svg { transform: rotate(180deg); }
+}
+.browse-mouse-copy { display: none; }
+@media (hover: hover) and (pointer: fine) {
+  .browse-touch-copy { display: none; }
+  .browse-mouse-copy { display: inline; }
 }

@@ -5,7 +5,7 @@ import { useMe } from './main';
 import { Icon } from './icons';
 import { InstallApp } from './install-app';
 import { selectHomeListings } from './home-listings';
-import { MobileBrowseControls, SwipeableListingRail } from './mobile-browse-controls';
+import { MobileBrowseControls, SwipeableListingRail, useMouseDragToScroll } from './mobile-browse-controls';
 import { ListingGallery } from './listing-gallery';
 
 export type Listing = { id: number; type: string; title: string; description: string; price: number; priceBasis: string; availability: string; condition?: 'new' | 'like_new' | 'good' | 'fair' | null;
@@ -84,6 +84,8 @@ export function Home() {
   const [popular, setPopular] = useState<Listing[] | null>(null);
   const [cats, setCats] = useState<any[]>([]);
   const [homeError, setHomeError] = useState('');
+  const categoriesRef = useRef<HTMLDivElement>(null);
+  const categoryMouseDrag = useMouseDragToScroll(categoriesRef);
   const loadHome = () => {
     setHomeError('');
     const fail = (e: unknown) => setHomeError(explain(e));
@@ -140,7 +142,8 @@ export function Home() {
 
     <section className="category-section" aria-label="Browse by category">
       <div className="sec-head category-head"><h2>Explore by category</h2><Link to="/explore">View all <Icon name="arrow" size={15} /></Link></div>
-      <div className="cat-rail">
+      <div className="cat-rail browse-drag-scroll" ref={categoriesRef} role="region" aria-label="Browse categories" tabIndex={0}
+        {...categoryMouseDrag}>
         {cats.slice(0, 8).map(c => <Link key={c.id} className="cat" to={`/explore?categoryId=${c.id}`}>
           <span className="cat-ico"><Icon name="tag" size={24} /></span><span>{c.name}</span></Link>)}
       </div>
@@ -206,6 +209,7 @@ export function Discover() {
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
   const [items, setItems] = useState<Listing[] | null>(null); const [total, setTotal] = useState<number | null>(null);
   const browseRef = useRef<HTMLDivElement>(null);
+  const browseMouseDrag = useMouseDragToScroll(browseRef);
   const [error, setError] = useState('');
   const currentPage = Math.max(1, Number(sp.get('page')) || 1);
   const pageCount = Math.ceil((total ?? 0) / 20);
@@ -323,7 +327,8 @@ export function Discover() {
       {dirty && <button className="btn ghost" onClick={reset}>Clear filters</button>}
     </div>}
     {items !== null && items.length > 0 && <h2 className="sr-only">Listing results</h2>}
-    <div className="grid listing-grid" ref={browseRef} role="region" aria-label="Explore listing results" tabIndex={0}>{items?.map(l => <ListingCard key={l.id} l={l} />)}</div>
+    <div className="grid listing-grid browse-drag-scroll" ref={browseRef} role="region" aria-label="Explore listing results" tabIndex={0}
+      {...browseMouseDrag}>{items?.map(l => <ListingCard key={l.id} l={l} />)}</div>
     {items !== null && <MobileBrowseControls targetRef={browseRef} itemCount={items.length} label="Explore listings" />}
     {pageCount > 1 && <nav className="row" aria-label="Listing pages" style={{ justifyContent: 'center', marginTop: '1rem' }}>
       <button type="button" className="btn ghost" disabled={currentPage <= 1} onClick={() => navigatePage(currentPage - 1)}>Previous</button>

@@ -1,10 +1,11 @@
 import { Router } from 'express';
+import { Prisma } from '@prisma/client';
 import { z } from 'zod';
 import { prisma } from '../db.js';
 import { HttpError } from '../http.js';
 import { requireStudent } from '../auth.js';
-import { audit, notify } from '../audit.js';
-import { inquiryAllowsMessage } from '../inquiry-safety.js';
+import { notify } from '../audit.js';
+import { inquiryAllowsMessage, appendMessageToOpenThread } from '../inquiry-safety.js';
 
 const r = Router();
 r.use(requireStudent);
@@ -74,7 +75,9 @@ r.post('/', async (req, res) => {
     create: { listingId: l.id, buyerUserId: req.user!.id, sellerProfileId: l.sellerProfileId }, update: {},
   });
   if (!inquiryAllowsMessage(t.status)) throw new HttpError(409, 'thread_closed');
-  const message = await prisma.inquiryMessage.create({ data: { threadId: t.id, authorUserId: req.user!.id, body: b.body } });
+  const message = await prisma.$transaction(tx => appendMessageToOpenThread(tx, t.id, req.user!.id, b.body), {
+    isolationLevel: Prisma.TransactionIsolationLevel.Serializable,
+  });
   await notify(l.seller.ownerUserId, 'inquiry.new', { threadId: t.id, messageId: message.id, listingTitle: l.title });
   res.status(201).json({ id: t.id });
 });
@@ -152,7 +155,9 @@ r.post('/:id/messages', async (req, res) => {
   if (!inquiryAllowsMessage(t.status)) throw new HttpError(409, 'thread_closed');
   if (t.seller.owner.status !== 'active') throw new HttpError(409, 'seller_unavailable');
   const b = z.object({ body: z.string().trim().min(1).max(1000) }).parse(req.body);
-  const m = await prisma.inquiryMessage.create({ data: { threadId: t.id, authorUserId: req.user!.id, body: b.body } });
+  const m = await prisma.$transaction(tx => appendMessageToOpenThread(tx, t.id, req.user!.id, b.body), {
+    isolationLevel: Prisma.TransactionIsolationLevel.Serializable,
+  });
   const other = t.buyerUserId === req.user!.id ? t.seller.ownerUserId : t.buyerUserId;
   await notify(other, 'inquiry.reply', { threadId: t.id, messageId: m.id, listingTitle: t.listing.title });
   res.status(201).json({ id: m.id });
@@ -163,16 +168,16 @@ r.post('/:id/messages', async (req, res) => {
 r.post('/:id/close', async (req, res) => {
   const threadId = z.coerce.number().int().positive().parse(req.params.id);
   const t = await participantThread(req.user!.id, threadId);
-  if (t.status === 'closed') { res.status(204).end(); return; }
   await prisma.$transaction(async tx => {
-    const changed = await tx.inquiryThread.updateMany({
-      where: { id: t.id, status: 'open' },
-      data: { status: 'closed' },
-    });
-    if (changed.count === 1) await tx.auditLog.create({
+    // SERIALIZABLE read locks the thread row until the close and audit commit.
+    const current = await tx.inquiryThread.findUnique({ where: { id: t.id }, select: { status: true } });
+    if (!current) throw new HttpError(404, 'not_found');
+    if (current.status === 'closed') return; // Idempotent: audit only the first close.
+    await tx.inquiryThread.update({ where: { id: t.id }, data: { status: 'closed' } });
+    await tx.auditLog.create({
       data: { actorUserId: req.user!.id, action: 'inquiry.closed', targetType: 'inquiry_thread', targetId: t.id },
     });
-  });
+  }, { isolationLevel: Prisma.TransactionIsolationLevel.Serializable });
   typing.delete(`${t.id}:${t.buyerUserId}`);
   typing.delete(`${t.id}:${t.seller.ownerUserId}`);
   presence.delete(`${t.id}:${t.buyerUserId}`);

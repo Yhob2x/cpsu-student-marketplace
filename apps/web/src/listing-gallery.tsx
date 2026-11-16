@@ -2,6 +2,8 @@ import { useRef, useState } from 'react';
 import type { KeyboardEvent, ReactNode, UIEvent } from 'react';
 import { Icon } from './icons';
 import { adjacentPhotoIndex, clampPhotoIndex, photoIndexFromScroll } from './gallery-navigation';
+import { useMouseDragToScroll } from './mobile-browse-controls';
+import { ImageZoomDialog } from './image-zoom';
 
 type ListingGalleryProps = {
   photos: readonly string[];
@@ -11,8 +13,12 @@ type ListingGalleryProps = {
 
 export function ListingGallery({ photos, title, saveControl }: ListingGalleryProps) {
   const viewport = useRef<HTMLDivElement>(null);
+  const thumbnailsViewport = useRef<HTMLDivElement>(null);
+  const photoMouseDrag = useMouseDragToScroll(viewport);
+  const thumbnailMouseDrag = useMouseDragToScroll(thumbnailsViewport, true);
   const [activeIndex, setActiveIndex] = useState(0);
   const [failedPhotos, setFailedPhotos] = useState<number[]>([]);
+  const [zoomIndex, setZoomIndex] = useState<number | null>(null);
   const total = photos.length;
   const multiple = total > 1;
 
@@ -45,8 +51,9 @@ export function ListingGallery({ photos, title, saveControl }: ListingGalleryPro
         ? <div className="listing-photo-empty"><Icon name="tag" size={30} /><span>No listing photos yet</span></div>
         : <>
           <div
-            className="product-gallery-viewport"
+            className="product-gallery-viewport browse-drag-scroll"
             ref={viewport}
+            {...photoMouseDrag}
             role={multiple ? 'region' : undefined}
             aria-roledescription={multiple ? 'carousel' : undefined}
             aria-label={multiple ? `Swipe through ${total} photos of ${title}` : undefined}
@@ -60,11 +67,16 @@ export function ListingGallery({ photos, title, saveControl }: ListingGalleryPro
               aria-label={multiple ? `${index + 1} of ${total}` : undefined}>
               {failedPhotos.includes(index)
                 ? <div className="product-gallery-failed"><Icon name="tag" size={28}/><span>Photo unavailable</span></div>
-                : <img src={photo} alt={`Photo ${index + 1} of ${total}: ${title}`}
-                    loading={index === 0 ? 'eager' : 'lazy'} decoding="async" draggable={false}
-                    onError={() => setFailedPhotos(previous => previous.includes(index) ? previous : [...previous, index])} />}
+                : <button type="button" className="product-gallery-photo-button"
+                    aria-label={`Enlarge photo ${index + 1} of ${total}: ${title}`} onClick={() => setZoomIndex(index)}>
+                    <img src={photo} alt={`Photo ${index + 1} of ${total}: ${title}`}
+                      loading={index === 0 ? 'eager' : 'lazy'} decoding="async" draggable={false}
+                      onError={() => setFailedPhotos(previous => previous.includes(index) ? previous : [...previous, index])} />
+                  </button>}
             </div>)}
           </div>
+          <button type="button" className="product-gallery-zoom-trigger" aria-label={`Zoom photo ${activeIndex + 1} of ${total}`}
+            onClick={() => setZoomIndex(activeIndex)}><span aria-hidden="true">+</span> Enlarge</button>
           {multiple && <>
             <span className="product-gallery-count" aria-hidden="true">{activeIndex + 1} / {total}</span>
             <button type="button" className="product-gallery-arrow product-gallery-prev"
@@ -87,7 +99,8 @@ export function ListingGallery({ photos, title, saveControl }: ListingGalleryPro
         <span>Product photos</span>
         <span className="product-gallery-swipe-hint">Swipe to see more</span>
       </div>
-      <div className="product-gallery-thumbnails" role="group" aria-label="Choose a photo">
+      <div className="product-gallery-thumbnails browse-drag-scroll" ref={thumbnailsViewport}
+        {...thumbnailMouseDrag} role="group" aria-label="Choose a photo">
         {photos.map((photo, index) => <button
           type="button" key={`thumb-${photo}-${index}`} className="product-gallery-thumb"
           aria-label={`Show photo ${index + 1} of ${total}`}
@@ -100,5 +113,7 @@ export function ListingGallery({ photos, title, saveControl }: ListingGalleryPro
       </div>
       <span className="sr-only" role="status">Photo {activeIndex + 1} of {total}</span>
     </>}
+    {zoomIndex !== null && total > 0 && <ImageZoomDialog photos={photos} title={title} initialIndex={zoomIndex}
+      onClose={() => setZoomIndex(null)} />}
   </section>;
 }

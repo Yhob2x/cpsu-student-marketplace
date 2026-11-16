@@ -747,8 +747,8 @@ export function Thread() {
           aria-label="Play test incoming message sound">Test sound</button>}
         {closed && <span className="status closed">Closed</span>}
         {!closed && <button type="button" className="btn ghost" disabled={closing || busy}
-          aria-expanded={closeConfirm} onClick={() => { setCloseConfirm(open => !open); setSafetyError(''); }}>
-          End conversation
+          aria-label="End conversation" aria-expanded={closeConfirm} onClick={() => { setCloseConfirm(open => !open); setSafetyError(''); }}>
+          End chat
         </button>}
         <Link className="btn ghost" to={`/listings/${d.thread.listingId}`}>View listing <Icon name="arrow" size={16} /></Link>
       </div>

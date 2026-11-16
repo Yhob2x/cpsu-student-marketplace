@@ -59,6 +59,7 @@ const MESSAGES: Record<string, string> = {
   rate_limited: 'Too many attempts. Wait a few minutes and try again.',
   student_verification_required: 'Purchase requests require an active, verified student account without an administrative role.',
   listing_unavailable: 'This listing is no longer available for a new request.',
+  thread_closed: 'This conversation has ended. You can read earlier messages, but neither student can send new ones here.',
   listing_under_review: 'This listing is no longer published. You can cancel the transaction or contact the campus reviewer.',
   transaction_reservation_active: 'An active purchase request has reserved this item. Resolve or cancel that transaction first.',
   invalid_transaction_state: 'This action is no longer available at the current transaction stage. Refresh the transaction.',

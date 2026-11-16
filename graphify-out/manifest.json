@@ -978,9 +978,9 @@
     "semantic_hash": ""
   },
   "apps/api/src/routes/inquiries.ts": {
-    "mtime": 1794818906.6443405,
-    "seen": 1794819294.7732337,
-    "ast_hash": "bf978b334de9d047c880870eec86ebad",
+    "mtime": 1794823277.2663531,
+    "seen": 1794823347.549974,
+    "ast_hash": "a1e2a4adf698127994eb7bde18773407",
     "semantic_hash": ""
   },
   "apps/api/src/routes/public.ts": {
@@ -1098,9 +1098,9 @@
     "semantic_hash": ""
   },
   "apps/web/src/api.ts": {
-    "mtime": 1794819473.739682,
-    "seen": 1794819990.720051,
-    "ast_hash": "0c40ad4a3b201b2288f843bd8436bfa7",
+    "mtime": 1794822952.221844,
+    "seen": 1794823347.5557585,
+    "ast_hash": "afb6edc9808480d84868811c0d812276",
     "semantic_hash": ""
   },
   "apps/web/src/icons.tsx": {
@@ -1110,15 +1110,15 @@
     "semantic_hash": ""
   },
   "apps/web/src/main.tsx": {
-    "mtime": 1794820930.8216326,
-    "seen": 1794821067.4278524,
-    "ast_hash": "a00d5319403d0051e0f29e9cd5532b38",
+    "mtime": 1794823215.8002498,
+    "seen": 1794823347.556739,
+    "ast_hash": "4c9f0fe5f2e4f6527119a8699cfa3317",
     "semantic_hash": ""
   },
   "apps/web/src/pages-account.tsx": {
-    "mtime": 1794820841.638733,
-    "seen": 1794821067.4280267,
-    "ast_hash": "cab3e7455aba9dea8bc866d43087b87a",
+    "mtime": 1794823126.8722148,
+    "seen": 1794823347.5569067,
+    "ast_hash": "39e92203ba53f77102f6b16c8d11f92a",
     "semantic_hash": ""
   },
   "apps/web/src/pages-admin.tsx": {
@@ -1134,9 +1134,9 @@
     "semantic_hash": ""
   },
   "apps/web/src/pages-public.tsx": {
-    "mtime": 1794820966.390133,
-    "seen": 1794821067.4285376,
-    "ast_hash": "2ff28af9515d4b3e97835a02f44b2edf",
+    "mtime": 1794823317.2358882,
+    "seen": 1794823347.5573933,
+    "ast_hash": "ef2241b5037f52278ee21c1cbe75aba7",
     "semantic_hash": ""
   },
   "apps/web/src/push-client.ts": {
@@ -2742,15 +2742,15 @@
     "semantic_hash": ""
   },
   "docs/API_DOCUMENTATION.md": {
-    "mtime": 1794819939.8484683,
-    "seen": 1794819990.7694314,
-    "ast_hash": "d4a6693e61df4dfb0ba794935d2d2e30",
+    "mtime": 1794823265.3831086,
+    "seen": 1794823347.6051407,
+    "ast_hash": "15f0a8418dac9ac4b5561f04e8ec5a4c",
     "semantic_hash": ""
   },
   "docs/BUSINESS_RULES.md": {
-    "mtime": 1794819942.445152,
-    "seen": 1794819990.7694342,
-    "ast_hash": "5c06d72d4e25586ee95f1c70b6b36a99",
+    "mtime": 1794823233.7573123,
+    "seen": 1794823347.6051438,
+    "ast_hash": "9831f30e795ef622ad60f1d84182d978",
     "semantic_hash": ""
   },
   "docs/CHANGELOG.md": {
@@ -2958,9 +2958,9 @@
     "semantic_hash": ""
   },
   "progress/DEVELOPMENT_LOG.md": {
-    "mtime": 1794819566.7262375,
-    "seen": 1794819990.7791812,
-    "ast_hash": "1cce929f8820b467c0660836ff016d30",
+    "mtime": 1794823299.935817,
+    "seen": 1794823347.6161923,
+    "ast_hash": "457cf1baf775d7e154e59af05d09c394",
     "semantic_hash": ""
   },
   "progress/IMPLEMENTATION_STATUS.md": {
@@ -3636,15 +3636,15 @@
     "semantic_hash": ""
   },
   "apps/web/src/listing-gallery.tsx": {
-    "mtime": 1794820503.9108226,
-    "seen": 1794820747.5081954,
-    "ast_hash": "67f816915465eada7f27d3976fe1aaf1",
+    "mtime": 1794823341.5197382,
+    "seen": 1794823347.556574,
+    "ast_hash": "bb27859038da3f94d2cd471a1faf82e4",
     "semantic_hash": ""
   },
   "apps/web/src/mobile-browse-controls.tsx": {
-    "mtime": 1794820920.5670013,
-    "seen": 1794821067.4280236,
-    "ast_hash": "9996961aaa00bafceeac0b302332cece",
+    "mtime": 1794823323.729651,
+    "seen": 1794823347.556904,
+    "ast_hash": "8f97addb98c75ceb3bd31d905e271e92",
     "semantic_hash": ""
   },
   "apps/web/test/auth-submit.test.ts": {
@@ -3684,15 +3684,69 @@
     "semantic_hash": ""
   },
   "docs/superpowers/plans/2026-11-16-security-user-flow-closure-a.md": {
-    "mtime": 1794820578.460001,
-    "seen": 1794820747.5682542,
-    "ast_hash": "d85ff3a45770900c0f54465c7fe1da00",
+    "mtime": 1794821174.219013,
+    "seen": 1794823347.6151922,
+    "ast_hash": "b3ab098d2d07f8f66cc0719071e14e4e",
     "semantic_hash": ""
   },
   "docs/MOBILE_BROWSE_BIDIRECTIONAL_NAVIGATION_2026-11-16.md": {
     "mtime": 1794820980.9437869,
     "seen": 1794821067.4820042,
     "ast_hash": "ca9f40cc2e6ca86b1277da4f177388c6",
+    "semantic_hash": ""
+  },
+  "apps/api/src/inquiry-safety.ts": {
+    "mtime": 1794823234.564886,
+    "seen": 1794823347.5481493,
+    "ast_hash": "60ecbea909bfabc435076cf2aa322d8c",
+    "semantic_hash": ""
+  },
+  "apps/api/test/inquiry-safety.test.ts": {
+    "mtime": 1794823216.8606422,
+    "seen": 1794823347.5518095,
+    "ast_hash": "bdb2a319f4a1a5df932d0fc647fd4950",
+    "semantic_hash": ""
+  },
+  "apps/web/src/image-zoom.tsx": {
+    "mtime": 1794823104.5187082,
+    "seen": 1794823347.5564091,
+    "ast_hash": "27bbe7d149f114c2eb2c7cd582e43166",
+    "semantic_hash": ""
+  },
+  "apps/web/test/conversation-safety.test.ts": {
+    "mtime": 1794823112.0715206,
+    "seen": 1794823347.5583968,
+    "ast_hash": "48b6dfa5c8c48108d8c7f63b4ac7dbac",
+    "semantic_hash": ""
+  },
+  "apps/web/test/guest-saved-browser-smoke.ts": {
+    "mtime": 1794821127.6086948,
+    "seen": 1794823347.5585623,
+    "ast_hash": "9a81aa557516c1662b6227e9a343b6fe",
+    "semantic_hash": ""
+  },
+  "docs/CONVERSATION_SAFETY_B1_2026-11-16.md": {
+    "mtime": 1794823297.428691,
+    "seen": 1794823347.6054697,
+    "ast_hash": "c7af3fdb923d679a808752b900dbd7c5",
+    "semantic_hash": ""
+  },
+  "docs/SECURITY_USER_FLOW_CLOSURE_A_2026-11-16.md": {
+    "mtime": 1794821170.594634,
+    "seen": 1794823347.6112547,
+    "ast_hash": "fa21d243470608bb5f640ad4a9878a78",
+    "semantic_hash": ""
+  },
+  "docs/superpowers/plans/2026-11-16-account-recovery-blocking-reporting-b2-design.md": {
+    "mtime": 1794823215.8840396,
+    "seen": 1794823347.6148527,
+    "ast_hash": "eff25d69b7ff8acc159172bd8ee9c4e7",
+    "semantic_hash": ""
+  },
+  "docs/superpowers/plans/2026-11-16-conversation-safety-b1.md": {
+    "mtime": 1794822632.548659,
+    "seen": 1794823347.6148558,
+    "ast_hash": "6a487bc8a507b0768bfd911fb713e797",
     "semantic_hash": ""
   },
   "package-lock.json": {

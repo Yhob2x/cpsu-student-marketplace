@@ -58,6 +58,11 @@ check('Staging API loopback, own port, HTTPS cookies and exact CORS',
   has(environment, 'BIND_HOST=127.0.0.1') &&
   has(environment, 'COOKIE_SECURE=true') &&
   has(environment, 'CORS_ORIGINS=https://__STAGING_DOMAIN__'));
+check('Independent staging push switches default to OFF',
+  has(environment, 'PUSH_SUBSCRIPTIONS_ENABLED=false') &&
+  has(environment, 'PUSH_DELIVERY_ENABLED=false') &&
+  has(apiEnv, "PUSH_SUBSCRIPTIONS_ENABLED: z.enum(['true', 'false']).default('false')") &&
+  has(apiEnv, "PUSH_DELIVERY_ENABLED: z.enum(['true', 'false']).default('false')"));
 check('Secrets remain placeholders, never actual values',
   has(environment, 'JWT_SECRET=__STAGING_UNIQUE_JWT_SECRET_32_PLUS_CHARS__') &&
   has(environment, 'VAPID_PRIVATE_KEY=__STAGING_VAPID_PRIVATE_KEY__') &&

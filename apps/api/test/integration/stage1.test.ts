@@ -56,6 +56,37 @@ if (process.env.CPSU_INTEGRATION_TESTS === '1') {
       expect((await request(app).get(url).set(token(fx.outsider.id))).body.items.some((t: any) => t.id === created.body.id)).toBe(false);
     });
 
+    test('WP3: seller cannot accept a request after buyer loses active verified student status', async () => {
+      const listing = await prisma.listing.create({ data: {
+        sellerProfileId: fx.store.id, campusId: fx.campusA.id, categoryId: fx.category.id,
+        type: 'physical_product', title: 'WP3 Buyer Eligibility Item',
+        description: 'Synthetic buyer eligibility revocation test', price: 190, status: 'published',
+      } });
+      const api = '/api/v1/transactions';
+      const created = await request(app).post(api).set(token(fx.buyer.id)).send({ listingId: listing.id });
+      expect(created.status).toBe(201);
+      await prisma.user.update({ where: { id: fx.buyer.id }, data: { status: 'suspended' } });
+      try {
+        const accept = await request(app).post(api + '/' + created.body.id + '/decision')
+          .set(token(fx.seller.id)).send({ action: 'accept' });
+        expect(accept.status).toBe(409);
+        expect((await prisma.transaction.findUniqueOrThrow({ where: { id: created.body.id } })).status).toBe('pending');
+        expect((await prisma.listing.findUniqueOrThrow({ where: { id: listing.id } })).availabilityState).toBe('available');
+      } finally {
+        await prisma.user.update({ where: { id: fx.buyer.id }, data: { status: 'active' } });
+      }
+      const affiliation = await prisma.affiliation.findFirstOrThrow({ where: { userId: fx.buyer.id } });
+      await prisma.affiliation.update({ where: { id: affiliation.id }, data: { verificationStatus: 'pending' } });
+      try {
+        const accept = await request(app).post(api + '/' + created.body.id + '/decision')
+          .set(token(fx.seller.id)).send({ action: 'accept' });
+        expect(accept.status).toBe(409);
+        expect((await prisma.transaction.findUniqueOrThrow({ where: { id: created.body.id } })).status).toBe('pending');
+      } finally {
+        await prisma.affiliation.update({ where: { id: affiliation.id }, data: { verificationStatus: 'verified' } });
+      }
+    });
+
     test('WP3: one physical item cannot be accepted by two buyers and only the owning seller decides', async () => {
       const listing = await prisma.listing.create({ data: {
         sellerProfileId: fx.store.id, campusId: fx.campusA.id, categoryId: fx.category.id,
@@ -792,6 +823,14 @@ if (process.env.CPSU_INTEGRATION_TESTS === '1') {
       expect(search.status).toBe(200);
       expect(search.body.items.some((item: any) => item.id === student.id)).toBe(true);
       expect(JSON.stringify(search.body)).not.toContain('passwordHash');
+      const filtered = await request(app).get(`/api/v1/admin/users?q=managed-student&status=active&verification=verified&campusId=${fx.campusA.id}&page=1&pageSize=1`).set(token(fx.globalAdmin.id));
+      expect(filtered.status).toBe(200);
+      expect(filtered.body.total).toBe(1);
+      expect(filtered.body.items).toHaveLength(1);
+      expect(filtered.body.page).toBe(1);
+      expect(filtered.body.items[0].id).toBe(student.id);
+      const nextPage = await request(app).get(`/api/v1/admin/users?q=managed-student&page=2&pageSize=1`).set(token(fx.globalAdmin.id));
+      expect(nextPage.body.items).toHaveLength(0);
 
       const suspended = await request(app).patch(route).set(token(fx.globalAdmin.id))
         .send({ status: 'suspended', reason });
@@ -919,6 +958,37 @@ if (process.env.CPSU_INTEGRATION_TESTS === '1') {
       const auditRow = await prisma.auditLog.findFirst({
         where: { action: 'listing.soft_deleted', targetId: item.id } });
       expect(auditRow).not.toBeNull();
+    });
+
+    test('global admin drafts and publishes student content while public reads exclude drafts and archives', async () => {
+      const admin = token(fx.globalAdmin.id);
+      const reviewer = token(fx.reviewerA.id);
+      const guidelines = '/api/v1/admin/content/guidelines';
+      expect((await request(app).put(guidelines).set(reviewer).send({ body: '# Changed rules' })).status).toBe(403);
+      expect((await request(app).put(guidelines).set(admin).send({ body: '<script>alert(1)</script>' })).status).toBe(400);
+      expect((await request(app).put(guidelines).set(admin).send({ body: '# Updated campus rules' })).status).toBe(200);
+      expect((await request(app).get('/api/v1/guidelines')).body.body).not.toContain('Updated campus rules');
+      expect((await request(app).post(guidelines + '/publish').set(admin).send({ expectedBody: '# Stale rules' })).status).toBe(409);
+      expect((await request(app).post(guidelines + '/publish').set(admin).send({ expectedBody: '# Updated campus rules' })).status).toBe(200);
+      expect((await request(app).get('/api/v1/guidelines')).body.body).toBe('# Updated campus rules');
+      expect((await request(app).put(guidelines).set(admin).send({ body: '# Later revision' })).status).toBe(200);
+      expect((await request(app).get('/api/v1/guidelines')).body.body).toBe('# Updated campus rules');
+
+      const announcements = '/api/v1/admin/content/announcements';
+      const created = await request(app).post(announcements).set(admin).send({ title: 'Campus notice', body: 'Marketplace update' });
+      expect(created.status).toBe(201);
+      expect((await request(app).get('/api/v1/announcements')).body.items).toHaveLength(0);
+      const id = created.body.id;
+      expect((await request(app).post(`${announcements}/${id}/publish`).set(reviewer)).status).toBe(403);
+      expect((await request(app).post(`${announcements}/${id}/publish`).set(admin).send({ expectedTitle: 'Old notice', expectedBody: 'Marketplace update' })).status).toBe(409);
+      expect((await request(app).post(`${announcements}/${id}/publish`).set(admin).send({ expectedTitle: 'Campus notice', expectedBody: 'Marketplace update' })).status).toBe(200);
+      expect((await request(app).get('/api/v1/announcements')).body.items[0].title).toBe('Campus notice');
+      expect((await request(app).patch(`${announcements}/${id}`).set(admin).send({ title: 'Revised notice', body: 'Updated marketplace news' })).status).toBe(200);
+      expect((await request(app).get('/api/v1/announcements')).body.items[0].title).toBe('Campus notice');
+      expect((await request(app).post(`${announcements}/${id}/publish`).set(admin).send({ expectedTitle: 'Revised notice', expectedBody: 'Updated marketplace news' })).status).toBe(200);
+      expect((await request(app).get('/api/v1/announcements')).body.items[0].title).toBe('Revised notice');
+      expect((await request(app).post(`${announcements}/${id}/archive`).set(admin)).status).toBe(200);
+      expect((await request(app).get('/api/v1/announcements')).body.items).toHaveLength(0);
     });
 
     test('database uniqueness constraints reject duplicate affiliations and duplicate favorites', async () => {

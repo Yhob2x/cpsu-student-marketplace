@@ -159,3 +159,9 @@ Carried into `progress/KNOWN_ISSUES.md`.
 - Reworked the Notifications component in apps/web/src/pages-profile.tsx and imported the new scoped apps/web/src/notifications.css from apps/web/src/main.tsx. Added grouped feed, unread summary, filters, contextual icons, per-row read actions, refresh, and differentiated loading/empty/error/success feedback.
 - Confirmed TypeScript/Vite production build, Git diff whitespace check, headless Chrome at 320/360/390/768/1024/1440px, 44px targets, correct filter/read behavior, 503 retry without false empty state, link navigation and mark-read, unknown notification without a link, and empty state. Browser fixtures were mock-only, no production data mutated.
 - No API, Prisma, migration, database credentials, PWA service worker, mobile-archive or external dependency changed. Manual screen-reader/physical-device checks remain open.
+
+### 2026-11-16 — Managed student guidelines and announcements (local implementation)
+
+- Added global-university-admin draft/publish controls for marketplace guidelines and draft/edit/publish/archive controls for announcements. Public endpoints return only published content; existing guideline copy remains the fallback before first publication. Publish requests reject stale drafts.
+- Added two additive migrations, public Home and Guidelines rendering, admin Content section, audit actions, and isolated authorization/visibility tests. Web build, API typecheck and isolated integration suite passed; no development or production migration was applied.
+- Development activation remains gated because the development database also has the separately test-only WP3 migration pending. Running a blanket migration command would apply WP3 without its database approval. Browser/device acceptance and announcement in-app notifications remain open. See `docs/MANAGED_STUDENT_CONTENT_2026-11-16.md`.

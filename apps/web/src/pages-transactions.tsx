@@ -99,6 +99,15 @@ export function TransactionDetail() {
     finally { setLoading(false); }
   }, [id]);
   useEffect(() => { setData(null); setLoading(true); setError(''); void reload(); }, [reload]);
+  // When the other student confirms, refresh status without requiring a full page reload.
+  // Foreground-only polling never caches the participant's private transaction data.
+  useEffect(() => {
+    if (data?.status === 'completed' || data?.status === 'cancelled') return;
+    const timer = window.setInterval(() => {
+      if (document.visibilityState === 'visible') void reload();
+    }, 15_000);
+    return () => window.clearInterval(timer);
+  }, [reload, data?.status]);
 
   const act = async (suffix: string, body: unknown = {}) => {
     if (busy) return;
@@ -137,7 +146,8 @@ export function TransactionDetail() {
     <section className="panel stack" aria-label="Transaction status">
       <div className="row"><h2 style={{ margin: 0 }}>Current status</h2><span className="tag">{names[data.status]}</span></div>
       <p className="muted">This is a student-reported arrangement. CPSU Market does not verify money exchanges, deliveries, or the condition of an item after handoff.</p>
-      <div className="row"><Link to={`/inquiries/${data.inquiryThreadId}`} className="btn ghost">Discuss arrangements</Link>
+      <div className="row"><button type="button" className="btn ghost" disabled={busy} onClick={() => void reload()}>Refresh status</button>
+        <Link to={`/inquiries/${data.inquiryThreadId}`} className="btn ghost">Discuss arrangements</Link>
         <Link to={`/listings/${data.listingId}`} className="btn ghost">View listing</Link></div>
     </section>
     {!terminal && <section className="panel stack" aria-label="Update this transaction">

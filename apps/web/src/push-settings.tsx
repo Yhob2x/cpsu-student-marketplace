@@ -116,7 +116,8 @@ export function PushSettings() {
               onClick={() => void turnOn()}>{busy ? 'Enabling…' : 'Enable alerts'}</button>
           </>}
         </div>
-        {!config?.enabled && <p className="muted">Push alerts are not configured on this server yet. In-app alerts still work.</p>}
+        {!config?.enabled && <p className="muted">Push alerts are currently disabled by the server administrator. In-app alerts still work.</p>}
+        {config?.enabled && !config.deliveryEnabled && <p className="muted" role="status">Device enrollment is available for staging tests, but background notification delivery remains paused by the server administrator.</p>}
         {config?.enabled && !supportsPush() && <p className="muted">This browser or connection does not support push notifications. Use an HTTPS site and a supported browser.</p>}
         {config?.enabled && needsHomeScreen && <p className="muted">On iPhone, open CPSU Market in Safari, select Share → Add to Home Screen, then open the installed app to enable alerts.</p>}
         {config?.enabled && blocked && <p className="muted">Notifications are blocked in this device or browser. Change the site's notification permission in settings.</p>}

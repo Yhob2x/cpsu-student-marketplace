@@ -42,6 +42,8 @@ No sender names, message bodies, listing titles, private review reasons, student
 6. Choose Messages, Listing reviews and Account verification toggles. Use **Disable alerts on this device** to revoke the endpoint on the server and unsubscribe locally.
 7. Test with dedicated nonproduction buyer/seller/reviewer accounts, never real students, before switching on production delivery.
 
+**Stage 5 release safety:** VAPID keys alone do **not** activate enrollment. `PUSH_SUBSCRIPTIONS_ENABLED=false` and `PUSH_DELIVERY_ENABLED=false` are the default server settings. Approved HTTPS staging first enables subscriptions separately, with delivery paused; remote delivery requires a second explicit toggle and verified production-mode HTTPS cookies, public origin and valid public contact. Test-mode may exercise synthetic enrollment but **never sends outbound pushes**. With enrollment disabled, authenticated `GET /push/config` responds `{ enabled:false, deliveryEnabled:false, publicKey:null }`, and `POST /push/subscriptions` / `PATCH /push/preferences` return HTTP 503. Opt-out (`DELETE /push/subscriptions`) remains available. See `docs/PWA_PUSH_STAGE5_RELEASE_SAFETY_2026-11-16.md`.
+
 Without *all three* VAPID settings, `GET /push/config` returns `enabled: false` and the browser settings show a disabled state. In-app notifications continue to work. No paid notification service, Firebase SDK, Expo, APK, polling-only workaround, or new platform account is required. Actual Web Push still uses the browser vendors' push relay infrastructure.
 
 ## Security and privacy decisions
@@ -60,7 +62,7 @@ Without *all three* VAPID settings, `GET /push/config` returns `enabled: false` 
 - `cd apps/web; bun run build` — TypeScript/Vite production build.
 - `cd apps/api; bunx prisma validate; bunx tsc -p . --noEmit` — schema/types.
 - `cd apps/api; bun test test/push.test.ts` — provider allowlist, privacy payload, SW notification and safe navigation tests.
-- `cd apps/api; bun run test:push:integration` — provision **`cpsu_marketplace_push_test` only**, apply migration, run **7 authenticated tests** with synthetic users and synthetic VAPID keys, including per-message read/notification clearing; no external delivery.
+- `cd apps/api; bun run test:push:integration` — provision **`cpsu_marketplace_push_test` only**, apply migration, run **10 authenticated tests** (including 3 fail-closed switch tests) with synthetic users and synthetic VAPID keys, including per-message read/notification clearing; no external delivery.
 - `bun run test` — existing API unit tests (plus new push unit suite).
 - `bun run pwa:check` — manifest, icons and offline-only service worker assets.
 

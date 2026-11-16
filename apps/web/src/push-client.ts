@@ -5,7 +5,7 @@ export type PushPreferences = {
   listingReviews: boolean;
   accountUpdates: boolean;
 };
-export type PushConfig = { enabled: boolean; publicKey: string | null };
+export type PushConfig = { enabled: boolean; deliveryEnabled: boolean; publicKey: string | null };
 
 type BadgeNavigator = Navigator & {
   setAppBadge?: (contents?: number) => Promise<void>;

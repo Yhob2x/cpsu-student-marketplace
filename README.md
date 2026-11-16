@@ -77,7 +77,7 @@ Payments, handoffs and confirmations remain arranged directly between students; 
 
 ## Deployment
 
-**Push staging is not deployed.** Dedicated, incomplete HTTPS staging templates live in `infrastructure/staging/`, with a manual approval and isolation runbook. Check the static templates using `bun run push:staging:templates`; check the *separate* public-domain/contact gates using `bun run push:staging:check`. Neither command deploys or sends push messages. See `docs/PWA_PUSH_STAGE4_STAGING_PREPARATION_2026-11-16.md`.
+**Push staging is not deployed.** Dedicated, incomplete HTTPS staging templates live in `infrastructure/staging/`, with a manual approval and isolation runbook. Stage 6 also adds `bun run push:staging:preflight` to audit staging approval evidence, migration selection and a clean, secret-free release candidate; it currently blocks deployment. See `docs/PWA_PUSH_STAGE6_STAGING_PREFLIGHT_2026-11-16.md`. Check the static templates using `bun run push:staging:templates`; check the *separate* public-domain/contact gates using `bun run push:staging:check`. Neither command deploys or sends push messages. See `docs/PWA_PUSH_STAGE4_STAGING_PREPARATION_2026-11-16.md`.
 
 The self-hosted Nginx config in `infrastructure/nginx/marketplace.conf` serves the **single** `apps/web/dist` frontend and proxies `/api` to Express. Serve the PWA over HTTPS, protect API access, keep database backups, and don't cache API responses or authenticated content in the service worker.
 
@@ -86,6 +86,8 @@ The self-hosted Nginx config in `infrastructure/nginx/marketplace.conf` serves t
 ## Optional mobile lock-screen alerts and badges
 
 The unified CPSU Market PWA supports **opt-in Web Push** for new messages and inquiries, listing-review decisions, and CPSU account verification updates. Students can enable it and choose categories in **Notifications → Phone and desktop alerts**. The mobile Messages tab shows unread-message counts; supported installed PWAs may display an app-icon badge for total unread notifications. Lock-screen alerts never show private message contents or sender names.
+
+**Stage 5 safeguards:** Both `PUSH_SUBSCRIPTIONS_ENABLED=false` and `PUSH_DELIVERY_ENABLED=false` are the default server settings. VAPID keys alone do not enroll devices or send notifications. An approved HTTPS staging setup can activate enrollment first, independently from remote delivery. No environment switches were enabled in the local `.env` file. Details: `docs/PWA_PUSH_STAGE5_RELEASE_SAFETY_2026-11-16.md`.
 
 **Local development status (16 November 2026):** The approved additive push migration is applied to `cpsu_marketplace`. Stage 2 securely stored one persistent VAPID keypair in the Git-ignored `apps/api/.env` with restricted Windows permissions. The VAPID contact is currently `https://localhost:8443/` **for local QA only**, not a monitored contact; replace it before public staging. Do not regenerate the existing keys, expose them to Vite variables, commit them, or use this temporary contact for real students. Browser-emulated HTTPS PWA checks passed; **real lock-screen push delivery has not been tested or enabled for students**.
 

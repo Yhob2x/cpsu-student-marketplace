@@ -12,6 +12,8 @@ These are inert, intentionally incomplete templates for an independently approve
 | `cpsu-marketplace-staging-api.service.template` | Separate Linux service that runs the Bun-targeted API as `marketplace-staging`, with basic filesystem restrictions. |
 | `staging.env.example` | Required variables and **placeholders only**. Do not rename/copy into Git or insert secrets into this file. |
 
+**Stage 6 owner continuation approval — release still blocked:** Run the read-only `bun run push:staging:preflight` to inspect the required approval manifest, all pending Prisma migrations, Git working-tree state and static secret checks. The placeholder-only `staging-approval.example.json` intentionally yields a blocked result. A real private approval record must never contain passwords or VAPID private keys. See `docs/PWA_PUSH_STAGE6_STAGING_PREFLIGHT_2026-11-16.md`.
+
 Run **`bun run push:staging:templates`** from the project root to check that the templates are structurally safe. A passed template check does not authorize deployment. Separately run **`bun run push:staging:check`** to confirm that the monitored contact and approved staging host are configured; this is expected to report blockers until provided.
 
 ## Mandatory external approvals — do not skip
@@ -28,6 +30,7 @@ Run **`bun run push:staging:templates`** from the project root to check that the
 - **Dedicated OS identity:** `marketplace-staging` with permission only for staging files and staging upload directory.
 - **Dedicated secrets:** unique staging JWT secret, DB role, and preferably a dedicated staging VAPID pair. These remain outside source control in `/etc/cpsu-marketplace/staging.env` (restrict to root/systemd as appropriate).
 - **Exact origin:** `CORS_ORIGINS=https://<approved-domain>`, `COOKIE_SECURE=true`, `NODE_ENV=production`.
+- **Fail-closed push release:** Both `PUSH_SUBSCRIPTIONS_ENABLED=false` and `PUSH_DELIVERY_ENABLED=false` remain in the staging template. With separately approved test data and consent, an administrator may first enable subscription enrollment only; outbound browser push relay delivery requires a **second, distinct approval**. Production-mode HTTPS, valid VAPID keys and a syntactically valid public monitored contact are verified by the API. A code-level check cannot prove the contact is actually staffed or the site belongs to CPSU.
 - **Network confinement:** `BIND_HOST=127.0.0.1`, `PORT=4400`; only Nginx has public HTTPS access. Firewall denies direct port 4400.
 - **Web root:** deploy `apps/web/dist` *without source files, server secrets or uploaded photos* to a dedicated staging web root. The built PWA's `start_url` and service-worker scope assume the root of its own subdomain.
 - **Runtime:** the current build uses Bun (`bun build --target bun`). The staging service intentionally uses an explicit `__STAGING_BUN_PATH__` placeholder, not Node. Verify the installed Bun runtime path and API build on the authorized Linux host.

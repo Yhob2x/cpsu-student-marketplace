@@ -5,7 +5,7 @@ import { requireAuth } from '../auth.js';
 import { prisma } from '../db.js';
 import { env } from '../env.js';
 import { HttpError } from '../http.js';
-import { endpointHash, permittedPushEndpoint, pushReady } from '../push.js';
+import { endpointHash, permittedPushEndpoint, pushDeliveryReady, pushReady } from '../push.js';
 
 const r = Router();
 r.use(requireAuth);
@@ -30,7 +30,7 @@ const subscriptionSchema = z.object({
 
 r.get('/config', (_req, res) => {
   res.setHeader('Cache-Control', 'no-store');
-  res.json({ enabled: pushReady, publicKey: pushReady ? env.VAPID_PUBLIC_KEY : null });
+  res.json({ enabled: pushReady, deliveryEnabled: pushDeliveryReady, publicKey: pushReady ? env.VAPID_PUBLIC_KEY : null });
 });
 
 r.get('/preferences', async (req, res) => {

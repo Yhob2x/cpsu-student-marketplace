@@ -121,14 +121,14 @@ report detail/findings, all-listings browser.
 
 | Method | Path | Request | Response |
 |---|---|---|---|
-| GET | `/push/config` | — | `{ enabled, publicKey }` (never the private key); disabled until VAPID config is present |
+| GET | `/push/config` | — | `{ enabled, deliveryEnabled, publicKey }` (never the private key). Enrollment and outbound delivery have separate, default-OFF server switches; `deliveryEnabled=false` means no background pushes will be sent |
 | GET | `/push/preferences` | — | `{ messages, listingReviews, accountUpdates }` for the signed-in user |
 | PATCH | `/push/preferences` | Partial booleans of the above | Updated preferences; requires configured VAPID |
 | POST | `/push/subscriptions` | Browser PushSubscription JSON: `endpoint, keys: { p256dh, auth }, expirationTime?` | `201 { ok: true }`. Only trusted HTTPS push-provider hosts; max eight devices per student |
 | DELETE | `/push/subscriptions` | `{ endpoint }` | `204`. Only revokes the currently authenticated student's endpoint |
 | GET | `/notifications/unread-count` | — | `{ total, messages }`; scoped to the authenticated user |
 
-Web Push is **best-effort** and never blocks the existing in-app notification or the creation of a message/review. No recipient names, message contents, review reasons, or listing titles are sent in lock-screen payloads. The PWA service worker only opens approved same-origin app paths. All three `VAPID_*` variables and an approved additive migration are required to activate. Real push-provider delivery is not verified by synthetic integration tests.
+Web Push is **best-effort** and never blocks the existing in-app notification or the creation of a message/review. No recipient names, message contents, review reasons, or listing titles are sent in lock-screen payloads. The PWA service worker only opens approved same-origin app paths. All three `VAPID_*` variables, an approved additive migration, production HTTPS/cookie/CORS settings, and *explicit* `PUSH_SUBSCRIPTIONS_ENABLED=true` and `PUSH_DELIVERY_ENABLED=true` server flags are required for outbound delivery. Both flags default **false**; enrollment can be enabled alone without outbound delivery. In `NODE_ENV=test`, external delivery is always suppressed. Real push-provider delivery is not verified by synthetic integration tests.
 
 For migration, key generation, private data handling and acceptance tests see `docs/PWA_PUSH_NOTIFICATIONS_2026-11-16.md`.
 
@@ -152,3 +152,10 @@ All participant endpoints require an authenticated **active, verified CPSU stude
 Transaction notifications include `transaction.requested`, `transaction.accepted`, `transaction.rejected`, `transaction.negotiating`, `transaction.meetup_confirmed`, `transaction.completion_confirmed`, `transaction.cancelled`. Updates and audit logs are stored atomically with every transition. Clients should display conflict HTTP 409 when the item/state changes concurrently.
 
 **Deployment reminder:** Development/production schemas have not received this migration, by explicit owner restriction. Earlier sections describing missing transactions are historical and superseded by this WP3 section for the local code state only.
+# Student account directory pagination (2026-11-16)
+
+`GET /admin/users` remains restricted to global university administrators. Optional query parameters: `q` (name/email, max 80 characters), `campusId`, `status` (`active` or `suspended`), `verification` (`unverified`, `pending`, `verified`, `rejected`, `suspended`), `page` (default 1), and `pageSize` (default 25, maximum 50). The response contains `{ items, total, page, pageSize }`. Affiliation filters apply to the same affiliation record. Results are ordered by descending user ID and never include password hashes.
+
+## Managed student-facing content (local implementation)
+
+Public: `GET /guidelines` returns `{ body, publishedAt }` with the existing text as fallback; `GET /announcements` returns `{ items }` containing the 10 newest published notices only. Global university administrators only: `GET|PUT /admin/content/guidelines`, `POST /admin/content/guidelines/publish`, `GET|POST /admin/content/announcements`, `PATCH /admin/content/announcements/:id`, and `POST /admin/content/announcements/:id/publish|archive`. Guidelines use `{ body }` for draft saves and `{ expectedBody }` for publishing. Announcements use `{ title, body }` for create/edit and `{ expectedTitle, expectedBody }` for publishing. Published announcement edits remain pending until publish. See `docs/MANAGED_STUDENT_CONTENT_2026-11-16.md` for local migration and release limits.

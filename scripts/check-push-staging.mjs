@@ -58,6 +58,9 @@ if (existsSync(envFile)) {
   publicKey = field('VAPID_PUBLIC_KEY');
   privateKey = field('VAPID_PRIVATE_KEY');
   const subject = field('VAPID_SUBJECT');
+  check('Development push release switches remain disabled',
+    field('PUSH_SUBSCRIPTIONS_ENABLED') !== 'true' && field('PUSH_DELIVERY_ENABLED') !== 'true',
+    'Local development must not activate subscription enrollment or outbound relay delivery');
   let matching = false;
   if (/^[A-Za-z0-9_-]{87}$/.test(publicKey) && /^[A-Za-z0-9_-]{43}$/.test(privateKey)) {
     try {

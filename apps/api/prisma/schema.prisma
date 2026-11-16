@@ -118,6 +118,34 @@ enum ReportStatus {
   dismissed
 }
 
+enum AnnouncementStatus {
+  draft
+  published
+  archived
+}
+
+model GuidelineContent {
+  id            Int       @id
+  draftBody     String    @db.Text
+  publishedBody String?   @db.Text
+  updatedAt     DateTime  @updatedAt
+  publishedAt   DateTime?
+}
+
+model Announcement {
+  id          Int                @id @default(autoincrement())
+  title       String             @db.VarChar(120)
+  body        String             @db.Text
+  pendingTitle String?            @db.VarChar(120)
+  pendingBody  String?            @db.Text
+  status      AnnouncementStatus @default(draft)
+  createdAt   DateTime           @default(now())
+  updatedAt   DateTime           @updatedAt
+  publishedAt DateTime?
+
+  @@index([status, publishedAt])
+}
+
 model Campus {
   id     Int     @id @default(autoincrement())
   code   String  @unique

@@ -52,6 +52,14 @@ Dark-green sections use light keyboard focus outlines. No new dependencies or AP
 | Breakpoints | fluid typography, tested at 320, 360, 390, 768, 1024 and 1440 px | n/a |
 | Admin | same shell, stacked panels | none (no admin in the mobile app) |
 
+The admin page uses a section switcher for Listings, Affiliations, Reports, Transactions, and Overview; university administrators also see Students and Audit history. Only the selected section is shown, so navigation does not jump down a long page. Queue and report counts reflect loaded data. Review decisions retain their required reason and human photo confirmation.
+
+Student accounts use a server-paged directory (25 records per page), with name/email, campus, account status, and verification filters. The list shows its result range and total; selecting one row reveals the existing status action and required reason. Staff account protection remains enforced by the API.
+
+Administrative audit history uses a compact chronological list with readable action labels, target reference, actor, local date/time, and a recorded reason when one exists. Pagination preserves older entries; retry continues from the failed cursor.
+
+The university-admin Content section provides a plain-text guideline editor with separate Save draft and Publish saved draft actions, plus announcement draft, publish and archive controls. Students see only published content. Guideline headings use `# ` lines; text is rendered as text rather than HTML. The Home page shows up to 10 published announcements and hides the section when empty.
+
 Search and Saved use the shared `.listing-grid` with `auto-fill` tracks at its responsive breakpoints. A single result keeps the normal card and photo width instead of stretching across the content area; additional results retain the existing column layout.
 
 ## 4. Components to reuse

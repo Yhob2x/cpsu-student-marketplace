@@ -26,6 +26,9 @@ const env = {
   VAPID_PUBLIC_KEY: keys.publicKey,
   VAPID_PRIVATE_KEY: keys.privateKey,
   VAPID_SUBJECT: 'mailto:qa-push@example.invalid',
+  // Test-mode accepts synthetic enrollment; outbound Web Push stays suppressed regardless.
+  PUSH_SUBSCRIPTIONS_ENABLED: 'true',
+  PUSH_DELIVERY_ENABLED: 'false',
   CPSU_PUSH_TESTS: '1',
 };
 
@@ -47,4 +50,10 @@ async function run(name: string, command: string[]) {
 }
 await run('apply migrations to isolated push test schema only', ['bunx', 'prisma', 'migrate', 'deploy']);
 await run('test authenticated push routes with synthetic users/endpoints', ['bun', 'test', 'test/integration/push.test.ts']);
-console.log('Push integration passed. Development and production databases were not migrated.');
+// Separate test process is required: environment flags are parsed once at API import.
+env.CPSU_PUSH_TESTS = '0';
+env.CPSU_PUSH_DISABLED_TESTS = '1';
+env.PUSH_SUBSCRIPTIONS_ENABLED = 'false';
+env.PUSH_DELIVERY_ENABLED = 'false';
+await run('verify server refuses subscriptions when release switches are disabled', ['bun', 'test', 'test/integration/push-disabled.test.ts']);
+console.log('Push integration passed. Development and production databases were not migrated. No remote pushes were delivered.');

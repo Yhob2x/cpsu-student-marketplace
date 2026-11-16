@@ -129,6 +129,8 @@ export function Home() {
       </div>
     </section>
 
+    <StudentAnnouncements />
+
     <section className="category-section" aria-label="Browse by category">
       <div className="sec-head category-head"><h2>Explore by category</h2><Link to="/explore">View all <Icon name="arrow" size={15} /></Link></div>
       <div className="cat-rail">
@@ -411,13 +413,27 @@ export function StorePage() {
 }
 
 export function Guidelines() {
-  return <div style={{ maxWidth: '62ch' }}>
+  const [content, setContent] = useState<{ body: string; publishedAt: string | null } | null>(null);
+  const [error, setError] = useState('');
+  const load = () => api<{ body: string; publishedAt: string | null }>('/guidelines').then(r => { setContent(r); setError(''); }).catch(e => setError(explain(e)));
+  useEffect(() => { void load(); }, []);
+  return <div className="guidelines-content">
     <h1>Marketplace guidelines</h1>
-    <p className="muted">Draft for discussion. Final rules are set by CPSU before launch.</p>
-    <h2>What you can list</h2><p>Student-made goods, pre-loved items, and skills-based services such as design, tutoring and IT help.</p>
-    <h2>What gets a closer look</h2><p>Food, drinks, printing and school supplies may overlap with campus establishments. A campus reviewer checks these before they appear, and may restrict them under the campus rules.</p>
-    <h2>Not allowed</h2><p>Paid cheating or impersonation, harassment, and anything prohibited by campus or national rules.</p>
-    <h2>Meeting and paying</h2><p>You and the other person agree on payment and handoff. Meet at a campus pickup spot where possible. The marketplace never holds money.</p>
-    <h2>Problems</h2><p>Use Report on any listing. A reviewer looks at it and records the outcome.</p>
+    {error && <p className="err" role="alert">Could not load guidelines: {error} <button className="btn ghost" type="button" onClick={load}>Retry</button></p>}
+    {!content && !error && <p className="muted" role="status">Loading guidelines…</p>}
+    {content && <><p className="muted">{content.publishedAt ? `Published ${new Date(content.publishedAt).toLocaleDateString('en-PH')}` : 'Draft for discussion. Final rules are set by CPSU before launch.'}</p>
+      {content.body.split(/\n/).filter(line => line.trim()).map((line, i) => line.startsWith('# ') ? <h2 key={i}>{line.slice(2)}</h2> : <p key={i}>{line}</p>)}</>}
   </div>;
+}
+
+function StudentAnnouncements() {
+  const [items, setItems] = useState<{ id: number; title: string; body: string; publishedAt: string }[]>([]);
+  useEffect(() => { api<{ items: typeof items }>('/announcements').then(r => setItems(r.items)).catch(() => {}); }, []);
+  if (items.length === 0) return null;
+  return <section className="student-announcements" aria-labelledby="student-announcements-title">
+    <h2 id="student-announcements-title">Campus announcements</h2>
+    <div className="student-announcement-list">{items.map(item => <article key={item.id}>
+      <h3>{item.title}</h3><p>{item.body}</p><time dateTime={item.publishedAt}>{new Date(item.publishedAt).toLocaleDateString('en-PH')}</time>
+    </article>)}</div>
+  </section>;
 }

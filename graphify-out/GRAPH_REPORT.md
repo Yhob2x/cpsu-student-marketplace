@@ -1,36 +1,36 @@
 # Graph Report - cpsu-student-marketplace  (2026-11-16)
 
 ## Corpus Check
-- 495 files · ~845,281 words
+- 524 files · ~874,407 words
 - Verdict: corpus is large enough that graph structure adds value.
-- Unclassified: 134 file(s) not represented in the graph (top: .csv 106, .css 6, .toml 5)
-- WARNING: 134 of 651 files seen (21%) have no supported extractor and are missing from this graph entirely. It may look complete while representing only part of the codebase.
+- Unclassified: 137 file(s) not represented in the graph (top: .csv 106, .css 6, .toml 5)
+- WARNING: 137 of 683 files seen (20%) have no supported extractor and are missing from this graph entirely. It may look complete while representing only part of the codebase.
 
 ## Summary
-- 8631 nodes · 13619 edges · 557 communities (412 shown, 145 thin omitted)
-- Extraction: 98% EXTRACTED · 2% INFERRED · 0% AMBIGUOUS · INFERRED: 235 edges (avg confidence: 0.86)
+- 8874 nodes · 14017 edges · 586 communities (448 shown, 138 thin omitted)
+- Extraction: 98% EXTRACTED · 2% INFERRED · 0% AMBIGUOUS · INFERRED: 241 edges (avg confidence: 0.87)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `e28d0d2f`
+- Built from commit: `461f9229`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
 ## Community Hubs (Navigation)
 - .opencode/skills/impeccable/scripts/live-browser.js
 - .agents/skills/impeccable/scripts/live-browser.js
-- re
-- pathlib
-- main.tsx
+- .opencode/skills/ui-ux-pro-max/scripts/validate_data.py
+- json
+- pages-transactions.tsx
 - connectSSE
 - connectSSE
 - setLiveState
 - .agents/skills/ui-ux-pro-max/scripts/core.py
 - .opencode/skills/ui-ux-pro-max/scripts/core.py
 - os
-- ref_node_path
+- unittest
 - setLiveState
-- argparse
+- ShadcnInstaller
 - .agents/skills/impeccable/scripts/modern-screenshot.umd.js
 - src/auth.ts
 - .opencode/skills/impeccable/scripts/modern-screenshot.umd.js
@@ -38,23 +38,23 @@
 - el
 - gray
 - gray
-- json
+- .opencode/skills/design-system/scripts/fetch-background.py
 - api/package.json
 - initPageChat
 - applyEditing
 - initPageChat
 - .opencode/skills/ui-ux-pro-max/scripts/design_system.py
-- .agents/skills/ui-ux-pro-max/scripts/validate_data.py
+- setup-local-vapid.mjs
 - .opencode/skills/impeccable/SKILL.md
 - .agents/skills/ui-ux-pro-max/scripts/design_system.py
 - initGlobalBar
 - Tailwind CSS Utility Reference
 - Tailwind CSS Utility Reference
-- .agents/skills/impeccable/reference/new-work.md
+- .agents/skills/impeccable/SKILL.md
 - TailwindConfigGenerator
 - TailwindConfigGenerator
 - Brand Guidelines v1.0
-- admin.ts
+- DesignSystemGenerator
 - Brand Guidelines v1.0
 - color
 - .agents/skills/impeccable/reference/live.md
@@ -87,7 +87,7 @@
 - Component Specifications
 - .agents/skills/design-system/scripts/html-token-validator.py
 - shadcn/ui Accessibility Patterns
-- src/push.ts
+- push-policy.test.ts
 - Logo Usage Rules
 - Component Specifications
 - .opencode/skills/design-system/scripts/html-token-validator.py
@@ -111,7 +111,7 @@
 - CIP Deliverable Guide
 - States and Variants
 - UI Styling Skill
-- DesignSystemGenerator
+- .agents/skills/design/scripts/cip/render-html.py
 - Workflow
 - .agents/skills/impeccable/reference/adapt.md
 - .agents/skills/impeccable/reference/document.md
@@ -125,16 +125,16 @@
 - .agents/skills/impeccable/reference/onboard.md
 - Tailwind CSS Customization
 - Write Swift
-- setup-local-vapid.mjs
+- ref_node_path
 - CLAUDE CODE — PROJECT GOVERNANCE INSTRUCTIONS
-- .opencode/skills/design/scripts/cip/core.py
+- .agents/skills/ui-ux-pro-max/scripts/validate_data.py
 - Design System
 - .opencode/skills/impeccable/reference/onboard.md
 - Tailwind CSS Customization
 - Apple Design
-- datetime
+- src/push.ts
 - .agents/skills/design-system/scripts/generate-slide.py
-- input
+- card
 - radius
 - The Fixes
 - spacing
@@ -165,11 +165,11 @@
 - Primary Color Meanings
 - Core Logo Types
 - button
-- captureElementToBlob
+- applyEditing
 - Asset Organization Guide
 - Primary Color Meanings
 - Core Logo Types
-- .opencode/skills/design-system/scripts/fetch-background.py
+- .agents/skills/ui-ux-pro-max/scripts/tests/test_style_taxonomy.py
 - color
 - showToast
 - Animation Performance
@@ -184,7 +184,7 @@
 - Color Semantics
 - Finding Animation Opportunities
 - verify-integrity-restore.ts
-- useTheme
+- .agents/skills/design/scripts/cip/core.py
 - CPSU STUDENT MARKETPLACE — AI CODING AGENT RULES
 - Design Principles
 - Design Principles
@@ -208,7 +208,7 @@
 - onAnnotDown
 - Copywriting Formulas
 - CatalogRefreshTest
-- .agents/skills/ui-ux-pro-max/scripts/tests/test_style_taxonomy.py
+- validate
 - CIP Design Reference
 - Icon Design Reference
 - Copywriting Formulas
@@ -246,9 +246,9 @@
 - Logo Design Reference
 - Token Architecture
 - Impeccable Asset Producer
-- .agents/skills/ui-ux-pro-max/scripts/search.py
+- main.tsx
+- validate-pwa.cjs
 - TestDomainDetection
-- TestSearchDomains
 - scripts
 - expo
 - MASTER_BLUEPRINT.md
@@ -258,24 +258,24 @@
 - Token Architecture
 - .opencode/skills/design-system/templates/design-tokens-starter.json
 - Impeccable Asset Producer
-- TestDomainDetection
+- .opencode/skills/ui-ux-pro-max/scripts/tests/test_core.py
 - TestSearchDomains
-- validate-pwa.cjs
+- TestDomainDetection
 - Primitive Tokens
 - .agents/skills/design-system/scripts/validate-tokens.cjs
 - .agents/skills/design-system/templates/design-tokens-starter.json
 - .agents/skills/impeccable/reference/critique.md
 - Simplify the Design
 - Hardening Dimensions
+- TestSearchDomains
 - .agents/skills/ui-ux-pro-max/scripts/tests/test_text_layout_resilience.py
-- .opencode/skills/ui-ux-pro-max/scripts/tests/test_text_layout_resilience.py
 - compilerOptions
 - Development roadmap
 - WP3 — Purchase requests and transactions: C5 design proposal
 - 2. Test layers to add, in order
 - Primitive Tokens
 - .opencode/skills/design-system/scripts/validate-tokens.cjs
-- card
+- button
 - .opencode/skills/impeccable/reference/critique.md
 - Simplify the Design
 - Hardening Dimensions
@@ -291,7 +291,7 @@
 - .agents/skills/impeccable/reference/polish.md
 - .agents/skills/impeccable/reference/quieter.md
 - The list
-- TestNativeDesktopStackFreshness
+- TestGeneratedConfigIsValidJs
 - Quick Reference
 - compilerOptions
 - Core Visual Elements
@@ -302,18 +302,18 @@
 - Nielsen's 10 Heuristics
 - .opencode/skills/impeccable/reference/polish.md
 - .opencode/skills/impeccable/reference/quieter.md
-- TestNativeDesktopStackFreshness
+- Functional requirements — status by module
 - .agents/skills/brand/scripts/sync-brand-to-tokens.cjs
 - Brand
 - Slide Strategies
 - Component Tokens
 - .agents/skills/design-system/scripts/generate-tokens.cjs
-- Responsive Design
+- .agents/skills/ui-ux-pro-max/scripts/search.py
 - Init flow
 - Slide Strategies
 - TestShadcnInstaller
-- TestMetricMath
-- Functional requirements — status by module
+- CPSU Market — Stage 5 Web Push Release Safety
+- TestGeneratedConfigIsValidJs
 - Non-functional requirements — status
 - CPSU Marketplace — access-control remediation and admin operations
 - WP3 Transaction Management Implementation Plan
@@ -322,49 +322,49 @@
 - Slide Strategies
 - Component Tokens
 - .opencode/skills/design-system/scripts/generate-tokens.cjs
-- button
+- pages-account.tsx
 - duration
 - Generate Combined Critique Report
 - Init flow
 - syncEditBadgeHitProxies
 - Slide Strategies
 - TestShadcnInstaller
-- TestStyleTaxonomy
+- Responsive Design
 - BM25
 - BM25
-- BM25
+- .agents/skills/design-system/scripts/slide_search_core.py
 - Design Engineering
 - Common Cognitive Load Violations
 - iOS platform
 - Shape
-- TestGeneratedConfigIsValidJs
+- BM25
 - TestTailwindConfigGenerator
 - MVP scope, gap analysis, and conflicts requiring approval
 - 6.1 Student Application Navigation
 - BM25
-- BM25
+- .opencode/skills/design-system/scripts/slide_search_core.py
 - Common Cognitive Load Violations
 - iOS platform
-- TestGeneratedConfigIsValidJs
+- input
 - TestTailwindConfigGenerator
 - CPSU Student Marketplace & Services
 - Component Building Principles
 - Android platform
 - Persona-Based Design Testing
-- .agents/skills/impeccable/reference/doctor.md
+- BM25
 - ui-ux-pro-max
-- stage1.test.ts
+- .agents/skills/design-system/scripts/search-slides.py
 - Impeccable — Interaction Reliability Hardening
 - Mobile UI/UX audit and refinement — CPSU Student Marketplace
 - PWA Mobile Finalization — CPSU Student Marketplace
 - System overview
 - WP2 Listing Management — Development implementation and verification
 - PART XI. DEVELOPMENT WORKFLOW FOR AI AGENTS
-- input
+- push-settings.tsx
 - Android platform
-- .opencode/skills/impeccable/reference/colorize.md
+- pages-profile.tsx
 - Persona-Based Design Testing
-- Extract Flow
+- .opencode/skills/impeccable/SKILL.md
 - Shape
 - Implementation status
 - Slides Reference
@@ -375,14 +375,14 @@
 - Impeccable Manual Edit Applier
 - .agents/skills/impeccable/scripts/live-browser-ignores.js
 - HTML Slide Template
-- TestEndToEndCoherence
-- TestThresholdGate
+- .agents/skills/ui-ux-pro-max/scripts/reasoning_contract.py
+- verify-wp3-retained-restore.ts
 - Query Contract
 - CPSU Marketplace — image upload safety and content review
 - CPSU Student Marketplace — Device and Accessibility Acceptance
 - CPSU Market — PWA Push Stage 1 Local Database Activation
 - Stage 1 database integrity — migration approval dossier
-- Stage 1 — Integration test foundation implementation report
+- .opencode/skills/design-system/scripts/search-slides.py
 - Unified Responsive Web / PWA Implementation Report
 - Slides Reference
 - HTML Slide Template
@@ -393,83 +393,83 @@
 - Impeccable Manual Edit Applier
 - .opencode/skills/impeccable/scripts/live-browser-ignores.js
 - HTML Slide Template
-- TestEndToEndCoherence
-- TestThresholdGate
+- .opencode/skills/impeccable/reference/doctor.md
+- api
 - The Animation Decision Framework
 - clip-path for Animation
 - Performance Rules
 - Gesture and Drag Interactions
 - Visualize: Direction Comps & Asset Production
 - Slides
-- TestTokenizer
-- TestPaletteSelection
+- .opencode/skills/ui-ux-pro-max/scripts/reasoning_contract.py
+- syncEditBadgeHitProxies
 - Pre-Delivery Checklist
 - Prerequisites
 - Phase 4 — Regression Testing and Final UI/UX QA
 - Stage 1 — Development database backup, restore, and migration rehearsal
 - expo-mobile/tsconfig.json
 - MODULE 09 — ADMINISTRATION AND MODERATION
-- Diagnostic Scan
-- Diagnostic Scan
-- .opencode/skills/impeccable/reference/bolder.md
+- .agents/skills/design/scripts/logo/search.py
+- WP3 — Transaction Management: Local Test-Only Implementation
+- .opencode/skills/ui-ux-pro-max/scripts/tests/test_text_layout_resilience.py
 - Visualize: Direction Comps & Asset Production
 - Slides
-- TestTokenizer
+- TestEndToEndCoherence
 - CSS Transform Mastery
 - The Sonner Principles (Building Loved Components)
 - Spring Animations
 - interface
 - Impeccable Documenter
 - Region map
-- TestBm25CoreBehavior
+- Stage 3 — CPSU Market PWA Web Push Device Acceptance
 - Common Rules for Professional UI
 - Example Workflow
 - theme.ts
-- scripts
+- BM25
 - 3.1 User Roles
 - PART V. STRICT MVP DEFINITION — VERSION 1.0
 - MODULE 02 — MARKETPLACE LISTINGS
 - $type
 - radius
-- lg
-- sm
-- Adaptation Strategies
+- CPSU Market — Stage 2 Local VAPID and HTTPS PWA QA
+- Stage 4 — Push HTTPS staging deployment preparation
+- .opencode/skills/design/scripts/logo/search.py
 - Impeccable Documenter
 - Region map
-- TestBm25CoreBehavior
+- WP3 Development Database Readiness — Implementation and Approval Plan
 - padding-y
-- xl
+- TestThresholdGate
 - Core Philosophy
 - Debugging Animations
 - Heuristics Scoring Guide
-- TestFixtureValidation
+- api
 - Tips for Better Results
 - Stage 1 database integrity — isolated candidate verification
 - PART X. TESTING AND QUALITY ASSURANCE
 - PART VII. DATA ARCHITECTURE
 - PART VIII. UI/UX DEVELOPMENT STANDARDS
 - MODULE 01 — AUTHENTICATION AND STUDENT VERIFICATION
-- padding-y
-- xl
-- none
+- CPSU Market — staging-only deployment templates
+- Responsive Design
+- TestBm25CoreBehavior
 - Heuristics Scoring Guide
-- Persuade and Experience
-- Read
-- Command guidance
+- scripts
+- .agents/skills/impeccable/reference/doctor.md
+- input
 - TestFixtureValidation
-- run-local-https-push-api.ts
+- Stage 1 — Integration test foundation implementation report
 - sw.js
 - MODULE 05 — FAVORITES
-- 16
-- 1
-- 3
-- 8
-- destructive
-- destructive-foreground
-- muted
-- primary-foreground
-- ring
-- secondary-foreground
+- User roles and permissions
+- lg
+- padding-y
+- xl
+- sm
+- $type
+- radius
+- lg
+- sm
+- xl
 - .agents/skills/design/references/slides-create.md
 - .agents/skills/slides/references/create.md
 - campus-policy-rules.md
@@ -480,41 +480,71 @@
 - .opencode/skills/design/references/slides-create.md
 - .opencode/skills/slides/references/create.md
 - KNOWN_ISSUES.md
+- destructive
+- destructive-foreground
+- push-staging-release-preflight.mjs
+- muted
+- primary-foreground
+- ring
+- secondary-foreground
+- none
+- none
+- 16
+- 1
+- 3
+- 8
+- 16
+- 1
+- 3
+- 8
+- TestTokenizer
+- destructive
+- destructive-foreground
+- muted
+- primary-foreground
+- ring
+- secondary-foreground
+- .agents/skills/design-system/scripts/fetch-background.py
+- card
+- CPSU Market — Stage 6 HTTPS Staging Release Preflight
+- WP3 Gate A — Verified retained backup and WP3-only isolated restore rehearsal
+- Managed guidelines and announcements
 
 ## God Nodes (most connected - your core abstractions)
-1. `connectSSE()` - 34 edges
+1. `TestTailwindConfigGenerator` - 34 edges
 2. `TestTailwindConfigGenerator` - 34 edges
-3. `connectSSE()` - 34 edges
-4. `TestTailwindConfigGenerator` - 34 edges
-5. `setLiveState()` - 33 edges
-6. `showToast()` - 33 edges
-7. `resumeSession()` - 33 edges
-8. `setLiveState()` - 33 edges
-9. `showToast()` - 33 edges
+3. `api()` - 34 edges
+4. `connectSSE()` - 34 edges
+5. `connectSSE()` - 34 edges
+6. `setLiveState()` - 33 edges
+7. `showToast()` - 33 edges
+8. `showToast()` - 33 edges
+9. `resumeSession()` - 33 edges
 10. `resumeSession()` - 33 edges
 
 ## Surprising Connections (you probably didn't know these)
+- `Implemented files` --references--> `deliverPush()`  [INFERRED]
+  docs/PWA_PUSH_STAGE5_RELEASE_SAFETY_2026-11-16.md → apps/api/src/push.ts
+- `MODULE 05 — Favorites ("Saved")` --references--> `requireAuth()`  [INFERRED]
+  docs/FUNCTIONAL_REQUIREMENTS.md → apps/api/src/auth.ts
+- `8. Stage 3 local implementation and verification (16 November 2026)` --references--> `previewLocalNotification()`  [INFERRED]
+  docs/PWA_PUSH_STAGE3_DEVICE_ACCEPTANCE_2026-11-16.md → apps/web/src/push-client.ts
+- `2026-11-11 — UI/UX update: navigation, Profile, notification centre` --references--> `timeAgo()`  [INFERRED]
+  docs/CHANGELOG.md → apps/web/src/api.ts
 - `Implemented` --references--> `createApp()`  [INFERRED]
   docs/STAGE1_TESTING_REPORT.md → apps/api/src/app.ts
-- `2.1 API integration (Supertest against `createApp()`)` --references--> `createApp()`  [INFERRED]
-  docs/TESTING_STRATEGY.md → apps/api/src/app.ts
-- `8. Notifications` --references--> `notify()`  [INFERRED]
-  docs/BUSINESS_RULES.md → apps/api/src/audit.ts
-- `2. Role assignment` --references--> `authenticate()`  [INFERRED]
-  docs/USER_ROLES_PERMISSIONS.md → apps/api/src/auth.ts
-- `4. Public discovery` --references--> `publicListing()`  [INFERRED]
-  docs/API_DOCUMENTATION.md → apps/api/src/routes/public.ts
 
 ## Import Cycles
 - 2-file cycle: `apps/web/src/main.tsx -> apps/web/src/push-settings.tsx -> apps/web/src/main.tsx`
 - 2-file cycle: `apps/web/src/main.tsx -> apps/web/src/pages-account.tsx -> apps/web/src/main.tsx`
-- 2-file cycle: `apps/web/src/main.tsx -> apps/web/src/pages-admin.tsx -> apps/web/src/main.tsx`
 - 2-file cycle: `apps/web/src/main.tsx -> apps/web/src/pages-profile.tsx -> apps/web/src/main.tsx`
+- 2-file cycle: `apps/web/src/main.tsx -> apps/web/src/pages-admin.tsx -> apps/web/src/main.tsx`
 - 2-file cycle: `apps/web/src/main.tsx -> apps/web/src/pages-public.tsx -> apps/web/src/main.tsx`
+- 2-file cycle: `apps/web/src/main.tsx -> apps/web/src/pages-transactions.tsx -> apps/web/src/main.tsx`
 - 3-file cycle: `apps/web/src/main.tsx -> apps/web/src/pages-profile.tsx -> apps/web/src/push-settings.tsx -> apps/web/src/main.tsx`
 - 3-file cycle: `apps/web/src/main.tsx -> apps/web/src/pages-account.tsx -> apps/web/src/pages-public.tsx -> apps/web/src/main.tsx`
 
-## Communities (557 total, 145 thin omitted)
+## Communities (586 total, 138 thin omitted)
 
 ### Community 0 - ".opencode/skills/impeccable/scripts/live-browser.js"
 Cohesion: 0.03
@@ -522,31 +552,31 @@ Nodes (142): absolutizeUrls(), applyGlobalBarLabelState(), applyLiveBarPreferenc
 
 ### Community 1 - ".agents/skills/impeccable/scripts/live-browser.js"
 Cohesion: 0.03
-Nodes (141): absolutizeUrls(), addManualContextText(), applyGlobalBarLabelState(), applyLiveBarPreference(), applyOriginalAttrsToSvelteAnchor(), applyParamDefaults(), applyParamValue(), applyPlaceholderSizingStyles() (+133 more)
+Nodes (142): absolutizeUrls(), applyGlobalBarLabelState(), applyLiveBarPreference(), applyOriginalAttrsToSvelteAnchor(), applyPlaceholderSizingStyles(), averageRgb01(), bufferToBase64(), buildCollapsible() (+134 more)
 
-### Community 2 - "re"
-Cohesion: 0.03
-Nodes (80): detect_domain(), get_cip_brief(), _load_csv(), search(), search_all(), _search_csv(), detect_domain(), _load_csv() (+72 more)
+### Community 2 - ".opencode/skills/ui-ux-pro-max/scripts/validate_data.py"
+Cohesion: 0.09
+Nodes (38): _catalog_date(), _check_app_interface_contract(), _check_catalog_contract(), _check_catalog_summary(), _check_chart_contract(), _check_color_contract(), _check_core_data_contract(), _check_file() (+30 more)
 
-### Community 3 - "pathlib"
-Cohesion: 0.03
-Nodes (18): test_sync_parses_bundled_starter_template(), main(), _run(), test_flags_hardcoded_hex_sharing_line_with_token(), test_token_only_line_reports_no_violation(), _write_persisted_file(), TestDiagnosticsContracts, TestPersistence (+10 more)
+### Community 3 - "json"
+Cohesion: 0.04
+Nodes (19): test_sync_parses_bundled_starter_template(), format_brief(), format_results(), main(), main(), _run(), test_flags_hardcoded_hex_sharing_line_with_token(), test_token_only_line_reports_no_violation() (+11 more)
 
-### Community 4 - "main.tsx"
-Cohesion: 0.05
-Nodes (93): dependencies, react@^18.3.1, react-dom@^18.3.1, react-router-dom@^6.28.0, devDependencies, @types/react@^18.3.12, @types/react-dom@^18.3.1, typescript@^5.7.2 (+85 more)
+### Community 4 - "pages-transactions.tsx"
+Cohesion: 0.10
+Nodes (26): dependencies, react@^18.3.1, react-dom@^18.3.1, react-router-dom@^6.28.0, devDependencies, @types/react@^18.3.12, @types/react-dom@^18.3.1, typescript@^5.7.2 (+18 more)
 
 ### Community 5 - "connectSSE"
-Cohesion: 0.05
-Nodes (91): abortSvelteComponentInjection(), applyPlaceholderDimensions(), applySavedSessionMeta(), buildParamsPanel(), checkpointPayload(), clampVariantIndex(), clearHandled(), clearSession() (+83 more)
+Cohesion: 0.06
+Nodes (87): abortSvelteComponentInjection(), applyParamDefaults(), applyParamValue(), applyPlaceholderDimensions(), applySavedParamValues(), applySavedSessionMeta(), checkpointPayload(), clampVariantIndex() (+79 more)
 
 ### Community 6 - "connectSSE"
 Cohesion: 0.06
 Nodes (87): abortSvelteComponentInjection(), applyParamDefaults(), applyParamValue(), applyPlaceholderDimensions(), applySavedParamValues(), applySavedSessionMeta(), checkpointPayload(), clampVariantIndex() (+79 more)
 
 ### Community 7 - "setLiveState"
-Cohesion: 0.08
-Nodes (69): applyEditing(), beginNewLiveConfiguration(), buildInsertPlaceholderSnapshotFromDom(), buildLocatorForLeaf(), buildPickedAnchorSnapshot(), cancelEditing(), cancelEditingToPicking(), cancelInsertConfigure() (+61 more)
+Cohesion: 0.10
+Nodes (60): beginNewLiveConfiguration(), buildInsertPlaceholderSnapshotFromDom(), buildPickedAnchorSnapshot(), cancelEditing(), cancelEditingToPicking(), cancelInsertConfigure(), captureAndEmit(), cleanup() (+52 more)
 
 ### Community 8 - ".agents/skills/ui-ux-pro-max/scripts/core.py"
 Cohesion: 0.06
@@ -558,27 +588,23 @@ Nodes (31): BM25, _contains_phrase(), detect_domain(), _domain_keywords(), _exac
 
 ### Community 10 - "os"
 Cohesion: 0.06
-Nodes (26): apply_color(), apply_viewbox_size(), extract_svgs(), generate_batch(), generate_icon(), generate_sizes(), load_env(), main() (+18 more)
+Nodes (28): apply_color(), apply_viewbox_size(), extract_svgs(), generate_batch(), generate_icon(), generate_sizes(), load_env(), main() (+20 more)
 
-### Community 11 - "ref_node_path"
+### Community 11 - "unittest"
 Cohesion: 0.04
-Nodes (42): sharp@0.35.5, dir, dump, fd, now, output, sha256, sql (+34 more)
+Nodes (8): _rows(), TestNativeDesktopStackFreshness, TestFixtureValidation, TestMetricMath, TestThresholdGate, _rows(), TestNativeDesktopStackFreshness, TestMetricMath
 
 ### Community 12 - "setLiveState"
 Cohesion: 0.10
 Nodes (60): beginNewLiveConfiguration(), buildInsertPlaceholderSnapshotFromDom(), buildPickedAnchorSnapshot(), cancelEditing(), cancelEditingToPicking(), cancelInsertConfigure(), captureAndEmit(), cleanup() (+52 more)
-
-### Community 13 - "argparse"
-Cohesion: 0.05
-Nodes (14): format_output(), generate_design_brief(), format_context(), format_result(), main(), main(), ShadcnInstaller, main() (+6 more)
 
 ### Community 14 - ".agents/skills/impeccable/scripts/modern-screenshot.umd.js"
 Cohesion: 0.09
 Nodes (53): ae(), be(), bt(), Ce(), Ct(), de(), dt(), _e() (+45 more)
 
 ### Community 15 - "src/auth.ts"
-Cohesion: 0.09
-Nodes (39): createApp(), audit(), notify(), ACCESS_MS, authenticate(), Express, Request, hashPassword() (+31 more)
+Cohesion: 0.05
+Nodes (72): createApp(), audit(), notify(), ACCESS_MS, authenticate(), Express, Request, hashPassword() (+64 more)
 
 ### Community 16 - ".opencode/skills/impeccable/scripts/modern-screenshot.umd.js"
 Cohesion: 0.09
@@ -590,7 +616,7 @@ Nodes (56): actionLabel(), applyConfigureBarChrome(), bindConfigureCountPillTool
 
 ### Community 18 - "el"
 Cohesion: 0.07
-Nodes (55): actionLabel(), applyConfigureBarChrome(), bindConfigureCountPillTooltip(), bindConfigureInlineControlHover(), bindConfigureModifierPillHover(), buildConfigureActionControl(), buildConfigureCountControl(), buildConfigureRow() (+47 more)
+Nodes (56): actionLabel(), applyConfigureBarChrome(), bindConfigureCountPillTooltip(), bindConfigureInlineControlHover(), bindConfigureModifierPillHover(), buildConfigureActionControl(), buildConfigureCountControl(), buildConfigureRow() (+48 more)
 
 ### Community 19 - "gray"
 Cohesion: 0.05
@@ -600,13 +626,13 @@ Nodes (53): $type, $value, $type, $value, $type, $value, $type, $value (+45 more
 Cohesion: 0.05
 Nodes (53): $type, $value, $type, $value, $type, $value, $type, $value (+45 more)
 
-### Community 21 - "json"
-Cohesion: 0.06
-Nodes (23): format_brief(), format_results(), main(), generate_css_for_background(), get_background_image(), get_curated_images(), get_overlay_css(), get_pexels_search_url() (+15 more)
+### Community 21 - ".opencode/skills/design-system/scripts/fetch-background.py"
+Cohesion: 0.16
+Nodes (9): generate_css_for_background(), get_background_image(), get_curated_images(), get_overlay_css(), get_pexels_search_url(), load_backgrounds_config(), load_brand_colors(), main() (+1 more)
 
 ### Community 22 - "api/package.json"
 Cohesion: 0.05
-Nodes (48): dependencies, argon2@^0.41.1, cookie-parser@^1.4.7, cors@^2.8.5, express@^5.0.1, express-rate-limit@^7.5.0, helmet@^8.0.0, jsonwebtoken@^9.0.2 (+40 more)
+Nodes (49): dependencies, argon2@^0.41.1, cookie-parser@^1.4.7, cors@^2.8.5, express@^5.0.1, express-rate-limit@^7.5.0, helmet@^8.0.0, jsonwebtoken@^9.0.2 (+41 more)
 
 ### Community 23 - "initPageChat"
 Cohesion: 0.08
@@ -617,28 +643,28 @@ Cohesion: 0.06
 Nodes (50): addManualContextText(), applyEditing(), buildLocatorForLeaf(), canRestoreManualEditElement(), collectEditableTextRows(), visit(), collectManualContextPieces(), walk() (+42 more)
 
 ### Community 25 - "initPageChat"
-Cohesion: 0.09
-Nodes (48): armPageChatForTyping(), attachSteerFocusDebug(), attachSteerFocusGuard(), buildSteerProcessingDots(), buildSteerQueueHint(), clearSteerAwaitTimer(), clearSteerFocusRecoverTimer(), collapsePageChat() (+40 more)
+Cohesion: 0.08
+Nodes (51): armPageChatForTyping(), attachSteerFocusDebug(), attachSteerFocusGuard(), buildSteerProcessingDots(), buildSteerQueueHint(), clearSteerAwaitTimer(), clearSteerFocusRecoverTimer(), collapsePageChat() (+43 more)
 
 ### Community 26 - ".opencode/skills/ui-ux-pro-max/scripts/design_system.py"
 Cohesion: 0.06
 Nodes (21): ansi_ljust(), _contrast_ratio(), _derive_dark_palette(), _detect_page_type(), format_ascii_box(), format_markdown(), format_master_md(), format_page_override_md() (+13 more)
 
-### Community 27 - ".agents/skills/ui-ux-pro-max/scripts/validate_data.py"
+### Community 27 - "setup-local-vapid.mjs"
 Cohesion: 0.09
-Nodes (38): _catalog_date(), _check_app_interface_contract(), _check_catalog_contract(), _check_catalog_summary(), _check_chart_contract(), _check_color_contract(), _check_core_data_contract(), _check_file() (+30 more)
+Nodes (19): web-push@^4.0.0, keys, database, envFile, here, ignored, keys, original (+11 more)
 
 ### Community 28 - ".opencode/skills/impeccable/SKILL.md"
 Cohesion: 0.06
-Nodes (32): Assess Adaptation Challenge, Implement & Verify, Recommended Actions, Recommended Actions, Craft (deprecated alias), Monorepo notes, Opting out of the boot check, Step 1: Run the pass (+24 more)
+Nodes (30): 1. Accessibility (VoiceOver / TalkBack), 2. Performance, 3. Appearance & Theming, 4. Platform Conformance (CRITICAL), 5. Adaptivity, Diagnostic Scan, Recommended Actions, Craft (deprecated alias) (+22 more)
 
 ### Community 29 - ".agents/skills/ui-ux-pro-max/scripts/design_system.py"
-Cohesion: 0.06
-Nodes (20): ansi_ljust(), _contrast_ratio(), _derive_dark_palette(), _detect_page_type(), format_ascii_box(), format_markdown(), format_master_md(), format_page_override_md() (+12 more)
+Cohesion: 0.07
+Nodes (16): ansi_ljust(), _detect_page_type(), format_ascii_box(), format_markdown(), format_master_md(), format_page_override_md(), generate_design_system(), _generate_intelligent_overrides() (+8 more)
 
 ### Community 30 - "initGlobalBar"
-Cohesion: 0.08
-Nodes (42): agentHasWorkInFlight(), agentStatusText(), barPaletteForTheme(), brandMarkSvg(), buildDesignHeader(), cursorForInsertAxis(), designPanelCss(), detectPageTheme() (+34 more)
+Cohesion: 0.10
+Nodes (30): agentHasWorkInFlight(), agentStatusText(), barPaletteForTheme(), brandMarkSvg(), buildParamsPanel(), cursorForInsertAxis(), designPanelCss(), detectPageTheme() (+22 more)
 
 ### Community 31 - "Tailwind CSS Utility Reference"
 Cohesion: 0.05
@@ -648,7 +674,7 @@ Nodes (43): Arbitrary Values, Aspect Ratio, Background Colors, Border Color, Bor
 Cohesion: 0.05
 Nodes (43): Arbitrary Values, Aspect Ratio, Background Colors, Border Color, Border Radius, Border Style, Border Width, Borders (+35 more)
 
-### Community 33 - ".agents/skills/impeccable/reference/new-work.md"
+### Community 33 - ".agents/skills/impeccable/SKILL.md"
 Cohesion: 0.06
 Nodes (30): 1. Accessibility (VoiceOver / TalkBack), 2. Performance, 3. Appearance & Theming, 4. Platform Conformance (CRITICAL), 5. Adaptivity, Diagnostic Scan, Recommended Actions, Craft (deprecated alias) (+22 more)
 
@@ -656,17 +682,17 @@ Nodes (30): 1. Accessibility (VoiceOver / TalkBack), 2. Performance, 3. Appearan
 Cohesion: 0.05
 Nodes (37): 1. Color Palette, 2. Typography, 3. Logo Usage, 4. Voice & Tone, 5. Imagery Guidelines, 6. Design Components, Accessibility, AI Image Generation (+29 more)
 
-### Community 37 - "admin.ts"
-Cohesion: 0.08
-Nodes (28): requireAuth(), requireReviewer(), HttpError, canReview(), reviewCampusIds(), requirePhotoReview(), r, reportScope() (+20 more)
+### Community 37 - "DesignSystemGenerator"
+Cohesion: 0.12
+Nodes (3): DesignSystemGenerator, _filter_anti_patterns_for_mode(), _resolve_dial()
 
 ### Community 38 - "Brand Guidelines v1.0"
 Cohesion: 0.05
 Nodes (37): 1. Color Palette, 2. Typography, 3. Logo Usage, 4. Voice & Tone, 5. Imagery Guidelines, 6. Design Components, Accessibility, AI Image Generation (+29 more)
 
 ### Community 39 - "color"
-Cohesion: 0.05
-Nodes (37): $type, $value, background, destructive, destructive-foreground, foreground, muted, muted-foreground (+29 more)
+Cohesion: 0.11
+Nodes (19): $type, $value, background, foreground, muted-foreground, primary, primary-hover, secondary (+11 more)
 
 ### Community 40 - ".agents/skills/impeccable/reference/live.md"
 Cohesion: 0.06
@@ -701,8 +727,8 @@ Cohesion: 0.06
 Nodes (33): Bottom sheet you can drag to dismiss, Collapsing header on scroll, Expo Animation Recipes, Firing something once at a threshold, Keyboard-synced UI, List entrances, Press feedback, Screen transitions (Expo Router) (+25 more)
 
 ### Community 48 - "showToast"
-Cohesion: 0.09
-Nodes (34): abandonForeignSession(), abandonSupersededGo(), cleanup(), clearMountErrorCard(), clearScrollY(), discardedWrappers(), discardOrphanedSession(), discardStateStyleId() (+26 more)
+Cohesion: 0.15
+Nodes (18): abandonForeignSession(), abandonSupersededGo(), discardOrphanedSession(), injectVariantsFromSource(), isCompiledTemplateSourceFile(), isSvelteComponentManifestPath(), markSessionHandled(), maybeCompleteSteer() (+10 more)
 
 ### Community 49 - "expo-mobile/package.json"
 Cohesion: 0.08
@@ -717,8 +743,8 @@ Cohesion: 0.06
 Nodes (32): Carry: steer a shared layout animation through its parent, Choreography Recipes, Direction-aware steps, Imperative orchestration (`useAnimate`), Overlap: CSS stagger with an index variable, Overlap: Motion variants with a non-uniform stagger, Sequence: morph between two rich states with a crossfade, Sequence: one draw after another (+24 more)
 
 ### Community 52 - "spacing"
-Cohesion: 0.06
-Nodes (34): $type, $value, $type, $value, $type, $value, $type, $value (+26 more)
+Cohesion: 0.09
+Nodes (22): $type, $value, $type, $value, $type, $value, $type, $value (+14 more)
 
 ### Community 53 - "read_rows"
 Cohesion: 0.09
@@ -761,8 +787,8 @@ Cohesion: 0.07
 Nodes (29): Session, 1. Tables as built (19), 2. Blueprint entity coverage, 3. Data standards check (blueprint §7.2), 4. Migration policy going forward, Affiliation *(pilot-only; blueprint folds this into `user_campus_affiliations`)*, AuditLog (blueprint `admin_logs`), Campus (+21 more)
 
 ### Community 63 - "App.tsx"
-Cohesion: 0.16
-Nodes (26): api(), ApiError, call(), explain(), keychain, MSG, peso(), refresh() (+18 more)
+Cohesion: 0.17
+Nodes (35): explain(), imageUrl(), peso(), Auth, AuthScreen(), basisNote(), Btn(), CardGrid() (+27 more)
 
 ### Community 64 - "Typography Specifications"
 Cohesion: 0.06
@@ -788,9 +814,9 @@ Nodes (12): get_context(), is_allowed_exception(), is_allowed_rgba(), is_inside_
 Cohesion: 0.07
 Nodes (28): Accordion, Alert, ARIA Labels, Checkbox and Radio, Color Contrast, Command Palette Navigation, Component-Specific Patterns, Dialog/Modal Navigation (+20 more)
 
-### Community 70 - "src/push.ts"
-Cohesion: 0.10
-Nodes (24): categoryForNotice(), deliverPush(), endpointHash(), EventData, HOSTS, permittedPushEndpoint(), PushCategory, PushContent (+16 more)
+### Community 70 - "push-policy.test.ts"
+Cohesion: 0.25
+Nodes (8): evaluatePushPolicy(), isPublicHostname(), PushPolicyEnvironment, validPublicHttpsOrigin(), validVapidContact(), validVapidPair(), fixture, keys
 
 ### Community 71 - "Logo Usage Rules"
 Cohesion: 0.07
@@ -805,24 +831,24 @@ Cohesion: 0.12
 Nodes (12): get_context(), is_allowed_exception(), is_allowed_rgba(), is_inside_block(), load_css_variables(), main(), print_result(), print_summary() (+4 more)
 
 ### Community 74 - ".opencode/skills/impeccable/reference/live.md"
-Cohesion: 0.07
-Nodes (26): Step 1: Parse the request, Step 2: Reuse the page, then start, Step 3: Generate, Step 4: Accept and close, Cleanup, Exit, First-time setup, Handle `accept` (+18 more)
+Cohesion: 0.06
+Nodes (33): Apply at system scale, Audit before choosing, Choose a strategy, Contrast and perception, Live-mode signature params, Verify, Visitor mode, Step 1: Parse the request (+25 more)
 
 ### Community 75 - "shadcn/ui Accessibility Patterns"
 Cohesion: 0.07
 Nodes (28): Accordion, Alert, ARIA Labels, Checkbox and Radio, Color Contrast, Command Palette Navigation, Component-Specific Patterns, Dialog/Modal Navigation (+20 more)
 
 ### Community 76 - "updatePendingCounter"
-Cohesion: 0.17
-Nodes (28): clearStoredManualApplyState(), fetchPendingCount(), handleManualEditActivity(), hidePendingApplyDock(), manualApplyLoadingText(), manualApplyStateKey(), manualEditEventForCurrentPage(), numberOrNull() (+20 more)
+Cohesion: 0.12
+Nodes (36): clearStoredManualApplyState(), fetchPendingCount(), handleManualEditActivity(), hidePendingApplyDock(), initGlobalBar(), loadDetectScript(), manualApplyLoadingText(), manualApplyStateKey() (+28 more)
 
 ### Community 77 - "Animation Standards Reference"
 Cohesion: 0.07
 Nodes (26): Aggressive Escalation Triggers, Guidelines, Initial Response, Operating Posture, Part 1 — Findings table (REQUIRED), Part 2 — Verdict (REQUIRED), Remedial Preference Hierarchy, Required Output Format (+18 more)
 
 ### Community 78 - "@prisma/client"
-Cohesion: 0.07
-Nodes (20): database, db, relations, Row, uri, db, dbName, refs (+12 more)
+Cohesion: 0.08
+Nodes (19): database, db, relations, Row, uri, db, dbName, refs (+11 more)
 
 ### Community 79 - "Asset Approval Checklist"
 Cohesion: 0.08
@@ -842,7 +868,7 @@ Nodes (25): Common Pitfalls, Core Prompt Structure, Detailed Brief, Eco/Sustaina
 
 ### Community 83 - "Responsive Design"
 Cohesion: 0.08
-Nodes (25): Assess Adaptation Challenge, Breakpoints: Content-Driven, Content Adaptation, Desktop Adaptation (Mobile → Desktop), Detect Input Method, Not Just Screen Size, Email Adaptation (Web → Email), Implement Adaptations, Layout Adaptation Patterns (+17 more)
+Nodes (22): Assess Adaptation Challenge, Content Adaptation, Desktop Adaptation (Mobile → Desktop), Email Adaptation (Web → Email), Implement Adaptations, Layout Adaptation Techniques, Mobile Adaptation (Desktop → Mobile), Adaptation Strategies (+14 more)
 
 ### Community 84 - "Color Palette Management"
 Cohesion: 0.08
@@ -865,8 +891,8 @@ Cohesion: 0.08
 Nodes (24): Accessibility Patterns, Alternative: Tailwind-Only Setup, Best Practices, Common Patterns, Component Layer: shadcn/ui, Component Library Guide, Component + Styling Setup, Core Stack (+16 more)
 
 ### Community 89 - "DesignSystemGenerator"
-Cohesion: 0.12
-Nodes (3): DesignSystemGenerator, _filter_anti_patterns_for_mode(), _resolve_dial()
+Cohesion: 0.08
+Nodes (8): _contrast_ratio(), _derive_dark_palette(), DesignSystemGenerator, _filter_anti_patterns_for_mode(), _palette_is_dark(), _relative_luminance(), _resolve_dial(), _select_palette_for_mode()
 
 ### Community 90 - "Color Palette Management"
 Cohesion: 0.08
@@ -884,9 +910,9 @@ Nodes (24): Accessibility, Accessibility Requirements, ARIA States, Color Contra
 Cohesion: 0.08
 Nodes (24): Accessibility Patterns, Alternative: Tailwind-Only Setup, Best Practices, Common Patterns, Component Layer: shadcn/ui, Component Library Guide, Component + Styling Setup, Core Stack (+16 more)
 
-### Community 94 - "DesignSystemGenerator"
-Cohesion: 0.12
-Nodes (3): DesignSystemGenerator, _filter_anti_patterns_for_mode(), _resolve_dial()
+### Community 94 - ".agents/skills/design/scripts/cip/render-html.py"
+Cohesion: 0.13
+Nodes (8): generate_html(), get_deliverable_info(), get_image_base64(), main(), generate_html(), get_deliverable_info(), get_image_base64(), main()
 
 ### Community 95 - "Workflow"
 Cohesion: 0.08
@@ -901,16 +927,16 @@ Cohesion: 0.08
 Nodes (23): Component translation rules, Narrative mapping, Pitfalls, Scan mode (approach C: auto-extract, then confirm descriptive language), Schema, Seed mode, Step 1: Find the design assets, Step 1: Route through new-work's workshop (+15 more)
 
 ### Community 98 - "mountSvelteComponentVariant"
-Cohesion: 0.13
-Nodes (24): acceptedDomAlreadyClean(), clearHandledWrapperReloadStamp(), commitAcceptedSvelteComponentToDom(), commitAcceptedVariantToDom(), componentModuleCandidates(), deferredRecoverySuperseded(), describeMountFailure(), detectDevServerBase() (+16 more)
+Cohesion: 0.23
+Nodes (14): acceptedDomAlreadyClean(), clearHandledWrapperReloadStamp(), commitAcceptedVariantToDom(), deferredRecoverySuperseded(), ensureAcceptedDomClean(), findAcceptedRuntimeWrappers(), handledWrapperReloadKey(), reloadAfterMissingAcceptedDom() (+6 more)
 
 ### Community 99 - "createLiveBrowserDomHelpers"
-Cohesion: 0.13
-Nodes (19): createLiveBrowserDomHelpers(), activeElementDeep(), cloneWithoutChrome(), copyTextViaSelection(), cssId(), liveUiRoot(), makeFrozenAnchor(), own() (+11 more)
+Cohesion: 0.16
+Nodes (15): createLiveBrowserDomHelpers(), activeElementDeep(), cloneWithoutChrome(), copyTextViaSelection(), cssId(), liveUiRoot(), makeFrozenAnchor(), raiseHitModal() (+7 more)
 
 ### Community 100 - ".opencode/skills/ui-ux-pro-max/scripts/tests/test_design_system_mode.py"
-Cohesion: 0.08
-Nodes (4): TestAntiPatternGating, TestLuminance, TestModeResolution, TestPaletteSelection
+Cohesion: 0.06
+Nodes (5): TestAntiPatternGating, TestEndToEndCoherence, TestLuminance, TestModeResolution, TestPaletteSelection
 
 ### Community 101 - "Workflow"
 Cohesion: 0.08
@@ -940,17 +966,17 @@ Nodes (22): @apply Directive, Best Practices, Color Customization, Complete Tail
 Cohesion: 0.09
 Nodes (22): 10. ARC and object lifetime, 11. Testing — Swift Testing by default, 12. Macros, 13. Logging and debugging, 14. Unsafe code and interop, 15. Modern syntax you should be using, 16. Migrating an existing codebase to Swift 6, 1. Model data with value types (+14 more)
 
-### Community 108 - "setup-local-vapid.mjs"
-Cohesion: 0.09
-Nodes (19): web-push@^4.0.0, keys, database, envFile, here, ignored, keys, original (+11 more)
+### Community 108 - "ref_node_path"
+Cohesion: 0.04
+Nodes (51): dir, dump, fd, now, output, sha256, sql, stamp (+43 more)
 
 ### Community 109 - "CLAUDE CODE — PROJECT GOVERNANCE INSTRUCTIONS"
 Cohesion: 0.09
 Nodes (22): 10. REQUIREMENT CONFLICT HANDLING, 11. DEFINITION OF DONE, 1. MANDATORY DOCUMENTATION, 2. DOCUMENT AUTHORITY, 3. MVP PROTECTION, 4. DEVELOPMENT PROCEDURE, 5. ARCHITECTURE RULES, 6. DATABASE RULES (+14 more)
 
-### Community 110 - ".opencode/skills/design/scripts/cip/core.py"
+### Community 110 - ".agents/skills/ui-ux-pro-max/scripts/validate_data.py"
 Cohesion: 0.12
-Nodes (7): BM25, detect_domain(), get_cip_brief(), _load_csv(), search(), search_all(), _search_csv()
+Nodes (26): _catalog_date(), _check_app_interface_contract(), _check_catalog_contract(), _check_catalog_summary(), _check_chart_contract(), _check_color_contract(), _check_core_data_contract(), _check_font_catalog() (+18 more)
 
 ### Community 111 - "Design System"
 Cohesion: 0.09
@@ -968,21 +994,21 @@ Nodes (22): @apply Directive, Best Practices, Color Customization, Complete Tail
 Cohesion: 0.09
 Nodes (21): 10. Gesture design details (the "feel" checklist), 11. Frame-level smoothness, 12. Materials & depth — translucency conveys hierarchy, 13. Multimodal feedback — motion + sound + haptics, 14. Reduced motion & accessibility, 15. Typography — optical sizing, tracking, leading, 16. Design foundations — the eight principles, 17. Process (+13 more)
 
-### Community 115 - "datetime"
-Cohesion: 0.13
-Nodes (8): generate_html(), get_deliverable_info(), get_image_base64(), main(), generate_html(), get_deliverable_info(), get_image_base64(), main()
+### Community 115 - "src/push.ts"
+Cohesion: 0.10
+Nodes (25): categoryForNotice(), deliverPush(), endpointHash(), EventData, HOSTS, permittedPushEndpoint(), PushCategory, PushContent (+17 more)
 
 ### Community 116 - ".agents/skills/design-system/scripts/generate-slide.py"
-Cohesion: 0.13
+Cohesion: 0.14
 Nodes (11): _e(), generate_chart_slide(), generate_cta_slide(), generate_deck(), generate_metrics_slide(), generate_problem_slide(), generate_solution_slide(), generate_testimonial_slide() (+3 more)
 
-### Community 117 - "input"
-Cohesion: 0.12
-Nodes (22): $type, $value, radius, border, padding, radius, shadow, border (+14 more)
+### Community 117 - "card"
+Cohesion: 0.20
+Nodes (12): $type, $value, bg, bg, padding, shadow, card, bg (+4 more)
 
 ### Community 118 - "radius"
-Cohesion: 0.13
-Nodes (22): $type, $value, sm, $type, $value, $type, $value, $type (+14 more)
+Cohesion: 0.19
+Nodes (14): $type, $value, $type, $value, $type, $value, primitive, radius (+6 more)
 
 ### Community 119 - "The Fixes"
 Cohesion: 0.09
@@ -993,8 +1019,8 @@ Cohesion: 0.09
 Nodes (22): $type, $value, $type, $value, $type, $value, $type, $value (+14 more)
 
 ### Community 121 - "fontSize"
-Cohesion: 0.10
-Nodes (21): $type, $value, $type, $value, $type, $value, $type, $value (+13 more)
+Cohesion: 0.12
+Nodes (16): $type, $value, $type, $value, $type, $value, $type, $value (+8 more)
 
 ### Community 122 - "Operate mode depth (and Read notes)"
 Cohesion: 0.10
@@ -1013,7 +1039,7 @@ Cohesion: 0.10
 Nodes (21): Audit Logs, Discovery Rules, Homepage Sections, Initial Service Categories, MODULE 03 — STUDENT SERVICES, MODULE 04 — SEARCH AND DISCOVERY, MODULE 06 — MESSAGING, MODULE 07 — TRANSACTION MANAGEMENT (+13 more)
 
 ### Community 126 - ".opencode/skills/design-system/scripts/generate-slide.py"
-Cohesion: 0.14
+Cohesion: 0.13
 Nodes (11): _e(), generate_chart_slide(), generate_cta_slide(), generate_deck(), generate_metrics_slide(), generate_problem_slide(), generate_solution_slide(), generate_testimonial_slide() (+3 more)
 
 ### Community 127 - "Operate mode depth (and Read notes)"
@@ -1049,8 +1075,8 @@ Cohesion: 0.15
 Nodes (5): read_rows(), TestAccessibilityGuidance, TestChartsTypographyAndIcons, TestCurrentReactGuidance, TestSemanticColors
 
 ### Community 135 - "Changelog"
-Cohesion: 0.10
-Nodes (19): 2026-11-10 — Pilot implementation (initial), 2026-11-11 — Colour palette: five-colour system, light and dark, 2026-11-11 — Documentation baseline, 2026-11-11 — Explore enhanced (web), 2026-11-11 — Expo web target fixed (mobile display), 2026-11-11 — Stage 1 isolated test foundation, 2026-11-11 — Stage 1 read-only integrity preflight, 2026-11-11 — Storefront UI/UX redesign (web and mobile) (+11 more)
+Cohesion: 0.08
+Nodes (23): 2026-11-10 — Pilot implementation (initial), 2026-11-11 — Colour palette: five-colour system, light and dark, 2026-11-11 — Documentation baseline, 2026-11-11 — Explore enhanced (web), 2026-11-11 — Stage 1 isolated test foundation, 2026-11-11 — Stage 1 read-only integrity preflight, 2026-11-11 — Storefront UI/UX redesign (web and mobile), 2026-11-11 — Typography: Plus Jakarta Sans + Inter (+15 more)
 
 ### Community 136 - "UI/UX guidelines — design system as built"
 Cohesion: 0.10
@@ -1093,12 +1119,12 @@ Cohesion: 0.11
 Nodes (18): 1. Wordmark (Logotype), 2. Lettermark (Monogram), 3. Pictorial Mark (Brand Mark), 4. Abstract Mark, 5. Mascot, 6. Emblem, 7. Combination Mark, Aesthetic Styles (+10 more)
 
 ### Community 147 - "button"
-Cohesion: 0.12
-Nodes (19): $type, $value, bg, fg, font-size, hover-bg, padding-x, bg (+11 more)
+Cohesion: 0.20
+Nodes (10): fg, font-size, hover-bg, button, $type, $value, $type, $value (+2 more)
 
-### Community 148 - "captureElementToBlob"
-Cohesion: 0.14
-Nodes (18): averageRgb01(), captureElementFromRenderedAncestor(), captureElementToBlob(), compileShader(), cssColorToRgb01(), dominantRgb01(), findBackdropAncestor(), findShaderProxyCaptureRoot() (+10 more)
+### Community 148 - "applyEditing"
+Cohesion: 0.06
+Nodes (50): addManualContextText(), applyEditing(), buildLocatorForLeaf(), canRestoreManualEditElement(), collectEditableTextRows(), visit(), collectManualContextPieces(), walk() (+42 more)
 
 ### Community 149 - "Asset Organization Guide"
 Cohesion: 0.11
@@ -1111,10 +1137,6 @@ Nodes (18): Accessibility Considerations, Analogous, Black, Blue, Color Combinat
 ### Community 151 - "Core Logo Types"
 Cohesion: 0.11
 Nodes (18): 1. Wordmark (Logotype), 2. Lettermark (Monogram), 3. Pictorial Mark (Brand Mark), 4. Abstract Mark, 5. Mascot, 6. Emblem, 7. Combination Mark, Aesthetic Styles (+10 more)
-
-### Community 152 - ".opencode/skills/design-system/scripts/fetch-background.py"
-Cohesion: 0.16
-Nodes (9): generate_css_for_background(), get_background_image(), get_curated_images(), get_overlay_css(), get_pexels_search_url(), load_backgrounds_config(), load_brand_colors(), main() (+1 more)
 
 ### Community 153 - "color"
 Cohesion: 0.11
@@ -1145,8 +1167,8 @@ Cohesion: 0.11
 Nodes (17): Accent, Applying Semantic Tokens, Background & Foreground, Border & Ring, Color Semantics, Dark Mode Overrides, Destructive, Interactive States (+9 more)
 
 ### Community 160 - ".agents/skills/ui-ux-pro-max/scripts/tests/test_design_system_mode.py"
-Cohesion: 0.11
-Nodes (3): TestAntiPatternGating, TestLuminance, TestModeResolution
+Cohesion: 0.08
+Nodes (4): TestAntiPatternGating, TestLuminance, TestModeResolution, TestPaletteSelection
 
 ### Community 161 - "3. Logo Usage"
 Cohesion: 0.11
@@ -1169,12 +1191,12 @@ Cohesion: 0.12
 Nodes (16): 1. Frequency — how often will a user see this?, 2. Purpose — why does this animate?, 3. Speed — can it stay inside budget?, 4. Function — does motion help or hinder here?, Finding Animation Opportunities, Hard Rules, Initial Response, Operating Posture (+8 more)
 
 ### Community 166 - "verify-integrity-restore.ts"
-Cohesion: 0.12
-Nodes (13): cliEnv, common, dumpFile, password, q(), restoreURL, Row, scratchDir (+5 more)
+Cohesion: 0.08
+Nodes (18): cliEnv, common, dumpFile, password, q(), restoreURL, Row, scratchDir (+10 more)
 
-### Community 167 - "useTheme"
-Cohesion: 0.21
-Nodes (17): CardGrid(), CatTile(), Chip(), Empty(), Explore(), Hero(), Home(), ListingCard() (+9 more)
+### Community 167 - ".agents/skills/design/scripts/cip/core.py"
+Cohesion: 0.04
+Nodes (24): detect_domain(), get_cip_brief(), _load_csv(), search(), search_all(), _search_csv(), detect_domain(), _load_csv() (+16 more)
 
 ### Community 168 - "CPSU STUDENT MARKETPLACE — AI CODING AGENT RULES"
 Cohesion: 0.12
@@ -1264,6 +1286,10 @@ Nodes (15): beginEditPin(), buildAnnotationsForCapture(), buildPinElement(), can
 Cohesion: 0.13
 Nodes (14): AIDA (Attention-Interest-Desire-Action), Before-After-Bridge, Contrast Patterns, Copywriting Formulas, Core Formulas, Cost of Inaction, FAB (Features-Advantages-Benefits), Formula-to-Slide Mapping (+6 more)
 
+### Community 191 - "validate"
+Cohesion: 0.19
+Nodes (12): _check_file(), _check_provenance(), _check_reasoning_contract(), _check_stack_freshness_contract(), main(), _read_rows(), _valid_catalog_source_key(), _valid_confidence() (+4 more)
+
 ### Community 192 - "CIP Design Reference"
 Cohesion: 0.13
 Nodes (14): CIP Brief (Start Here), CIP Design Reference, Commands, Deliverable Categories, Design Styles, Detailed References, Generate Mockups, HTML Presentation Features (+6 more)
@@ -1285,8 +1311,8 @@ Cohesion: 0.13
 Nodes (14): AIDA (Attention-Interest-Desire-Action), Before-After-Bridge, Contrast Patterns, Copywriting Formulas, Core Formulas, Cost of Inaction, FAB (Features-Advantages-Benefits), Formula-to-Slide Mapping (+6 more)
 
 ### Community 198 - "Development log"
-Cohesion: 0.13
-Nodes (14): 2026-11-10 — Pilot implementation, 2026-11-11 — Agent rules adopted (AGENTS.md), 2026-11-11 — Baseline inspection and documentation foundation, 2026-11-11 — Governance instructions adopted; UI/UX update completed, 2026-11-11 — Stage 1 database integrity preflight (no schema change), 2026-11-11 — Stage 1 isolated integration foundation, 2026-11-11 — Storefront-inspired light theme (UI UX Pro Max), 2026-11-11 — UI UX Pro Max web refinement (+6 more)
+Cohesion: 0.12
+Nodes (15): 2026-11-10 — Pilot implementation, 2026-11-11 — Agent rules adopted (AGENTS.md), 2026-11-11 — Baseline inspection and documentation foundation, 2026-11-11 — Governance instructions adopted; UI/UX update completed, 2026-11-11 — Stage 1 database integrity preflight (no schema change), 2026-11-11 — Stage 1 isolated integration foundation, 2026-11-11 — Storefront-inspired light theme (UI UX Pro Max), 2026-11-11 — UI UX Pro Max web refinement (+7 more)
 
 ### Community 199 - "Banner Design - Multi-Format Creative Banner System"
 Cohesion: 0.14
@@ -1329,8 +1355,8 @@ Cohesion: 0.15
 Nodes (10): admin, countRows(), devURL, preexisting, Q(), Row, sandboxEnv, sandboxURL (+2 more)
 
 ### Community 210 - "API documentation (as built)"
-Cohesion: 0.14
-Nodes (13): 10. Before exposing this API publicly, 1. Conventions, 2. Health, 3. Authentication — `/auth`, 4. Public discovery, 5. Account — authenticated, 6. Seller — `/seller` (authenticated), 7. Inquiries — `/inquiries` (authenticated) (+5 more)
+Cohesion: 0.13
+Nodes (14): 10. Before exposing this API publicly, 1. Conventions, 2. Health, 3. Authentication — `/auth`, 5. Account — authenticated, 6. Seller — `/seller` (authenticated), 7. Inquiries — `/inquiries` (authenticated), 8. Administration — `/admin` (authenticated + review scope) (+6 more)
 
 ### Community 211 - "Banner Design - Multi-Format Creative Banner System"
 Cohesion: 0.14
@@ -1400,6 +1426,14 @@ Nodes (12): Categories, Dark Mode, File Organization, Layer 1: Primitive Tokens,
 Cohesion: 0.15
 Nodes (11): Act on the receipt, Assemble and review, Plan and asset review, Plan, capture, serve, Core Rule, Decision Comps, Impeccable Asset Producer, Input Contract (+3 more)
 
+### Community 229 - "main.tsx"
+Cohesion: 0.17
+Nodes (16): Icon(), Ctx, HeaderSearch(), Me, Shell(), SiteFooter(), Saved(), Discover() (+8 more)
+
+### Community 230 - "validate-pwa.cjs"
+Cohesion: 0.17
+Nodes (10): actualIcons, assert, fs, index, manifest, path, publicDir, signature (+2 more)
+
 ### Community 232 - "scripts"
 Cohesion: 0.15
 Nodes (13): scripts, build, db:deploy, db:integrity-preflight, db:migrate, db:restore-rehearsal, db:seed, dev (+5 more)
@@ -1436,9 +1470,9 @@ Nodes (12): component, $type, $value, dark, semantic, $schema, $type, $value (+4
 Cohesion: 0.15
 Nodes (11): Act on the receipt, Assemble and review, Plan and asset review, Plan, capture, serve, Core Rule, Decision Comps, Impeccable Asset Producer, Input Contract (+3 more)
 
-### Community 243 - "validate-pwa.cjs"
-Cohesion: 0.15
-Nodes (10): actualIcons, assert, fs, index, manifest, path, publicDir, signature (+2 more)
+### Community 241 - ".opencode/skills/ui-ux-pro-max/scripts/tests/test_core.py"
+Cohesion: 0.08
+Nodes (5): TestBm25CoreBehavior, TestDiagnosticsContracts, TestPersistence, TestReasoningMatch, TestTokenizer
 
 ### Community 244 - "Primitive Tokens"
 Cohesion: 0.17
@@ -1449,8 +1483,8 @@ Cohesion: 0.24
 Nodes (11): extensions, formatReport(), fs, getFiles(), main(), parseArgs(), path, patterns (+3 more)
 
 ### Community 246 - ".agents/skills/design-system/templates/design-tokens-starter.json"
-Cohesion: 0.17
-Nodes (11): $type, $value, dark, semantic, $schema, $type, $value, semantic (+3 more)
+Cohesion: 0.15
+Nodes (12): component, $type, $value, dark, semantic, $schema, $type, $value (+4 more)
 
 ### Community 247 - ".agents/skills/impeccable/reference/critique.md"
 Cohesion: 0.17
@@ -1464,11 +1498,7 @@ Nodes (11): Assess Current State, Code Simplification, Content Simplification, D
 Cohesion: 0.17
 Nodes (11): Accessibility Resilience, Assess Hardening Needs, Edge Cases & Boundary Conditions, Error Handling, Hardening Dimensions, Input Validation & Sanitization, Internationalization (i18n), Performance Resilience (+3 more)
 
-### Community 250 - ".agents/skills/ui-ux-pro-max/scripts/tests/test_text_layout_resilience.py"
-Cohesion: 0.18
-Nodes (3): read_rows(), TestTextLayoutDataContracts, TestTextLayoutRetrieval
-
-### Community 251 - ".opencode/skills/ui-ux-pro-max/scripts/tests/test_text_layout_resilience.py"
+### Community 251 - ".agents/skills/ui-ux-pro-max/scripts/tests/test_text_layout_resilience.py"
 Cohesion: 0.18
 Nodes (3): read_rows(), TestTextLayoutDataContracts, TestTextLayoutRetrieval
 
@@ -1482,7 +1512,7 @@ Nodes (11): Development roadmap, Sequencing constraints, Stage 0 — Governance 
 
 ### Community 254 - "WP3 — Purchase requests and transactions: C5 design proposal"
 Cohesion: 0.17
-Nodes (11): 1. What exists now, 2. Approaches considered, 3. Proposed student workflow (requires C5 approval), 4. Proposed status transition table, 5. Proposed data design — ADDITIVE ONLY, 6. Proposed API / UI boundaries, 7. Tests and deployment gates, 8. Exact decisions requiring owner approval (not previously authorized) (+3 more)
+Nodes (11): 1. What exists now, 2. Approaches considered, 3. Proposed student workflow (requires C5 approval), 4. Proposed status transition table, 5. Proposed data design — ADDITIVE ONLY, 6. Proposed API / UI boundaries, 7. Tests and deployment gates, 8. Approved owner decisions (2026-11-16) (+3 more)
 
 ### Community 255 - "2. Test layers to add, in order"
 Cohesion: 0.17
@@ -1496,9 +1526,9 @@ Nodes (11): Border Radius, Color Scales, Gray Scale, Motion / Duration, Primary 
 Cohesion: 0.24
 Nodes (11): extensions, formatReport(), fs, getFiles(), main(), parseArgs(), path, patterns (+3 more)
 
-### Community 258 - "card"
+### Community 258 - "button"
 Cohesion: 0.20
-Nodes (12): $type, $value, bg, bg, padding, shadow, card, bg (+4 more)
+Nodes (10): fg, font-size, hover-bg, button, $type, $value, $type, $value (+2 more)
 
 ### Community 259 - ".opencode/skills/impeccable/reference/critique.md"
 Cohesion: 0.17
@@ -1513,8 +1543,8 @@ Cohesion: 0.17
 Nodes (11): Accessibility Resilience, Assess Hardening Needs, Edge Cases & Boundary Conditions, Error Handling, Hardening Dimensions, Input Validation & Sanitization, Internationalization (i18n), Performance Resilience (+3 more)
 
 ### Community 262 - "scripts"
-Cohesion: 0.17
-Nodes (11): name, private, scripts, api, db:migrate, db:seed, pwa:check, test (+3 more)
+Cohesion: 0.13
+Nodes (14): name, private, scripts, api, db:migrate, db:seed, push:staging:check, push:staging:preflight (+6 more)
 
 ### Community 263 - "Core Visual Elements"
 Cohesion: 0.18
@@ -1533,8 +1563,8 @@ Cohesion: 0.18
 Nodes (8): args, fs, minimal, MINIMAL_TOKENS, path, projectRoot, tokensPath, wrapStyle
 
 ### Community 267 - "primitive"
-Cohesion: 0.18
-Nodes (11): fast, normal, slow, $type, $value, $type, $value, primitive (+3 more)
+Cohesion: 0.20
+Nodes (10): fast, normal, slow, $type, $value, $type, $value, duration (+2 more)
 
 ### Community 268 - ".agents/skills/impeccable/reference/clarify.md"
 Cohesion: 0.18
@@ -1600,6 +1630,10 @@ Nodes (10): 1. Establish the system, 2. Gather the evidence, 3. Triage, 4. Polis
 Cohesion: 0.18
 Nodes (10): Assess Current State, Color Refinement, Composition Refinement, Motion Reduction, Plan Refinement, Refine the Design, Simplification, Verify Quality (+2 more)
 
+### Community 287 - "Functional requirements — status by module"
+Cohesion: 0.18
+Nodes (10): Cross-cutting: access control matrix (blueprint §3.2), Functional requirements — status by module, MODULE 02 — Marketplace listings, MODULE 03 — Student services, MODULE 04 — Search and discovery, MODULE 05 — Favorites ("Saved"), MODULE 07 — Transaction management, MODULE 08 — Notifications (+2 more)
+
 ### Community 288 - ".agents/skills/brand/scripts/sync-brand-to-tokens.cjs"
 Cohesion: 0.29
 Nodes (8): adjustBrightness(), { execFileSync }, extractColorsFromMarkdown(), fs, generateColorScale(), main(), path, updateDesignTokens()
@@ -1620,10 +1654,6 @@ Nodes (9): Alert Tokens, Badge Tokens, Button Tokens, Card Tokens, Component Tok
 Cohesion: 0.36
 Nodes (9): flattenTokens(), fs, generateCSS(), generateTailwind(), main(), parseArgs(), path, resolveReference() (+1 more)
 
-### Community 293 - "Responsive Design"
-Cohesion: 0.20
-Nodes (10): Breakpoints: Content-Driven, Detect Input Method, Not Just Screen Size, Layout Adaptation Patterns, Mobile-First: Write It Right, Picture Element for Art Direction, Responsive Design, Responsive Images: Get It Right, Safe Areas: Handle the Notch (+2 more)
-
 ### Community 294 - "Init flow"
 Cohesion: 0.20
 Nodes (10): Completion gate, Init flow, Step 1: Load current state, Step 2: Explore the project, Step 3: Interview for product truth, Step 4: Write PRODUCT.md, Step 5: Record workflow defaults, Step 6: Wrap up or resume (+2 more)
@@ -1632,9 +1662,9 @@ Nodes (10): Completion gate, Init flow, Step 1: Load current state, Step 2: Expl
 Cohesion: 0.20
 Nodes (9): Common Structures, Duarte Sparkline Pattern, Matching Strategy to Context, Product Demo (6 slides), Sales Pitch (9 slides), Search Commands, Slide Strategies, Strategy Selection (+1 more)
 
-### Community 298 - "Functional requirements — status by module"
-Cohesion: 0.20
-Nodes (9): Cross-cutting: access control matrix (blueprint §3.2), Functional requirements — status by module, MODULE 02 — Marketplace listings, MODULE 03 — Student services, MODULE 04 — Search and discovery, MODULE 07 — Transaction management, MODULE 08 — Notifications, MODULE 09 — Administration and moderation (+1 more)
+### Community 297 - "CPSU Market — Stage 5 Web Push Release Safety"
+Cohesion: 0.22
+Nodes (8): Acceptance commands, API behavior by release phase, CPSU Market — Stage 5 Web Push Release Safety, Goal and authorization boundary, Implemented files, Safety checks and known limitations, Two independent default-OFF controls, Verification results (16 November 2026)
 
 ### Community 299 - "Non-functional requirements — status"
 Cohesion: 0.20
@@ -1668,9 +1698,9 @@ Nodes (9): Alert Tokens, Badge Tokens, Button Tokens, Card Tokens, Component Tok
 Cohesion: 0.36
 Nodes (9): flattenTokens(), fs, generateCSS(), generateTailwind(), main(), parseArgs(), path, resolveReference() (+1 more)
 
-### Community 307 - "button"
-Cohesion: 0.20
-Nodes (10): fg, font-size, hover-bg, button, $type, $value, $type, $value (+2 more)
+### Community 307 - "pages-account.tsx"
+Cohesion: 0.15
+Nodes (27): explain(), peso(), setToken(), useMe(), ConversationListing, ConversationListingCard(), Dashboard(), initials() (+19 more)
 
 ### Community 308 - "duration"
 Cohesion: 0.20
@@ -1691,6 +1721,14 @@ Nodes (10): bindEditBadgeProxy(), editBadgeProxyTargets(), initEditBadge(), init
 ### Community 312 - "Slide Strategies"
 Cohesion: 0.20
 Nodes (9): Common Structures, Duarte Sparkline Pattern, Matching Strategy to Context, Product Demo (6 slides), Sales Pitch (9 slides), Search Commands, Slide Strategies, Strategy Selection (+1 more)
+
+### Community 314 - "Responsive Design"
+Cohesion: 0.20
+Nodes (10): Breakpoints: Content-Driven, Detect Input Method, Not Just Screen Size, Layout Adaptation Patterns, Mobile-First: Write It Right, Picture Element for Art Direction, Responsive Design, Responsive Images: Get It Right, Safe Areas: Handle the Notch (+2 more)
+
+### Community 317 - ".agents/skills/design-system/scripts/slide_search_core.py"
+Cohesion: 0.12
+Nodes (13): calculate_pattern_break(), detect_domain(), get_background_config(), get_color_for_emotion(), get_layout_for_goal(), get_typography_for_slide(), _load_csv(), _load_decision_csv() (+5 more)
 
 ### Community 318 - "Design Engineering"
 Cohesion: 0.22
@@ -1716,6 +1754,10 @@ Nodes (8): 1. MVP checklist status, 2. Module-level gap summary, 3. Non-MVP work
 Cohesion: 0.22
 Nodes (9): 6.1 Student Application Navigation, 6.2 Administrative Application Navigation, Explore, Home, Messages, PART VI. APPLICATION STRUCTURE, Primary Navigation, Profile (+1 more)
 
+### Community 328 - ".opencode/skills/design-system/scripts/slide_search_core.py"
+Cohesion: 0.12
+Nodes (13): calculate_pattern_break(), detect_domain(), get_background_config(), get_color_for_emotion(), get_layout_for_goal(), get_typography_for_slide(), _load_csv(), _load_decision_csv() (+5 more)
+
 ### Community 329 - "Common Cognitive Load Violations"
 Cohesion: 0.22
 Nodes (9): 1. The Wall of Options, 2. The Memory Bridge, 3. The Hidden Navigation, 4. The Jargon Barrier, 5. The Visual Noise Floor, 6. The Inconsistent Pattern, 7. The Multi-Task Demand, 8. The Context Switch (+1 more)
@@ -1724,9 +1766,13 @@ Nodes (9): 1. The Wall of Options, 2. The Memory Bridge, 3. The Hidden Navigatio
 Cohesion: 0.22
 Nodes (9): Color & materials, Components & controls, iOS platform, Layout & structure, Motion, The iOS slop test, Touch targets, Typography (+1 more)
 
+### Community 332 - "input"
+Cohesion: 0.29
+Nodes (8): padding-x, input, $type, $value, focus-ring, padding-x, $type, $value
+
 ### Community 334 - "CPSU Student Marketplace & Services"
-Cohesion: 0.22
-Nodes (8): CPSU Student Marketplace & Services, Deployment, Install on a phone (after HTTPS deployment), Optional mobile lock-screen alerts and badges, PWA icon and mobile navigation QA, Run locally on Windows (VS Code / PowerShell), Test, Try the full flow
+Cohesion: 0.20
+Nodes (9): CPSU Student Marketplace & Services, Deployment, Install on a phone (after HTTPS deployment), Optional mobile lock-screen alerts and badges, PWA icon and mobile navigation QA, Run locally on Windows (VS Code / PowerShell), Stage 3 — Device testing readiness, Test (+1 more)
 
 ### Community 335 - "Component Building Principles"
 Cohesion: 0.25
@@ -1740,17 +1786,13 @@ Nodes (8): Android platform, Color & theming, Components & motion, Layout & stru
 Cohesion: 0.25
 Nodes (8): 1. Impatient Power User: "Alex", 2. Confused First-Timer: "Jordan", 3. Accessibility-Dependent User: "Sam", 4. Deliberate Stress Tester: "Riley", 5. Distracted Mobile User: "Casey", Persona-Based Design Testing, Project-Specific Personas, Selecting Personas
 
-### Community 338 - ".agents/skills/impeccable/reference/doctor.md"
-Cohesion: 0.25
-Nodes (7): Monorepo notes, Opting out of the boot check, Step 1: Run the pass, Step 2: Act by severity, Step 3: Deprecated fields are binding, Step 4: Do not overclaim on truth drift, What this owns, and what it does not
-
 ### Community 339 - "ui-ux-pro-max"
 Cohesion: 0.25
 Nodes (7): How to Use, Primary Use Cases, Recommended, Rule Categories by Priority, Skip, ui-ux-pro-max, When to Apply
 
-### Community 340 - "stage1.test.ts"
-Cohesion: 0.43
-Nodes (4): assertIsolatedTestDatabase(), resetFixtures(), seedFixtures(), Fixtures
+### Community 340 - ".agents/skills/design-system/scripts/search-slides.py"
+Cohesion: 0.32
+Nodes (3): format_context(), format_result(), main()
 
 ### Community 341 - "Impeccable — Interaction Reliability Hardening"
 Cohesion: 0.25
@@ -1776,28 +1818,28 @@ Nodes (7): API functionality verified, Backup caveat, Remaining gates, State obs
 Cohesion: 0.25
 Nodes (8): PART XI. DEVELOPMENT WORKFLOW FOR AI AGENTS, STEP 1 — PROJECT INSPECTION, STEP 2 — REQUIREMENTS MAPPING, STEP 3 — IMPLEMENTATION PLANNING, STEP 4 — IMPLEMENTATION, STEP 5 — TESTING, STEP 6 — DOCUMENTATION, STEP 7 — COMPLETION REPORT
 
-### Community 347 - "input"
+### Community 347 - "push-settings.tsx"
 Cohesion: 0.29
-Nodes (8): padding-x, input, $type, $value, focus-ring, padding-x, $type, $value
+Nodes (15): BadgeNavigator, base64ToBytes(), currentSubscription(), disablePush(), disconnectPushOnLogout(), enablePush(), isIosWithoutHomeScreen(), previewLocalNotification() (+7 more)
 
 ### Community 348 - "Android platform"
 Cohesion: 0.25
 Nodes (8): Android platform, Color & theming, Components & motion, Layout & structure, The Android slop test, Touch targets, Typography, Verifying the build
 
-### Community 349 - ".opencode/skills/impeccable/reference/colorize.md"
-Cohesion: 0.25
-Nodes (7): Apply at system scale, Audit before choosing, Choose a strategy, Contrast and perception, Live-mode signature params, Verify, Visitor mode
+### Community 349 - "pages-profile.tsx"
+Cohesion: 0.21
+Nodes (12): timeAgo(), IconName, PATHS, DECISION, Notice, NoticeFilter, NoticeGroup, noticeTarget() (+4 more)
 
 ### Community 350 - "Persona-Based Design Testing"
 Cohesion: 0.25
 Nodes (8): 1. Impatient Power User: "Alex", 2. Confused First-Timer: "Jordan", 3. Accessibility-Dependent User: "Sam", 4. Deliberate Stress Tester: "Riley", 5. Distracted Mobile User: "Casey", Persona-Based Design Testing, Project-Specific Personas, Selecting Personas
 
-### Community 351 - "Extract Flow"
-Cohesion: 0.25
-Nodes (7): Extract Flow, Step 1: Discover the Design System, Step 2: Identify Patterns, Step 3: Plan Extraction, Step 4: Extract & Enrich, Step 5: Migrate, Step 6: Document
+### Community 351 - ".opencode/skills/impeccable/SKILL.md"
+Cohesion: 0.09
+Nodes (19): Before you finish, Scope is sovereign, The amplification, The skeleton test, Why it reads flat, Extract Flow, Step 1: Discover the Design System, Step 2: Identify Patterns (+11 more)
 
 ### Community 352 - "Shape"
-Cohesion: 0.25
+Cohesion: 0.22
 Nodes (8): Cadence, Confirm and stop, Phase 1: Discovery interview, Phase 2: Resolve the design direction, Phase 3: Write the brief, Round 1: purpose, people, and outcome, Round 2: material, behavior, and boundaries, Shape
 
 ### Community 353 - "Implementation status"
@@ -1836,6 +1878,14 @@ Nodes (6): globToRegex(), matchesScope(), normalizeIgnoreRule(), normalizeIgnore
 Cohesion: 0.29
 Nodes (6): Animation Classes, Background Images, Base Structure, Chart.js Integration, CSS Variables Reference, HTML Slide Template
 
+### Community 362 - ".agents/skills/ui-ux-pro-max/scripts/reasoning_contract.py"
+Cohesion: 0.32
+Nodes (4): apply_decision_rules(), _object_without_duplicates(), parse_decision_rules(), _validate_action()
+
+### Community 363 - "verify-wp3-retained-restore.ts"
+Cohesion: 0.07
+Nodes (44): admin, p, sandbox, source, backedUploads, backup, history(), ident() (+36 more)
+
 ### Community 364 - "Query Contract"
 Cohesion: 0.29
 Nodes (7): Query Contract, Step 1: Analyze User Requirements, Step 2: Generate Design System (new projects/pages), Step 2b: Persist Design System (Master + Overrides Pattern), Step 2c: Design Dials (optional), Step 3: Supplement with Detailed Searches (as needed), Step 4: Stack Guidelines
@@ -1856,9 +1906,9 @@ Nodes (6): 1. Database safeguards and preflight, 2. Retained pre-migration backu
 Cohesion: 0.29
 Nodes (6): 1. Verified read-only preflight, 2. Proposed FK additions (all require owner decision on delete behavior), 3. Proposed listing discovery index, 4. Additive migration plan, NOT YET EXECUTED, 5. Blocking conditions / approval request, Stage 1 database integrity — migration approval dossier
 
-### Community 369 - "Stage 1 — Integration test foundation implementation report"
-Cohesion: 0.29
-Nodes (6): Completion statement, How to run, Implemented, Remaining Stage 1 items and approval gates, Stage 1 — Integration test foundation implementation report, Verified results
+### Community 369 - ".opencode/skills/design-system/scripts/search-slides.py"
+Cohesion: 0.32
+Nodes (3): format_context(), format_result(), main()
 
 ### Community 370 - "Unified Responsive Web / PWA Implementation Report"
 Cohesion: 0.29
@@ -1873,8 +1923,8 @@ Cohesion: 0.29
 Nodes (6): Animation Classes, Background Images, Base Structure, Chart.js Integration, CSS Variables Reference, HTML Slide Template
 
 ### Community 373 - "Generate Report"
-Cohesion: 0.29
-Nodes (7): Audit Health Score, Detailed Findings by Severity, Executive Summary, Generate Report, Implementation Integrity Verdict, Patterns & Systemic Issues, Positive Findings
+Cohesion: 0.13
+Nodes (14): 1. Accessibility (A11y), 2. Performance, 3. Theming, 4. Responsive Design, 5. Implementation Integrity (CRITICAL), Audit Health Score, Detailed Findings by Severity, Diagnostic Scan (+6 more)
 
 ### Community 374 - "Generate Report"
 Cohesion: 0.29
@@ -1900,6 +1950,14 @@ Nodes (6): globToRegex(), matchesScope(), normalizeIgnoreRule(), normalizeIgnore
 Cohesion: 0.29
 Nodes (6): Animation Classes, Background Images, Base Structure, Chart.js Integration, CSS Variables Reference, HTML Slide Template
 
+### Community 380 - ".opencode/skills/impeccable/reference/doctor.md"
+Cohesion: 0.25
+Nodes (7): Monorepo notes, Opting out of the boot check, Step 1: Run the pass, Step 2: Act by severity, Step 3: Deprecated fields are binding, Step 4: Do not overclaim on truth drift, What this owns, and what it does not
+
+### Community 381 - "api"
+Cohesion: 0.24
+Nodes (10): 2026-11-11 — Expo web target fixed (mobile display), api(), ApiError, call(), keychain, MSG, refresh(), signIn() (+2 more)
+
 ### Community 382 - "The Animation Decision Framework"
 Cohesion: 0.33
 Nodes (6): 1. Should this animate at all?, 2. What is the purpose?, 3. What easing should it use?, 4. How fast should it be?, Perceived performance, The Animation Decision Framework
@@ -1923,6 +1981,14 @@ Nodes (5): After approval: the comp becomes a spec, Generate three compositional
 ### Community 387 - "Slides"
 Cohesion: 0.33
 Nodes (5): References (Knowledge Base), Routing, Slides, Subcommands, When to Use
+
+### Community 388 - ".opencode/skills/ui-ux-pro-max/scripts/reasoning_contract.py"
+Cohesion: 0.32
+Nodes (4): apply_decision_rules(), _object_without_duplicates(), parse_decision_rules(), _validate_action()
+
+### Community 389 - "syncEditBadgeHitProxies"
+Cohesion: 0.27
+Nodes (10): bindEditBadgeProxy(), editBadgeProxyTargets(), initEditBadge(), initEditBadgeHitProxies(), positionEditBadge(), proxyMouseEvent(), setImportantStyle(), styleEditBadgeProxy() (+2 more)
 
 ### Community 390 - "Pre-Delivery Checklist"
 Cohesion: 0.33
@@ -1948,17 +2014,13 @@ Nodes (5): compilerOptions, strict, extends, include, expo/tsconfig.base
 Cohesion: 0.33
 Nodes (6): Analytics, Announcements, Listing Management, MODULE 09 — ADMINISTRATION AND MODERATION, Transaction Monitoring, User Management
 
-### Community 396 - "Diagnostic Scan"
-Cohesion: 0.33
-Nodes (6): 1. Accessibility (A11y), 2. Performance, 3. Theming, 4. Responsive Design, 5. Implementation Integrity (CRITICAL), Diagnostic Scan
+### Community 397 - "WP3 — Transaction Management: Local Test-Only Implementation"
+Cohesion: 0.29
+Nodes (6): Acceptance evidence (local synthetic only), Database boundaries, Remaining gates / known limitations, Source paths, What was implemented, WP3 — Transaction Management: Local Test-Only Implementation
 
-### Community 397 - "Diagnostic Scan"
-Cohesion: 0.33
-Nodes (6): 1. Accessibility (VoiceOver / TalkBack), 2. Performance, 3. Appearance & Theming, 4. Platform Conformance (CRITICAL), 5. Adaptivity, Diagnostic Scan
-
-### Community 398 - ".opencode/skills/impeccable/reference/bolder.md"
-Cohesion: 0.33
-Nodes (5): Before you finish, Scope is sovereign, The amplification, The skeleton test, Why it reads flat
+### Community 398 - ".opencode/skills/ui-ux-pro-max/scripts/tests/test_text_layout_resilience.py"
+Cohesion: 0.18
+Nodes (3): read_rows(), TestTextLayoutDataContracts, TestTextLayoutRetrieval
 
 ### Community 399 - "Visualize: Direction Comps & Asset Production"
 Cohesion: 0.33
@@ -1992,6 +2054,10 @@ Nodes (4): Impeccable Documenter, Input Contract, Output Contract, Workflow
 Cohesion: 0.40
 Nodes (4): Containment, Painted material, Region map, What varies independently
 
+### Community 408 - "Stage 3 — CPSU Market PWA Web Push Device Acceptance"
+Cohesion: 0.20
+Nodes (9): 1. Current blockers, 2. Local developer smoke test (no remote push), 3. Real Android test — physical Chrome-installed PWA, 4. Real iPhone test — Safari Home Screen web app (iOS 16.4+), 5. Privacy and failure checks, 6. Device test results — fill in only after real tests, 7. Safe commands, 8. Stage 3 local implementation and verification (16 November 2026) (+1 more)
+
 ### Community 409 - "Common Rules for Professional UI"
 Cohesion: 0.40
 Nodes (5): Common Rules for Professional UI, Icons & Visual Elements, Interaction (App), Layout & Spacing, Light/Dark Mode Contrast
@@ -2003,10 +2069,6 @@ Nodes (5): Example Workflow, Step 1: Analyze Requirements, Step 2: Generate Desi
 ### Community 411 - "theme.ts"
 Cohesion: 0.40
 Nodes (4): react-native@0.76.5, dark, light, react-native
-
-### Community 412 - "scripts"
-Cohesion: 0.40
-Nodes (5): scripts, android, ios, start, typecheck
 
 ### Community 413 - "3.1 User Roles"
 Cohesion: 0.40
@@ -2028,17 +2090,13 @@ Nodes (5): $type, $value, border, border, border
 Cohesion: 0.60
 Nodes (5): radius, radius, radius, $type, $value
 
-### Community 418 - "lg"
-Cohesion: 0.60
-Nodes (5): lg, $type, $value, lg, lg
+### Community 418 - "CPSU Market — Stage 2 Local VAPID and HTTPS PWA QA"
+Cohesion: 0.29
+Nodes (6): 1. Secret handling — complete locally, 2. Local-only HTTPS infrastructure — complete for QA, 3. Browser verification (localhost HTTPS, no student accounts), 4. Regression verification, 5. Follow-up gates, CPSU Market — Stage 2 Local VAPID and HTTPS PWA QA
 
-### Community 419 - "sm"
-Cohesion: 0.60
-Nodes (5): sm, sm, sm, $type, $value
-
-### Community 420 - "Adaptation Strategies"
-Cohesion: 0.40
-Nodes (5): Adaptation Strategies, Orientation & foldables, Phone → Tablet (iPad / large screens), Platform → platform (iOS ↔ Android), Web → native (porting a website or web app)
+### Community 419 - "Stage 4 — Push HTTPS staging deployment preparation"
+Cohesion: 0.29
+Nodes (6): Implemented, source-only, Inspected source architecture, Objectives and approved boundary, Remaining external gates, Stage 4 — Push HTTPS staging deployment preparation, Verification evidence
 
 ### Community 421 - "Impeccable Documenter"
 Cohesion: 0.40
@@ -2048,13 +2106,13 @@ Nodes (4): Impeccable Documenter, Input Contract, Output Contract, Workflow
 Cohesion: 0.40
 Nodes (4): Containment, Painted material, Region map, What varies independently
 
+### Community 423 - "WP3 Development Database Readiness — Implementation and Approval Plan"
+Cohesion: 0.17
+Nodes (11): Current verified baseline (read-only inspection), Global constraints, Review focus: risks the plan must catch, Status and approval requests, Task 1 — Reconfirm immutable preflight (READ-ONLY; may be executed now), Task 2 — Create verifiable retained backup (ONLY AFTER APPROVAL A), Task 3 — Prove full restore and forward migration in disposable schema (ONLY AFTER APPROVAL A), Task 4 — Activate the development schema (ONLY AFTER APPROVAL B) (+3 more)
+
 ### Community 424 - "padding-y"
 Cohesion: 0.67
 Nodes (4): padding-y, padding-y, $type, $value
-
-### Community 425 - "xl"
-Cohesion: 0.67
-Nodes (4): xl, xl, $type, $value
 
 ### Community 426 - "Core Philosophy"
 Cohesion: 0.50
@@ -2067,6 +2125,10 @@ Nodes (4): Debugging Animations, Frame-by-frame inspection, Slow motion testing,
 ### Community 428 - "Heuristics Scoring Guide"
 Cohesion: 0.50
 Nodes (4): Heuristics Scoring Guide, Issue Severity (P0–P3), Reference Material, Score Summary
+
+### Community 429 - "api"
+Cohesion: 0.23
+Nodes (11): api(), ApiError, MESSAGES, raw(), refreshNow(), tryRestoreSession(), Admin(), AUDIT_ACTION_TEXT (+3 more)
 
 ### Community 430 - "Tips for Better Results"
 Cohesion: 0.50
@@ -2092,97 +2154,209 @@ Nodes (4): 8.1 Design Philosophy, 8.2 Responsive Requirements, 8.3 Design System
 Cohesion: 0.50
 Nodes (4): Business Rules, MODULE 01 — AUTHENTICATION AND STUDENT VERIFICATION, Required Functions, Student Profile Fields
 
-### Community 436 - "padding-y"
-Cohesion: 0.67
-Nodes (4): padding-y, padding-y, $type, $value
+### Community 436 - "CPSU Market — staging-only deployment templates"
+Cohesion: 0.29
+Nodes (6): CPSU Market — staging-only deployment templates, Files and what they do, Known stopping conditions, Mandatory external approvals — do not skip, Safe future manual deployment process (requires a new explicit approval), Staging isolation and configuration requirements
 
-### Community 437 - "xl"
-Cohesion: 0.67
-Nodes (4): xl, xl, $type, $value
-
-### Community 438 - "none"
-Cohesion: 0.67
-Nodes (4): $type, $value, none, none
+### Community 437 - "Responsive Design"
+Cohesion: 0.20
+Nodes (10): Breakpoints: Content-Driven, Detect Input Method, Not Just Screen Size, Layout Adaptation Patterns, Mobile-First: Write It Right, Picture Element for Art Direction, Responsive Design, Responsive Images: Get It Right, Safe Areas: Handle the Notch (+2 more)
 
 ### Community 439 - "Heuristics Scoring Guide"
 Cohesion: 0.50
 Nodes (4): Heuristics Scoring Guide, Issue Severity (P0–P3), Reference Material, Score Summary
 
-### Community 440 - "Persuade and Experience"
-Cohesion: 0.50
-Nodes (3): Comps, Directions, Persuade and Experience
+### Community 440 - "scripts"
+Cohesion: 0.40
+Nodes (5): scripts, android, ios, start, typecheck
 
-### Community 441 - "Read"
-Cohesion: 0.50
-Nodes (3): Comps, Directions, Read
+### Community 441 - ".agents/skills/impeccable/reference/doctor.md"
+Cohesion: 0.25
+Nodes (7): Monorepo notes, Opting out of the boot check, Step 1: Run the pass, Step 2: Act by severity, Step 3: Deprecated fields are binding, Step 4: Do not overclaim on truth drift, What this owns, and what it does not
 
-### Community 442 - "Command guidance"
-Cohesion: 0.50
-Nodes (3): Command guidance, No-argument routing: the context-aware menu, Workflow questions
+### Community 442 - "input"
+Cohesion: 0.29
+Nodes (8): padding-x, input, $type, $value, focus-ring, padding-x, $type, $value
+
+### Community 445 - "Stage 1 — Integration test foundation implementation report"
+Cohesion: 0.18
+Nodes (8): isolated, originalUrl, Completion statement, How to run, Implemented, Remaining Stage 1 items and approval gates, Stage 1 — Integration test foundation implementation report, Verified results
 
 ### Community 447 - "MODULE 05 — FAVORITES"
 Cohesion: 0.67
 Nodes (3): MODULE 05 — FAVORITES, Required Functions, Rules
 
-### Community 448 - "16"
-Cohesion: 0.67
-Nodes (3): $type, $value, 16
+### Community 448 - "User roles and permissions"
+Cohesion: 0.33
+Nodes (5): 1. Blueprint roles → implemented roles, 2. Role assignment, 3. Authorization primitives, 4. Capability matrix as implemented, User roles and permissions
 
-### Community 449 - "1"
-Cohesion: 0.67
-Nodes (3): $type, $value, 1
+### Community 449 - "lg"
+Cohesion: 0.60
+Nodes (5): lg, $type, $value, lg, lg
 
-### Community 450 - "3"
+### Community 450 - "padding-y"
 Cohesion: 0.67
-Nodes (3): $type, $value, 3
+Nodes (4): padding-y, padding-y, $type, $value
 
-### Community 451 - "8"
+### Community 451 - "xl"
 Cohesion: 0.67
-Nodes (3): $type, $value, 8
+Nodes (4): xl, xl, $type, $value
 
-### Community 452 - "destructive"
+### Community 452 - "sm"
+Cohesion: 0.60
+Nodes (5): sm, sm, sm, $type, $value
+
+### Community 453 - "$type"
+Cohesion: 0.60
+Nodes (5): $type, $value, border, border, border
+
+### Community 454 - "radius"
+Cohesion: 0.60
+Nodes (5): radius, radius, radius, $type, $value
+
+### Community 455 - "lg"
+Cohesion: 0.60
+Nodes (5): lg, $type, $value, lg, lg
+
+### Community 456 - "sm"
+Cohesion: 0.60
+Nodes (5): sm, sm, sm, $type, $value
+
+### Community 457 - "xl"
+Cohesion: 0.67
+Nodes (4): xl, xl, $type, $value
+
+### Community 557 - "destructive"
 Cohesion: 0.67
 Nodes (3): destructive, $type, $value
 
-### Community 453 - "destructive-foreground"
+### Community 558 - "destructive-foreground"
 Cohesion: 0.67
 Nodes (3): destructive-foreground, $type, $value
 
-### Community 454 - "muted"
+### Community 559 - "push-staging-release-preflight.mjs"
+Cohesion: 0.08
+Nodes (26): contactValid(), currentMigrations(), evaluateReleaseProfile(), exampleProfile, exec(), isApproval(), migrationDir, realPublicHost() (+18 more)
+
+### Community 560 - "muted"
 Cohesion: 0.67
 Nodes (3): muted, $type, $value
 
-### Community 455 - "primary-foreground"
+### Community 561 - "primary-foreground"
 Cohesion: 0.67
 Nodes (3): primary-foreground, $type, $value
 
-### Community 456 - "ring"
+### Community 562 - "ring"
 Cohesion: 0.67
 Nodes (3): ring, $type, $value
 
-### Community 457 - "secondary-foreground"
+### Community 563 - "secondary-foreground"
 Cohesion: 0.67
 Nodes (3): secondary-foreground, $type, $value
 
+### Community 564 - "none"
+Cohesion: 0.67
+Nodes (4): $type, $value, none, none
+
+### Community 565 - "none"
+Cohesion: 0.67
+Nodes (4): $type, $value, none, none
+
+### Community 566 - "16"
+Cohesion: 0.67
+Nodes (3): $type, $value, 16
+
+### Community 567 - "1"
+Cohesion: 0.67
+Nodes (3): $type, $value, 1
+
+### Community 568 - "3"
+Cohesion: 0.67
+Nodes (3): $type, $value, 3
+
+### Community 569 - "8"
+Cohesion: 0.67
+Nodes (3): $type, $value, 8
+
+### Community 570 - "16"
+Cohesion: 0.67
+Nodes (3): $type, $value, 16
+
+### Community 571 - "1"
+Cohesion: 0.67
+Nodes (3): $type, $value, 1
+
+### Community 572 - "3"
+Cohesion: 0.67
+Nodes (3): $type, $value, 3
+
+### Community 573 - "8"
+Cohesion: 0.67
+Nodes (3): $type, $value, 8
+
+### Community 575 - "destructive"
+Cohesion: 0.67
+Nodes (3): destructive, $type, $value
+
+### Community 576 - "destructive-foreground"
+Cohesion: 0.67
+Nodes (3): destructive-foreground, $type, $value
+
+### Community 577 - "muted"
+Cohesion: 0.67
+Nodes (3): muted, $type, $value
+
+### Community 578 - "primary-foreground"
+Cohesion: 0.67
+Nodes (3): primary-foreground, $type, $value
+
+### Community 579 - "ring"
+Cohesion: 0.67
+Nodes (3): ring, $type, $value
+
+### Community 580 - "secondary-foreground"
+Cohesion: 0.67
+Nodes (3): secondary-foreground, $type, $value
+
+### Community 605 - ".agents/skills/design-system/scripts/fetch-background.py"
+Cohesion: 0.16
+Nodes (9): generate_css_for_background(), get_background_image(), get_curated_images(), get_overlay_css(), get_pexels_search_url(), load_backgrounds_config(), load_brand_colors(), main() (+1 more)
+
+### Community 614 - "card"
+Cohesion: 0.20
+Nodes (12): $type, $value, bg, bg, padding, shadow, card, bg (+4 more)
+
+### Community 644 - "CPSU Market — Stage 6 HTTPS Staging Release Preflight"
+Cohesion: 0.25
+Nodes (7): Authorization and scope, CPSU Market — Stage 6 HTTPS Staging Release Preflight, Current blocking approvals and implementation dependencies, Evidence observed, Stage 6 additions, Test evidence, Usage
+
+### Community 650 - "WP3 Gate A — Verified retained backup and WP3-only isolated restore rehearsal"
+Cohesion: 0.29
+Nodes (6): 1. Retained backup evidence, 2. Safely reconciled migration chain, 3. Restore and WP3 migration results, 4. Superpowers/TDD and independent checks, 5. Follow-up gates, WP3 Gate A — Verified retained backup and WP3-only isolated restore rehearsal
+
+### Community 655 - "Managed guidelines and announcements"
+Cohesion: 0.18
+Nodes (9): Announcement, Behavior, Managed guidelines and announcements, Storage and deployment, Verification, Implementation, Limits, Managed student content (+1 more)
+
 ## Knowledge Gaps
 - **1 isolated node(s):** `expo/tsconfig.base`
-  These have ≤1 connection - possible missing edges or undocumented components. (Counts symbols only; 4753 node(s) total have ≤1 connection when file, concept and rationale nodes are included.)
-- **145 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
+  These have ≤1 connection - possible missing edges or undocumented components. (Counts symbols only; 4896 node(s) total have ≤1 connection when file, concept and rationale nodes are included.)
+- **138 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `TestTailwindConfigGenerator` connect `TestTailwindConfigGenerator` to `pathlib`, `.test_add_colors_multiple_times`, `.test_add_color_palette`, `.test_add_fonts`, `.test_add_spacing`, `.test_add_breakpoints`, `.test_add_plugins_no_duplicates`, `.test_recommend_plugins_nextjs`, `.test_generate_typescript_config`, `.test_init_default_typescript`, `.test_generate_javascript_config`, `.test_generate_config_with_colors`, `.test_generate_config_with_plugins`, `.test_validate_config_valid`, `.test_validate_config_no_content`, `.test_validate_config_empty_theme`, `.test_write_config`, `.test_init_javascript`, `.test_write_config_creates_content`, `.test_write_config_invalid_path`, `.test_full_configuration_typescript`, `.test_init_framework`, `.test_full_configuration_javascript`, `.test_default_output_path_typescript`, `.test_custom_output_path`, `.test_base_config_structure`, `.test_default_content_paths_react`, `.test_default_content_paths_vue`, `.test_add_colors`?**
-  _High betweenness centrality (0.004) - this node is a cross-community bridge._
+- **Why does `TestTailwindConfigGenerator` connect `TestTailwindConfigGenerator` to `json`, `.test_add_colors_multiple_times`, `.test_add_color_palette`, `.test_add_fonts`, `.test_add_spacing`, `.test_add_breakpoints`, `.test_add_plugins_no_duplicates`, `.test_recommend_plugins_nextjs`, `.test_generate_typescript_config`, `.test_init_default_typescript`, `.test_generate_javascript_config`, `.test_generate_config_with_colors`, `.test_generate_config_with_plugins`, `.test_validate_config_valid`, `.test_validate_config_no_content`, `.test_validate_config_empty_theme`, `.test_write_config`, `.test_init_javascript`, `.test_write_config_creates_content`, `.test_write_config_invalid_path`, `.test_full_configuration_typescript`, `.test_init_framework`, `.test_full_configuration_javascript`, `.test_default_output_path_typescript`, `.test_custom_output_path`, `.test_base_config_structure`, `.test_default_content_paths_react`, `.test_default_content_paths_vue`, `.test_add_colors`?**
+  _High betweenness centrality (0.007) - this node is a cross-community bridge._
 - **What connects `expo/tsconfig.base` to the rest of the system?**
   _1 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `.opencode/skills/impeccable/scripts/live-browser.js` be split into smaller, more focused modules?**
   _Cohesion score 0.029049457620886194 - nodes in this community are weakly interconnected._
-- **Why does `TestShadcnInstaller` connect `TestShadcnInstaller` to `.test_add_components_with_overwrite`, `.test_add_components_dry_run`, `.test_add_all_components_dry_run`, `pathlib`, `.test_list_installed_no_config`, `.test_init_default_project_root`, `.test_init_custom_project_root`, `.test_init_dry_run`, `.test_check_shadcn_config_exists`, `.test_check_shadcn_config_not_exists`, `.temp_project`, `patch`, `.test_get_installed_components_empty`, `.test_get_installed_components_with_files`, `.test_list_installed_with_components`, `.test_add_components_no_config`, `.test_add_components_already_installed`?**
-  _High betweenness centrality (0.004) - this node is a cross-community bridge._
-- **Should `.agents/skills/impeccable/scripts/live-browser.js` be split into smaller, more focused modules?**
-  _Cohesion score 0.028153046764289088 - nodes in this community are weakly interconnected._
-- **Why does `TailwindConfigGenerator` connect `TailwindConfigGenerator` to `argparse`?**
+- **Why does `read_rows()` connect `read_rows` to `json`, `.agents/skills/design/scripts/cip/core.py`?**
   _High betweenness centrality (0.003) - this node is a cross-community bridge._
-- **Should `re` be split into smaller, more focused modules?**
-  _Cohesion score 0.026126651126651128 - nodes in this community are weakly interconnected._
+- **Should `.agents/skills/impeccable/scripts/live-browser.js` be split into smaller, more focused modules?**
+  _Cohesion score 0.029049457620886194 - nodes in this community are weakly interconnected._
+- **Should `.opencode/skills/ui-ux-pro-max/scripts/validate_data.py` be split into smaller, more focused modules?**
+  _Cohesion score 0.09393939393939393 - nodes in this community are weakly interconnected._
+- **Should `json` be split into smaller, more focused modules?**
+  _Cohesion score 0.03544554455445544 - nodes in this community are weakly interconnected._

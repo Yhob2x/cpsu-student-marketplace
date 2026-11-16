@@ -1,5 +1,21 @@
 # Changelog
 
+## 2026-11-16 — Push Stage 6 staging release preflight (local only)
+
+- Added a **read-only**, fail-closed staging release checker (`bun run push:staging:preflight`), a placeholder-only non-secret approval manifest, and eight automated tests. The validator inventories six Prisma migrations and checks every one for explicit staging approval; it also blocks mixed uncommitted source and accidental push activation.
+- Default preflight is intentionally **4/16 passed, 12 blocked**, pending approved HTTPS domain, monitored VAPID contact, hosting/privacy decisions, isolated staging data and a clean release snapshot. No staging site or notification was activated.
+- The eight preflight tests, 25 API unit tests, 16 staging-template checks and PWA validation passed. Documentation: `docs/PWA_PUSH_STAGE6_STAGING_PREFLIGHT_2026-11-16.md`.
+
+
+## 2026-11-16 — Push Stage 5 default-off release safety (local only)
+
+- Added two independent, default-OFF server release switches: `PUSH_SUBSCRIPTIONS_ENABLED` controls explicit browser enrollment; `PUSH_DELIVERY_ENABLED` separately controls outbound Web Push. Valid VAPID keys alone no longer activate anything. Test and development modes cannot send real pushes.
+- Production-mode enrollment additionally requires a matching VAPID P-256 pair, syntactically valid non-local contact, secure cookies and an explicit public HTTPS origin. The logged-in config reports both enrollment and delivery statuses; the UI indicates when background delivery is paused.
+- Added 8 pure security-policy tests and 3 authenticated fail-closed HTTP tests, alongside the previous 7 isolated push integration tests. With both switches off, subscription creation and preference writes return 503; user-scoped opt-out remains available.
+- Updated staging environment templates, the readiness checker and template validator to protect the switches. No existing secrets were changed, no remote push was sent, and no public deployment or development database migration was authorized.
+- Details: `docs/PWA_PUSH_STAGE5_RELEASE_SAFETY_2026-11-16.md`.
+
+
 ## 2026-11-16 — Push Stage 4 isolated HTTPS staging package (local only)
 
 - Prepared new, **unapplied** Nginx HTTPS, Bun systemd and environment templates under `infrastructure/staging/`; they use placeholders only, prevent API/HTML caching and specify isolated staging credentials, database, OS identity and loopback API access.

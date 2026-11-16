@@ -11,7 +11,7 @@
 - Canonical statuses: `pending`, `accepted`, `negotiating`, `for_meetup`, `completed`, `cancelled`. Rejection and cancellation are terminal, recorded with event name, actor and reason.
 - Both participants independently confirm meetup and completion. A single confirmation never claims a completed transaction. `Handoff` remains a separate self-reported logistics record and is never promoted to a canonical transaction status.
 - Physical products are exclusively reserved by the accepted transaction, atomically released only by that transaction on cancellation, and marked sold after mutual completion. Services do not auto-reserve or auto-sell, and new service requests are allowed after terminal status.
-- Seller listing edits, photo additions, manual availability changes and soft deletion are blocked during an active physical-item reservation.
+- Seller listing edits, photo additions, manual availability changes and soft deletion are blocked during an active physical-item reservation. Moderated/unpublished listings cannot advance meetup/completion; cancellation remains available. New requests are blocked against staff-owned or no-longer-verified sellers even when legacy published store records still exist.
 - Append-only status logs, audit records and per-event in-app notifications are created atomically with each transition. Push transport is optional and not a transaction dependency.
 - New `/api/v1/transactions` participant endpoints and read-only `/api/v1/admin/transactions` campus-scoped monitoring.
 - Web/PWA: listing purchase-request action, My Transactions index, transaction details/timeline/confirmations/cancellation with required reasons, mobile-accessible Profile link, and notification copy/deep links; admin monitoring panel.
@@ -47,8 +47,8 @@ Windows Prisma Client engine DLL generation was locked by another process. Schem
 
 - TDD RED checks observed for absent transaction endpoints and admin monitoring.
 - HTTP tests exercise student role/verification, seller-only decisions, per-student visibility, idempotent active request, reason validation, logs and notifications, physical reservation conflict, same-item concurrent acceptances, cancellation and release, service repeat requests and mutual completion, two-party meetup/completion, Handoff preservation, and admin campus isolation.
-- Isolated `bun run test:integration` passed 32/32 as of initial local interface implementation; subsequent final verification counts recorded separately.
-- `bunx tsc -p . --noEmit` API passed; `apps/web` `bun run build` passed.
+- Final isolated `bun run test:integration` passed **35/35**, with **0 failures**, **327 expectations**, and a read-only integrity audit reporting **0/10 missing reviewed FKs**. All fixture data was confined to `cpsu_marketplace_test`. A TDD RED→GREEN regression added on 2026-11-16 confirms sellers cannot accept a previously pending transaction when the buyer has since been suspended or lost verified CPSU affiliation; rejection occurs without reserving the listing or changing the transaction state.
+- `bunx prisma validate` and `bunx tsc -p . --noEmit` API passed; `apps/web` `bun run build` passed. API unit tests: **17 pass, 2 opt-in integration skips, 0 fail**; isolated push integration: **7 pass, 0 fail**; root `bun run pwa:check` passed.
 - Existing Stage 1 integrity audit showed 0/10 missing reviewed FK targets; the new schema adds additional transaction FKs.
 
 ## Remaining gates / known limitations

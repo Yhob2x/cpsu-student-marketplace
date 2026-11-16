@@ -6,6 +6,7 @@ import { HttpError } from '../http.js';
 import { requireAuth, requireReviewer, canReview, reviewCampusIds } from '../auth.js';
 import { audit, notify } from '../audit.js';
 import { requirePhotoReview } from '../photo-review.js';
+import { DEFAULT_GUIDELINES, plainContent } from '../managed-content.js';
 
 const r = Router();
 r.use(requireAuth, requireReviewer);
@@ -132,6 +133,86 @@ r.post('/reports/:id/resolve', async (req, res) => {
 const accountAdmin = (req: Express.Request) =>
   req.user!.roles.some(role => role.role === 'university_admin' && role.campusId === null);
 
+r.get('/content/guidelines', async (req, res) => {
+  if (!accountAdmin(req)) throw new HttpError(403, 'forbidden');
+  const content = await prisma.guidelineContent.findUnique({ where: { id: 1 } });
+  res.json(content ?? { id: 1, draftBody: DEFAULT_GUIDELINES, publishedBody: null, publishedAt: null });
+});
+r.put('/content/guidelines', async (req, res) => {
+  if (!accountAdmin(req)) throw new HttpError(403, 'forbidden');
+  const { body } = z.object({ body: plainContent(10000) }).parse(req.body);
+  const content = await prisma.guidelineContent.upsert({ where: { id: 1 }, create: { id: 1, draftBody: body }, update: { draftBody: body } });
+  await audit(req.user!.id, 'guidelines.draft_saved', 'guidelines', 1);
+  res.json(content);
+});
+r.post('/content/guidelines/publish', async (req, res) => {
+  if (!accountAdmin(req)) throw new HttpError(403, 'forbidden');
+  const { expectedBody } = z.object({ expectedBody: plainContent(10000) }).parse(req.body);
+  const current = await prisma.guidelineContent.findUnique({ where: { id: 1 } });
+  if (!current) throw new HttpError(409, 'no_draft');
+  if (current.draftBody !== expectedBody) throw new HttpError(409, 'draft_changed');
+  const changed = await prisma.guidelineContent.updateMany({ where: { id: 1, draftBody: expectedBody }, data: { publishedBody: expectedBody, publishedAt: new Date() } });
+  if (changed.count !== 1) throw new HttpError(409, 'draft_changed');
+  const content = await prisma.guidelineContent.findUniqueOrThrow({ where: { id: 1 } });
+  await audit(req.user!.id, 'guidelines.published', 'guidelines', 1);
+  res.json(content);
+});
+
+r.get('/content/announcements', async (req, res) => {
+  if (!accountAdmin(req)) throw new HttpError(403, 'forbidden');
+  const items = await prisma.announcement.findMany({ orderBy: { id: 'desc' }, take: 50 });
+  res.json({ items });
+});
+const announcementInput = z.object({ title: plainContent(120), body: plainContent(2000) });
+r.post('/content/announcements', async (req, res) => {
+  if (!accountAdmin(req)) throw new HttpError(403, 'forbidden');
+  const data = announcementInput.parse(req.body);
+  const item = await prisma.announcement.create({ data });
+  await audit(req.user!.id, 'announcement.created', 'announcement', item.id);
+  res.status(201).json(item);
+});
+r.patch('/content/announcements/:id', async (req, res) => {
+  if (!accountAdmin(req)) throw new HttpError(403, 'forbidden');
+  const id = z.coerce.number().int().positive().parse(req.params.id);
+  const data = announcementInput.parse(req.body);
+  const current = await prisma.announcement.findUnique({ where: { id } });
+  if (!current) throw new HttpError(404, 'not_found');
+  if (current.status === 'archived') throw new HttpError(409, 'archived');
+  const item = await prisma.announcement.update({ where: { id }, data: current.status === 'published' ? { pendingTitle: data.title, pendingBody: data.body } : data });
+  await audit(req.user!.id, 'announcement.draft_saved', 'announcement', id);
+  res.json(item);
+});
+r.post('/content/announcements/:id/publish', async (req, res) => {
+  if (!accountAdmin(req)) throw new HttpError(403, 'forbidden');
+  const id = z.coerce.number().int().positive().parse(req.params.id);
+  const { expectedTitle, expectedBody } = z.object({ expectedTitle: plainContent(120), expectedBody: plainContent(2000) }).parse(req.body);
+  const current = await prisma.announcement.findUnique({ where: { id } });
+  if (!current) throw new HttpError(404, 'not_found');
+  if (current.status === 'archived') throw new HttpError(409, 'archived');
+  if ((current.pendingTitle ?? current.title) !== expectedTitle || (current.pendingBody ?? current.body) !== expectedBody) throw new HttpError(409, 'draft_changed');
+  const changed = await prisma.announcement.updateMany({ where: {
+    id, status: current.status,
+    ...(current.status === 'published' ? { pendingTitle: current.pendingTitle, pendingBody: current.pendingBody } : { title: current.title, body: current.body }),
+  }, data: {
+    title: expectedTitle, body: expectedBody,
+    pendingTitle: null, pendingBody: null, status: 'published', publishedAt: new Date(),
+  } });
+  if (changed.count !== 1) throw new HttpError(409, 'draft_changed');
+  const item = await prisma.announcement.findUniqueOrThrow({ where: { id } });
+  await audit(req.user!.id, 'announcement.published', 'announcement', id);
+  res.json(item);
+});
+r.post('/content/announcements/:id/archive', async (req, res) => {
+  if (!accountAdmin(req)) throw new HttpError(403, 'forbidden');
+  const id = z.coerce.number().int().positive().parse(req.params.id);
+  const current = await prisma.announcement.findUnique({ where: { id } });
+  if (!current) throw new HttpError(404, 'not_found');
+  if (current.status === 'archived') throw new HttpError(409, 'archived');
+  const item = await prisma.announcement.update({ where: { id }, data: { status: 'archived' } });
+  await audit(req.user!.id, 'announcement.archived', 'announcement', id);
+  res.json(item);
+});
+
 r.get('/audit-logs', async (req, res) => {
   if (!accountAdmin(req)) throw new HttpError(403, 'forbidden');
   const { limit, cursor } = z.object({
@@ -153,18 +234,34 @@ r.get('/audit-logs', async (req, res) => {
 
 r.get('/users', async (req, res) => {
   if (!accountAdmin(req)) throw new HttpError(403, 'forbidden');
-  const { q } = z.object({ q: z.string().trim().max(80).optional() }).parse(req.query);
+  const { q, status, verification, campusId, page, pageSize } = z.object({
+    q: z.string().trim().max(80).optional(),
+    status: z.enum(['active', 'suspended']).optional(),
+    verification: z.enum(['unverified', 'pending', 'verified', 'rejected', 'suspended']).optional(),
+    campusId: z.coerce.number().int().positive().optional(),
+    page: z.coerce.number().int().min(1).max(10000).default(1),
+    pageSize: z.coerce.number().int().min(1).max(50).default(25),
+  }).parse(req.query);
+  const where: Prisma.UserWhereInput = {
+    ...(q ? { OR: [{ displayName: { contains: q } }, { email: { contains: q } }] } : {}),
+    ...(status ? { status } : {}),
+    ...(campusId || verification ? { affiliations: { some: {
+      ...(campusId ? { campusId } : {}),
+      ...(verification ? { verificationStatus: verification } : {}),
+    } } } : {}),
+  };
+  const total = await prisma.user.count({ where });
   const items = await prisma.user.findMany({
-    where: q ? { OR: [{ displayName: { contains: q } }, { email: { contains: q } }] } : {},
+    where,
     select: {
       id: true, displayName: true, email: true, status: true,
       roles: { select: { role: true } },
       affiliations: { select: { campus: { select: { code: true } }, verificationStatus: true } },
     },
-    orderBy: { id: 'desc' }, take: 25,
+    orderBy: { id: 'desc' }, skip: (page - 1) * pageSize, take: pageSize,
   });
   res.setHeader('Cache-Control', 'no-store');
-  res.json({ items });
+  res.json({ items, total, page, pageSize });
 });
 
 r.patch('/users/:id/status', async (req, res) => {

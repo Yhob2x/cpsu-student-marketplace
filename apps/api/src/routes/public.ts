@@ -1,10 +1,12 @@
 import { Router } from 'express';
 import path from 'node:path';
 import { z } from 'zod';
+import { Prisma } from '@prisma/client';
 import { prisma } from '../db.js';
 import { env } from '../env.js';
 import { HttpError } from '../http.js';
 import { reviewCampusIds } from '../auth.js';
+import { DEFAULT_GUIDELINES } from '../managed-content.js';
 
 const r = Router();
 export const publicListing = (l: any) => ({
@@ -20,6 +22,29 @@ const include = { category: true, campus: true, seller: { include: { owner: { se
 
 r.get('/campuses', async (_q, res) => res.json(await prisma.campus.findMany({ where: { active: true }, select: { id: true, code: true, name: true } })));
 r.get('/categories', async (_q, res) => res.json(await prisma.category.findMany({ select: { id: true, parentId: true, name: true, listingType: true } })));
+
+r.get('/guidelines', async (_req, res) => {
+  try {
+    const content = await prisma.guidelineContent.findUnique({ where: { id: 1 }, select: { publishedBody: true, publishedAt: true } });
+    res.json({ body: content?.publishedBody ?? DEFAULT_GUIDELINES, publishedAt: content?.publishedAt ?? null });
+  } catch (error) {
+    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2021') {
+      return res.json({ body: DEFAULT_GUIDELINES, publishedAt: null });
+    }
+    throw error;
+  }
+});
+
+r.get('/announcements', async (_req, res) => {
+  try {
+    const items = await prisma.announcement.findMany({ where: { status: 'published' }, orderBy: { publishedAt: 'desc' }, take: 10,
+      select: { id: true, title: true, body: true, publishedAt: true } });
+    res.json({ items });
+  } catch (error) {
+    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2021') return res.json({ items: [] });
+    throw error;
+  }
+});
 
 r.get('/listings', async (req, res) => {
   const q = z.object({

@@ -72,6 +72,7 @@ if (process.env.CPSU_PUSH_TESTS === '1') {
       const cfg = await request(app).get('/api/v1/push/config').set(auth(a));
       expect(cfg.status).toBe(200);
       expect(cfg.body.enabled).toBe(true);
+      expect(cfg.body.deliveryEnabled).toBe(false);
       expect(cfg.body.publicKey).toBe(process.env.VAPID_PUBLIC_KEY);
       expect(JSON.stringify(cfg.body)).not.toContain(process.env.VAPID_PRIVATE_KEY!);
       const prefs = await request(app).get('/api/v1/push/preferences').set(auth(a));

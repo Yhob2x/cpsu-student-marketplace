@@ -32,6 +32,9 @@ The project owner requested continuation after Stage 3 device-readiness preparat
 ## Verification evidence
 
 - `bun run push:staging:templates`: **15/15 checks PASS**. During implementation a mistyped escaped Nginx hidden-file regex was identified by this validator and corrected before completion.
+- `cd apps/web; bun run build`: PASS. `bun run test`: 17 unit tests pass; 2 opt-in integration suites skipped by default. `bun run pwa:check`: PASS.
+- **Concurrent code change observed:** The first `cd apps/api; bunx tsc -p . --noEmit` run reported three WP3 transaction-route errors at lines 68–69. Following a separate concurrent local commit, `461f922`, a fresh API TypeScript check **passed (exit 0)**. Stage 4 did not edit the WP3 route to fix those errors. The build may still require further real staging/server acceptance; a local TypeScript pass is not production approval.
+- **Separate Git activity:** Commit `461f922` appeared during this task and includes staging assets, WP3 work and Graphify-generated files. It was **not created or pushed by this assistant**. Preserve that commit and review its scope before any future GitHub push; other users' staged changes were not reset.
 - Source templates contain **no real private keys, JWT values, DB credentials, approved domain or contact**.
 - Existing production Nginx/systemd templates were **not edited**.
 - The public readiness check `bun run push:staging:check` remains appropriately blocked on the two known requirements: the localhost-only VAPID subject and missing approved HTTPS staging URL.

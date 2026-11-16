@@ -13,5 +13,8 @@ const schema = z.object({
   VAPID_PUBLIC_KEY: z.string().optional(),
   VAPID_PRIVATE_KEY: z.string().optional(),
   VAPID_SUBJECT: z.string().optional(),
+  // Stage 5: both release gates default off. Explicit private server approval required.
+  PUSH_SUBSCRIPTIONS_ENABLED: z.enum(['true', 'false']).default('false'),
+  PUSH_DELIVERY_ENABLED: z.enum(['true', 'false']).default('false'),
 });
 export const env = schema.parse(process.env);

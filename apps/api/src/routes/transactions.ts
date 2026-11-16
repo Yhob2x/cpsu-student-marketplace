@@ -167,6 +167,16 @@ r.post('/:id/decision', async (req, res) => {
   ]).parse(req.body);
   const result = await prisma.$transaction(async tx => {
     if (b.action === 'accept') {
+      // The buyer may have been suspended or lost CPSU verification after submitting.
+      // A seller must not accept a request for an ineligible student.
+      const eligibleBuyer = await tx.user.count({ where: {
+        id: t.buyerUserId, status: 'active', roles: { none: {} },
+        affiliations: { some: {
+          verificationStatus: 'verified', campus: { active: true },
+          OR: [{ expirationAt: null }, { expirationAt: { gt: new Date() } }],
+        } },
+      } });
+      if (!eligibleBuyer) throw new HttpError(409, 'buyer_unavailable');
       const updated = await tx.transaction.updateMany({ where: { id: t.id, status: 'pending', activeThreadId: t.inquiryThreadId },
         data: { status: 'accepted' } });
       if (!updated.count) throw new HttpError(409, 'invalid_transaction_state');

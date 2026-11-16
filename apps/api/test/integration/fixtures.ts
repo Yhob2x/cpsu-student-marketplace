@@ -25,6 +25,8 @@ export async function resetFixtures(prisma: PrismaClient) {
   await prisma.report.deleteMany();
   await prisma.notification.deleteMany();
   await prisma.auditLog.deleteMany();
+  await prisma.announcement.deleteMany();
+  await prisma.guidelineContent.deleteMany();
   await prisma.listing.deleteMany();
   await prisma.restrictedCategory.deleteMany();
   await prisma.campusPolicy.deleteMany();

@@ -2,6 +2,7 @@ import { createHash } from 'node:crypto';
 import * as webPush from 'web-push';
 import { prisma } from './db.js';
 import { env } from './env.js';
+import { evaluatePushPolicy } from './push-policy.js';
 
 export type PushCategory = 'messages' | 'listingReviews' | 'accountUpdates';
 type EventData = Record<string, unknown>;
@@ -33,10 +34,10 @@ export function permittedPushEndpoint(raw: string): boolean {
 
 export const endpointHash = (endpoint: string) => createHash('sha256').update(endpoint).digest('hex');
 
-// Never advertise push as enabled when keys are incomplete or incorrectly formatted.
-const validSubject = /^(mailto:[^@\s]+@[^@\s]+\.[^@\s]+|https:\/\/[^\s/]+(?:\/[^\s]*)?)$/.test(env.VAPID_SUBJECT ?? '');
-export const pushReady = /^[A-Za-z0-9_-]{87}$/.test(env.VAPID_PUBLIC_KEY ?? '')
-  && /^[A-Za-z0-9_-]{43}$/.test(env.VAPID_PRIVATE_KEY ?? '') && validSubject;
+// Separate subscription and outbound-delivery gates; never infer approval from VAPID keys alone.
+const pushPolicy = evaluatePushPolicy(env);
+export const pushReady = pushPolicy.subscriptionsEnabled;
+export const pushDeliveryReady = pushPolicy.deliveryEnabled;
 
 export function categoryForNotice(type: string): PushCategory | null {
   if (type === 'inquiry.new' || type === 'inquiry.reply') return 'messages';
@@ -80,7 +81,7 @@ const VAPID = pushReady ? {
 /** Delivery is best-effort: in-app notification persistence must not depend on external push services. */
 export async function deliverPush(userId: number, type: string, data: EventData, notificationId: number): Promise<void> {
   const category = categoryForNotice(type);
-  if (!VAPID || !category || env.NODE_ENV === 'test') return;
+  if (!pushDeliveryReady || !VAPID || !category || env.NODE_ENV === 'test') return;
   const recipient = await prisma.user.findUnique({ where: { id: userId }, select: { status: true } });
   if (recipient?.status !== 'active') return;
   const preferences = await prisma.pushPreference.findUnique({ where: { userId } });

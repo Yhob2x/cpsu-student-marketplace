@@ -23,6 +23,15 @@ r.patch('/me', async (req, res) => {
   res.json({ ok: true });
 });
 
+r.get('/notifications/unread-count', async (req, res) => {
+  res.setHeader('Cache-Control', 'no-store');
+  const where = { userId: req.user!.id, readAt: null };
+  const [total, messages] = await Promise.all([
+    prisma.notification.count({ where }),
+    prisma.notification.count({ where: { ...where, type: { in: ['inquiry.new', 'inquiry.reply'] } } }),
+  ]);
+  res.json({ total, messages });
+});
 r.get('/notifications', async (req, res) =>
   res.json(await prisma.notification.findMany({ where: { userId: req.user!.id }, orderBy: { createdAt: 'desc' }, take: 50 })));
 r.post('/notifications/read', async (req, res) => {
@@ -40,7 +49,7 @@ r.post('/notifications/:id/read', async (req, res) => {
 r.get('/saved', async (req, res) => {
   const rows = await prisma.savedListing.findMany({
     where: { userId: req.user!.id, listing: { status: 'published', deletedAt: null,
-      seller: { approvalStatus: 'approved' } } },
+      seller: { approvalStatus: 'approved', owner: { status: 'active' } } } },
     include: { listing: { include: { category: true, campus: true, seller: true, media: true } } }, orderBy: { createdAt: 'desc' },
   });
   res.json(rows.map(s => publicListing(s.listing)));
@@ -48,7 +57,7 @@ r.get('/saved', async (req, res) => {
 r.put('/saved/:listingId', async (req, res) => {
   const listingId = Number(req.params.listingId);
   const listing = await prisma.listing.findFirst({ where: {
-    id: listingId, status: 'published', deletedAt: null, seller: { approvalStatus: 'approved' },
+    id: listingId, status: 'published', deletedAt: null, seller: { approvalStatus: 'approved', owner: { status: 'active' } },
   }, include: { seller: true } });
   if (!listing) throw new HttpError(404, 'not_found');
   if (listing.seller.ownerUserId === req.user!.id) throw new HttpError(400, 'own_listing');

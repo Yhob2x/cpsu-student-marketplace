@@ -30,7 +30,9 @@ or institutional approval; those carry the module that owns them.
 | A listing needs a price > 0 and at least one photo before review | Enforced | `submit` returns `422 incomplete_listing`. |
 | A prohibited category on a campus cannot be submitted | Enforced | `restricted_prohibited` → `422 category_prohibited`. |
 | A listing is publicly visible only when published and its store is approved | Enforced | `GET /listings`, `/listings/:id`, `/media/:id`. |
-| At most 6 images per listing, JPEG/PNG/WebP, ≤ 3 MB | Enforced | multer config + `too_many_images`. |
+| At most 6 photos per listing, input JPEG/PNG/WebP ≤ 3 MB, decoded-format validation, ≤ 24 MP, still-image normalization to metadata-free WebP | Enforced for new uploads | `routes/seller.ts`, `src/upload-security.ts`; no retroactive legacy-media processing. |
+| A new photo on an already published listing cannot appear without fresh review | Enforced | Photo upload changes published → draft atomically with media creation. |
+| A campus reviewer must explicitly confirm inspecting all photos before approval | Enforced as reviewer attestation, **not automatic content scanning** | `/admin/listings/:id/decision` requires `photosReviewed: true` for approval and audits the confirmation. |
 | Food and other establishment-overlapping categories need human approval | Partial | Flagged for review (`rules.ts`); the decision is human. |
 | Academic dishonesty is prohibited | Partial | Keyword flag + 20-character reason on approval; keyword list is not policy. |
 | Products carry a condition (new / like new / good / fair) | Not implemented | No column. |

@@ -210,3 +210,13 @@ Sentence case for headings and buttons. Prices as `₱` on web (`Intl` en-PH, no
 - Preserve two-column listing cards on standard phones and allow the existing rem-based grid to collapse for magnified text. Keep readable typography, 44px save controls, and at least 48px app-bottom-tab targets.
 - Browser checks cover 320/360/390/414/560/768/1024px, interaction states, 200% text, no horizontal overflow, and Axe-core on Home/Explore/Login at 320/390px (0 confirmed violations; card contrast computations still require manual review).
 - Do not treat Chrome emulation as real iPhone/Android verification. Physical device keyboard/safe-area, PWA install, and VoiceOver/TalkBack tests remain release blockers.
+
+
+## 18. Seller upload content policy and reviewer confirmation — 16 November 2026
+
+- Seller create/edit forms describe prohibited image categories (pornography, explicit sexual imagery, graphic violence and similar prohibited material) adjacent to the file control with an accessible description.
+- The server validates and re-encodes new images; this **does not classify the subject matter**. Do not present the upload as being automatically scanned for pornography.
+- Review queue shows every attached photo and the count. A previously unchecked human-review confirmation is required before the Approve button becomes enabled. Request changes and Reject continue to work without approving any content.
+- The server requires the confirmation even when an API client bypasses frontend controls. Review decisions retain their reasons and the authorized review scope; confirmation and photo count are audited.
+- A newly added photo to an existing published listing sends the listing back to draft. Show a clear status message to the seller that resubmission is required, rather than implying the photo is instantly public.
+- Continue the existing approved light/forest-green design, visible labels, keyboard controls, and screen reader feedback. Device and screen-reader acceptance remains pending.

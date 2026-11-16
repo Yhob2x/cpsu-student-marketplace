@@ -132,6 +132,75 @@ if (process.env.CPSU_INTEGRATION_TESTS === '1') {
       expect(report.body.error.code).toBe('category_prohibited');
     });
 
+    test('upload sanitization and human photo-review gate prevent unreviewed media publication', async () => {
+      const { default: sharp } = await import('sharp');
+      const fs = await import('node:fs/promises');
+      const path = await import('node:path');
+      const { env } = await import('../../src/env.js');
+      const safePixels = await sharp({
+        create: { width: 48, height: 32, channels: 3, background: '#78a88a' },
+      }).png().toBuffer();
+      const created = await request(app).post('/api/v1/seller/listings')
+        .set(token(fx.seller.id)).send({ ...sample(fx.category.id), condition: 'good' });
+      expect(created.status).toBe(201);
+      const listingId = created.body.id;
+      const target = '/api/v1/seller/listings/' + listingId + '/media';
+
+      // Permission checking happens before multipart disk storage.
+      const outsider = await request(app).post(target).set(token(fx.outsider.id))
+        .attach('image', safePixels, { filename: 'synthetic.png', contentType: 'image/png' });
+      expect(outsider.status).toBe(404);
+
+      // A declared JPEG cannot contain PNG bytes, and text renamed to JPEG is not an image.
+      const spoofedMime = await request(app).post(target).set(token(fx.seller.id))
+        .attach('image', safePixels, { filename: 'disguised.jpg', contentType: 'image/jpeg' });
+      expect(spoofedMime.status).toBe(400);
+      expect(spoofedMime.body.error.code).toBe('invalid_image');
+      const randomBytes = await request(app).post(target).set(token(fx.seller.id))
+        .attach('image', Buffer.from('this is not a real image'), { filename: 'invalid.jpg', contentType: 'image/jpeg' });
+      expect(randomBytes.status).toBe(400);
+      expect(randomBytes.body.error.code).toBe('invalid_image');
+      expect(await prisma.listingMedia.count({ where: { listingId } })).toBe(0);
+      expect((await fs.readdir(env.UPLOAD_DIR)).filter(f => f.endsWith('.upload'))).toHaveLength(0);
+
+      // The only stored image is a decoded/re-encoded WebP with no EXIF metadata.
+      const accepted = await request(app).post(target).set(token(fx.seller.id))
+        .attach('image', safePixels, { filename: 'synthetic.png', contentType: 'image/png' });
+      expect(accepted.status).toBe(201);
+      const stored = await prisma.listingMedia.findUniqueOrThrow({ where: { id: accepted.body.id } });
+      expect(stored.mimeType).toBe('image/webp');
+      expect(stored.mediaPath.endsWith('.webp')).toBe(true);
+      const normalized = await sharp(await fs.readFile(path.join(env.UPLOAD_DIR, stored.mediaPath))).metadata();
+      expect(normalized.format).toBe('webp');
+      expect(normalized.exif).toBeUndefined();
+
+      const submitted = await request(app).post('/api/v1/seller/listings/' + listingId + '/submit')
+        .set(token(fx.seller.id)).send({});
+      expect(submitted.status).toBe(200);
+      const decision = '/api/v1/admin/listings/' + listingId + '/decision';
+      const unchecked = await request(app).post(decision).set(token(fx.reviewerA.id))
+        .send({ decision: 'approved', reason: 'Photos checked' });
+      expect(unchecked.status).toBe(422);
+      expect(unchecked.body.error.code).toBe('photo_review_required');
+      expect((await prisma.listing.findUniqueOrThrow({ where: { id: listingId } })).status).toBe('pending_review');
+      const otherCampus = await request(app).post(decision).set(token(fx.reviewerB.id))
+        .send({ decision: 'approved', reason: 'Photos checked', photosReviewed: true });
+      expect(otherCampus.status).toBe(404);
+      const approved = await request(app).post(decision).set(token(fx.reviewerA.id))
+        .send({ decision: 'approved', reason: 'Photos checked', photosReviewed: true });
+      expect(approved.status).toBe(200);
+      expect(approved.body.status).toBe('published');
+
+      // New photos added to approved listings MUST be reviewed again.
+      const second = await request(app).post(target).set(token(fx.seller.id))
+        .attach('image', safePixels, { filename: 'another.png', contentType: 'image/png' });
+      expect(second.status).toBe(201);
+      expect((await prisma.listing.findUniqueOrThrow({ where: { id: listingId } })).status).toBe('draft');
+      const publicView = await request(app).get('/api/v1/media/' + second.body.id);
+      expect(publicView.status).toBe(404);
+      expect((await fs.readdir(env.UPLOAD_DIR)).filter(f => f.endsWith('.upload'))).toHaveLength(0);
+    });
+
     test('search sort validation and pagination contract are enforced', async () => {
       const wrong = await request(app).get('/api/v1/listings?sort=unexpected');
       expect(wrong.status).toBe(400);
@@ -291,6 +360,157 @@ if (process.env.CPSU_INTEGRATION_TESTS === '1') {
       expect(scoped.status).toBe(404);
       const admin = await request(app).get('/api/v1/admin/review-queue').set(token(fx.globalAdmin.id));
       expect(admin.status).toBe(200);
+    });
+
+    test('campus reviewers can only read and resolve reports about their permitted campus', async () => {
+      const a = await prisma.report.create({ data: {
+        reporterUserId: fx.buyer.id, listingId: fx.published.id, reason: 'Test report on campus A',
+      } });
+      const b = await prisma.report.create({ data: {
+        reporterUserId: fx.buyer.id, sellerProfileId: fx.storeB.id, reason: 'Test report on campus B',
+      } });
+      const aQueue = await request(app).get('/api/v1/admin/reports').set(token(fx.reviewerA.id));
+      expect(aQueue.status).toBe(200);
+      expect(aQueue.body.some((rep: any) => rep.id === a.id)).toBe(true);
+      expect(aQueue.body.some((rep: any) => rep.id === b.id)).toBe(false);
+      const bQueue = await request(app).get('/api/v1/admin/reports').set(token(fx.reviewerB.id));
+      expect(bQueue.body.some((rep: any) => rep.id === b.id)).toBe(true);
+      expect(bQueue.body.some((rep: any) => rep.id === a.id)).toBe(false);
+      const rejected = await request(app).post('/api/v1/admin/reports/' + b.id + '/resolve')
+        .set(token(fx.reviewerA.id)).send({ status: 'resolved' });
+      expect(rejected.status).toBe(404);
+      expect((await prisma.report.findUniqueOrThrow({ where: { id: b.id } })).status).toBe('open');
+      expect(await prisma.auditLog.count({ where: { action: 'report.resolved', targetId: b.id } })).toBe(0);
+      const global = await request(app).get('/api/v1/admin/reports').set(token(fx.globalAdmin.id));
+      expect(global.body.some((rep: any) => rep.id === b.id)).toBe(true);
+      const allowed = await request(app).post('/api/v1/admin/reports/' + b.id + '/resolve')
+        .set(token(fx.reviewerB.id)).send({ status: 'resolved' });
+      expect(allowed.status).toBe(204);
+      const replay = await request(app).post('/api/v1/admin/reports/' + b.id + '/resolve')
+        .set(token(fx.reviewerB.id)).send({ status: 'dismissed' });
+      expect(replay.status).toBe(409);
+    });
+
+    test('a suspended seller cannot appear in public discovery, profile, details, or media', async () => {
+      const owner = await prisma.user.create({ data: {
+        email: 'visibility-owner@stage1.invalid', displayName: 'Visibility Owner',
+        passwordHash: await hashPassword('TestPassphrase-Stage1-2026!'), status: 'active',
+      } });
+      const store = await prisma.sellerProfile.create({ data: {
+        ownerUserId: owner.id, campusId: fx.campusA.id, storeName: 'Hidden Shop',
+        description: 'Should disappear when account is suspended', approvalStatus: 'approved',
+      } });
+      const item = await prisma.listing.create({ data: {
+        sellerProfileId: store.id, campusId: fx.campusA.id, categoryId: fx.category.id,
+        type: 'physical_product', title: 'Visibility Sample', description: 'Test visibility item',
+        price: 95, status: 'published',
+      } });
+      const media = await prisma.listingMedia.create({ data: {
+        listingId: item.id, mediaPath: 'synthetic-visibility.webp', mimeType: 'image/webp',
+      } });
+      await prisma.savedListing.create({ data: { listingId: item.id, userId: fx.buyer.id } });
+      expect((await request(app).get('/api/v1/listings')).body.items.some((l: any) => l.id === item.id)).toBe(true);
+      const thread = await request(app).post('/api/v1/inquiries').set(token(fx.buyer.id))
+        .send({ listingId: item.id, body: 'Before owner suspension' });
+      expect(thread.status).toBe(201);
+      await prisma.user.update({ where: { id: owner.id }, data: { status: 'suspended' } });
+      const search = await request(app).get('/api/v1/listings');
+      expect(search.body.items.some((l: any) => l.id === item.id)).toBe(false);
+      expect((await request(app).get('/api/v1/listings/popular')).body.items.some((l: any) => l.id === item.id)).toBe(false);
+      expect((await request(app).get('/api/v1/listings/' + item.id)).status).toBe(404);
+      expect((await request(app).get('/api/v1/seller-profiles/' + store.id)).status).toBe(404);
+      expect((await request(app).get('/api/v1/media/' + media.id)).status).toBe(404);
+      expect((await request(app).post('/api/v1/inquiries').set(token(fx.outsider.id))
+        .send({ listingId: item.id, body: 'Do not contact suspended owner' })).status).toBe(404);
+      expect((await request(app).post('/api/v1/inquiries/' + thread.body.id + '/messages')
+        .set(token(fx.buyer.id)).send({ body: 'Do not send to suspended owner' })).status).toBe(409);
+      const history = await request(app).get('/api/v1/inquiries/' + thread.body.id + '/messages').set(token(fx.buyer.id));
+      expect(history.status).toBe(200);
+      expect(history.body.listing.imageUrl).toBeNull();
+      expect((await request(app).get('/api/v1/saved').set(token(fx.buyer.id))).body.some((l: any) => l.id === item.id)).toBe(false);
+    });
+
+    test('only university administration can page through audited security decisions', async () => {
+      const id = fx.published.id;
+      await prisma.auditLog.create({ data: {
+        actorUserId: fx.globalAdmin.id, action: 'test.security.review', targetType: 'listing',
+        targetId: id, metadata: { result: 'synthetic' },
+      } });
+      const url = '/api/v1/admin/audit-logs?limit=1';
+      expect((await request(app).get(url).set(token(fx.buyer.id))).status).toBe(403);
+      expect((await request(app).get(url).set(token(fx.reviewerA.id))).status).toBe(403);
+      const first = await request(app).get(url).set(token(fx.globalAdmin.id));
+      expect(first.status).toBe(200);
+      expect(first.body.items).toHaveLength(1);
+      expect(first.body.items[0]).toMatchObject({
+        action: 'test.security.review', targetType: 'listing', targetId: id,
+      });
+      expect(first.body.items[0]).not.toHaveProperty('passwordHash');
+      expect(first.body.nextCursor).toBe(first.body.items[0].id);
+      const second = await request(app).get(url + '&cursor=' + first.body.nextCursor)
+        .set(token(fx.globalAdmin.id));
+      expect(second.status).toBe(200);
+      expect(second.body.items.some((a: any) => a.id === first.body.items[0].id)).toBe(false);
+    });
+
+    test('refresh denies an account suspended outside the normal admin workflow', async () => {
+      const login = await request(app).post('/api/v1/auth/login').set('X-Client', 'mobile')
+        .send({ email: fx.outsider.email, password: 'TestPassphrase-Stage1-2026!' });
+      expect(login.status).toBe(200);
+      await prisma.user.update({ where: { id: fx.outsider.id }, data: { status: 'suspended' } });
+      const refresh = await request(app).post('/api/v1/auth/refresh').set('X-Client', 'mobile')
+        .send({ refreshToken: login.body.refreshToken });
+      await prisma.user.update({ where: { id: fx.outsider.id }, data: { status: 'active' } });
+      expect(refresh.status).toBe(401);
+    });
+
+    test('only a university admin can suspend and reactivate a student with audit and session revocation', async () => {
+      const pass = 'TestPassphrase-Stage1-2026!';
+      const student = await prisma.user.create({ data: {
+        email: 'managed-student@stage1.invalid', displayName: 'Managed Student',
+        passwordHash: await hashPassword(pass),
+        affiliations: { create: { campusId: fx.campusA.id, verificationStatus: 'verified' } },
+      } });
+      const login = await request(app).post('/api/v1/auth/login').set('X-Client', 'mobile')
+        .send({ email: student.email, password: pass });
+      expect(login.status).toBe(200);
+      const route = '/api/v1/admin/users/' + student.id + '/status';
+      const reason = 'Confirmed test-only policy violation';
+      expect((await request(app).patch(route).set(token(fx.buyer.id))
+        .send({ status: 'suspended', reason })).status).toBe(403);
+      expect((await request(app).patch(route).set(token(fx.reviewerA.id))
+        .send({ status: 'suspended', reason })).status).toBe(403);
+      expect((await request(app).patch('/api/v1/admin/users/' + fx.globalAdmin.id + '/status')
+        .set(token(fx.globalAdmin.id)).send({ status: 'suspended', reason })).status).toBe(409);
+      const search = await request(app).get('/api/v1/admin/users?q=managed-student').set(token(fx.globalAdmin.id));
+      expect(search.status).toBe(200);
+      expect(search.body.items.some((item: any) => item.id === student.id)).toBe(true);
+      expect(JSON.stringify(search.body)).not.toContain('passwordHash');
+
+      const suspended = await request(app).patch(route).set(token(fx.globalAdmin.id))
+        .send({ status: 'suspended', reason });
+      expect(suspended.status).toBe(200);
+      expect((await prisma.user.findUniqueOrThrow({ where: { id: student.id } })).status).toBe('suspended');
+      expect((await request(app).get('/api/v1/me')
+        .set({ Authorization: 'Bearer ' + login.body.accessToken })).status).toBe(401);
+      expect((await request(app).post('/api/v1/auth/refresh').set('X-Client', 'mobile')
+        .send({ refreshToken: login.body.refreshToken })).status).toBe(401);
+      expect((await request(app).post('/api/v1/auth/login').set('X-Client', 'mobile')
+        .send({ email: student.email, password: pass })).status).toBe(401);
+      expect(await prisma.session.count({ where: { userId: student.id, revokedAt: null } })).toBe(0);
+      expect((await prisma.auditLog.findFirst({ where: {
+        actorUserId: fx.globalAdmin.id, action: 'user.suspended', targetId: student.id,
+      } }))?.metadata).toMatchObject({ reason });
+      expect((await request(app).patch(route).set(token(fx.globalAdmin.id))
+        .send({ status: 'suspended', reason })).status).toBe(409);
+
+      const activated = await request(app).patch(route).set(token(fx.globalAdmin.id))
+        .send({ status: 'active', reason: 'Appeal reviewed and restriction lifted' });
+      expect(activated.status).toBe(200);
+      expect((await request(app).post('/api/v1/auth/refresh').set('X-Client', 'mobile')
+        .send({ refreshToken: login.body.refreshToken })).status).toBe(401);
+      expect((await request(app).post('/api/v1/auth/login').set('X-Client', 'mobile')
+        .send({ email: student.email, password: pass })).status).toBe(200);
     });
 
     test('administrative suspension records actor and target in audit log', async () => {

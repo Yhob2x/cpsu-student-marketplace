@@ -10,16 +10,18 @@ import { HttpError } from '../http.js';
 import { requireAuth } from '../auth.js';
 import { audit, notify } from '../audit.js';
 import { evaluateListing, isMaterialChange } from '../rules.js';
+import { sanitizeListingImage } from '../upload-security.js';
 
 const r = Router();
 r.use(requireAuth);
 fs.mkdirSync(env.UPLOAD_DIR, { recursive: true });
 
-const EXT: Record<string, string> = { 'image/jpeg': '.jpg', 'image/png': '.png', 'image/webp': '.webp' };
+const ALLOWED_IMAGE_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp']);
 const upload = multer({
-  storage: multer.diskStorage({ destination: env.UPLOAD_DIR, filename: (_q, f, cb) => cb(null, crypto.randomBytes(16).toString('hex') + (EXT[f.mimetype] ?? '')) }),
+  // Incoming bytes are temporary and never served; only re-encoded WebP is retained.
+  storage: multer.diskStorage({ destination: env.UPLOAD_DIR, filename: (_q, _f, cb) => cb(null, crypto.randomBytes(16).toString('hex') + '.upload') }),
   limits: { fileSize: 3 * 1024 * 1024, files: 1 },
-  fileFilter: (_q, f, cb) => cb(null, f.mimetype in EXT),
+  fileFilter: (_q, f, cb) => cb(null, ALLOWED_IMAGE_TYPES.has(f.mimetype)),
 });
 
 const listingBody = z.object({
@@ -77,14 +79,60 @@ r.patch('/listings/:id', async (req, res) => {
     data: { ...patch, ...(type === 'service' && { condition: null }), status } }));
 });
 
-r.post('/listings/:id/media', upload.single('image'), async (req, res) => {
-  const l = await ownListing(req.user!.id, Number(req.params.id));
-  if (l.deletedAt) { if (req.file) fs.unlink(req.file.path, () => {}); throw new HttpError(409, 'listing_deleted'); }
-  if (!req.file) throw new HttpError(400, 'invalid_image', 'JPEG, PNG or WebP up to 3 MB');
-  if (l.media.length >= 6) { fs.unlink(req.file.path, () => {}); throw new HttpError(409, 'too_many_images'); }
-  const m = await prisma.listingMedia.create({ data: { listingId: l.id, mediaPath: path.basename(req.file.path), mimeType: req.file.mimetype, position: l.media.length } });
-  res.status(201).json({ id: m.id });
-});
+// Authorize and check the quota BEFORE accepting any file bytes to avoid
+// unauthorized uploads filling storage with orphan files.
+r.post('/listings/:id/media',
+  async (req, _res, next) => {
+    try {
+      const l = await ownListing(req.user!.id, Number(req.params.id));
+      if (l.deletedAt) throw new HttpError(409, 'listing_deleted');
+      if (!['draft', 'changes_requested', 'published'].includes(l.status))
+        throw new HttpError(409, 'not_editable');
+      if (l.media.length >= 6) throw new HttpError(409, 'too_many_images');
+      next();
+    } catch (error) { next(error); }
+  },
+  (req, res, next) => upload.single('image')(req, res, error => {
+    if (error instanceof multer.MulterError)
+      return next(new HttpError(400, 'invalid_image', 'Upload one JPEG, PNG or WebP photo up to 3 MB.'));
+    next(error);
+  }),
+  async (req, res) => {
+    if (!req.file) throw new HttpError(400, 'invalid_image', 'Upload a JPEG, PNG or WebP photo up to 3 MB.');
+    const safe = await sanitizeListingImage(req.file, env.UPLOAD_DIR);
+    try {
+      const media = await prisma.$transaction(async tx => {
+        const current = await tx.listing.findFirst({
+          where: { id: Number(req.params.id), seller: { ownerUserId: req.user!.id } },
+          include: { media: true },
+        });
+        if (!current) throw new HttpError(404, 'not_found');
+        if (current.deletedAt) throw new HttpError(409, 'listing_deleted');
+        if (!['draft', 'changes_requested', 'published'].includes(current.status))
+          throw new HttpError(409, 'not_editable');
+        if (current.media.length >= 6) throw new HttpError(409, 'too_many_images');
+        // Adding any new photo to an already approved listing requires a fresh
+        // campus review. No new, unreviewed image may inherit published status.
+        if (current.status === 'published') {
+          await tx.listing.update({ where: { id: current.id }, data: { status: 'draft' } });
+        }
+        const record = await tx.listingMedia.create({ data: {
+          listingId: current.id, mediaPath: safe.mediaPath, mimeType: safe.mimeType,
+          position: current.media.length,
+        } });
+        await tx.auditLog.create({ data: {
+          actorUserId: req.user!.id, action: 'listing.photo_added', targetType: 'listing',
+          targetId: current.id, metadata: { photoId: record.id, requiresReview: current.status === 'published' },
+        } });
+        return record;
+      });
+      res.status(201).json({ id: media.id });
+    } catch (error) {
+      await fs.promises.unlink(path.join(env.UPLOAD_DIR, safe.mediaPath)).catch(() => {});
+      throw error;
+    }
+  },
+);
 
 r.post('/listings/:id/submit', async (req, res) => {
   const l = await ownListing(req.user!.id, Number(req.params.id));

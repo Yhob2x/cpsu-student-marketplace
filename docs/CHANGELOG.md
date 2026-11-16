@@ -1,5 +1,28 @@
 # Changelog
 
+## 2026-11-16 — Push Stage 1 local development database activation
+
+- Following explicit owner approval, used the retained database-and-upload backup script, saving a verified 175,557-byte SQL snapshot plus 22 media files privately outside Git. SHA-256 and expected table structure matched the manifest.
+- Applied **only** the additive `20261116094000_pwa_push_notifications` migration to local `127.0.0.1:3306/cpsu_marketplace`. Verified `PushSubscription` and `PushPreference` are empty, both foreign keys exist, all five migrations are applied, and integrity preflight still reports 0 orphans.
+- Prisma/TypeScript, 17 API unit tests and PWA asset validation pass. VAPID configuration remains **0/3** and no push notifications were sent. No GitHub commits/pushes, production deployment, or other existing local work changed.
+- Detailed evidence: `docs/PWA_PUSH_STAGE1_LOCAL_ACTIVATION_2026-11-16.md`.
+
+## 2026-11-16 — PWA Push Notifications & App Badges (local only)
+
+- **Optional alerts:** Added private browser Web Push for existing inquiry/reply, listing-review and affiliation events. In-app notices are saved first; push delivery is best-effort and disabled unless VAPID keys, schema and per-device consent are present.
+- **Account-owned settings:** Added additive `PushSubscription` and `PushPreference` Prisma models, migration, strict endpoint-provider allowlist, per-user notification categories and secure subscription deletion.
+- **Web experience:** Added the opt-in settings panel in Notifications, generic lock-screen banners, notification-tap navigation, login return links, unread badge updates and a Messages-only badge on mobile navigation. Message-specific unread badges clear only when the recipient actually observes a message; newer unseen messages remain unread.
+- **Privacy:** Never send sender names, message text, listing titles or review reasons to the lock screen; push endpoints are capability secrets and are never cached in the service worker or logged.
+- **QA:** Synthetic, isolated MySQL push migration and seven authenticated integration tests pass. New unit tests verify private payloads and service-worker navigation. This change does not apply a development/production migration, install credentials, push GitHub commits, or transmit a real notification. See `docs/PWA_PUSH_NOTIFICATIONS_2026-11-16.md`.
+
+
+## 2026-11-16 — Listing image security and mandatory content review (local only)
+
+- **Upload hardening:** Authenticated seller ownership/status/quota now checked before accepting file bytes. The server decodes and validates true JPEG/PNG/WebP format, enforces a 3 MiB and 24 MP bound, rejects multi-frame input, removes original temporary files and re-encodes new photos to metadata-free WebP (max 2400px). Added the free Sharp dependency; no external scanning service or DB migration.
+- **Approval gate:** Adding a photo to a published listing returns it to draft. Campus reviewers must explicitly confirm inspecting every photo before approving; confirmation and photo count are audited. Seller and reviewer UI explain that pornographic/explicit or otherwise prohibited imagery is not allowed.
+- **Security boundary:** No automatic pornography or graphic-content classifier was installed. Existing media are not reprocessed; browser-saved copies of already public media cannot be prevented. See `docs/CONTENT_MODERATION_SECURITY_2026-11-16.md`.
+- **Verification:** New sanitizer tests 3/3, reviewer-attestation unit tests 5/5, and existing permission tests 5/5 pass (**13/13 total**); web build passes, and isolated API integration assertions were added. Full API typecheck/integration are blocked by concurrent PWA push-notification code (`web-push` default-import runtime error and stale Prisma client types). No production deployment.
+
 ## 2026-11-12 — Mobile UI/UX refinement (local only)
 
 - **Home:** Shortened the decorative hero at 320px from 847px to 508px and at 390px from 682px to 394px. Phone/tablet PWA content now reaches categories and listings sooner; desktop artwork stays intact.

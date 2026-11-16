@@ -21,7 +21,8 @@ Not legal advice — CPSU's data protection officer must review (`docs/privacy-a
 | XSS | React escaping; no `dangerouslySetInnerHTML`; JSON responses | throughout |
 | Input validation | Zod schemas on every mutating route and on query strings; length and range caps | `routes/*` |
 | Request size limits | JSON ≤ 100 KB, one upload ≤ 3 MB | `app.ts`, `routes/seller.ts` |
-| Upload validation | MIME allowlist (JPEG/PNG/WebP), random hex filename, count cap of 6, `nosniff` on serve | `routes/seller.ts`, `routes/public.ts` |
+| Upload validation | Pre-upload ownership/status/quota checks; JPEG/PNG/WebP declared-type allowlist **and decoded-format match** via Sharp; 3 MB / 24 MP / single-frame limits; resize to 2400 px maximum, metadata-stripping WebP re-encoding, random filename, untrusted temporary file cleanup, `nosniff` on serve. Applies to **new** uploads. | `routes/seller.ts`, `src/upload-security.ts`, `routes/public.ts` |
+| Photo content review | Listings remain unpublished until campus review. Reviewer must explicitly attest to inspecting every photo and their confirmation/count is audited. Adding a new photo to an already published listing returns it to draft for re-review. | `routes/admin.ts`, `routes/seller.ts`, `apps/web/src/pages-admin.tsx` |
 | Media access control | Published media public; otherwise owner or in-scope reviewer only | `routes/public.ts` |
 | Security headers | `helmet` defaults; cross-origin resource policy relaxed for images | `app.ts` |
 | Error hygiene | Typed JSON errors; unexpected errors log server-side and return `500 internal_error` with no stack trace | `src/http.ts` |
@@ -36,7 +37,8 @@ Not legal advice — CPSU's data protection officer must review (`docs/privacy-a
 |---|---|---|---|
 | S1 | No password recovery | Locked-out students need manual DB edits | Time-limited single-use reset tokens, hashed at rest, emailed through an approved transport; revoke sessions on reset |
 | S2 | No CSRF token | Low today — mutations require an in-memory Bearer token, and the refresh cookie is `SameSite=Lax` | If the refresh cookie is ever used for mutations, add a double-submit CSRF token |
-| S3 | Upload content is not inspected; only the client-declared MIME type is checked | A crafted file could be stored and served | Verify magic bytes, re-encode images to strip payloads/EXIF, and scan if CPSU requires it |
+| S3 | Pornography/graphic-content recognition is **not automatic**; a human reviewer must inspect uploaded photos | A reviewer could miss harmful imagery or intentionally provide a false confirmation; private uploads still exist before review | Evaluate a locally hosted content-classification model and a safe manual appeal/review path; test false positives and negatives with approved synthetic datasets. Do not claim automatic NSFW detection without validated model and rollout. |
+| S3a | Existing pre-hardening photos were not re-encoded | Previously stored files may retain metadata or invalid content | Separately audit and reprocess legacy media with backups, authorization and institutional approval before production. |
 | S4 | No per-account lockout or captcha | Distributed credential stuffing is only throttled per IP | Per-account attempt counter plus an alert |
 | S5 | Audit rows are mutable by anyone with DB access | Audit trail is not tamper-evident | Append-only DB grants, or a hash chain / write-once store |
 | S6 | No session management UI or per-device revocation | Users cannot drop a stolen device | List and revoke `Session` rows from `/me` |

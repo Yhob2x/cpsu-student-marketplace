@@ -16,7 +16,7 @@ export const publicListing = (l: any) => ({
   seller: l.seller && { id: l.seller.id, storeName: l.seller.storeName, sellerType: l.seller.sellerType },
   images: (l.media ?? []).sort((a: any, b: any) => a.position - b.position).map((m: any) => `/api/v1/media/${m.id}`),
 });
-const include = { category: true, campus: true, seller: true, media: true };
+const include = { category: true, campus: true, seller: { include: { owner: { select: { status: true } } } }, media: true } as const;
 
 r.get('/campuses', async (_q, res) => res.json(await prisma.campus.findMany({ where: { active: true }, select: { id: true, code: true, name: true } })));
 r.get('/categories', async (_q, res) => res.json(await prisma.category.findMany({ select: { id: true, parentId: true, name: true, listingType: true } })));
@@ -31,7 +31,7 @@ r.get('/listings', async (req, res) => {
     page: z.coerce.number().int().min(1).default(1), pageSize: z.coerce.number().int().min(1).max(50).default(20),
   }).parse(req.query);
   const where: any = { status: 'published', availabilityState: 'available', deletedAt: null,
-    seller: { approvalStatus: 'approved', ...(q.sellerType && { sellerType: q.sellerType }) } };
+    seller: { approvalStatus: 'approved', owner: { status: 'active' }, ...(q.sellerType && { sellerType: q.sellerType }) } };
   if (q.q) where.OR = [{ title: { contains: q.q } }, { description: { contains: q.q } }];
   if (q.categoryId) where.categoryId = q.categoryId;
   if (q.campusId) where.campusId = q.campusId;
@@ -53,7 +53,7 @@ r.get('/listings', async (req, res) => {
 r.get('/listings/popular', async (_q, res) => {
   const rows = await prisma.listing.findMany({ where: {
     status: 'published', availabilityState: 'available', deletedAt: null,
-    seller: { approvalStatus: 'approved' }, savedListings: { some: {} },
+    seller: { approvalStatus: 'approved', owner: { status: 'active' } }, savedListings: { some: {} },
   },
     include, orderBy: { savedListings: { _count: 'desc' } }, take: 8 });
   res.json({ items: rows.map(publicListing) });
@@ -65,14 +65,14 @@ r.get('/listings/:id', async (req, res) => {
   const u = req.user;
   const owner = u && (await prisma.sellerProfile.findFirst({ where: { id: l.sellerProfileId, ownerUserId: u.id } }));
   const reviewer = u && (() => { const c = reviewCampusIds(u); return c === 'all' || c.includes(l.campusId); })();
-  const publiclyVisible = !l.deletedAt && l.status === 'published' && l.seller.approvalStatus === 'approved';
+  const publiclyVisible = !l.deletedAt && l.status === 'published' && l.seller.approvalStatus === 'approved' && l.seller.owner.status === 'active';
   if (!publiclyVisible && !owner && !reviewer) throw new HttpError(404, 'not_found'); // drafts / deleted listings never leak
   res.json({ ...publicListing(l), status: owner || reviewer ? l.status : undefined });
 });
 
 r.get('/seller-profiles/:id', async (req, res) => {
   const s = await prisma.sellerProfile.findFirst({
-    where: { id: Number(req.params.id), approvalStatus: 'approved' },
+    where: { id: Number(req.params.id), approvalStatus: 'approved', owner: { status: 'active' } },
     include: { listings: { where: { status: 'published', deletedAt: null, availabilityState: 'available' }, include } },
   });
   if (!s) throw new HttpError(404, 'not_found');
@@ -81,12 +81,12 @@ r.get('/seller-profiles/:id', async (req, res) => {
 });
 
 r.get('/media/:id', async (req, res) => {
-  const m = await prisma.listingMedia.findUnique({ where: { id: Number(req.params.id) }, include: { listing: { include: { seller: true } } } });
+  const m = await prisma.listingMedia.findUnique({ where: { id: Number(req.params.id) }, include: { listing: { include: { seller: { include: { owner: { select: { status: true } } } } } } } });
   if (!m) throw new HttpError(404, 'not_found');
   const u = req.user;
   const c = u ? reviewCampusIds(u) : [];
   const publicMedia = m.listing.status === 'published' && !m.listing.deletedAt &&
-    m.listing.seller.approvalStatus === 'approved';
+    m.listing.seller.approvalStatus === 'approved' && m.listing.seller.owner.status === 'active';
   const allowed = publicMedia || (u && m.listing.seller.ownerUserId === u.id) ||
     c === 'all' || (c as number[]).includes(m.listing.campusId);
   if (!allowed) throw new HttpError(404, 'not_found');

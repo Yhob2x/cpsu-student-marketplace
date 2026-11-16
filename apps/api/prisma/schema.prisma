@@ -155,6 +155,8 @@ model User {
   reportedItems         Report[]             @relation("ReportReporter")
   assignedReports       Report[]             @relation("ReportAssignee")
   notifications         Notification[]
+  pushSubscriptions     PushSubscription[]
+  pushPreference        PushPreference?
   auditLogs             AuditLog[]
 
 }
@@ -395,4 +397,33 @@ model Notification {
   createdAt DateTime  @default(now())
   user User @relation(fields: [userId], references: [id], onDelete: Restrict, onUpdate: Cascade)
 
+}
+
+model PushSubscription {
+  id           Int      @id @default(autoincrement())
+  userId       Int
+  endpointHash String   @unique @db.Char(64)
+  endpoint     String   @db.Text
+  p256dh       String   @db.VarChar(256)
+  auth         String   @db.VarChar(128)
+  expiresAt    DateTime?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+}
+
+// Push delivery is opt-in by subscription. Event categories can be disabled independently.
+// This table is not the source of in-app notification truth.
+model PushPreference {
+  userId         Int      @id
+  messages       Boolean  @default(true)
+  listingReviews Boolean  @default(true)
+  accountUpdates Boolean  @default(true)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }

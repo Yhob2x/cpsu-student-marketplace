@@ -1,13 +1,26 @@
 import { Router } from 'express';
+import type { Prisma } from '@prisma/client';
 import { z } from 'zod';
 import { prisma } from '../db.js';
 import { HttpError } from '../http.js';
 import { requireAuth, requireReviewer, canReview, reviewCampusIds } from '../auth.js';
 import { audit, notify } from '../audit.js';
+import { requirePhotoReview } from '../photo-review.js';
 
 const r = Router();
 r.use(requireAuth, requireReviewer);
 const scope = (u: Express.Request['user']) => { const c = reviewCampusIds(u!); return c === 'all' ? {} : { campusId: { in: c } }; };
+// Reports can target a listing or a seller. Both targets, if present, must
+// belong to a permitted campus; reports with no target are not visible to campus staff.
+const reportScope = (u: Express.Request['user']): Prisma.ReportWhereInput => {
+  const ids = reviewCampusIds(u!);
+  if (ids === 'all') return {};
+  return { AND: [
+    { OR: [{ listingId: { not: null } }, { sellerProfileId: { not: null } }] },
+    { OR: [{ listingId: null }, { listing: { campusId: { in: ids } } }] },
+    { OR: [{ sellerProfileId: null }, { seller: { campusId: { in: ids } } }] },
+  ] };
+};
 
 r.get('/review-queue', async (req, res) => {
   const [listings, affiliations] = await Promise.all([
@@ -20,11 +33,17 @@ r.get('/review-queue', async (req, res) => {
 });
 
 r.post('/listings/:id/decision', async (req, res) => {
-  const b = z.object({ decision: z.enum(['approved', 'changes_requested', 'rejected']), reason: z.string().trim().min(5).max(1000) }).parse(req.body);
-  const l = await prisma.listing.findUnique({ where: { id: Number(req.params.id) }, include: { seller: true } });
+  const b = z.object({
+    decision: z.enum(['approved', 'changes_requested', 'rejected']),
+    reason: z.string().trim().min(5).max(1000),
+    photosReviewed: z.boolean().optional(),
+  }).parse(req.body);
+  const l = await prisma.listing.findUnique({ where: { id: Number(req.params.id) }, include: { seller: true, media: true } });
   if (!l || !canReview(req.user!, l.campusId)) throw new HttpError(404, 'not_found'); // out-of-scope looks like not found
   if (l.deletedAt) throw new HttpError(409, 'listing_deleted');
   if (l.status !== 'pending_review') throw new HttpError(409, 'not_pending');
+  // Require explicit human inspection of all photos before publication.
+  requirePhotoReview(b.decision, b.photosReviewed, l.media.length);
   const flags = (l.flags as string[] | null) ?? [];
   if (b.decision === 'approved' && flags.includes('academic_integrity_concern') && b.reason.length < 20)
     throw new HttpError(422, 'reason_too_short', 'Flagged listings need a documented reason of at least 20 characters.');
@@ -34,7 +53,10 @@ r.post('/listings/:id/decision', async (req, res) => {
     prisma.listing.update({ where: { id: l.id }, data: { status } }),
     prisma.listingReview.create({ data: { listingId: l.id, reviewerId: req.user!.id, decision: b.decision, reason: b.reason, policyVersionId: policy?.id } }),
   ]);
-  await audit(req.user!.id, `listing.${b.decision}`, 'listing', l.id, { policyVersionId: policy?.id });
+  await audit(req.user!.id, `listing.${b.decision}`, 'listing', l.id, {
+    policyVersionId: policy?.id,
+    ...(b.decision === 'approved' ? { photosReviewed: true, photoCount: l.media.length } : {}),
+  });
   await notify(l.seller.ownerUserId, 'listing.decision', { listingId: l.id, title: l.title, decision: b.decision, reason: b.reason });
   res.json({ id: l.id, status });
 });
@@ -61,12 +83,95 @@ r.post('/listings/:id/suspend', async (req, res) => {
   res.json({ id: l.id, status: 'suspended' });
 });
 
-r.get('/reports', async (_q, res) => res.json(await prisma.report.findMany({ where: { status: { in: ['open', 'reviewing'] } }, orderBy: { createdAt: 'asc' }, take: 100 })));
+r.get('/reports', async (req, res) => res.json(await prisma.report.findMany({
+  where: { status: { in: ['open', 'reviewing'] }, ...reportScope(req.user) },
+  orderBy: { createdAt: 'asc' }, take: 100,
+})));
 r.post('/reports/:id/resolve', async (req, res) => {
+  const id = z.coerce.number().int().positive().parse(req.params.id);
   const b = z.object({ status: z.enum(['resolved', 'dismissed']) }).parse(req.body);
-  await prisma.report.update({ where: { id: Number(req.params.id) }, data: { status: b.status, assignedReviewerId: req.user!.id } });
-  await audit(req.user!.id, `report.${b.status}`, 'report', Number(req.params.id));
+  const where = { id, ...reportScope(req.user) };
+  const report = await prisma.report.findFirst({ where, select: { status: true } });
+  if (!report) throw new HttpError(404, 'not_found');
+  if (!['open', 'reviewing'].includes(report.status)) throw new HttpError(409, 'already_resolved');
+  const result = await prisma.report.updateMany({
+    where: { ...where, status: { in: ['open', 'reviewing'] } },
+    data: { status: b.status, assignedReviewerId: req.user!.id },
+  });
+  if (result.count !== 1) throw new HttpError(409, 'already_resolved');
+  await audit(req.user!.id, `report.${b.status}`, 'report', id);
   res.status(204).end();
+});
+
+// Account-wide suspension is more powerful than campus moderation. Only a
+// global university administrator may exercise it; campus reviewers cannot.
+const accountAdmin = (req: Express.Request) =>
+  req.user!.roles.some(role => role.role === 'university_admin' && role.campusId === null);
+
+r.get('/audit-logs', async (req, res) => {
+  if (!accountAdmin(req)) throw new HttpError(403, 'forbidden');
+  const { limit, cursor } = z.object({
+    limit: z.coerce.number().int().min(1).max(50).default(25),
+    cursor: z.coerce.number().int().positive().optional(),
+  }).parse(req.query);
+  const items = await prisma.auditLog.findMany({
+    where: cursor ? { id: { lt: cursor } } : {},
+    select: {
+      id: true, actorUserId: true, action: true, targetType: true,
+      targetId: true, metadata: true, createdAt: true,
+      actor: { select: { displayName: true } },
+    },
+    orderBy: { id: 'desc' }, take: limit,
+  });
+  res.setHeader('Cache-Control', 'no-store');
+  res.json({ items, nextCursor: items.length === limit ? items.at(-1)!.id : null });
+});
+
+r.get('/users', async (req, res) => {
+  if (!accountAdmin(req)) throw new HttpError(403, 'forbidden');
+  const { q } = z.object({ q: z.string().trim().max(80).optional() }).parse(req.query);
+  const items = await prisma.user.findMany({
+    where: q ? { OR: [{ displayName: { contains: q } }, { email: { contains: q } }] } : {},
+    select: {
+      id: true, displayName: true, email: true, status: true,
+      roles: { select: { role: true } },
+      affiliations: { select: { campus: { select: { code: true } }, verificationStatus: true } },
+    },
+    orderBy: { id: 'desc' }, take: 25,
+  });
+  res.setHeader('Cache-Control', 'no-store');
+  res.json({ items });
+});
+
+r.patch('/users/:id/status', async (req, res) => {
+  if (!accountAdmin(req)) throw new HttpError(403, 'forbidden');
+  const id = z.coerce.number().int().positive().parse(req.params.id);
+  const { status, reason } = z.object({
+    status: z.enum(['active', 'suspended']), reason: z.string().trim().min(10).max(500),
+  }).parse(req.body);
+  const target = await prisma.user.findUnique({ where: { id }, include: { roles: true } });
+  if (!target) throw new HttpError(404, 'not_found');
+  if (target.id === req.user!.id) throw new HttpError(409, 'self_status_change_forbidden');
+  if (target.roles.some(role => ['campus_reviewer', 'university_admin', 'system_admin'].includes(role.role))) {
+    throw new HttpError(403, 'staff_account_protected');
+  }
+  if (target.status === status) throw new HttpError(409, 'unchanged_status');
+  await prisma.$transaction(async tx => {
+    const updated = await tx.user.updateMany({ where: { id, status: target.status }, data: { status } });
+    if (updated.count !== 1) throw new HttpError(409, 'status_changed');
+    if (status === 'suspended') {
+      await tx.session.updateMany({ where: { userId: id, revokedAt: null }, data: { revokedAt: new Date() } });
+    }
+    await tx.auditLog.create({ data: {
+      actorUserId: req.user!.id, action: status === 'suspended' ? 'user.suspended' : 'user.reactivated',
+      targetType: 'user', targetId: id, metadata: { reason },
+    } });
+    await tx.notification.create({ data: {
+      userId: id, type: 'account.status', payload: { status },
+    } });
+  });
+  res.setHeader('Cache-Control', 'no-store');
+  res.json({ id, status });
 });
 
 const MIN_COUNT = 5; // small counts are suppressed so one student cannot be singled out

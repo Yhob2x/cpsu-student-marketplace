@@ -12,6 +12,7 @@ import sellerRoutes from './routes/seller.js';
 import inquiryRoutes from './routes/inquiries.js';
 import adminRoutes from './routes/admin.js';
 import accountRoutes from './routes/account.js';
+import pushRoutes from './routes/push.js';
 
 export function createApp() {
   const app = express();
@@ -29,6 +30,7 @@ export function createApp() {
   v1.use('/auth', rateLimit({ windowMs: 15 * 60_000, limit: env.NODE_ENV === 'production' ? 30 : 300 }), authRoutes);
   v1.use(publicRoutes);
   v1.use(accountRoutes);
+  v1.use('/push', pushRoutes);
   v1.use('/seller', sellerRoutes);
   v1.use('/inquiries', inquiryRoutes);
   v1.use('/admin', adminRoutes);

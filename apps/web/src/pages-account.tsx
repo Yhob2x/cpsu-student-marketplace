@@ -1,15 +1,18 @@
 import { FormEvent, useEffect, useRef, useState } from 'react';
-import { Link, useNavigate, useParams } from 'react-router-dom';
+import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { api, explain, peso, setToken, timeAgo } from './api';
 import { useMe } from './main';
 import { ListingCard, Listing } from './pages-public';
 import { Icon } from './icons';
 
 export function Login() {
-  const nav = useNavigate(); const { reload } = useMe(); const [err, setErr] = useState('');
+  const nav = useNavigate(); const location = useLocation(); const { reload } = useMe(); const [err, setErr] = useState('');
+  // Deep links from push notifications return only to explicitly allowed in-app paths.
+  const requested = new URLSearchParams(location.search).get('next') ?? '';
+  const next = /^\/(inquiries\/\d+|notifications|profile)$/.test(requested) ? requested : '/';
   const go = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault(); const d = Object.fromEntries(new FormData(e.currentTarget));
-    try { const r = await api('/auth/login', { body: d }); setToken(r.accessToken); await reload(); nav('/'); } catch (x) { setErr(explain(x)); }
+    try { const r = await api('/auth/login', { body: d }); setToken(r.accessToken); await reload(); nav(next, { replace: true }); } catch (x) { setErr(explain(x)); }
   };
   return <form className="stack auth-form" onSubmit={go}><h1>Sign in</h1>
     <label className="field">Email
@@ -147,7 +150,7 @@ export function Dashboard() {
       setEditing(null);
       await load();
       if (uploadFailure) setErr(`Listing details were saved, but the photo could not upload: ${uploadFailure} Select Edit below to retry the photo.`);
-      else setOk('Listing updated.');
+      else setOk(file ? 'Photo saved. Submit the listing for review again before it appears publicly.' : 'Listing updated.');
     } catch (x) { setErr(explain(x)); }
     finally { editInFlight.current = false; setSavingEdit(false); }
   };
@@ -174,7 +177,8 @@ export function Dashboard() {
           <label className="field">Price (PHP)<input name="price" type="number" min="1" max="1000000" step="1" required /></label>
           <label className="field">Price basis (optional)<input name="priceBasis" placeholder="Per item or per hour" maxLength={40} /></label>
         </div>
-        <label className="field">Photo (JPEG, PNG or WebP, up to 3 MB) <input name="image" type="file" accept="image/jpeg,image/png,image/webp" /></label>
+        <label className="field">Photo (JPEG, PNG or WebP, up to 3 MB) <input name="image" type="file" accept="image/jpeg,image/png,image/webp" aria-describedby="new-photo-policy" /></label>
+        <p className="muted" id="new-photo-policy">No pornography, explicit sexual imagery, graphic violence, or other prohibited content. Photos must pass campus reviewer inspection before publication.</p>
         <button className="btn" disabled={creatingListing}>{creatingListing ? 'Saving draft…' : 'Save draft'}</button></form>
       <h2>Your listings</h2>
       {listingsLoading && <p className="muted" role="status">Loading your listings…</p>}
@@ -193,7 +197,8 @@ export function Dashboard() {
               <label className="field">Price basis (optional)<input name="priceBasis" defaultValue={l.priceBasis} maxLength={40} /></label>
             </div>
             <p className="muted">{l.media.length} of 6 photos{l.media.length >= 6 && ' (limit reached)'}</p>
-            <label className="field">Add photo (JPEG, PNG or WebP, up to 3 MB) <input name="image" type="file" accept="image/jpeg,image/png,image/webp" disabled={l.media.length >= 6} /></label>
+            <label className="field">Add photo (JPEG, PNG or WebP, up to 3 MB) <input name="image" type="file" accept="image/jpeg,image/png,image/webp" disabled={l.media.length >= 6} aria-describedby="edit-photo-policy" /></label>
+            <p className="muted" id="edit-photo-policy">Explicit or harmful photos are prohibited. Adding a photo to a published listing returns it to draft for another campus review.</p>
             <div className="row"><button className="btn" disabled={savingEdit}>{savingEdit ? 'Saving…' : 'Save changes'}</button><button type="button" className="btn ghost" disabled={savingEdit} onClick={() => setEditing(null)}>Cancel</button></div></form>
         : <div key={l.id} className="panel row"><div style={{ flex: 1 }}><h3>{l.title}</h3><span className={`status ${l.status}`}>{l.status.replace('_', ' ')}</span> <span>{peso(Number(l.price))}</span></div>
             {!['pending_review', 'suspended', 'rejected'].includes(l.status) && l.availabilityState !== 'sold' && <button className="btn ghost" onClick={() => { setEditing(l); setEditCategoryId(String(l.categoryId)); setErr(''); setOk(''); }}>Edit</button>}
@@ -311,6 +316,7 @@ function ConversationListingCard({ listing }: { listing: ConversationListing }) 
 
 export function Thread() {
   const { id } = useParams();
+  const { syncUnread } = useMe();
   const [d, setD] = useState<any>(null);
   const messageIdsRef = useRef<Set<number>>(new Set());
   const newlyArrivedRef = useRef<Set<number>>(new Set());
@@ -440,6 +446,7 @@ export function Thread() {
         .then(() => {
           if (!active) return;
           seenConfirmedRef.current = Math.max(seenConfirmedRef.current, highest);
+          void syncUnread();
           const seenAt = new Date().toISOString();
           setD((prev: any) => prev?.thread?.id === Number(id) ? {
             ...prev, messages: prev.messages.map((m: any) =>

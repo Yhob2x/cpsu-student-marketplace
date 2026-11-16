@@ -4,6 +4,8 @@
 **Verdict: Version 1.0 is not complete.** 2 items are done, 12 are partial, 6 are missing outright, and 4 more are blocked by the six
 scope conflicts in §4. Nothing in §4 has been reconciled — each one needs the project owner's decision first (RULE 04, PART XIII).
 
+**Remediation update (2026-11-16):** The original checklist below is a historical gap snapshot, not a live release score. Isolated regression tests now cover campus-scoped reports, suspended-owner visibility, privileged student suspension/reactivation, refresh revocation, and university-only audit-history viewing. Student-management and audit-history controls were added to the current admin page. See `SECURITY_REMEDIATION_2026-11-16.md` for verified tests and remaining production gates. MVP-014/015 and the C5 transaction decision remain open; this update does not approve transaction rules or mark V1 production-ready.
+
 ## 1. MVP checklist status
 
 | ID | Feature | Status | What is actually there / what is missing |

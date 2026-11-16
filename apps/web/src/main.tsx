@@ -2,6 +2,7 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import { BrowserRouter, Link, NavLink, Route, Routes, Navigate, useNavigate } from 'react-router-dom';
 import { api, setToken, tryRestoreSession } from './api';
+import { disconnectPushOnLogout, updateAppBadge } from './push-client';
 import { Discover, Home, ListingDetail, Guidelines, StorePage } from './pages-public';
 import { Icon } from './icons';
 import { Login, Register, Dashboard, Inquiries, Thread, Saved } from './pages-account';
@@ -12,6 +13,7 @@ import './storefront-theme.css';
 import './message-motion.css';
 import './notifications.css';
 import './mobile-refinements.css';
+import './push-settings.css';
 
 export type Me = { id: number; email: string; displayName: string; roles: { role: string; campusId: number | null }[];
   affiliations: { id: number; campus: { id: number; name: string }; status: string }[]; storeId: number | null };
@@ -68,14 +70,16 @@ function Shell() {
   const [me, setMe] = useState<Me | null>(null);
   const [ready, setReady] = useState(false);
   const [unread, setUnread] = useState(0);
+  const [unreadMessages, setUnreadMessages] = useState(0);
   const [queue, setQueue] = useState(0);
   const [savedIds, setSavedIds] = useState<number[]>([]);
 
   const reload = async () => { try { setMe(await api<Me>('/me')); } catch { setMe(null); } };
   const syncUnread = async () => {
     try {
-      const rows = await api<{ readAt: string | null }[]>('/notifications');
-      setUnread(rows.filter(r => !r.readAt).length);
+      const counts = await api<{ total: number; messages: number }>('/notifications/unread-count');
+      setUnread(counts.total);
+      setUnreadMessages(counts.messages);
     } catch { /* keep the previous count rather than flashing zero */ }
   };
 
@@ -101,11 +105,28 @@ function Shell() {
     } catch { /* keep the previous count */ }
   };
   useEffect(() => {
-    if (!me) { setUnread(0); setSavedIds([]); setQueue(0); return; }
+    if (!me) { setUnread(0); setUnreadMessages(0); setSavedIds([]); setQueue(0); return; }
     syncUnread(); syncSaved(); if (isReviewer) syncQueue();
   }, [me]);
 
-  const logout = async () => { await api('/auth/logout', { method: 'POST', body: {} }); setToken(null); setMe(null); };
+  // Revoke this device's push capability before ending its login session. Other devices stay registered.
+  const logout = async () => { await disconnectPushOnLogout(); await api('/auth/logout', { method: 'POST', body: {} }); setToken(null); setMe(null); };
+  useEffect(() => { void updateAppBadge(me ? unread : null); }, [me?.id, unread]);
+  useEffect(() => {
+    if (!me) return;
+    const refresh = () => { if (document.visibilityState === 'visible') void syncUnread(); };
+    const timer = window.setInterval(refresh, 30_000);
+    window.addEventListener('focus', refresh);
+    document.addEventListener('visibilitychange', refresh);
+    const sw = (event: MessageEvent) => { if (event.data?.type === 'CPSU_PUSH_RECEIVED') refresh(); };
+    navigator.serviceWorker?.addEventListener('message', sw);
+    return () => {
+      window.clearInterval(timer);
+      window.removeEventListener('focus', refresh);
+      document.removeEventListener('visibilitychange', refresh);
+      navigator.serviceWorker?.removeEventListener('message', sw);
+    };
+  }, [me?.id]);
   const signedOut = ready && !me;
 
   return (
@@ -124,7 +145,8 @@ function Shell() {
           <HeaderSearch />
           {me && <nav className="actions" aria-label="Your activity">
             <NavLink to="/saved"><Icon name="heart" size={22} /><span>Saved</span></NavLink>
-            <NavLink to="/inquiries"><Icon name="chat" size={22} /><span>Messages</span></NavLink>
+            <NavLink to="/inquiries" aria-label={unreadMessages > 0 ? `Messages, ${unreadMessages} unread` : undefined}>
+              <Icon name="chat" size={22} /><span>Messages{unreadMessages > 0 && <span className="nav-badge">{unreadMessages > 99 ? '99+' : unreadMessages}</span>}</span></NavLink>
             <NavLink to="/notifications" className="alerts" aria-label={unread > 0 ? `Alerts, ${unread} unread` : 'Alerts'}>
               <Icon name="bell" size={22} /><span>Alerts{unread > 0 && <span className="nav-badge">{unread}</span>}</span></NavLink>
             <NavLink to="/profile"><Icon name="user" size={22} /><span>Profile</span></NavLink>
@@ -152,9 +174,9 @@ function Shell() {
           <Route path="/login" element={<Login />} /><Route path="/register" element={<Register />} />
           <Route path="/dashboard" element={signedOut ? <Navigate to="/login" /> : <Dashboard />} />
           <Route path="/inquiries" element={signedOut ? <Navigate to="/login" /> : <Inquiries />} />
-          <Route path="/inquiries/:id" element={<Thread />} /><Route path="/saved" element={<Saved />} />
-          <Route path="/profile" element={signedOut ? <Navigate to="/login" /> : <Profile />} />
-          <Route path="/notifications" element={signedOut ? <Navigate to="/login" /> : <Notifications />} />
+          <Route path="/inquiries/:id" element={!ready ? <p role="status">Checking session…</p> : signedOut ? <Navigate to={`/login?next=${encodeURIComponent(window.location.pathname)}`} replace /> : <Thread />} /><Route path="/saved" element={<Saved />} />
+          <Route path="/profile" element={signedOut ? <Navigate to="/login?next=%2Fprofile" /> : <Profile />} />
+          <Route path="/notifications" element={signedOut ? <Navigate to="/login?next=%2Fnotifications" /> : <Notifications />} />
           <Route path="/admin" element={ready && !isReviewer ? <Navigate to="/" /> : <Admin />} />
         </Routes>
       </div></main>
@@ -163,7 +185,7 @@ function Shell() {
         <NavLink to="/" end><Icon name="home" size={19} /><span>Home</span></NavLink>
         <NavLink to="/explore"><Icon name="search" size={19} /><span>Explore</span></NavLink>
         <NavLink to="/dashboard"><Icon name="plus" size={20} /><span>Sell</span></NavLink>
-        <NavLink to="/inquiries"><Icon name="chat" size={19} /><span>Messages</span></NavLink>
+        <NavLink to="/inquiries" aria-label={unreadMessages > 0 ? `Messages, ${unreadMessages} unread` : undefined}><Icon name="chat" size={19} /><span>Messages</span>{unreadMessages > 0 && <span className="tab-badge" aria-hidden="true">{unreadMessages > 99 ? '99+' : unreadMessages}</span>}</NavLink>
         <NavLink to="/profile"><Icon name="user" size={19} /><span>Profile</span></NavLink>
       </nav>
     </Ctx.Provider>

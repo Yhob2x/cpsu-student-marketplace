@@ -80,3 +80,17 @@ Payments, handoffs and confirmations remain arranged directly between students; 
 The self-hosted Nginx config in `infrastructure/nginx/marketplace.conf` serves the **single** `apps/web/dist` frontend and proxies `/api` to Express. Serve the PWA over HTTPS, protect API access, keep database backups, and don't cache API responses or authenticated content in the service worker.
 
 **Legacy note:** The former `apps/mobile` directory was moved intact to `legacy/expo-mobile` to preserve unfinished local work. It is not included in workspaces, dependency installation, startup scripts, or active releases. Historical documentation may still mention it; see `docs/UNIFIED_WEB_PWA_2026-11-12.md`.
+
+## Optional mobile lock-screen alerts and badges
+
+The unified CPSU Market PWA supports **opt-in Web Push** for new messages and inquiries, listing-review decisions, and CPSU account verification updates. Students can enable it and choose categories in **Notifications → Phone and desktop alerts**. The mobile Messages tab shows unread-message counts; supported installed PWAs may display an app-icon badge for total unread notifications. Lock-screen alerts never show private message contents or sender names.
+
+Web Push **does not activate** until the additive MySQL migration is approved/applied and `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY` and a monitored `VAPID_SUBJECT` are configured privately on the API server. Do not place a VAPID private key in a `VITE_*` variable or commit it. Use `cd apps/api; bun scripts/generate-vapid-keys.mjs` locally to generate a persistent pair (do not share the output).
+
+```powershell
+# Synthetic, isolated push migration + API tests (development database untouched):
+cd apps/api
+bun run test:push:integration
+```
+
+Actual lock-screen banners and home-screen badge behavior depend on iOS/Android browser and notification settings. On iPhone, install the HTTPS PWA to Home Screen first. Follow `docs/PWA_PUSH_NOTIFICATIONS_2026-11-16.md` for configuration and release gates.

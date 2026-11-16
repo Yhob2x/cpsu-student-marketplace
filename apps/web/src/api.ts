@@ -50,6 +50,8 @@ const MESSAGES: Record<string, string> = {
   affiliation_not_verified: 'Your CPSU affiliation is still being verified. You can sell once a reviewer approves it.',
   category_prohibited: 'This category is not allowed on your campus.', missing_images: 'Add at least one photo before submitting.',
   incomplete_listing: 'Add at least one photo and a price before submitting.', not_editable: 'This listing is in review or closed and cannot be edited.',
+  invalid_image: 'Upload a valid JPEG, PNG or WebP photo up to 3 MB and 24 megapixels.',
+  photo_review_required: 'Inspect every listing photo and confirm the content rules before approving.',
   store_exists: 'You already have a store.', own_listing: 'This is your own listing.', validation_error: 'Please check the highlighted fields.',
   rate_limited: 'Too many attempts. Wait a few minutes and try again.',
   not_found: 'That item is no longer available.',

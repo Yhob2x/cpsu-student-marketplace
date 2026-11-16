@@ -70,7 +70,7 @@ There is no OpenAPI document; this file is the contract of record and must chang
 | GET | `/seller/listings` | Own listings with media and category, newest edit first. |
 | POST | `/seller/listings` | `type`, `categoryId`, `title` (3–120), `description` (10–3000), `price` (>0, ≤1,000,000), `priceBasis`, `availability`, `handoffNote?`. Requires an approved store; creates a `draft`. |
 | PATCH | `/seller/listings/:id` | Partial body. `409 not_editable` for `pending_review`/`suspended`/`rejected`. A material edit to a published listing reverts it to `draft`. |
-| POST | `/seller/listings/:id/media` | `multipart/form-data` field `image`. JPEG/PNG/WebP ≤ 3 MB, max 6. `400 invalid_image`, `409 too_many_images`. |
+| POST | `/seller/listings/:id/media` | Authenticated owner only, checked **before writing upload bytes**. `multipart/form-data` field `image`; declared JPEG/PNG/WebP ≤ 3 MB, fully decoded format must match MIME, ≤ 24 MP, single frame. Re-encodes to WebP (up to 2400px, strips metadata). Max 6 photos. Adding a photo to a published listing returns it to draft for renewed campus review. Errors: `400 invalid_image`, `409 too_many_images`/`not_editable`. |
 | POST | `/seller/listings/:id/submit` | Runs the rules engine; `422 category_prohibited` for a prohibited category, `422 incomplete_listing` for no image or bad price. Moves to `pending_review` and audits the flags. |
 
 **Not present:** `DELETE /seller/listings/:id`, mark-as-sold, reorder/delete a photo, close a thread.
@@ -93,7 +93,7 @@ There is no OpenAPI document; this file is the contract of record and must chang
 | Method | Path | Notes |
 |---|---|---|
 | GET | `/admin/review-queue` | Pending listings and pending affiliations inside the caller's campus scope. |
-| POST | `/admin/listings/:id/decision` | `decision` (`approved`/`changes_requested`/`rejected`), `reason` (5–1000; ≥20 when flagged for academic integrity). `409 not_pending`. Writes `ListingReview` + policy version, audits, notifies. |
+| POST | `/admin/listings/:id/decision` | `decision` (`approved`/`changes_requested`/`rejected`), `reason` (5–1000; ≥20 when flagged for academic integrity). For `approved`, the reviewer must send `photosReviewed: true`; zero-photo or unchecked approvals return `422 photo_review_required`. Other decisions need no attestation. `409 not_pending`. Writes `ListingReview` + policy version, audits reviewer/photo count and notifies. **Human review, not automatic NSFW detection.** |
 | POST | `/admin/affiliations/:id/verify` | `decision` (`verified`/`rejected`), `reason` (3–500). Audits and notifies. |
 | POST | `/admin/listings/:id/suspend` | `reason` (5–500). Sets `suspended`, audits, notifies. |
 | GET | `/admin/reports` | Open/reviewing reports, oldest first, max 100. |
@@ -107,7 +107,7 @@ report detail/findings, all-listings browser.
 
 `unauthenticated` (401), `forbidden` (403), `not_found` (404), `invalid_credentials` (401), `no_session` (401), `session_expired` (401),
 `email_taken` (409), `invalid_campus` (400), `validation_error` (400), `not_editable` (409), `no_approved_store` (403),
-`affiliation_not_verified` (403), `store_exists` (409), `invalid_image` (400), `too_many_images` (409), `not_submittable` (409),
+`affiliation_not_verified` (403), `store_exists` (409), `invalid_image` (400), `too_many_images` (409), `photo_review_required` (422), `not_submittable` (409),
 `category_prohibited` (422), `incomplete_listing` (422), `own_listing` (400), `not_pending` (409), `reason_too_short` (422),
 `thread_closed` (409), `internal_error` (500). The active web/PWA maps these to plain-language messages in `apps/web/src/api.ts`; the retired native prototype is preserved under `legacy/expo-mobile/src/api.ts`.
 
@@ -116,3 +116,18 @@ report detail/findings, all-listings browser.
 1. Publish an OpenAPI description generated from the Zod schemas, and keep it in CI.
 2. Add contract tests per endpoint (none exist today).
 3. Decide the public/guest browsing question (conflict **C3**) so §4 is intentional rather than incidental.
+
+## Web Push — `/push` (new, authenticated, opt-in)
+
+| Method | Path | Request | Response |
+|---|---|---|---|
+| GET | `/push/config` | — | `{ enabled, publicKey }` (never the private key); disabled until VAPID config is present |
+| GET | `/push/preferences` | — | `{ messages, listingReviews, accountUpdates }` for the signed-in user |
+| PATCH | `/push/preferences` | Partial booleans of the above | Updated preferences; requires configured VAPID |
+| POST | `/push/subscriptions` | Browser PushSubscription JSON: `endpoint, keys: { p256dh, auth }, expirationTime?` | `201 { ok: true }`. Only trusted HTTPS push-provider hosts; max eight devices per student |
+| DELETE | `/push/subscriptions` | `{ endpoint }` | `204`. Only revokes the currently authenticated student's endpoint |
+| GET | `/notifications/unread-count` | — | `{ total, messages }`; scoped to the authenticated user |
+
+Web Push is **best-effort** and never blocks the existing in-app notification or the creation of a message/review. No recipient names, message contents, review reasons, or listing titles are sent in lock-screen payloads. The PWA service worker only opens approved same-origin app paths. All three `VAPID_*` variables and an approved additive migration are required to activate. Real push-provider delivery is not verified by synthetic integration tests.
+
+For migration, key generation, private data handling and acceptance tests see `docs/PWA_PUSH_NOTIFICATIONS_2026-11-16.md`.

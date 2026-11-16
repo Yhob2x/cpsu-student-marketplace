@@ -53,6 +53,12 @@ r.post('/refresh', async (req, res) => {
     if (s) await prisma.session.updateMany({ where: { userId: s.userId, revokedAt: null }, data: { revokedAt: new Date() } });
     throw new HttpError(401, 'session_expired');
   }
+  // A refresh token must never mint credentials for an account suspended since login.
+  const owner = await prisma.user.findUnique({ where: { id: s.userId }, select: { status: true } });
+  if (!owner || owner.status !== 'active') {
+    await prisma.session.updateMany({ where: { userId: s.userId, revokedAt: null }, data: { revokedAt: new Date() } });
+    throw new HttpError(401, 'session_expired');
+  }
   await prisma.session.update({ where: { id: s.id }, data: { revokedAt: new Date() } });
   res.json(await issue(req, res, s.userId));
 });

@@ -22,7 +22,7 @@ const receipt = (m: { deliveredAt: Date | null; seenAt: Date | null }) =>
 // Participants only: the buyer, or the owner of the listing's store.
 async function participantThread(userId: number, id: number) {
   const t = await prisma.inquiryThread.findUnique({ where: { id }, include: {
-    seller: { include: { owner: { select: { displayName: true } } } },
+    seller: { include: { owner: { select: { displayName: true, status: true } } } },
     buyer: { select: { displayName: true } },
     listing: { include: { media: true } },
   } });
@@ -37,7 +37,7 @@ r.get('/', async (req, res) => {
     include: {
       listing: { select: { id: true, title: true } },
       buyer: { select: { displayName: true } },
-      seller: { include: { owner: { select: { displayName: true } } } },
+      seller: { include: { owner: { select: { displayName: true, status: true } } } },
       messages: { orderBy: { createdAt: 'desc' }, take: 1 },
     },
     orderBy: { createdAt: 'desc' },
@@ -56,7 +56,7 @@ r.get('/', async (req, res) => {
 r.post('/', async (req, res) => {
   const b = z.object({ listingId: z.number().int(), body: z.string().trim().min(1).max(1000) }).parse(req.body);
   const l = await prisma.listing.findFirst({ where: {
-    id: b.listingId, status: 'published', deletedAt: null, seller: { approvalStatus: 'approved' },
+    id: b.listingId, status: 'published', deletedAt: null, seller: { approvalStatus: 'approved', owner: { status: 'active' } },
   }, include: { seller: true } });
   if (!l) throw new HttpError(404, 'not_found');
   if (l.seller.ownerUserId === req.user!.id) throw new HttpError(400, 'own_listing');
@@ -65,8 +65,8 @@ r.post('/', async (req, res) => {
     where: { listingId_buyerUserId: { listingId: l.id, buyerUserId: req.user!.id } },
     create: { listingId: l.id, buyerUserId: req.user!.id, sellerProfileId: l.sellerProfileId }, update: {},
   });
-  await prisma.inquiryMessage.create({ data: { threadId: t.id, authorUserId: req.user!.id, body: b.body } });
-  await notify(l.seller.ownerUserId, 'inquiry.new', { threadId: t.id, listingTitle: l.title });
+  const message = await prisma.inquiryMessage.create({ data: { threadId: t.id, authorUserId: req.user!.id, body: b.body } });
+  await notify(l.seller.ownerUserId, 'inquiry.new', { threadId: t.id, messageId: message.id, listingTitle: l.title });
   res.status(201).json({ id: t.id });
 });
 
@@ -80,7 +80,7 @@ r.get('/:id/messages', async (req, res) => {
   const messages = await prisma.inquiryMessage.findMany({ where: { threadId: t.id }, orderBy: { createdAt: 'asc' }, include: { author: { select: { displayName: true } } } });
   const handoff = await prisma.handoff.findUnique({ where: { inquiryThreadId: t.id } });
   const other = t.buyerUserId === req.user!.id ? t.seller.ownerUserId : t.buyerUserId;
-  const listingVisible = t.listing.status === 'published' && !t.listing.deletedAt && t.seller.approvalStatus === 'approved';
+  const listingVisible = t.listing.status === 'published' && !t.listing.deletedAt && t.seller.approvalStatus === 'approved' && t.seller.owner.status === 'active';
   const leadPhoto = listingVisible ? [...t.listing.media].sort((a, b) => a.position - b.position)[0] : undefined;
   res.json({ thread: {
     id: t.id, status: t.status, listingId: t.listingId,
@@ -115,6 +115,19 @@ r.post('/:id/seen', async (req, res) => {
   const now = new Date();
   await prisma.inquiryMessage.updateMany({ where: { ...where, deliveredAt: null }, data: { deliveredAt: now } });
   await prisma.inquiryMessage.updateMany({ where: { ...where, seenAt: null }, data: { seenAt: now } });
+  // A badge represents unread messages. Clear only notifications whose specific incoming
+  // message was actually visible and acknowledged, not newer messages in the same thread.
+  const pending = await prisma.notification.findMany({
+    where: { userId: req.user!.id, readAt: null, type: { in: ['inquiry.new', 'inquiry.reply'] } },
+    select: { id: true, payload: true }, orderBy: { createdAt: 'desc' }, take: 200,
+  });
+  const readIds = pending.filter(n => {
+    const p = n.payload as { threadId?: unknown; messageId?: unknown } | null;
+    return p?.threadId === t.id && typeof p.messageId === 'number' && p.messageId <= upToId;
+  }).map(n => n.id);
+  if (readIds.length) await prisma.notification.updateMany({
+    where: { userId: req.user!.id, id: { in: readIds }, readAt: null }, data: { readAt: now },
+  });
   res.status(204).end();
 });
 
@@ -128,10 +141,11 @@ r.post('/:id/typing', async (req, res) => {
 r.post('/:id/messages', async (req, res) => {
   const t = await participantThread(req.user!.id, Number(req.params.id));
   if (t.status === 'closed') throw new HttpError(409, 'thread_closed');
+  if (t.seller.owner.status !== 'active') throw new HttpError(409, 'seller_unavailable');
   const b = z.object({ body: z.string().trim().min(1).max(1000) }).parse(req.body);
   const m = await prisma.inquiryMessage.create({ data: { threadId: t.id, authorUserId: req.user!.id, body: b.body } });
   const other = t.buyerUserId === req.user!.id ? t.seller.ownerUserId : t.buyerUserId;
-  await notify(other, 'inquiry.reply', { threadId: t.id, listingTitle: t.listing.title });
+  await notify(other, 'inquiry.reply', { threadId: t.id, messageId: m.id, listingTitle: t.listing.title });
   res.status(201).json({ id: m.id });
 });
 

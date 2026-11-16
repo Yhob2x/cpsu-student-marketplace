@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { api, explain, timeAgo } from './api';
 import { useMe } from './main';
 import { Icon, type IconName } from './icons';
+import { PushSettings } from './push-settings';
 
 type Notice = { id: number; type: string; payload: any; readAt: string | null; createdAt: string };
 
@@ -236,6 +237,8 @@ export function Notifications() {
         {refreshing ? 'Refreshing…' : 'Refresh'}
       </button>
     </header>
+
+    <PushSettings />
 
     <div className="notifications-summary">
       <span className="notifications-summary-icon" aria-hidden="true"><Icon name="bell" size={23} /></span>

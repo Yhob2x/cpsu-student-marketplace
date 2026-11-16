@@ -12,6 +12,7 @@ import sellerRoutes from './routes/seller.js';
 import inquiryRoutes from './routes/inquiries.js';
 import transactionRoutes from './routes/transactions.js';
 import adminRoutes from './routes/admin.js';
+import reviewerRoutes from './routes/reviewers.js';
 import accountRoutes from './routes/account.js';
 import pushRoutes from './routes/push.js';
 
@@ -35,6 +36,7 @@ export function createApp() {
   v1.use('/seller', sellerRoutes);
   v1.use('/inquiries', inquiryRoutes);
   v1.use('/transactions', transactionRoutes);
+  v1.use('/admin/reviewers', reviewerRoutes);
   v1.use('/admin', adminRoutes);
   app.use('/api/v1', v1);
   app.use(errorHandler);

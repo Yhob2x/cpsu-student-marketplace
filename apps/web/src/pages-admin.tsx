@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { api, explain, peso } from './api';
 import { useMe } from './main';
 import { ManagedContentAdmin } from './pages-managed-content';
+import { ReviewerAdmin } from './pages-reviewers';
 
 const FLAG_TEXT: Record<string, string> = {
   sensitive_category: 'Sensitive category', restricted_review: 'Campus restriction: review', possible_establishment_overlap: 'May overlap with a campus establishment',
@@ -15,6 +16,7 @@ const AUDIT_ACTION_TEXT: Record<string, string> = {
   'affiliation.rejected': 'Affiliation rejected', 'report.create': 'Report created',
   'report.resolved': 'Report resolved', 'report.dismissed': 'Report dismissed',
   'user.suspended': 'Student suspended', 'user.reactivated': 'Student reactivated',
+  'reviewer.created': 'Reviewer account created', 'reviewer.updated': 'Reviewer account updated',
 };
 
 export function Admin() {
@@ -130,7 +132,7 @@ export function Admin() {
   return <>
     <div className="page-head"><div><h1>Administration</h1><p className="muted">Review campus activity and manage the work assigned to your role.</p></div></div>
     <nav className="admin-section-nav" aria-label="Administration sections">
-      {([['listings', 'Listings', q?.listings.length], ['affiliations', 'Affiliations', q?.affiliations.length], ['reports', 'Reports', reports?.length], ['transactions', 'Transactions'], ...(accountAdmin ? [['students', 'Students'], ['content', 'Content'], ['audit', 'Audit history']] : []), ['overview', 'Overview']] as [string, string, number?][]).map(([key, label, count]) =>
+      {([['listings', 'Listings', q?.listings.length], ['affiliations', 'Affiliations', q?.affiliations.length], ['reports', 'Reports', reports?.length], ['transactions', 'Transactions'], ...(accountAdmin ? [['students', 'Students'], ['staff', 'Staff'], ['content', 'Content'], ['audit', 'Audit history']] : []), ['overview', 'Overview']] as [string, string, number?][]).map(([key, label, count]) =>
         <button key={key} type="button" aria-pressed={activeSection === key} onClick={() => setActiveSection(key)}>{label} {count != null && <span>{count}</span>}</button>)}
     </nav>
     <div hidden={activeSection !== 'affiliations'}>
@@ -217,6 +219,7 @@ export function Admin() {
       </div>}
       {!studentsError && studentTotal > 25 && <nav className="admin-student-pages" aria-label="Student result pages"><button className="btn ghost" type="button" disabled={studentsLoading || studentPage <= 1} onClick={() => void searchStudents(studentApplied, studentPage - 1)}>Previous</button><span>Page {studentPage} of {Math.ceil(studentTotal / 25)}</span><button className="btn ghost" type="button" disabled={studentsLoading || studentPage * 25 >= studentTotal} onClick={() => void searchStudents(studentApplied, studentPage + 1)}>Next</button></nav>}
     </section>}
+    {accountAdmin && activeSection === 'staff' && <ReviewerAdmin active campuses={campuses} />}
     {accountAdmin && activeSection === 'content' && <ManagedContentAdmin />}
     {accountAdmin && <section hidden={activeSection !== 'audit'} aria-labelledby="audit-history-heading">
       <h2 id="audit-history-heading">Administrative audit history</h2>

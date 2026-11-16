@@ -243,6 +243,7 @@ r.get('/users', async (req, res) => {
     pageSize: z.coerce.number().int().min(1).max(50).default(25),
   }).parse(req.query);
   const where: Prisma.UserWhereInput = {
+    roles: { none: { role: { in: ['campus_reviewer', 'university_admin', 'system_admin', 'establishment'] } } },
     ...(q ? { OR: [{ displayName: { contains: q } }, { email: { contains: q } }] } : {}),
     ...(status ? { status } : {}),
     ...(campusId || verification ? { affiliations: { some: {
@@ -273,7 +274,7 @@ r.patch('/users/:id/status', async (req, res) => {
   const target = await prisma.user.findUnique({ where: { id }, include: { roles: true } });
   if (!target) throw new HttpError(404, 'not_found');
   if (target.id === req.user!.id) throw new HttpError(409, 'self_status_change_forbidden');
-  if (target.roles.some(role => ['campus_reviewer', 'university_admin', 'system_admin'].includes(role.role))) {
+  if (target.roles.some(role => ['campus_reviewer', 'university_admin', 'system_admin', 'establishment'].includes(role.role))) {
     throw new HttpError(403, 'staff_account_protected');
   }
   if (target.status === status) throw new HttpError(409, 'unchanged_status');

@@ -8,7 +8,7 @@ owner approval; nothing has been changed.
 
 | Blueprint role | Implemented equivalent | Notes |
 |---|---|---|
-| Student | Any authenticated `User` | No role row needed. Buyer and seller are the same account. |
+| Student | Authenticated `User` without a staff or establishment role | No role row needed. Buyer and seller are the same account. |
 | Administrator | `university_admin` (all campuses) or `campus_reviewer` (one campus) | The pilot splits Administrator into a campus-scoped reviewer and a global admin, which is stricter than the blueprint. |
 | — (no blueprint equivalent) | `system_admin` | Infrastructure role. Deliberately **cannot** approve listings; unit-tested in `apps/api/test/permissions.test.ts`. |
 | — (no blueprint equivalent) | `establishment` | Reserved for a deferred campus-establishment directory; no endpoints in v1. |
@@ -19,8 +19,8 @@ A person can hold several roles.
 
 ## 2. Role assignment
 
-- Roles are created only by database/seed operations (or a future admin UI). There is **no API to grant a role**.
-- Changing a role requires infrastructure access; every review decision it enables is still audited.
+- Global university administrators can create and edit campus reviewer accounts through `/admin/reviewers`; this API cannot grant university or system administrator roles.
+- Changing university or system administrator roles requires infrastructure access; every review decision it enables is still audited.
 - Roles are never trusted from a token: `authenticate` (in `apps/api/src/auth.ts`) loads the user and roles from MySQL on every request,
   and rejects non-`active` users.
 
@@ -31,6 +31,7 @@ A person can hold several roles.
 | `canReview(user, campusId)` | `src/permissions.ts` | True for a `campus_reviewer` on that campus, or a `university_admin` with `campusId` null or matching. `system_admin` always false. |
 | `reviewCampusIds(user)` | `src/permissions.ts` | `'all'` for a global admin, otherwise the list of campus ids. |
 | `requireAuth` | `src/auth.ts` | `401 unauthenticated`. |
+| `requireStudent` | `src/auth.ts` | `401` without a session; `403` for staff or establishment roles on student actions. |
 | `requireReviewer` | `src/auth.ts` | `401`, then `403` when the resolved scope is empty. |
 | `scope(user)` | `routes/admin.ts` | Turns scope into a Prisma `where` fragment for list queries. |
 
@@ -42,19 +43,19 @@ A person can hold several roles.
 | Open a store | Verified only | — | — | — | No |
 | Create / edit own listing | Verified + store | No | No | No | No |
 | Delete own listing | **Not built** | — | — | — | — |
-| Send / read own inquiries | Yes | No* | No* | No* | No |
-| Save favorites | Yes | Yes | Yes | Yes | No |
-| Report a listing | Yes | Yes | Yes | Yes | No |
+| Send / read own inquiries | Yes | No | No | No | No |
+| Save favorites | Yes | No | No | No | No |
+| Report a listing | Yes | No | No | No | No |
 | Review affiliation / listing (own campus) | No | Yes | Yes | No | No |
 | Suspend a listing | No | Yes | Yes | No | No |
-| Suspend / reactivate an account | **Not built** | — | — | — | — |
+| Suspend / reactivate a student account | No | No | Yes | No | No |
+| Create / edit campus reviewers | No | No | Yes | No | No |
 | Manage categories | **Not built** | — | — | — | — |
 | View analytics (campus-scoped, suppressed <5) | No | Yes | Yes | No | No |
 | Resolve reports | No | Yes | Yes | No | No |
-| View audit logs | **Not built** | — | — | — | — |
+| View audit logs | No | No | Yes | No | No |
 
-\* Reviewers and admins are not barred from messaging as ordinary students: role rows do not remove student abilities. The blueprint's
-matrix says an Administrator does not send messages; this is a minor divergence to confirm (conflict **C1a**).
+Staff and establishment roles are barred from student seller, inquiry, saved-listing, reporting and transaction actions, even when a legacy account has a student affiliation. Public browsing remains available. Existing affiliation and transaction records are retained.
 
 ## 5. Enforcement patterns worth preserving
 

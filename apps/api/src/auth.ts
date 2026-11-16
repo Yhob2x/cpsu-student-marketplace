@@ -7,6 +7,7 @@ import { prisma } from './db.js';
 import { HttpError } from './http.js';
 
 import type { AuthUser } from './permissions.js';
+import { isStaffAccount } from './permissions.js';
 export type { AuthUser };
 declare global { namespace Express { interface Request { user?: AuthUser } } }
 
@@ -33,6 +34,10 @@ export const authenticate: RequestHandler = async (req, _res, next) => {
   next();
 };
 export const requireAuth: RequestHandler = (req, _res, next) => req.user ? next() : next(new HttpError(401, 'unauthenticated'));
+export const requireStudent: RequestHandler = (req, _res, next) => {
+  if (!req.user) return next(new HttpError(401, 'unauthenticated'));
+  return isStaffAccount(req.user.roles) ? next(new HttpError(403, 'student_account_required')) : next();
+};
 
 export { canReview, reviewCampusIds } from './permissions.js';
 import { reviewCampusIds as scopeOf } from './permissions.js';

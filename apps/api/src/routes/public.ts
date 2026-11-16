@@ -1,12 +1,12 @@
 import { Router } from 'express';
-import path from 'node:path';
 import { z } from 'zod';
 import { Prisma } from '@prisma/client';
 import { prisma } from '../db.js';
-import { env } from '../env.js';
+import { driveMediaId, localMediaFile, readDriveMedia } from '../media-storage.js';
 import { HttpError } from '../http.js';
 import { reviewCampusIds } from '../auth.js';
 import { DEFAULT_GUIDELINES } from '../managed-content.js';
+import { freshListingIdsQuery } from '../fresh-listings-query.js';
 
 const r = Router();
 export const publicListing = (l: any) => ({
@@ -76,9 +76,9 @@ r.get('/listings', async (req, res) => {
   if (q.condition) { where.condition = q.condition; where.type = 'physical_product'; }
   if (q.minPrice !== undefined || q.maxPrice !== undefined) where.price = { gte: q.minPrice, lte: q.maxPrice };
   // Ordering is chosen from a fixed set, never from a raw client string.
-  const orderBy = q.sort === 'price_asc' ? { price: 'asc' as const }
-    : q.sort === 'price_desc' ? { price: 'desc' as const }
-    : { createdAt: 'desc' as const };
+  const orderBy: Prisma.ListingOrderByWithRelationInput[] = q.sort === 'price_asc' ? [{ price: 'asc' }, { id: 'desc' }]
+    : q.sort === 'price_desc' ? [{ price: 'desc' }, { id: 'desc' }]
+    : [{ createdAt: 'desc' }, { id: 'desc' }];
   const [total, rows] = await Promise.all([
     prisma.listing.count({ where }),
     prisma.listing.findMany({ where, select: publicListingSelect, orderBy, skip: (q.page - 1) * q.pageSize, take: q.pageSize }),
@@ -94,6 +94,20 @@ r.get('/listings/popular', async (_q, res) => {
   },
     select: publicListingSelect, orderBy: { savedListings: { _count: 'desc' } }, take: 8 });
   res.json({ items: rows.map(publicListing) });
+});
+
+// Home's Fresh rail follows the latest approval, when a listing becomes public.
+// Legacy published rows without a review fall back to their creation time.
+r.get('/listings/fresh', async (_req, res) => {
+  const ranked = await prisma.$queryRaw<Array<{ id: number }>>(freshListingIdsQuery);
+  const ids = ranked.map(row => row.id);
+  const rows = ids.length ? await prisma.listing.findMany({
+    where: { id: { in: ids }, status: 'published', availabilityState: 'available', deletedAt: null,
+      seller: { approvalStatus: 'approved', owner: { status: 'active' } } },
+    select: publicListingSelect,
+  }) : [];
+  const byId = new Map(rows.map(row => [row.id, row]));
+  res.json({ items: ids.flatMap(id => { const row = byId.get(id); return row ? [publicListing(row)] : []; }) });
 });
 
 r.get('/listings/:id', async (req, res) => {
@@ -128,6 +142,12 @@ r.get('/media/:id', async (req, res) => {
     c === 'all' || (c as number[]).includes(m.listing.campusId);
   if (!allowed) throw new HttpError(404, 'not_found');
   res.setHeader('X-Content-Type-Options', 'nosniff');
-  res.type(m.mimeType).sendFile(path.resolve(env.UPLOAD_DIR, m.mediaPath));
+  if (driveMediaId(m.mediaPath)) {
+    const content = await readDriveMedia(m.mediaPath);
+    // Do not leak Drive links or store private/unreviewed images in shared caches.
+    res.setHeader('Cache-Control', 'private, no-store');
+    return res.type(m.mimeType).send(content);
+  }
+  res.type(m.mimeType).sendFile(localMediaFile(m.mediaPath));
 });
 export default r;

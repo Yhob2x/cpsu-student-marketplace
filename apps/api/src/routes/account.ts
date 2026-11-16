@@ -2,12 +2,13 @@ import { Router } from 'express';
 import { z } from 'zod';
 import { prisma } from '../db.js';
 import { HttpError } from '../http.js';
-import { requireAuth } from '../auth.js';
+import { requireAuth, requireStudent } from '../auth.js';
 import { audit } from '../audit.js';
 import { publicListing } from './public.js';
 
 const r = Router();
 r.use(['/me', '/notifications', '/saved', '/reports'], requireAuth);
+r.use(['/saved', '/reports'], requireStudent);
 
 r.get('/me', async (req, res) => {
   const u = req.user!;

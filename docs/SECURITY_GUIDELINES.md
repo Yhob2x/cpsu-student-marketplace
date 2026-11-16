@@ -23,7 +23,7 @@ Not legal advice — CPSU's data protection officer must review (`docs/privacy-a
 | Request size limits | JSON ≤ 100 KB, one upload ≤ 3 MB | `app.ts`, `routes/seller.ts` |
 | Upload validation | Pre-upload ownership/status/quota checks; JPEG/PNG/WebP declared-type allowlist **and decoded-format match** via Sharp; 3 MB / 24 MP / single-frame limits; resize to 2400 px maximum, metadata-stripping WebP re-encoding, random filename, untrusted temporary file cleanup, `nosniff` on serve. Applies to **new** uploads. | `routes/seller.ts`, `src/upload-security.ts`, `routes/public.ts` |
 | Photo content review | Listings remain unpublished until campus review. Reviewer must explicitly attest to inspecting every photo and their confirmation/count is audited. Adding a new photo to an already published listing returns it to draft for re-review. | `routes/admin.ts`, `routes/seller.ts`, `apps/web/src/pages-admin.tsx` |
-| Media access control | Published media public; otherwise owner or in-scope reviewer only | `routes/public.ts` |
+| Media access control | Published media public; otherwise owner or in-scope reviewer only. Optional private Google Drive storage uses a server-only OAuth grant, app-owned folder, checksum verification, and the same access-controlled image endpoint; disabled by default | `routes/public.ts`, `src/media-storage.ts`, `src/google-drive-storage.ts` |
 | Security headers | `helmet` defaults; cross-origin resource policy relaxed for images | `app.ts` |
 | Error hygiene | Typed JSON errors; unexpected errors log server-side and return `500 internal_error` with no stack trace | `src/http.ts` |
 | Audit trail | Actor, action, target type/id, JSON metadata, timestamp for every privileged action | `src/audit.ts` |

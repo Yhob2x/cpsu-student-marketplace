@@ -58,12 +58,10 @@ The launcher opens three visible terminals for the static web preview, isolated 
 This is personal device QA. It is **not** a substitute for proper public HTTPS hosting, CPSU privacy/security acceptance or physical-device validation.
 
 
-## 16 November: HTTPS demo login activation
+## 16 November: Temporary demo login cleanup
 
-**Root cause:** a read-only Prisma preflight confirmed the isolated `cpsu_marketplace_push_test` schema had **0 users and 0 campuses**, while the existing `cpsu_marketplace` development database is intentionally separate. Hence regular local-development user credentials failed with `invalid_credentials` on the iPhone HTTPS URL.
+At the user's request, both temporary HTTPS test accounts and all their database password hashes were deleted from `cpsu_marketplace_push_test`, along with **six test sessions**, **two affiliations**, and **one empty seller profile**. A guarded transaction verified no listings, messages, transactions, reports or other business records were attached before deletion. The test schema now contains **zero users**.
 
-**Remediation:** added `apps/api/scripts/seed-iphone-login-demo.ts`, guarded by `CPSU_IPHONE_DEMO_SEED=1` and exact localhost `cpsu_marketplace` source URL. The script refuses a non-empty test schema and writes only to `cpsu_marketplace_push_test`. It transactionally creates a synthetic Cauayan campus and **two unprivileged, fictional accounts** (`buyer@dev.test`, `seller@dev.test`), with Argon2id password hashes, fictional test-only verified affiliations, and the existing demo seed password from `apps/api/prisma/seed.ts`. No admin/reviewer role, live account, login token export, password modification, production deployment or DB migration.
+The temporary demo credentials are no longer valid. Their account-specific seeding and login verification scripts have been retired. The original local development database, real accounts, and HTTPS certificate settings were not changed.
 
-**Verification:** the read-only `apps/api/scripts/iphone-test-login-preflight.ts` reported **2 active synthetic users and 1 campus** afterward. `scripts/verify-iphone-demo-login.mjs` made CA-validated HTTPS requests to `192.168.0.133:8445` and confirmed both users receive 200 on `POST /api/v1/auth/login` and 200 on bearer-authenticated `GET /api/v1/me`. No access/refresh token values were printed. Note: test seller has no seller profile, and this test DB has no original listings/messages. The test accounts/password are not suitable for production or student-facing deployment.
-
-**iPhone use:** with the development CA manually trusted, connect to the private Wi-Fi, open `https://192.168.0.133:8445/`, and use either synthetic email with the existing development-only password `DevPassword!123`. The main local API and original developer accounts remain unchanged.
+The existing development seed outside this iPhone QA setup remains separate and was not modified.

@@ -2,18 +2,19 @@ import { Router } from 'express';
 import multer from 'multer';
 import crypto from 'node:crypto';
 import fs from 'node:fs';
-import path from 'node:path';
 import { z } from 'zod';
 import { prisma } from '../db.js';
 import { env } from '../env.js';
 import { HttpError } from '../http.js';
-import { requireAuth } from '../auth.js';
+import { requireStudent } from '../auth.js';
 import { audit, notify } from '../audit.js';
 import { evaluateListing, isMaterialChange } from '../rules.js';
 import { sanitizeListingImage } from '../upload-security.js';
+import { storeSanitizedMedia, deleteStoredMedia } from '../media-storage.js';
+import { canAddListingPhoto, MAX_LISTING_PHOTOS } from '../listing-photo-limit.js';
 
 const r = Router();
-r.use(requireAuth);
+r.use(requireStudent);
 fs.mkdirSync(env.UPLOAD_DIR, { recursive: true });
 
 const ALLOWED_IMAGE_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp']);
@@ -93,7 +94,7 @@ r.post('/listings/:id/media',
       if (l.reservationTransactionId !== null) throw new HttpError(409, 'transaction_reservation_active');
       if (!['draft', 'changes_requested', 'published'].includes(l.status))
         throw new HttpError(409, 'not_editable');
-      if (l.media.length >= 6) throw new HttpError(409, 'too_many_images');
+      if (!canAddListingPhoto(l.media.length)) throw new HttpError(409, 'too_many_images', `A listing can have up to ${MAX_LISTING_PHOTOS} photos.`);
       next();
     } catch (error) { next(error); }
   },
@@ -104,7 +105,8 @@ r.post('/listings/:id/media',
   }),
   async (req, res) => {
     if (!req.file) throw new HttpError(400, 'invalid_image', 'Upload a JPEG, PNG or WebP photo up to 3 MB.');
-    const safe = await sanitizeListingImage(req.file, env.UPLOAD_DIR);
+    const sanitized = await sanitizeListingImage(req.file, env.UPLOAD_DIR);
+    const safe = await storeSanitizedMedia(sanitized);
     try {
       const media = await prisma.$transaction(async tx => {
         const current = await tx.listing.findFirst({
@@ -116,7 +118,7 @@ r.post('/listings/:id/media',
         if (current.reservationTransactionId !== null) throw new HttpError(409, 'transaction_reservation_active');
         if (!['draft', 'changes_requested', 'published'].includes(current.status))
           throw new HttpError(409, 'not_editable');
-        if (current.media.length >= 6) throw new HttpError(409, 'too_many_images');
+        if (!canAddListingPhoto(current.media.length)) throw new HttpError(409, 'too_many_images', `A listing can have up to ${MAX_LISTING_PHOTOS} photos.`);
         // Adding any new photo to an already approved listing requires a fresh
         // campus review. No new, unreviewed image may inherit published status.
         if (current.status === 'published') {
@@ -134,7 +136,9 @@ r.post('/listings/:id/media',
       });
       res.status(201).json({ id: media.id });
     } catch (error) {
-      await fs.promises.unlink(path.join(env.UPLOAD_DIR, safe.mediaPath)).catch(() => {});
+      await deleteStoredMedia(safe.mediaPath).catch(() => {
+        console.error('Photo storage cleanup failed after database rollback.');
+      });
       throw error;
     }
   },

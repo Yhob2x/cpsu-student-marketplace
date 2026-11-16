@@ -58,6 +58,7 @@ export function Profile() {
   useEffect(() => { if (me) setName(me.displayName); }, [me?.displayName]);
 
   if (!me) return <p className="muted">Loading your profile</p>;
+  const staff = me.roles.some(role => ['campus_reviewer', 'university_admin', 'system_admin', 'establishment'].includes(role.role));
 
   const save = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -74,7 +75,7 @@ export function Profile() {
     <div className="page-head">
       <div>
         <h1>Profile</h1>
-        <p className="muted">How you appear to other students, and where your CPSU affiliation stands.</p>
+        <p className="muted">{staff ? 'Your staff account and notification settings.' : 'How you appear to other students, and where your CPSU affiliation stands.'}</p>
       </div>
     </div>
 
@@ -83,26 +84,27 @@ export function Profile() {
       <section className="panel">
         <h2>Your account</h2>
         <dl className="facts">
-          <div><dt>Name shown to others</dt><dd>{me.displayName}</dd></div>
+          <div><dt>{staff ? 'Name' : 'Name shown to others'}</dt><dd>{me.displayName}</dd></div>
           <div><dt>Email</dt><dd>{me.email}</dd></div>
         </dl>
-        <p className="muted">Only your display name, campus and listings are visible to other students. Your email is never shown publicly.</p>
+        <p className="muted">Your email is never shown publicly.</p>
       </section>
 
-      <section className="panel">
+      {!staff && <section className="panel">
         <h2>CPSU affiliation</h2>
         {me.affiliations.length === 0 && <p className="muted">No campus affiliation on record.</p>}
         {me.affiliations.map(a => <p key={a.id}>{a.campus.name} <span className={`status ${a.status}`}>{a.status}</span></p>)}
         {!me.storeId && <p className="muted">A campus reviewer confirms your affiliation before you can sell. Browsing and messaging work right away.</p>}
-      </section>
+      </section>}
 
       <section className="panel">
         <h2>Where to go</h2>
         <ul className="quick">
+          {staff ? (me.roles.some(role => ['campus_reviewer', 'university_admin'].includes(role.role)) && <li><Link to="/admin">Administration</Link><span className="muted">Review listings and campus activity</span></li>) : <>
           <li><Link to="/dashboard">My listings</Link><span className="muted">{me.storeId ? 'Manage your drafts, reviews and listings' : 'Open a store once your affiliation is verified'}</span></li>
           <li><Link to="/saved">Favorites</Link><span className="muted">Listings you saved for later</span></li>
           <li><Link to="/inquiries">Messages</Link><span className="muted">Conversations with buyers and sellers</span></li>
-          <li><Link to="/transactions">My transactions</Link><span className="muted">Purchase requests, arrangements and mutual completion records</span></li>
+          <li><Link to="/transactions">My transactions</Link><span className="muted">Purchase requests, arrangements and mutual completion records</span></li></>}
           <li><Link to="/notifications">Notifications</Link><span className="muted">Review decisions, replies and affiliation updates</span></li>
         </ul>
       </section>

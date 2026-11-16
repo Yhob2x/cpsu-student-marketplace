@@ -4,36 +4,55 @@ import { api, explain, peso, setToken, timeAgo } from './api';
 import { useMe } from './main';
 import { ListingCard, Listing } from './pages-public';
 import { Icon } from './icons';
+import { MAX_LISTING_PHOTOS, selectedPhotosError, uploadListingPhotos } from './listing-photo-uploads';
+import { runExclusive } from './auth-submit';
 import { hasNewIncomingMessage, messageReceiveSoundEnabled, playMessageReceiveSound, prepareMessageReceiveSound, setMessageReceiveSoundEnabled, unlockMessageReceiveSound } from './message-receive-sound';
 
 export function Login() {
   const nav = useNavigate(); const location = useLocation(); const { reload } = useMe(); const [err, setErr] = useState('');
+  const [busy, setBusy] = useState(false); const submitLock = useRef(false);
   // Deep links from push notifications return only to explicitly allowed in-app paths.
   const requested = new URLSearchParams(location.search).get('next') ?? '';
-  const next = /^\/(inquiries\/\d+|transactions(?:\/\d+)?|notifications|profile)$/.test(requested) ? requested : '/';
+  const next = /^\/(inquiries\/\d+|transactions(?:\/\d+)?|notifications|profile|saved)$/.test(requested) ? requested : '/';
   const go = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault(); const d = Object.fromEntries(new FormData(e.currentTarget));
-    try { const r = await api('/auth/login', { body: d }); setToken(r.accessToken); await reload(); nav(next, { replace: true }); } catch (x) { setErr(explain(x)); }
+    await runExclusive(submitLock, async () => {
+      setBusy(true); setErr('');
+      try {
+        const r = await api('/auth/login', { body: d }); setToken(r.accessToken);
+        const current = await reload();
+        const staff = current?.roles.some(role => ['campus_reviewer', 'university_admin', 'system_admin', 'establishment'].includes(role.role));
+        const reviewer = current?.roles.some(role => ['campus_reviewer', 'university_admin'].includes(role.role));
+        nav(next === '/' && staff ? reviewer ? '/admin' : '/profile' : next, { replace: true });
+      } catch (x) { setErr(explain(x)); }
+      finally { setBusy(false); }
+    });
   };
-  return <form className="stack auth-form" onSubmit={go}><h1>Sign in</h1>
+  return <form className="stack auth-form" aria-busy={busy} onSubmit={go}><h1>Sign in</h1>
     <label className="field">Email
       <input name="email" type="email" placeholder="Your email address" autoComplete="email" required />
     </label>
     <label className="field">Password
       <input name="password" type="password" autoComplete="current-password" required />
     </label>
-    {err && <p className="err" role="alert">{err}</p>}<button className="btn">Sign in</button>
+    {err && <p className="err" role="alert">{err}</p>}<button className="btn" disabled={busy}>{busy ? 'Signing in…' : 'Sign in'}</button>
     <p className="muted">New here? <Link to="/register">Create an account</Link></p></form>;
 }
 
 export function Register() {
   const nav = useNavigate(); const { reload } = useMe(); const [err, setErr] = useState(''); const [campuses, setCampuses] = useState<any[]>([]);
+  const [busy, setBusy] = useState(false); const submitLock = useRef(false);
   useEffect(() => { api('/campuses').then(setCampuses).catch(x => setErr(explain(x))); }, []);
   const go = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault(); const d: any = Object.fromEntries(new FormData(e.currentTarget)); d.campusId = Number(d.campusId);
-    try { const r = await api('/auth/register', { body: d }); setToken(r.accessToken); await reload(); nav('/dashboard'); } catch (x) { setErr(explain(x)); }
+    await runExclusive(submitLock, async () => {
+      setBusy(true); setErr('');
+      try { const r = await api('/auth/register', { body: d }); setToken(r.accessToken); await reload(); nav('/dashboard'); }
+      catch (x) { setErr(explain(x)); }
+      finally { setBusy(false); }
+    });
   };
-  return <form className="stack auth-form" onSubmit={go}><h1>Create your account</h1>
+  return <form className="stack auth-form" aria-busy={busy} onSubmit={go}><h1>Create your account</h1>
     <label className="field">Display name
       <input name="displayName" placeholder="Name shown to others" required minLength={2} maxLength={80} />
     </label>
@@ -47,8 +66,22 @@ export function Register() {
       <select name="campusId" required defaultValue=""><option value="" disabled>Select a campus</option>{campuses.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}</select>
     </label>
     <p className="muted">A campus reviewer confirms you are part of the CPSU community before you can sell. Browsing and messaging work right away.</p>
-    {err && <p className="err" role="alert">{err}</p>}<button className="btn">Create account</button></form>;
+    {err && <p className="err" role="alert">{err}</p>}<button className="btn" disabled={busy}>{busy ? 'Creating account…' : 'Create account'}</button></form>;
 }
+
+function StoreListingPhoto({ media, title, type }: { media: { id: number; position: number }[]; title: string; type: string }) {
+  const [failedSrc, setFailedSrc] = useState<string | null>(null);
+  const firstPhoto = media.slice().sort((a, b) => a.position - b.position)[0];
+  const src = firstPhoto ? `/api/v1/media/${firstPhoto.id}` : null;
+  return <div className="store-listing-photo">
+    {src && failedSrc !== src
+      ? <img src={src} alt={`Photo of ${title}`} loading="lazy" decoding="async" onError={() => setFailedSrc(src)} />
+      : <span className="store-photo-placeholder"><Icon name="tag" size={28} /><span>{src ? 'Photo unavailable' : 'No photo yet'}</span></span>}
+    <span className="store-listing-kind">{type === 'service' ? 'Service' : 'Product'}</span>
+  </div>;
+}
+
+type RepeatListing = { id: number; categoryId: number; title: string; description: string; price: number; priceBasis?: string | null; condition?: string | null };
 
 export function Dashboard() {
   const { me, reload } = useMe(); const [listings, setListings] = useState<any[]>([]); const [cats, setCats] = useState<any[]>([]); const [err, setErr] = useState(''); const [ok, setOk] = useState('');
@@ -56,11 +89,24 @@ export function Dashboard() {
   const [listingLoadError, setListingLoadError] = useState('');
   const [newCategoryId, setNewCategoryId] = useState('');
   const [editCategoryId, setEditCategoryId] = useState('');
-  const [listingsLoading, setListingsLoading] = useState(false);
+  const [listingsLoading, setListingsLoading] = useState(true);
   const [creatingListing, setCreatingListing] = useState(false);
   const [savingEdit, setSavingEdit] = useState(false);
+  const [newSelectedCount, setNewSelectedCount] = useState(0);
+  const [editSelectedCount, setEditSelectedCount] = useState(0);
+  const [newSelectionError, setNewSelectionError] = useState('');
+  const [editSelectionError, setEditSelectionError] = useState('');
+  const [photoProgress, setPhotoProgress] = useState('');
+  const [listingQuery, setListingQuery] = useState('');
+  const [listingStatus, setListingStatus] = useState('all');
+  const [listingPage, setListingPage] = useState(1);
+  const [repeatListing, setRepeatListing] = useState<RepeatListing | null>(null);
+  const [createDirty, setCreateDirty] = useState(false);
   const createInFlight = useRef(false);
   const editInFlight = useRef(false);
+  const listingsHeading = useRef<HTMLHeadingElement>(null);
+  const createDetails = useRef<HTMLDetailsElement>(null);
+  const createTitle = useRef<HTMLInputElement>(null);
   const load = () => {
     setListingsLoading(true);
     return api('/seller/listings')
@@ -74,39 +120,73 @@ export function Dashboard() {
   }, [me?.storeId]);
   if (!me) return <p className="muted">Loading</p>;
   const verified = me.affiliations.some(a => a.status === 'verified');
+  const visibleListings = listings.filter(l => !l.deletedAt);
+  const matchingListings = visibleListings.filter(l =>
+    l.title.toLocaleLowerCase().includes(listingQuery.trim().toLocaleLowerCase()) &&
+    (listingStatus === 'all' || l.status === listingStatus));
+  const pageSize = 6;
+  const pageCount = Math.max(1, Math.ceil(matchingListings.length / pageSize));
+  const currentPage = Math.min(listingPage, pageCount);
+  const pageListings = matchingListings.slice((currentPage - 1) * pageSize, currentPage * pageSize);
+  const changeListingPage = (nextPage: number) => {
+    setListingPage(nextPage);
+    requestAnimationFrame(() => listingsHeading.current?.focus());
+  };
+  const sellAgain = (listing: RepeatListing) => {
+    if (createDirty && !window.confirm('Replace the unsaved details in your new listing form?')) return;
+    setRepeatListing(listing);
+    setNewCategoryId(String(listing.categoryId));
+    setNewSelectedCount(0); setNewSelectionError('');
+    setCreateDirty(false);
+    if (createDetails.current) createDetails.current.open = true;
+    requestAnimationFrame(() => createTitle.current?.focus());
+  };
+  const startBlankListing = () => {
+    if (createDirty && !window.confirm('Clear the unsaved details in your new listing form?')) return;
+    setRepeatListing(null);
+    setNewCategoryId('');
+    setNewSelectedCount(0); setNewSelectionError('');
+    setCreateDirty(false);
+    requestAnimationFrame(() => createTitle.current?.focus());
+  };
   const createStore = async (e: FormEvent<HTMLFormElement>) => { e.preventDefault(); try { await api('/seller/store', { body: Object.fromEntries(new FormData(e.currentTarget)) }); await reload(); } catch (x) { setErr(explain(x)); } };
-  const photoError = (file?: File) => file && (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type) || file.size > 3 * 1024 * 1024)
-    ? 'Choose a JPEG, PNG or WebP photo no larger than 3 MB.' : '';
+  const uploadOnePhoto = async (id: number, file: File) => {
+    const fd = new FormData();
+    fd.append('image', file);
+    await api(`/seller/listings/${id}/media`, { form: fd });
+  };
   const createListing = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (createInFlight.current) return;
     const form = e.currentTarget;
     const d: any = Object.fromEntries(new FormData(form));
     const cat = cats.find(c => c.id === Number(d.categoryId));
-    const file = (form.elements.namedItem('image') as HTMLInputElement).files?.[0];
-    const invalidPhoto = photoError(file);
-    if (invalidPhoto || !cat) { setErr(invalidPhoto || 'Choose a valid category.'); return; }
+    const files = Array.from((form.elements.namedItem('image') as HTMLInputElement).files ?? []);
+    const invalidPhotos = selectedPhotosError(files);
+    if (invalidPhotos || !cat) { setErr(invalidPhotos || 'Choose a valid category.'); return; }
     createInFlight.current = true;
     setCreatingListing(true); setErr(''); setOk('');
     try {
       const l = await api<{ id: number }>('/seller/listings', { body: { type: cat.listingType, categoryId: cat.id, title: d.title, description: d.description, price: Number(d.price), priceBasis: d.priceBasis || undefined, condition: cat.listingType === 'physical_product' ? d.condition || null : null } });
       // Once the server creates a draft, upload failure must not suggest that nothing was saved.
       let uploadFailure = '';
-      if (file) {
-        try {
-          const fd = new FormData(); fd.append('image', file);
-          await api(`/seller/listings/${l.id}/media`, { form: fd });
-        } catch (x) { uploadFailure = explain(x); }
+      if (files.length) {
+        const result = await uploadListingPhotos(l.id, files, uploadOnePhoto,
+          (done, total) => setPhotoProgress(`Uploading photos: ${done} of ${total}`));
+        if (result.failedIndex !== null)
+          uploadFailure = `${result.uploaded} of ${files.length} photos uploaded. ${explain(result.error)}`;
       }
-      form.reset(); setNewCategoryId('');
+      setPhotoProgress('');
+      form.reset(); setNewSelectedCount(0); setNewSelectionError('');
+      setNewCategoryId(''); setRepeatListing(null); setCreateDirty(false);
       await load();
       if (uploadFailure) {
-        setErr(`Draft "${d.title}" was saved, but its photo could not upload: ${uploadFailure} Use Edit on that draft below to retry the photo. Do not create another draft.`);
+        setErr(`Draft "${d.title}" was saved. ${uploadFailure} Use Edit on that draft to select only the photos that did not upload. Do not create another draft.`);
       } else {
-        setOk('Draft saved. Submit it for review when you are ready.');
+        setOk(files.length ? `Draft saved with ${files.length} ${files.length === 1 ? 'photo' : 'photos'}. Submit it for review when ready.` : 'Draft saved. Add at least one photo before submitting it for review.');
       }
     } catch (x) { setErr(explain(x)); }
-    finally { createInFlight.current = false; setCreatingListing(false); }
+    finally { createInFlight.current = false; setCreatingListing(false); setPhotoProgress(''); }
   };
   const changeAvailability = async (id: number, availability: 'available' | 'reserved' | 'sold'): Promise<boolean> => {
     // Sold is terminal in v1: the listing leaves public search and cannot be relisted, so a mis-picked option must not end it silently.
@@ -134,32 +214,33 @@ export function Dashboard() {
     const form = e.currentTarget;
     const d: any = Object.fromEntries(new FormData(form));
     const cat = cats.find(c => c.id === Number(d.categoryId));
-    const file = (form.elements.namedItem('image') as HTMLInputElement).files?.[0];
-    const invalidPhoto = photoError(file);
-    if (invalidPhoto || !cat) { setErr(invalidPhoto || 'Choose a valid category.'); return; }
+    const files = Array.from((form.elements.namedItem('image') as HTMLInputElement).files ?? []);
+    const invalidPhotos = selectedPhotosError(files, editing.media.length);
+    if (invalidPhotos || !cat) { setErr(invalidPhotos || 'Choose a valid category.'); return; }
     editInFlight.current = true;
     setSavingEdit(true); setErr(''); setOk('');
     try {
       await api(`/seller/listings/${editing.id}`, { method: 'PATCH', body: { type: cat.listingType, categoryId: cat.id, title: d.title, description: d.description, price: Number(d.price), priceBasis: d.priceBasis || undefined, condition: cat.listingType === 'physical_product' ? d.condition || null : null } });
       let uploadFailure = '';
-      if (file) {
-        try {
-          const fd = new FormData(); fd.append('image', file);
-          await api(`/seller/listings/${editing.id}/media`, { form: fd });
-        } catch (x) { uploadFailure = explain(x); }
+      if (files.length) {
+        const result = await uploadListingPhotos(editing.id, files, uploadOnePhoto,
+          (done, total) => setPhotoProgress(`Uploading photos: ${done} of ${total}`));
+        if (result.failedIndex !== null)
+          uploadFailure = `${result.uploaded} of ${files.length} new photos uploaded. ${explain(result.error)}`;
       }
-      setEditing(null);
+      setPhotoProgress('');
+      setEditing(null); setEditSelectedCount(0); setEditSelectionError('');
       await load();
-      if (uploadFailure) setErr(`Listing details were saved, but the photo could not upload: ${uploadFailure} Select Edit below to retry the photo.`);
-      else setOk(file ? 'Photo saved. Submit the listing for review again before it appears publicly.' : 'Listing updated.');
+      if (uploadFailure) setErr(`Listing details were saved. ${uploadFailure} Select Edit to retry only the remaining photos.`);
+      else setOk(files.length ? `${files.length} ${files.length === 1 ? 'photo' : 'photos'} saved. Submit the listing for review again before it appears publicly.` : 'Listing updated.');
     } catch (x) { setErr(explain(x)); }
-    finally { editInFlight.current = false; setSavingEdit(false); }
+    finally { editInFlight.current = false; setSavingEdit(false); setPhotoProgress(''); }
   };
-  return <>
+  return <div className="my-store">
     <div className="page-head">
       <div><h1>My store</h1><p className="muted">Create listings, manage drafts, and follow reviewer decisions.</p></div>
     </div>
-    <div className="panel"><h2 className="panel-heading-small">CPSU affiliation</h2>{me.affiliations.map(a => <p key={a.id}>{a.campus.name}: <span className={`status ${a.status}`}>{a.status}</span></p>)}
+    <div className="panel store-affiliation"><h2 className="panel-heading-small">CPSU affiliation</h2>{me.affiliations.map(a => <p key={a.id}>{a.campus.name}: <span className={`status ${a.status}`}>{a.status}</span></p>)}
       {!verified && <p className="muted">Pending until a campus reviewer confirms you. You can still browse and message sellers.</p>}</div>
     {err && <p className="err" role="alert">{err}</p>}{ok && <p role="status">{ok}</p>}
     {verified && !me.storeId && <form className="panel stack" onSubmit={createStore}><h2>Open your store</h2>
@@ -167,26 +248,36 @@ export function Dashboard() {
       <label className="field">Store description<textarea name="description" placeholder="What do you make or offer?" required minLength={10} maxLength={1000} /></label>
       <button className="btn">Open store</button></form>}
     {me.storeId && <>
-      <form className="panel stack seller-composer" onSubmit={createListing}><h2>New listing</h2><p className="muted">Add the essential details first. Save your draft, then submit it for review.</p>
-        <label className="field">Title<input name="title" placeholder="What are you offering?" required minLength={3} maxLength={120} /></label>
+      <details className="panel store-create" ref={createDetails}><summary><span>{repeatListing ? 'Sell again' : 'New listing'}</span><span className="store-create-hint">Save a draft</span></summary>
+      <form key={repeatListing?.id ?? 'new'} className="stack seller-composer" onChange={() => setCreateDirty(true)} onSubmit={createListing}><p className="muted">{repeatListing ? 'Review the copied details and upload a photo or portfolio image. This makes a new draft; the sold listing stays sold.' : 'Add the essential details first. Save your draft, then submit it for review.'}</p>
+        {repeatListing && <button type="button" className="btn ghost store-start-blank" onClick={startBlankListing}>Start blank instead</button>}
+        <label className="field">Title<input ref={createTitle} name="title" placeholder="What are you offering?" defaultValue={repeatListing?.title ?? ''} required minLength={3} maxLength={120} /></label>
         <label className="field">Category
           <select name="categoryId" required value={newCategoryId} onChange={e => setNewCategoryId(e.target.value)}><option value="" disabled>Select a category</option>{cats.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}</select>
         </label>
-        {cats.find(c => c.id === Number(newCategoryId))?.listingType === 'physical_product' && <label className="field">Product condition<select name="condition" defaultValue="" required><option value="" disabled>Select condition</option><option value="new">New</option><option value="like_new">Like new</option><option value="good">Good</option><option value="fair">Fair</option></select></label>}
-        <label className="field">Description<textarea name="description" placeholder="Describe it: condition, size, what is included" required minLength={10} maxLength={3000} /></label>
+        {cats.find(c => c.id === Number(newCategoryId))?.listingType === 'physical_product' && <label className="field">Product condition<select name="condition" defaultValue={repeatListing?.condition ?? ''} required><option value="" disabled>Select condition</option><option value="new">New</option><option value="like_new">Like new</option><option value="good">Good</option><option value="fair">Fair</option></select></label>}
+        <label className="field">Description<textarea name="description" placeholder="Describe it: condition, size, what is included" defaultValue={repeatListing?.description ?? ''} required minLength={10} maxLength={3000} /></label>
         <div className="row">
-          <label className="field">Price (PHP)<input name="price" type="number" min="1" max="1000000" step="1" required /></label>
-          <label className="field">Price basis (optional)<input name="priceBasis" placeholder="Per item or per hour" maxLength={40} /></label>
+          <label className="field">Price (PHP)<input name="price" type="number" min="1" max="1000000" step="1" defaultValue={repeatListing ? Number(repeatListing.price) : ''} required /></label>
+          <label className="field">Price basis (optional)<input name="priceBasis" placeholder="Per item or per hour" defaultValue={repeatListing?.priceBasis ?? ''} maxLength={40} /></label>
         </div>
-        <label className="field">Photo (JPEG, PNG or WebP, up to 3 MB) <input name="image" type="file" accept="image/jpeg,image/png,image/webp" aria-describedby="new-photo-policy" /></label>
-        <p className="muted" id="new-photo-policy">No pornography, explicit sexual imagery, graphic violence, or other prohibited content. Photos must pass campus reviewer inspection before publication.</p>
-        <button className="btn" disabled={creatingListing}>{creatingListing ? 'Saving draft…' : 'Save draft'}</button></form>
-      <h2>Your listings</h2>
+        <label className="field">Photos (select up to {MAX_LISTING_PHOTOS}, JPEG, PNG or WebP, 3 MB each) <input name="image" type="file" multiple accept="image/jpeg,image/png,image/webp" disabled={creatingListing} aria-describedby="new-photo-policy" onChange={e => { const photos = Array.from(e.currentTarget.files ?? []); setNewSelectedCount(photos.length); setNewSelectionError(selectedPhotosError(photos)); }} /></label>
+        <p className="muted" role="status">{newSelectedCount} of {MAX_LISTING_PHOTOS} photos selected</p>{newSelectionError && <p className="err" role="alert">{newSelectionError}</p>}{creatingListing && photoProgress && <p role="status">{photoProgress}</p>}
+        <p className="muted" id="new-photo-policy">Add at least 1 photo before submitting for review, with a maximum of {MAX_LISTING_PHOTOS} per listing. You may save a draft without a photo. You can select multiple photos at once. They upload in order and the first becomes the cover. No pornography, explicit sexual imagery, graphic violence, or other prohibited content. Photos must pass campus reviewer inspection before publication.</p>
+        <button className="btn" disabled={creatingListing}>{creatingListing ? 'Saving draft…' : 'Save draft'}</button></form></details>
+      <div className="store-listings-head"><div><h2 ref={listingsHeading} tabIndex={-1}>Your listings</h2><p className="muted">Review status and availability for each item.</p></div>{!listingsLoading && !listingLoadError && <span className="store-listing-count">{visibleListings.length} {visibleListings.length === 1 ? 'listing' : 'listings'}</span>}</div>
       {listingsLoading && <p className="muted" role="status">Loading your listings…</p>}
       {listingLoadError && <p className="err" role="alert">Could not load your listings: {listingLoadError} <button type="button" className="btn ghost" onClick={load}>Retry</button></p>}
-      {!listingsLoading && !listingLoadError && listings.length === 0 && <p className="muted">No listings yet. Add your first one above.</p>}
-      {!listingLoadError && listings.filter(l => !l.deletedAt).map(l => editing?.id === l.id
-        ? <form key={l.id} className="panel stack" onSubmit={saveEdit}><h2>Edit listing</h2>
+      {!listingsLoading && !listingLoadError && visibleListings.length === 0 && <div className="panel store-empty"><h3>Your store is ready for its first listing</h3><p className="muted">Open New listing above, save a draft, then send it to a campus reviewer.</p></div>}
+      {!listingsLoading && !listingLoadError && visibleListings.length > 0 && <>
+        <div className="store-listing-filters">
+          <label className="field">Find a listing<input type="search" value={listingQuery} onChange={e => { setListingQuery(e.target.value); setListingPage(1); }} placeholder="Search by title" /></label>
+          <label className="field">Status<select value={listingStatus} onChange={e => { setListingStatus(e.target.value); setListingPage(1); }}><option value="all">All statuses</option><option value="draft">Draft</option><option value="changes_requested">Changes requested</option><option value="pending_review">Pending review</option><option value="published">Published</option><option value="rejected">Rejected</option><option value="suspended">Suspended</option></select></label>
+        </div>
+        {matchingListings.length === 0 ? <div className="panel store-empty"><h3>No matching listings</h3><p className="muted">Try another title or status to find your listing.</p><button type="button" className="btn ghost" onClick={() => { setListingQuery(''); setListingStatus('all'); setListingPage(1); }}>Clear filters</button></div> : <p className="store-listing-range" role="status">Showing {(currentPage - 1) * pageSize + 1}–{Math.min(currentPage * pageSize, matchingListings.length)} of {matchingListings.length} {matchingListings.length === 1 ? 'listing' : 'listings'}</p>}
+      </>}
+      {!listingsLoading && !listingLoadError && pageListings.length > 0 && <div className="store-card-grid">{pageListings.map(l => editing?.id === l.id
+        ? <form key={l.id} className="panel stack store-edit-form" onSubmit={saveEdit}><h2>Edit listing</h2>
             <label className="field">Title<input name="title" defaultValue={l.title} required minLength={3} maxLength={120} /></label>
             <label className="field">Category
               <select name="categoryId" required value={editCategoryId} onChange={e => setEditCategoryId(e.target.value)}>{cats.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}</select>
@@ -197,17 +288,21 @@ export function Dashboard() {
               <label className="field">Price (PHP)<input name="price" type="number" min="1" max="1000000" step="1" defaultValue={Number(l.price)} required /></label>
               <label className="field">Price basis (optional)<input name="priceBasis" defaultValue={l.priceBasis} maxLength={40} /></label>
             </div>
-            <p className="muted">{l.media.length} of 6 photos{l.media.length >= 6 && ' (limit reached)'}</p>
-            <label className="field">Add photo (JPEG, PNG or WebP, up to 3 MB) <input name="image" type="file" accept="image/jpeg,image/png,image/webp" disabled={l.media.length >= 6} aria-describedby="edit-photo-policy" /></label>
-            <p className="muted" id="edit-photo-policy">Explicit or harmful photos are prohibited. Adding a photo to a published listing returns it to draft for another campus review.</p>
+            <p className="muted">{l.media.length} {l.media.length === 1 ? 'photo' : 'photos'} · {MAX_LISTING_PHOTOS} maximum{l.media.length >= MAX_LISTING_PHOTOS && ' (limit reached)'}</p>
+            <label className="field">Add photos (JPEG, PNG or WebP, 3 MB each) <input name="image" type="file" multiple accept="image/jpeg,image/png,image/webp" disabled={savingEdit || l.media.length >= MAX_LISTING_PHOTOS} aria-describedby="edit-photo-policy" onChange={e => { const photos = Array.from(e.currentTarget.files ?? []); setEditSelectedCount(photos.length); setEditSelectionError(selectedPhotosError(photos, l.media.length)); }} /></label>
+             <p className="muted" role="status">{editSelectedCount} new {editSelectedCount === 1 ? 'photo' : 'photos'} selected · {Math.max(0, MAX_LISTING_PHOTOS - l.media.length)} remaining</p>{editSelectionError && <p className="err" role="alert">{editSelectionError}</p>}{savingEdit && photoProgress && <p role="status">{photoProgress}</p>}
+            <p className="muted" id="edit-photo-policy">You can select several photos at once, up to the remaining slots. Explicit or harmful photos are prohibited. Adding photos to a published listing returns it to draft for another campus review.</p>
             <div className="row"><button className="btn" disabled={savingEdit}>{savingEdit ? 'Saving…' : 'Save changes'}</button><button type="button" className="btn ghost" disabled={savingEdit} onClick={() => setEditing(null)}>Cancel</button></div></form>
-        : <div key={l.id} className="panel row"><div style={{ flex: 1 }}><h3>{l.title}</h3><span className={`status ${l.status}`}>{l.status.replace('_', ' ')}</span> <span>{peso(Number(l.price))}</span></div>
-            {!['pending_review', 'suspended', 'rejected'].includes(l.status) && l.availabilityState !== 'sold' && <button className="btn ghost" onClick={() => { setEditing(l); setEditCategoryId(String(l.categoryId)); setErr(''); setOk(''); }}>Edit</button>}
-            {['draft', 'changes_requested'].includes(l.status) && <button className="btn" disabled={pending === l.id} onClick={() => submit(l.id)}>{pending === l.id ? 'Submitting…' : 'Submit for review'}</button>}
-            {l.status === 'published' && <><span className="status">{l.availabilityState || 'available'}</span>{l.availabilityState !== 'sold' && <select aria-label={`Availability for ${l.title}`} value={l.availabilityState || 'available'} disabled={pending === l.id} onChange={async e => { const next = e.target.value as 'available' | 'reserved' | 'sold'; if (!(await changeAvailability(l.id, next))) e.target.value = l.availabilityState || 'available'; }}><option value="available">Available</option><option value="reserved">Reserved</option><option value="sold">Sold (final)</option></select>}</>}
-            <button type="button" className="btn ghost" disabled={pending === l.id} onClick={() => removeListing(l.id)}>Remove</button></div>)}
+        : <article key={l.id} className="panel store-listing"><StoreListingPhoto media={l.media} title={l.title} type={l.type} /><div className="store-listing-main"><div className="store-listing-title"><h3>{l.title}</h3><strong>{peso(Number(l.price))}</strong></div><p className="store-listing-category">{l.category?.name}</p><div className="store-listing-meta"><span className={`status ${l.status}`}>{l.status.replace('_', ' ')}</span>{l.status === 'published' && <span className="status">{l.availabilityState || 'available'}</span>}</div>
+            <p className="muted store-listing-help">{l.status === 'draft' ? 'Draft only · submit for campus review when ready.' : l.status === 'changes_requested' ? 'Changes requested · edit and resubmit for review.' : l.status === 'pending_review' ? 'Waiting for a campus reviewer.' : l.status === 'published' ? l.availabilityState === 'sold' ? 'Sold · use Sell again to make a new draft.' : 'Published · manage availability below.' : l.status === 'rejected' ? 'Not approved for publication.' : l.status === 'suspended' ? 'Removed from public browsing by a reviewer.' : 'Check this listing’s review status.'}</p>{l.status === 'published' && <Link className="store-listing-view" to={`/listings/${l.id}`}>View listing <Icon name="arrow" size={15} /></Link>}</div>
+            <div className="store-listing-actions">{!['pending_review', 'suspended', 'rejected'].includes(l.status) && l.availabilityState !== 'sold' && <button type="button" className="btn ghost" onClick={() => { setEditing(l); setEditCategoryId(String(l.categoryId)); setEditSelectedCount(0); setEditSelectionError(''); setErr(''); setOk(''); }}>Edit</button>}
+            {['draft', 'changes_requested'].includes(l.status) && <button type="button" className="btn" disabled={pending === l.id} onClick={() => submit(l.id)}>{pending === l.id ? 'Submitting…' : 'Submit for review'}</button>}
+            {l.status === 'published' && l.availabilityState !== 'sold' && <select aria-label={`Availability for ${l.title}`} value={l.availabilityState || 'available'} disabled={pending === l.id} onChange={async e => { const next = e.target.value as 'available' | 'reserved' | 'sold'; if (!(await changeAvailability(l.id, next))) e.target.value = l.availabilityState || 'available'; }}><option value="available">Available</option><option value="reserved">Reserved</option><option value="sold">Sold (final)</option></select>}
+            {l.status === 'published' && l.availabilityState === 'sold' && <button type="button" className="btn" aria-label={`Sell ${l.title} again`} disabled={creatingListing} onClick={() => sellAgain(l)}>Sell again</button>}
+            <button type="button" className="btn ghost store-remove" disabled={pending === l.id} onClick={() => removeListing(l.id)}>Remove</button></div></article>)}</div>}
+      {!listingsLoading && !listingLoadError && pageCount > 1 && <nav className="store-pagination" aria-label="Your listings pages"><button type="button" className="btn ghost" disabled={currentPage === 1} onClick={() => changeListingPage(currentPage - 1)}>Previous</button><span>Page {currentPage} of {pageCount}</span><button type="button" className="btn ghost" disabled={currentPage === pageCount} onClick={() => changeListingPage(currentPage + 1)}>Next</button></nav>}
     </>}
-  </>;
+  </div>;
 }
 
 type ReceiptState = 'sent' | 'delivered' | 'read';
@@ -387,6 +482,11 @@ export function Thread() {
   const [loadError, setLoadError] = useState('');
   const [sendError, setSendError] = useState('');
   const [busy, setBusy] = useState(false);
+  const [closeConfirm, setCloseConfirm] = useState(false);
+  const [closing, setClosing] = useState(false);
+  const [safetyError, setSafetyError] = useState('');
+  const [safetyNotice, setSafetyNotice] = useState('');
+  const closeLock = useRef(false);
   const [receiveSoundOn, setReceiveSoundOn] = useState(messageReceiveSoundEnabled);
   const logRef = useRef<HTMLDivElement>(null);
   const followLatest = useRef(true);
@@ -448,6 +548,7 @@ export function Thread() {
     seenConfirmedRef.current = 0;
     seenPendingRef.current = 0;
     setD(null); setLoadError(''); setSendError(''); setBody('');
+    setCloseConfirm(false); setSafetyError(''); setSafetyNotice('');
     const refresh = async () => {
       const request = ++newestRequest;
       try {
@@ -575,9 +676,25 @@ export function Thread() {
     };
   }, [id, d?.messages]);
 
+  const closeConversation = async () => {
+    if (closeLock.current || busy || !d || d.thread.status === 'closed') return;
+    closeLock.current = true; setClosing(true); setSafetyError(''); setSafetyNotice('');
+    try {
+      await api(`/inquiries/${id}/close`, { body: {} });
+      // Immediately remove the composer; the next refresh confirms server state.
+      setD((prev: any) => prev?.thread?.id === Number(id)
+        ? { ...prev, thread: { ...prev.thread, status: 'closed' }, typing: false }
+        : prev);
+      setCloseConfirm(false);
+      setSafetyNotice('Conversation ended. Previous messages remain available.');
+      await refreshRef.current();
+    } catch (e) { setSafetyError(explain(e)); }
+    finally { closeLock.current = false; setClosing(false); }
+  };
+
   const send = async () => {
     const message = body.trim();
-    if (busy || !message || !d || d.thread.status === 'closed') return;
+    if (busy || closing || closeConfirm || !message || !d || d.thread.status === 'closed') return;
     // Sending a message must be silent. Only newly received messages ring.
     setBusy(true); setSendError('');
     try {
@@ -629,9 +746,22 @@ export function Thread() {
           onClick={() => { unlockMessageReceiveSound(); playMessageReceiveSound(); }}
           aria-label="Play test incoming message sound">Test sound</button>}
         {closed && <span className="status closed">Closed</span>}
+        {!closed && <button type="button" className="btn ghost" disabled={closing || busy}
+          aria-expanded={closeConfirm} onClick={() => { setCloseConfirm(open => !open); setSafetyError(''); }}>
+          End conversation
+        </button>}
         <Link className="btn ghost" to={`/listings/${d.thread.listingId}`}>View listing <Icon name="arrow" size={16} /></Link>
       </div>
     </div>
+    {closeConfirm && !closed && <div className="panel stack" role="group" aria-label="End conversation confirmation">
+      <h2>End this conversation for both students?</h2>
+      <p className="muted">Neither of you can send more messages in this listing's conversation. Previous messages stay readable. This does not block the student on other listings or cancel any transaction.</p>
+      <div className="row"><button type="button" className="btn danger" disabled={closing || busy}
+        onClick={() => void closeConversation()}>{closing ? 'Ending…' : 'Yes, end conversation'}</button>
+        <button type="button" className="btn ghost" disabled={closing} onClick={() => setCloseConfirm(false)}>Keep chatting</button></div>
+    </div>}
+    {safetyError && <p className="err" role="alert">Could not end conversation: {safetyError}</p>}
+    {safetyNotice && <p role="status">{safetyNotice}</p>}
     {loadError && <p className="err" role="alert">Could not refresh messages: {loadError}</p>}
     <div className="thread-scroll conversation-log" ref={logRef} role="log" tabIndex={0} aria-label="Conversation messages" aria-live="polite"
       onScroll={e => { const el = e.currentTarget; followLatest.current = el.scrollHeight - el.scrollTop - el.clientHeight < 80; }}>

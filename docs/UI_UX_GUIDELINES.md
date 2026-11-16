@@ -52,7 +52,7 @@ Dark-green sections use light keyboard focus outlines. No new dependencies or AP
 | Breakpoints | fluid typography, tested at 320, 360, 390, 768, 1024 and 1440 px | n/a |
 | Admin | same shell, stacked panels | none (no admin in the mobile app) |
 
-The admin page uses a section switcher for Listings, Affiliations, Reports, Transactions, and Overview; university administrators also see Students and Audit history. Only the selected section is shown, so navigation does not jump down a long page. Queue and report counts reflect loaded data. Review decisions retain their required reason and human photo confirmation.
+The admin page uses a section switcher for Listings, Affiliations, Reports, Transactions, and Overview; university administrators also see Students, Staff, Content and Audit history. Only the selected section is shown, so navigation does not jump down a long page. Queue and report counts reflect loaded data. Review decisions retain their required reason and human photo confirmation. Staff has separate reviewer creation and editing forms; staff-only accounts do not see student action navigation.
 
 Student accounts use a server-paged directory (25 records per page), with name/email, campus, account status, and verification filters. The list shows its result range and total; selecting one row reveals the existing status action and required reason. Staff account protection remains enforced by the API.
 

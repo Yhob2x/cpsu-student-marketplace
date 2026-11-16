@@ -3,10 +3,10 @@ import { Prisma, type Transaction, type TransactionStatus } from '@prisma/client
 import { z } from 'zod';
 import { prisma } from '../db.js';
 import { HttpError } from '../http.js';
-import { requireAuth } from '../auth.js';
+import { requireStudent } from '../auth.js';
 
 const r = Router();
-r.use(requireAuth);
+r.use(requireStudent);
 const idOf = (s: string) => z.coerce.number().int().positive().parse(s);
 const reasonBody = z.object({ reason: z.string().trim().min(10).max(500) }).strict();
 const terminal = ['completed', 'cancelled'] as const;

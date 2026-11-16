@@ -70,7 +70,7 @@ There is no OpenAPI document; this file is the contract of record and must chang
 | GET | `/seller/listings` | Own listings with media and category, newest edit first. |
 | POST | `/seller/listings` | `type`, `categoryId`, `title` (3–120), `description` (10–3000), `price` (>0, ≤1,000,000), `priceBasis`, `availability`, `handoffNote?`. Requires an approved store; creates a `draft`. |
 | PATCH | `/seller/listings/:id` | Partial body. `409 not_editable` for `pending_review`/`suspended`/`rejected`. A material edit to a published listing reverts it to `draft`. |
-| POST | `/seller/listings/:id/media` | Authenticated owner only, checked **before writing upload bytes**. `multipart/form-data` field `image`; declared JPEG/PNG/WebP ≤ 3 MB, fully decoded format must match MIME, ≤ 24 MP, single frame. Re-encodes to WebP (up to 2400px, strips metadata). Max 6 photos. Adding a photo to a published listing returns it to draft for renewed campus review. Errors: `400 invalid_image`, `409 too_many_images`/`not_editable`. |
+| POST | `/seller/listings/:id/media` | Authenticated owner only, checked **before writing upload bytes**. `multipart/form-data` field `image`; declared JPEG/PNG/WebP ≤ 3 MB, fully decoded format must match MIME, ≤ 24 MP, single frame. Re-encodes to WebP (up to 2400px, strips metadata). Max 5 photos (at least 1 required for review; drafts may have none). The browser supports selecting several images together and sends each sequentially to this single-image endpoint; it reports partial success instead of retrying already uploaded photos. Adding a photo to a published listing returns it to draft for renewed campus review. Errors: `400 invalid_image`, `409 too_many_images`/`not_editable`. |
 | POST | `/seller/listings/:id/submit` | Runs the rules engine; `422 category_prohibited` for a prohibited category, `422 incomplete_listing` for no image or bad price. Moves to `pending_review` and audits the flags. |
 
 **Not present:** `DELETE /seller/listings/:id`, mark-as-sold, reorder/delete a photo, close a thread.
@@ -154,7 +154,13 @@ Transaction notifications include `transaction.requested`, `transaction.accepted
 **Deployment reminder:** Development/production schemas have not received this migration, by explicit owner restriction. Earlier sections describing missing transactions are historical and superseded by this WP3 section for the local code state only.
 # Student account directory pagination (2026-11-16)
 
-`GET /admin/users` remains restricted to global university administrators. Optional query parameters: `q` (name/email, max 80 characters), `campusId`, `status` (`active` or `suspended`), `verification` (`unverified`, `pending`, `verified`, `rejected`, `suspended`), `page` (default 1), and `pageSize` (default 25, maximum 50). The response contains `{ items, total, page, pageSize }`. Affiliation filters apply to the same affiliation record. Results are ordered by descending user ID and never include password hashes.
+`GET /admin/users` remains restricted to global university administrators and excludes staff and establishment roles. Optional query parameters: `q` (name/email, max 80 characters), `campusId`, `status` (`active` or `suspended`), `verification` (`unverified`, `pending`, `verified`, `rejected`, `suspended`), `page` (default 1), and `pageSize` (default 25, maximum 50). The response contains `{ items, total, page, pageSize }`. Affiliation filters apply to the same affiliation record. Results are ordered by descending user ID and never include password hashes.
+
+## Campus reviewer accounts (local implementation)
+
+Global university administrators only: `GET /admin/reviewers?q=&page=1&pageSize=25` lists campus reviewers separately from students. `POST /admin/reviewers` creates a staff-only account with `{ displayName, email, campusId, password }` and no student affiliation. `PATCH /admin/reviewers/:id` accepts one or more of `displayName`, `email`, `campusId`, `status` (`active` or `suspended`), or `password`, plus a required 10–500 character `reason`. Passwords must be 12–128 characters. Email uniqueness and active campus are checked on the server. Email, password, campus, or status changes revoke active refresh sessions. Every create/edit is audited without recording passwords. The endpoint cannot grant university or system administrator roles.
+
+Staff roles cannot use student seller, inquiry, saved-listing, reporting, or transaction actions. Existing mixed accounts retain their history and affiliation records, but their staff role blocks student actions. Public browsing and moderation remain available.
 
 ## Managed student-facing content (local implementation)
 

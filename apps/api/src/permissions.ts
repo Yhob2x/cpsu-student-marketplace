@@ -1,6 +1,9 @@
 // Pure authorization helpers (no database access) so they are easy to unit test.
 export type AuthUser = { id: number; email: string; displayName: string; roles: { role: string; campusId: number | null }[] };
 
+export const staffRoles = ['campus_reviewer', 'university_admin', 'system_admin', 'establishment'] as const;
+export const isStaffAccount = (roles: AuthUser['roles']) => roles.some(({ role }) => (staffRoles as readonly string[]).includes(role));
+
 // Campus-scoped review authority. System administrators deliberately cannot approve listings.
 export const canReview = (u: AuthUser, campusId: number) =>
   u.roles.some(r => (r.role === 'campus_reviewer' && r.campusId === campusId) ||

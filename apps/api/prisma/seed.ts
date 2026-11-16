@@ -32,7 +32,8 @@ async function main() {
   ];
   for (const p of people) {
     const u = await prisma.user.upsert({ where: { email: p.email }, update: {}, create: { email: p.email, displayName: p.displayName, passwordHash: hash } });
-    await prisma.affiliation.upsert({ where: { userId_campusId: { userId: u.id, campusId: cauayan.id } }, update: {}, create: { userId: u.id, campusId: cauayan.id, verificationStatus: p.status, verifiedAt: new Date() } });
+    // New staff identities must not also receive a student affiliation.
+    if (!p.role) await prisma.affiliation.upsert({ where: { userId_campusId: { userId: u.id, campusId: cauayan.id } }, update: {}, create: { userId: u.id, campusId: cauayan.id, verificationStatus: p.status, verifiedAt: new Date() } });
     if (p.role && !await prisma.userRole.findFirst({ where: { userId: u.id, role: p.role } }))
       await prisma.userRole.create({ data: { userId: u.id, role: p.role, campusId: p.role === 'university_admin' ? null : cauayan.id } });
   }

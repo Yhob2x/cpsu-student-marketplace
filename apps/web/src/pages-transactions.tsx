@@ -22,7 +22,7 @@ const names: Record<Status, string> = {
   accepted: 'Accepted',
   negotiating: 'Discussing arrangements',
   for_meetup: 'Meetup agreed',
-  completed: 'Completed — self-reported by both students',
+  completed: 'Completed',
   cancelled: 'Cancelled',
 };
 const eventName: Record<string, string> = {
@@ -145,10 +145,7 @@ export function TransactionDetail() {
     </div></div>
     <section className="panel stack" aria-label="Transaction status">
       <div className="row"><h2 style={{ margin: 0 }}>Current status</h2><span className="tag">{names[data.status]}</span></div>
-      <p className="muted">This is a student-reported arrangement. CPSU Market does not verify money exchanges, deliveries, or the condition of an item after handoff.</p>
-      <div className="row"><button type="button" className="btn ghost" disabled={busy} onClick={() => void reload()}>Refresh status</button>
-        <Link to={`/inquiries/${data.inquiryThreadId}`} className="btn ghost">Discuss arrangements</Link>
-        <Link to={`/listings/${data.listingId}`} className="btn ghost">View listing</Link></div>
+      <p className="muted" style={{ margin: 0 }}>This status is student-reported. CPSU Market does not verify payments, deliveries, or item condition.</p>
     </section>
     {!terminal && <section className="panel stack" aria-label="Update this transaction">
       <h2>Next action</h2>
@@ -194,6 +191,15 @@ export function TransactionDetail() {
     {terminal && <p role="status">{data.status === 'completed'
       ? 'Both students confirmed completion. This is a mutual self-report, not an independently verified sale.'
       : 'This transaction is closed. The history below remains available to both students.'}</p>}
+    <section className="panel stack" aria-label="Transaction options">
+      <h2 style={{ margin: 0 }}>More options</h2>
+      <p className="muted" style={{ margin: 0 }}>Payment and handoff are arranged directly between students.</p>
+      <div className="row">
+        <Link to={`/inquiries/${data.inquiryThreadId}`} className="btn ghost">Discuss arrangements</Link>
+        <button type="button" className="btn ghost" disabled={busy} onClick={() => void reload()}>Refresh status</button>
+        <Link to={`/listings/${data.listingId}`} className="btn ghost">View listing</Link>
+      </div>
+    </section>
     {data.handoff && <aside className="panel stack" aria-label="Previous handoff arrangements">
       <h2>Handoff details (self-reported)</h2>
       <p>{data.handoff.generalLocation} · {data.handoff.timeWindow}</p>

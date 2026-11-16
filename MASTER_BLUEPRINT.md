@@ -1167,6 +1167,31 @@ Never silently modify approved requirements.
 
 ---
 
+## Approved change record — Private Google Drive listing-photo storage adapter (2026-11-16)
+
+**Decision:** The project owner requested transferring marketplace upload storage to Google Drive. This authorizes preparing an opt-in Google Drive-backed storage implementation for **existing MVP listing photos only**, not automatic activation or a nonlocal data transfer without account consent, verified backup, or privacy approval.
+
+- **Affected modules:** 02 Product Listings, 03 Student Services (photo uploads), media serving and infrastructure.
+- **Storage:** Default local mode is retained. App-owned private Google Drive files use narrow operator-authorized `drive.file` OAuth and server-side proxying through the same authenticated and moderated media API. No direct public Drive links or student Google account access is authorized.
+- **Preservation:** Old media paths continue to work. Migration must be deliberate, backup-gated, checksum-verified, and leave local originals untouched until restored copies are proven. No database schema or photo moderation workflow changes.
+- **Privacy:** Google-hosted student photos require CPSU's data-protection approval, documented retention and vendor/data-residency assessment before real-data activation.
+- **Verification/deployment:** Mocked storage unit tests and local typechecks are not Google live acceptance. Production OAuth configuration, transfer, cutover, storage monitoring and backup/restore remain separate gates.
+- **Reference:** `docs/GOOGLE_DRIVE_MEDIA_MIGRATION_2026-11-16.md`.
+
+---
+
+## Approved change record — Five-photo maximum per listing (2026-11-16)
+
+**Decision:** The project owner explicitly approved reducing the upload maximum from 6 to **5 photos per listing**, with fewer photos permitted.
+
+- **Scope:** Applies to product and service listings, independent of local or private Google Drive storage. Keep the existing requirement for at least one photo before submitting for campus review; drafts may have zero photos.
+- **Enforcement:** The seller API checks before receiving the image and again in the database transaction. The seller interface displays the five-photo limit and disables additional uploads once reached. On 2026-11-16 the owner reported that the picker selected only one photo; the approved usability correction allows selecting multiple JPEG/PNG/WebP photos at once (up to remaining slots) and submits them sequentially through the existing single-image endpoint, with per-batch progress, pre-validation and explicit partial-success handling.
+- **Data preservation:** Do not delete photos or alter records for pre-existing six-photo listings. Those listings remain viewable but cannot accept new photos while above the new limit.
+- **No schema change:** The `ListingMedia` schema and private media-serving authorization stay unchanged.
+- **Verification:** Unit policy tests, API TypeScript check, and web production build. Production rollout remains separately gated.
+
+---
+
 # PART XIV. FINAL MASTER INSTRUCTION TO AI
 
 You are an AI software development agent assigned to the CPSU Student Marketplace project.
@@ -1211,6 +1236,10 @@ All features must be functional, tested, and documented.
 All AI agents and developers must follow it.
 
 ---
+
+## Approved change record — Reviewer account separation (2026-11-16)
+
+The project owner chose dedicated staff-only reviewer accounts, separate from student participation. Global university administrators may create campus reviewer accounts and edit their name, email, campus assignment, account status, and password. Reviewer accounts do not receive student affiliations on creation. Staff roles cannot sell, message as buyers or sellers, save listings, report as students, or participate in student transactions. Public browsing and authorized campus moderation remain available. Existing mixed-role accounts keep historical records but lose student action access. Only the campus reviewer role can be assigned by this management workflow; university and system administrator roles remain outside it. Changes are validated, audited, and sensitive account edits revoke refresh sessions. No new database table is required.
 
 **END OF MASTER BLUEPRINT**
 

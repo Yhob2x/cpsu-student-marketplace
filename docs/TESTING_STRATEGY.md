@@ -34,7 +34,7 @@ one published listing, one prohibited-category listing.
 | Area | Cases PART X demands | Additional cases to add |
 |---|---|---|
 | Authentication | Invalid credentials rejected | Unverified cannot create a store; suspended cannot log in; refresh reuse revokes all sessions; expired access token → 401 |
-| Listings | Edit only own; invalid price rejected | Another seller's listing id → 404; material edit of a published listing reverts to draft; submit without a photo → 422; prohibited category → 422; >6 images → 409 |
+| Listings | Edit only own; invalid price rejected | Another seller's listing id → 404; material edit of a published listing reverts to draft; submit without a photo → 422; prohibited category → 422; >5 images (sixth upload) → 409 |
 | Messaging | Non-participants blocked | Own-listing inquiry → 400; message >1000 chars → 400; closed thread → 409 |
 | Transactions (after WP3) | Invalid transition rejected; participants only; history recorded | Buyer cannot accept their own request; completed is terminal; every transition writes a status-log row |
 | Administration | Students cannot reach `/admin`; actions audited | Reviewer of campus A gets 404 for campus B's listing; `system_admin` gets 403; analytics suppression renders `<5` at 1–4 |

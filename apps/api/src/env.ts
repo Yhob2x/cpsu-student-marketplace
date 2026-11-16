@@ -10,6 +10,12 @@ const schema = z.object({
   CORS_ORIGINS: z.string().default('http://localhost:5173'),
   COOKIE_SECURE: z.enum(['true', 'false']).default('false'),
   UPLOAD_DIR: z.string().default('./uploads'),
+  // Local is retained until OAuth, private folder setup, backup and verification are complete.
+  MEDIA_STORAGE: z.enum(['local', 'google_drive']).default('local'),
+  GOOGLE_DRIVE_CLIENT_ID: z.string().optional(),
+  GOOGLE_DRIVE_CLIENT_SECRET: z.string().optional(),
+  GOOGLE_DRIVE_REFRESH_TOKEN: z.string().optional(),
+  GOOGLE_DRIVE_FOLDER_ID: z.string().optional(),
   VAPID_PUBLIC_KEY: z.string().optional(),
   VAPID_PRIVATE_KEY: z.string().optional(),
   VAPID_SUBJECT: z.string().optional(),

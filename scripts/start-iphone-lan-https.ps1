@@ -4,6 +4,15 @@ param([switch]$LocalOnly)
 $ErrorActionPreference = 'Stop'
 if (-not $LocalOnly -or $env:NODE_ENV -eq 'production') { throw 'LocalOnly required; production is refused.' }
 $repo = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path
+# Fail closed BEFORE any certificate setup, build, listener, or other side effect.
+# This checks all firewall profiles, trusted home-network category, existing
+# certificate chain/SAN and private-key ACLs. It never changes Windows settings.
+$readiness = Join-Path $PSScriptRoot 'wp3-iphone-lan-readiness-readonly.mjs'
+if (-not (Test-Path -LiteralPath $readiness)) { throw 'iPhone QA safety preflight missing; refusing LAN launch.' }
+& node $readiness --read-only --prestart
+if ($LASTEXITCODE -ne 0) {
+  throw 'iPhone QA launch BLOCKED: firewall/network/certificate safety prerequisites not met. No services started by this launcher.'
+}
 & (Join-Path $PSScriptRoot 'setup-iphone-lan-https.ps1') -LocalOnly | Out-Null
 $wireless = @(Get-NetIPAddress -AddressFamily IPv4 | Where-Object {
   $_.InterfaceAlias -match 'Wi-Fi|Wireless' -and $_.IPAddress -match '^192\.168\.' -and $_.PrefixLength -eq 24

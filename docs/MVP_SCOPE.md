@@ -18,7 +18,7 @@ scope conflicts in §4. Nothing in §4 has been reconciled — each one needs th
 | MVP-004 | Student profile | **Partial** | Display name and campus status only. No student ID, college, course, year level, profile photo; only `displayName` is editable. |
 | MVP-005 | Product listings | **Partial** | Create/edit/view, submit, approve. Missing delete, `condition`, real `sold` state. |
 | MVP-006 | Service listings | **Partial** | Same table with `type=service`, rate + basis, service categories. Missing delete and service-specific availability. |
-| MVP-007 | Listing image uploads | **Done** | Up to 6 JPEG/PNG/WebP ≤ 3 MB, ownership-checked, access-controlled serving. |
+| MVP-007 | Listing image uploads | **Done** | Up to 5 JPEG/PNG/WebP ≤ 3 MB, ownership-checked, access-controlled serving. |
 | MVP-008 | Marketplace categories | **Partial** | Read-only seeded catalog whose names differ from the blueprint's lists. No admin CRUD. |
 | MVP-009 | Search and filtering | **Partial** | Keyword, category, campus, type, min/max price, pagination, and all three sorts (newest, price ascending/descending) exposed in Explore with a result count and clear-filters. Missing only the condition filter, which requires the `condition` column (C4). |
 | MVP-010 | Recently added listings | **Done** | Home section from the newest feed. |
@@ -65,12 +65,12 @@ without approval.
 
 **Decision update (2026-11-16): C5 and transaction-only C1a APPROVED; isolated test-database implementation authorized only. See `MASTER_BLUEPRINT.md` PART XIII and `WP3_TEST_ONLY_IMPLEMENTATION_2026-11-16.md`.
 
-**Decision update (2026-11-11): C4 APPROVED.** The project owner authorized product condition `new/like_new/good/fair`, availability `available/reserved/sold` (sold is final), soft delete, condition search, and owner-favorite restrictions. Preserve null conditions on legacy items; require condition before product review submission. See `MASTER_BLUEPRINT.md` PART XIII approved change record. C1/C1a/C2/C3/C5/C6/C7 remain open. The historical C4 row below is retained for audit traceability.
+**Decision update (2026-11-16): C1a staff participation resolved.** The owner chose dedicated staff-only reviewer accounts and server-side exclusion from student actions. See the master blueprint approved change record. Earlier C4 and transaction decisions remain in their respective approved records; the historical conflict rows below are retained for audit traceability.
 
 | # | Conflict | Blueprint says | Code does | Impact if unresolved | Recommended resolution |
 |---|---|---|---|---|---|
 | **C1** | Role model | 2 roles: Student, Administrator | 4 roles: `campus_reviewer`, `university_admin`, `system_admin`, `establishment` | Admin UI, permission tests, and docs disagree about who may review | Keep the split; treat `campus_reviewer` + `university_admin` as two Administrator tiers and amend PART III |
-| **C1a** | Administrator participation | Admin does not create listings or send messages | Roles are additive, so an administrator can also act as a student | Unclear whether staff may transact | Allow it (staff are students too) and audit; OR strip student abilities when an admin role exists. **Needs a decision either way** |
+| **C1a** | Administrator participation | Admin does not create listings or send messages | Roles were additive, so an administrator could also act as a student | Resolved for student actions by owner decision on 2026-11-16 | Dedicated staff-only reviewer accounts; staff role blocks student actions even on legacy mixed accounts. See master blueprint approved change record. |
 | **C2** | Stores | Listings belong to a student; no store entity | Every listing requires an approved `SellerProfile` ("My store") | Renaming or removing stores changes schema, URLs, and UI copy | Keep `SellerProfile` as the seller profile (one per user) and describe it in the blueprint as the seller's public profile |
 | **C3** | Guest access | Access matrix lists only Student and Administrator; "public guest transactions" excluded | Anyone can browse published listings anonymously | Determines whether discovery is open (SEO, sharing) or login-walled | Keep anonymous read-only browsing; add a Visitor row to the matrix. Transactions stay student-only |
 | **C4** | Availability and condition | `availability` ∈ {available, reserved, sold}, plus `condition` ∈ {new, like new, good, fair} | `availability` is free text and ignored by discovery; no `condition` | Sold items can look available; no condition filter | Add both as enums in one additive migration; keep moderation `status` separate |

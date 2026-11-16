@@ -2,11 +2,12 @@ import { Router } from 'express';
 import { z } from 'zod';
 import { prisma } from '../db.js';
 import { HttpError } from '../http.js';
-import { requireAuth } from '../auth.js';
-import { notify } from '../audit.js';
+import { requireStudent } from '../auth.js';
+import { audit, notify } from '../audit.js';
+import { inquiryAllowsMessage } from '../inquiry-safety.js';
 
 const r = Router();
-r.use(requireAuth);
+r.use(requireStudent);
 // shortcut: typing state lives in memory, so it is per API instance and resets on restart
 const typing = new Map<string, number>();
 const TYPING_MS = 5000;
@@ -72,6 +73,7 @@ r.post('/', async (req, res) => {
     where: { listingId_buyerUserId: { listingId: l.id, buyerUserId: req.user!.id } },
     create: { listingId: l.id, buyerUserId: req.user!.id, sellerProfileId: l.sellerProfileId }, update: {},
   });
+  if (!inquiryAllowsMessage(t.status)) throw new HttpError(409, 'thread_closed');
   const message = await prisma.inquiryMessage.create({ data: { threadId: t.id, authorUserId: req.user!.id, body: b.body } });
   await notify(l.seller.ownerUserId, 'inquiry.new', { threadId: t.id, messageId: message.id, listingTitle: l.title });
   res.status(201).json({ id: t.id });
@@ -147,13 +149,35 @@ r.post('/:id/typing', async (req, res) => {
 
 r.post('/:id/messages', async (req, res) => {
   const t = await participantThread(req.user!.id, Number(req.params.id));
-  if (t.status === 'closed') throw new HttpError(409, 'thread_closed');
+  if (!inquiryAllowsMessage(t.status)) throw new HttpError(409, 'thread_closed');
   if (t.seller.owner.status !== 'active') throw new HttpError(409, 'seller_unavailable');
   const b = z.object({ body: z.string().trim().min(1).max(1000) }).parse(req.body);
   const m = await prisma.inquiryMessage.create({ data: { threadId: t.id, authorUserId: req.user!.id, body: b.body } });
   const other = t.buyerUserId === req.user!.id ? t.seller.ownerUserId : t.buyerUserId;
   await notify(other, 'inquiry.reply', { threadId: t.id, messageId: m.id, listingTitle: t.listing.title });
   res.status(201).json({ id: m.id });
+});
+
+// Ending a chat is participant-only and applies to this listing, not to other conversations.
+// No one can reopen or post to a closed thread through the inquiry-create shortcut.
+r.post('/:id/close', async (req, res) => {
+  const threadId = z.coerce.number().int().positive().parse(req.params.id);
+  const t = await participantThread(req.user!.id, threadId);
+  if (t.status === 'closed') { res.status(204).end(); return; }
+  await prisma.$transaction(async tx => {
+    const changed = await tx.inquiryThread.updateMany({
+      where: { id: t.id, status: 'open' },
+      data: { status: 'closed' },
+    });
+    if (changed.count === 1) await tx.auditLog.create({
+      data: { actorUserId: req.user!.id, action: 'inquiry.closed', targetType: 'inquiry_thread', targetId: t.id },
+    });
+  });
+  typing.delete(`${t.id}:${t.buyerUserId}`);
+  typing.delete(`${t.id}:${t.seller.ownerUserId}`);
+  presence.delete(`${t.id}:${t.buyerUserId}`);
+  presence.delete(`${t.id}:${t.seller.ownerUserId}`);
+  res.status(204).end();
 });
 
 // Either party records the agreed handoff and, later, an outcome. Outcomes are self-reported, not verified sales.

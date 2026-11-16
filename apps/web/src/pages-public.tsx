@@ -1,9 +1,12 @@
-import { FormEvent, useEffect, useState } from 'react';
+import { FormEvent, useEffect, useRef, useState } from 'react';
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { api, explain, peso } from './api';
 import { useMe } from './main';
 import { Icon } from './icons';
 import { InstallApp } from './install-app';
+import { selectHomeListings } from './home-listings';
+import { MobileBrowseControls, SwipeableListingRail } from './mobile-browse-controls';
+import { ListingGallery } from './listing-gallery';
 
 export type Listing = { id: number; type: string; title: string; description: string; price: number; priceBasis: string; availability: string; condition?: 'new' | 'like_new' | 'good' | 'fair' | null;
   handoffNote?: string; category: { name: string }; campus: { code: string; name: string }; seller: { id: number; storeName: string }; images: string[]; status?: string };
@@ -18,7 +21,8 @@ export function ListingCard({ l }: { l: Listing }) {
   const showImage = Boolean(imageSrc && failedImageSrc !== imageSrc);
   const saved = savedIds.includes(l.id);
   const isOwner = me != null && me.storeId === l.seller.id;
-  const canSave = !isOwner && (l.availability === 'available' || saved);
+  const staff = me?.roles.some(role => ['campus_reviewer', 'university_admin', 'system_admin', 'establishment'].includes(role.role));
+  const canSave = !staff && !isOwner && (l.availability === 'available' || saved);
   const saveLabel = isOwner ? 'You cannot save your own listing'
     : !canSave ? 'This listing is not available to save'
     : !me ? 'Sign in to save this listing'
@@ -43,9 +47,10 @@ export function ListingCard({ l }: { l: Listing }) {
           ? <img src={imageSrc} alt="" loading="lazy" decoding="async" onError={() => setFailedImageSrc(imageSrc)} />
           : <span className="photo-placeholder"><Icon name="tag" size={30} /><span>{imageSrc ? 'Photo unavailable' : 'No photo yet'}</span></span>}
         <span className="listing-kind">{l.type === 'service' ? 'Service' : 'Product'}</span>
-        <button type="button" className="heart-btn" aria-pressed={saved} aria-label={saveLabel}
+        {l.images.length > 1 && <span className="product-photo-multiple">{l.images.length} photos</span>}
+        {!staff && <button type="button" className="heart-btn" aria-pressed={saved} aria-label={saveLabel}
           title={saveLabel} aria-busy={busy} disabled={busy || !canSave} onClick={flip}>
-          <Icon name="heart" filled={saved} size={16} /></button>
+          <Icon name="heart" filled={saved} size={16} /></button>}
       </div>
       <div className="body">
         <h3 title={l.title}>{l.title}</h3>
@@ -71,6 +76,8 @@ export function ListingCard({ l }: { l: Listing }) {
 // cart, discount or delivery promise because v1 has none — gold is spent on prices, not on sale stickers.
 export function Home() {
   const nav = useNavigate();
+  const { me } = useMe();
+  const staff = me?.roles.some(role => ['campus_reviewer', 'university_admin', 'system_admin', 'establishment'].includes(role.role));
   const [q, setQ] = useState('');
   const [feed, setFeed] = useState<Listing[] | null>(null);
   const [services, setServices] = useState<Listing[] | null>(null);
@@ -80,27 +87,24 @@ export function Home() {
   const loadHome = () => {
     setHomeError('');
     const fail = (e: unknown) => setHomeError(explain(e));
-    api('/listings?pageSize=24').then(r => setFeed(r.items)).catch(e => { setFeed([]); fail(e); });
+    api('/listings/fresh').then(r => setFeed(r.items)).catch(e => { setFeed([]); fail(e); });
     api('/listings?type=service&pageSize=8').then(r => setServices(r.items)).catch(e => { setServices([]); fail(e); });
     api('/listings/popular').then(r => setPopular(r.items)).catch(e => { setPopular([]); fail(e); });
     api('/categories').then(setCats).catch(fail);
   };
   useEffect(loadHome, []);
   const go = (e: FormEvent<HTMLFormElement>) => { e.preventDefault(); nav(q.trim() ? `/explore?q=${encodeURIComponent(q.trim())}` : '/explore'); };
-  const rail = (rows: Listing[]) => <div className="rail">{rows.map(l => <ListingCard key={l.id} l={l} />)}</div>;
+  const rail = (rows: Listing[], label: string) => <SwipeableListingRail itemCount={rows.length} label={label}>
+    {rows.map(l => <ListingCard key={l.id} l={l} />)}
+  </SwipeableListingRail>;
   const skeletons = <div className="rail">{Array.from({ length: 4 }, (_, i) => <div key={i} className="skel card" aria-hidden="true" />)}</div>;
   // Skeletons while loading; once loaded, an empty section disappears instead of leaving a dead heading.
   const block = (title: string, to: string, rows: Listing[] | null) => rows === null
     ? <><div className="sec-head"><h2>{title}</h2></div>{skeletons}</>
-    : rows.length > 0 ? <><div className="sec-head"><h2>{title}</h2><Link to={to}>See all <Icon name="arrow" size={14} /></Link></div>{rail(rows)}</> : null;
+    : rows.length > 0 ? <><div className="sec-head"><h2>{title}</h2><Link to={to}>See all <Icon name="arrow" size={14} /></Link></div>{rail(rows, title)}</> : null;
   const shots = (feed ?? []).filter(l => l.images[0]).slice(0, 3);
-  const top = popular && popular.length > 0 ? popular : (feed ? feed.slice(0, 8) : null);
-  const topTitle = popular?.length ? 'Popular listings' : 'Browse listings';
-  // A listing appears once per page: the fresh and services rails drop whatever the first rail already showed (the services
-  // rail is usually a subset of the popular one), and a section with nothing left disappears.
-  const fresh = feed ? feed.filter(l => !(top ?? []).some(t => t.id === l.id)).slice(0, 8) : null;
-  const shown = new Set([...(top ?? []), ...(fresh ?? [])].map(l => l.id));
-  const serviceRows = services ? services.filter(l => !shown.has(l.id)) : null;
+  // Fresh listings always show the newest public listings, even when one is also popular.
+  const { popular: top, fresh, services: serviceRows } = selectHomeListings(feed, popular, services);
   return <>
     {homeError && <div className="panel" role="alert">Some marketplace content could not load. {homeError} <button type="button" className="btn ghost" onClick={loadHome}>Retry</button></div>}
     <section className="hero">
@@ -110,7 +114,7 @@ export function Home() {
         <p>Discover pre-loved essentials, student-made goods and useful skills from the CPSU community. Connect directly with the students behind every listing.</p>
         <div className="hero-actions">
           <Link className="btn" to="/explore">Explore listings <Icon name="arrow" size={17} /></Link>
-          <Link className="btn ghost" to="/dashboard">Start selling</Link>
+          {!staff && <Link className="btn ghost" to="/dashboard">Start selling</Link>}
         </div>
         <form className="search hero-search" role="search" aria-label="Home listing search" onSubmit={go}>
           <input aria-label="Search listings" placeholder="Search products, services, skills…" maxLength={80} value={q} onChange={e => setQ(e.target.value)} />
@@ -142,15 +146,15 @@ export function Home() {
       </div>
     </section>
 
-    {block(topTitle, '/explore', top)}
+    {block('Popular listings', '/explore', top)}
 
     <section className="promos" aria-label="Quick links">
       <Link className="promo promo-a" to="/explore?type=service"><h3>Student services</h3>
         <p>Design, tutoring, printing and IT help from classmates.</p><span className="more">Browse services <Icon name="arrow" size={14} /></span></Link>
       <Link className="promo promo-b" to="/explore?type=physical_product"><h3>Pre-loved finds</h3>
         <p>Books, gadgets and dorm essentials passed on by students.</p><span className="more">Browse products <Icon name="arrow" size={14} /></span></Link>
-      <Link className="promo promo-c" to="/dashboard"><h3>Have something to sell?</h3>
-        <p>Set up your store and publish your first listing.</p><span className="more">Start selling <Icon name="arrow" size={14} /></span></Link>
+      {!staff && <Link className="promo promo-c" to="/dashboard"><h3>Have something to sell?</h3>
+        <p>Set up your store and publish your first listing.</p><span className="more">Start selling <Icon name="arrow" size={14} /></span></Link>}
     </section>
 
     {block('Fresh listings', '/explore', fresh)}
@@ -165,12 +169,12 @@ export function Home() {
       </ol>
     </section>
 
-    <section className="cta-band">
+    {!staff && <section className="cta-band">
       <span className="cta-icon"><Icon name="store" /></span>
       <div><span className="cta-eyebrow">YOUR CAMPUS. YOUR COMMUNITY.</span><h2>Turn what you no longer need into something useful</h2>
         <p>Students with a verified campus affiliation can open a store and publish listings.</p></div>
       <Link className="btn gold" to="/dashboard">Start selling</Link>
-    </section>
+    </section>}
 
     <ul className="trust">
       <li><Icon name="shield" /> Reviewer-approved listings</li>
@@ -201,6 +205,7 @@ export function Discover() {
   const [filterError, setFilterError] = useState(''); const [filtersLoading, setFiltersLoading] = useState(false);
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
   const [items, setItems] = useState<Listing[] | null>(null); const [total, setTotal] = useState<number | null>(null);
+  const browseRef = useRef<HTMLDivElement>(null);
   const [error, setError] = useState('');
   const currentPage = Math.max(1, Number(sp.get('page')) || 1);
   const pageCount = Math.ceil((total ?? 0) / 20);
@@ -227,6 +232,8 @@ export function Discover() {
   if (f.condition) queryParams.set('type', 'physical_product');
   else queryParams.delete('condition');
   const query = queryParams.toString();
+  // Reset swipe position when search, filters, sorting or pagination changes.
+  useEffect(() => { if (browseRef.current) browseRef.current.scrollLeft = 0; }, [query]);
   useEffect(() => {
     let active = true;
     setItems(null); setTotal(null); setError('');
@@ -316,7 +323,8 @@ export function Discover() {
       {dirty && <button className="btn ghost" onClick={reset}>Clear filters</button>}
     </div>}
     {items !== null && items.length > 0 && <h2 className="sr-only">Listing results</h2>}
-    <div className="grid listing-grid">{items?.map(l => <ListingCard key={l.id} l={l} />)}</div>
+    <div className="grid listing-grid" ref={browseRef} role="region" aria-label="Explore listing results" tabIndex={0}>{items?.map(l => <ListingCard key={l.id} l={l} />)}</div>
+    {items !== null && <MobileBrowseControls targetRef={browseRef} itemCount={items.length} label="Explore listings" />}
     {pageCount > 1 && <nav className="row" aria-label="Listing pages" style={{ justifyContent: 'center', marginTop: '1rem' }}>
       <button type="button" className="btn ghost" disabled={currentPage <= 1} onClick={() => navigatePage(currentPage - 1)}>Previous</button>
       <span className="muted" role="status">Page {currentPage} of {pageCount}</span>
@@ -336,6 +344,7 @@ export function ListingDetail() {
   // Saved state comes from the shell (one fetch at sign-in), shared with the hearts on every card.
   const saved = savedIds.includes(l.id);
   const isOwner = me?.storeId === l.seller.id;
+  const staff = me?.roles.some(role => ['campus_reviewer', 'university_admin', 'system_admin', 'establishment'].includes(role.role));
   const isAvailable = l.availability === 'available';
   const canRequest = Boolean(me && me.roles.length === 0 && me.affiliations.some(a => a.status === 'verified'));
   const send = async () => { setBusy(true); try { const r = await api('/inquiries', { body: { listingId: l.id, body } }); setBody(''); setNote(`Message sent. Continue in Inquiries (thread ${r.id}).`); setErr(''); } catch (e) { setErr(explain(e)); } finally { setBusy(false); } };
@@ -362,15 +371,8 @@ export function ListingDetail() {
   return <article className="listing-detail">
     <Link className="listing-back" to="/explore">← Browse all listings</Link>
     <div className="listing-detail-layout">
-      <div className="gallery listing-gallery" role={l.images.length > 1 ? 'region' : undefined}
-      aria-label={l.images.length > 1 ? `Photos of ${l.title}` : undefined} tabIndex={l.images.length > 1 ? 0 : undefined}>
-      {l.images.length === 0 && <div className="listing-photo-empty"><Icon name="tag" size={30} /><span>No listing photos yet</span></div>}
-      {l.images.length > 0 && <span className="gallery-lead">
-        <img src={l.images[0]} alt={`Photo 1 of ${l.images.length}: ${l.title}`} loading="eager" decoding="async" />
-        {me && !isOwner && (isAvailable || saved) && heart}
-      </span>}
-      {l.images.slice(1).map((s, i) => <img key={s} src={s} alt={`Photo ${i + 2} of ${l.images.length}: ${l.title}`} loading="lazy" decoding="async" />)}
-      </div>
+      <ListingGallery key={l.id} photos={l.images} title={l.title}
+        saveControl={me && !staff && !isOwner && (isAvailable || saved) ? heart : undefined} />
       <div className="listing-detail-content">
     <h1 className="listing-detail-title">{l.title}</h1>
     {/* Only show a basis that carries meaning; a value like "1" would render as "₱150 1". */}
@@ -381,9 +383,10 @@ export function ListingDetail() {
       <h2>Ask the seller</h2>
       {!isAvailable && <p className="muted" role="status">This listing is {l.availability}. New inquiries are disabled.</p>}
       {isOwner && <p className="muted">This is your own listing.</p>}
-      {me && !isOwner && !canRequest && <p className="muted">Purchase requests require a verified student account without administrative or establishment roles. Messaging remains separate.</p>}
+      {staff && <p className="muted">Staff accounts can browse and review listings. Student purchase, messaging and reporting actions use a separate student account.</p>}
+      {me && !staff && !isOwner && !canRequest && <p className="muted">Purchase requests require a verified student account.</p>}
       <p className="muted">Payment and handoff are arranged directly between you and the seller. The marketplace does not hold money or deliver items.</p>
-      {me ? <><label className="field">Your message to the seller
+      {me && !staff ? <><label className="field">Your message to the seller
         <textarea value={body} onChange={e => setBody(e.target.value)} maxLength={1000} placeholder="Is this still available? Where can we meet on campus?" />
       </label>
         <div className="row"><button className="btn" disabled={busy || !body.trim() || !isAvailable || isOwner} onClick={send}>Send inquiry</button>
@@ -398,7 +401,7 @@ export function ListingDetail() {
           </label>
           <div className="row"><button className="btn danger" disabled={busy || reason.trim().length < 10} onClick={report}>Send report</button>
             <button className="btn ghost" disabled={busy} onClick={() => setReporting(false)}>Cancel</button></div></div>}</>
-        : <p><Link to="/login">Sign in</Link> to message this seller.</p>}
+        : !me ? <p><Link to="/login">Sign in</Link> to message this seller.</p> : null}
       {note && <p role="status">{note}</p>}{err && <p className="err" role="alert">{err}</p>}
     </div>
       </div>
@@ -407,11 +410,40 @@ export function ListingDetail() {
 }
 
 export function StorePage() {
-  const { id } = useParams(); const [s, setS] = useState<any>(null);
+  const { id } = useParams(); const { me } = useMe(); const [s, setS] = useState<any>(null);
+  const [reporting, setReporting] = useState(false); const [reason, setReason] = useState('');
+  const [reportBusy, setReportBusy] = useState(false); const [reportError, setReportError] = useState(''); const [reportNotice, setReportNotice] = useState('');
+  const reportLock = useRef(false);
   useEffect(() => { api(`/seller-profiles/${id}`).then(setS).catch(() => setS(false)); }, [id]);
   if (s === false) return <p className="err">Store not found.</p>; if (!s) return <p className="muted">Loading</p>;
+  const staff = me?.roles.some(role => ['campus_reviewer', 'university_admin', 'system_admin', 'establishment'].includes(role.role));
+  const isOwner = me?.storeId === s.id;
+  const reportSeller = async () => {
+    if (reportLock.current || !me || staff || isOwner || reason.trim().length < 10) return;
+    reportLock.current = true; setReportBusy(true); setReportError(''); setReportNotice('');
+    try {
+      await api('/reports', { body: { sellerProfileId: s.id, reason: reason.trim() } });
+      setReason(''); setReporting(false); setReportNotice('Seller report sent to a campus reviewer.');
+    } catch (e) { setReportError(explain(e)); }
+    finally { reportLock.current = false; setReportBusy(false); }
+  };
   return <><h1>{s.storeName}</h1><p><span className="status">{s.badge}</span></p><p style={{ maxWidth: '60ch' }}>{s.description}</p>
     <p className="muted">This badge confirms campus affiliation only. It is not an endorsement of products or services by the university.</p>
+    {me && !staff && !isOwner && <section className="panel stack" aria-label="Report seller" style={{ maxWidth: '42rem', marginBlock: '1rem' }}>
+      <div className="row"><button type="button" className="btn ghost" aria-expanded={reporting} disabled={reportBusy}
+        onClick={() => { setReporting(open => !open); setReportError(''); }}>Report this seller</button></div>
+      {reporting && <>
+        <p className="muted">Report suspected scams, harassment, or rule violations. Describe what happened; reports go to authorized campus reviewers.</p>
+        <label className="field">Why are you reporting this seller?
+          <textarea value={reason} onChange={e => setReason(e.target.value)} maxLength={1000}
+            placeholder="Describe what happened (at least 10 characters)" disabled={reportBusy} />
+        </label>
+        <div className="row"><button type="button" className="btn danger" disabled={reportBusy || reason.trim().length < 10}
+          onClick={() => void reportSeller()}>{reportBusy ? 'Sending report…' : 'Send report'}</button>
+          <button type="button" className="btn ghost" disabled={reportBusy} onClick={() => setReporting(false)}>Cancel</button></div>
+      </>}
+      {reportNotice && <p role="status">{reportNotice}</p>}{reportError && <p className="err" role="alert">{reportError}</p>}
+    </section>}
     <div className="grid listing-grid">{s.listings.map((l: Listing) => <ListingCard key={l.id} l={l} />)}</div></>;
 }
 

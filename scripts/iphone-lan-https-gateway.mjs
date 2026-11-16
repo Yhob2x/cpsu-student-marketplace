@@ -10,10 +10,20 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { networkInterfaces, homedir } from 'node:os';
 import { isIP } from 'node:net';
+import { spawnSync } from 'node:child_process';
+import { fileURLToPath } from 'node:url';
 
 if (process.env.CPSU_IPHONE_LAN_QA !== '1' || process.env.NODE_ENV === 'production') {
   throw new Error('CPSU_IPHONE_LAN_QA=1 required. Production mode is refused.');
 }
+// Guard direct gateway launches as well as the PowerShell launcher. Never
+// offer TLS on a LAN where Windows Firewall or Wi-Fi trust checks fail.
+const safetyScript=fileURLToPath(new URL('./wp3-iphone-lan-readiness-readonly.mjs',import.meta.url));
+const safety=spawnSync(process.execPath,[safetyScript,'--read-only','--prestart'],{
+  encoding:'utf8',windowsHide:true,timeout:20000,stdio:['ignore','pipe','pipe'],
+});
+if(safety.status!==0)
+  throw new Error('LAN HTTPS QA blocked: firewall/network/certificate prestart safety check failed. Run the read-only readiness script for details.');
 const ip = process.env.CPSU_IPHONE_LAN_IP;
 if (!ip || isIP(ip) !== 4 || !/^192\.168\.(?:\d{1,3})\.(?:\d{1,3})$/.test(ip)) {
   throw new Error('Only an explicit private 192.168.x.x IPv4 is allowed.');

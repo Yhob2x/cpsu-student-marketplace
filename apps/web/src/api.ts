@@ -47,6 +47,9 @@ export const timeAgo = (iso: string) => {
 // Plain-language messages for API error codes.
 const MESSAGES: Record<string, string> = {
   invalid_credentials: 'Email or password is incorrect.', email_taken: 'That email already has an account.',
+  invalid_campus: 'Choose an active campus for this reviewer.',
+  student_account_required: 'Staff accounts cannot use student marketplace actions.',
+  reviewer_scope_changed: 'This reviewer changed while you were editing. Reload and try again.',
   affiliation_not_verified: 'Your CPSU affiliation is still being verified. You can sell once a reviewer approves it.',
   category_prohibited: 'This category is not allowed on your campus.', missing_images: 'Add at least one photo before submitting.',
   incomplete_listing: 'Add at least one photo and a price before submitting.', not_editable: 'This listing is in review or closed and cannot be edited.',

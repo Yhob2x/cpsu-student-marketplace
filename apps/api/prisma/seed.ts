@@ -39,3 +39,6 @@ async function main() {
   console.log(`Seeded. Dev accounts: seller@/buyer@/reviewer@/admin@dev.test, password ${DEV_PASSWORD}`);
 }
 main().finally(() => prisma.$disconnect());
+
+
+//DevPassword!123

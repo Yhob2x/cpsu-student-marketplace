@@ -11,6 +11,7 @@
   "test": "bun --filter @cpsu/api test",
   "pwa:check": "node scripts/validate-pwa.cjs",
   "push:staging:check": "node scripts/check-push-staging.mjs",
-  "push:staging:templates": "node scripts/validate-push-staging-templates.mjs"
+  "push:staging:templates": "node scripts/validate-push-staging-templates.mjs",
+  "push:staging:preflight": "node scripts/push-staging-release-preflight.mjs"
 }
 }

@@ -108,21 +108,21 @@ export function Admin() {
     {q?.affiliations.map((a: any) => <div key={a.id} className="panel row"><div style={{ flex: 1 }}><h3>{a.user.displayName}</h3><span className="muted">{a.campus}</span></div>
       {field(`a${a.id}`, 'Reason (5+ characters)')}<button className="btn" disabled={pending === `a${a.id}` || !reasonOk(`a${a.id}`)} onClick={() => verify(a.id, 'verified')}>Verify</button><button className="btn danger" disabled={pending === `a${a.id}` || !reasonOk(`a${a.id}`)} onClick={() => verify(a.id, 'rejected')}>Reject</button></div>)}
     <h2>Listings to review</h2>{q?.listings.length === 0 && <p className="muted">No listings waiting.</p>}
-    {q?.listings.map((l: any) => <div key={l.id} className="panel stack" style={{ maxWidth: 'none' }}>
-      <div className="row"><h3 style={{ flex: 1 }}>{l.title}</h3><span className="tag">{peso(l.price)}</span></div>
-      <p className="muted">{l.store}, {l.campus}, {l.category}</p><p style={{ maxWidth: '65ch' }}>{l.description}</p>
+    {q?.listings.map((l: any) => <article key={l.id} className="panel stack review-listing">
+      <div className="review-listing-heading"><div><h3>{l.title}</h3><p className="muted">{l.store} · {l.campus} · {l.category}</p></div><span className="tag">{peso(l.price)}</span></div>
+      <p className="review-description">{l.description}</p>
       <div className="row">{l.flags.map((f: string) => <span key={f} className="flag">{FLAG_TEXT[f] ?? f}</span>)}{l.flags.length === 0 && <span className="muted">No text/category flags — photos still need human review</span>}</div>
       <p className="muted">{l.images.length} listing {l.images.length === 1 ? 'photo' : 'photos'} to inspect. Photos are not automatically checked for explicit content.</p>
-      <div className="row">{l.images.length === 0 && <span className="muted">No photos attached</span>}
-        {l.images.map((s: string, i: number) => <a key={s} href={s} target="_blank" rel="noreferrer"><img src={s} alt={`Listing photo ${i + 1} of ${l.images.length}`} style={{ height: 160, borderRadius: 8 }} /></a>)}</div>
-      <label className="row" style={{ alignItems: 'flex-start' }}>
+      <div className="review-photos">{l.images.length === 0 && <span className="muted">No photos attached</span>}
+        {l.images.map((s: string, i: number) => <a key={s} href={s} target="_blank" rel="noreferrer" aria-label={`Open listing photo ${i + 1} of ${l.images.length} in a new tab`}><img src={s} alt={`Listing photo ${i + 1} of ${l.images.length}`} loading="lazy" /></a>)}</div>
+      <label className="review-confirmation">
         <input type="checkbox" checked={photosReviewed[l.id] === true}
           onChange={e => setPhotosReviewed(prev => ({ ...prev, [l.id]: e.target.checked }))}
-          style={{ flex: 'none' }} />
-        <span style={{ flex: 1, minWidth: 0 }}>I personally inspected all {l.images.length} photos and confirm they do not contain pornography, explicit sexual imagery, graphic violence, or other prohibited content.</span>
+          disabled={l.images.length === 0 || pending === `l${l.id}`} />
+        <span>I personally inspected all {l.images.length} photos and confirm they do not contain pornography, explicit sexual imagery, graphic violence, or other prohibited content.</span>
       </label>
-      <div className="row">{field(`l${l.id}`, 'Reason (required, 5+ characters, shown to the seller)')}{!reasonOk(`l${l.id}`) && <span className="muted">Type a reason to enable the buttons</span>}
-        <button className="btn" disabled={pending === `l${l.id}` || !reasonOk(`l${l.id}`) || !photosReviewed[l.id] || l.images.length === 0} onClick={() => decide(l.id, 'approved')}>Approve</button><button className="btn ghost" disabled={pending === `l${l.id}` || !reasonOk(`l${l.id}`)} onClick={() => decide(l.id, 'changes_requested')}>Request changes</button><button className="btn danger" disabled={pending === `l${l.id}` || !reasonOk(`l${l.id}`)} onClick={() => decide(l.id, 'rejected')}>Reject</button></div></div>)}
+      <div className="review-decision">{field(`l${l.id}`, 'Reason (required, 5+ characters, shown to the seller)')}{!reasonOk(`l${l.id}`) && <span className="muted">Enter a reason of at least 5 characters to enable a decision.</span>}
+        <div className="review-actions"><button className="btn" disabled={pending === `l${l.id}` || !reasonOk(`l${l.id}`) || !photosReviewed[l.id] || l.images.length === 0} onClick={() => decide(l.id, 'approved')}>{pending === `l${l.id}` ? 'Saving decision…' : 'Approve'}</button><button className="btn ghost" disabled={pending === `l${l.id}` || !reasonOk(`l${l.id}`)} onClick={() => decide(l.id, 'changes_requested')}>Request changes</button><button className="btn danger" disabled={pending === `l${l.id}` || !reasonOk(`l${l.id}`)} onClick={() => decide(l.id, 'rejected')}>Reject</button></div></div></article>)}
     <h2>Reports from students</h2>{reportsError && <p className="err" role="alert">Reports could not load: {reportsError} <button type="button" className="btn ghost" onClick={load}>Retry</button></p>}
     {reports === null && !reportsError && <p className="muted" role="status">Loading reports…</p>}
     {reports?.length === 0 && !reportsError && <p className="muted">No open reports.</p>}

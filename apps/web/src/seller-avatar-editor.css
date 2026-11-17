@@ -7,7 +7,11 @@
 .seller-avatar-editor__photos { display: flex; flex-wrap: wrap; gap: .9rem; align-items: start; }
 .seller-avatar-editor__photos > div { display: grid; justify-items: center; align-content: start; gap: .35rem; }
 .seller-avatar-editor__photos small { max-width: 115px; color: var(--ink-soft); font-size: .78rem; text-align: center; }
+.seller-avatar-editor__form { min-width: 0; }
 .seller-avatar-editor__form form { gap: .6rem; }
+.seller-avatar-editor__form input[type="file"] { width: 100%; max-width: 100%; min-width: 0; }
+.seller-avatar-editor__form input[type="file"]::file-selector-button { max-width: 100%; white-space: normal; }
+.seller-avatar-editor__form form[aria-busy="true"] { cursor: progress; }
 .seller-avatar-editor__form form p { margin: 0; font-size: .82rem; }
 .seller-avatar-editor__form .btn { justify-self: start; }
 .seller-avatar-editor__pending { margin: 0 0 .8rem; font-weight: 650; color: var(--forest); }

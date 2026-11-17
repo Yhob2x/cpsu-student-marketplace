@@ -6,6 +6,7 @@ import { disconnectPushOnLogout, updateAppBadge } from './push-client';
 import { Discover, Home, ListingDetail, Guidelines, StorePage } from './pages-public';
 import { Icon } from './icons';
 import { SiteFooter } from './site-footer';
+import { FloatingChat } from './floating-chat';
 import { Login, Register, Dashboard, Inquiries, Thread, Saved } from './pages-account';
 import { Profile, Notifications } from './pages-profile';
 import { Admin } from './pages-admin';
@@ -24,6 +25,7 @@ import './student-emphasis.css';
 import './student-motion.css';
 import './profile-refinements.css';
 import './footer-refinements.css';
+import './floating-chat.css';
 
 export type Me = { id: number; email: string; displayName: string; roles: { role: string; campusId: number | null }[];
   affiliations: { id: number; campus: { id: number; name: string }; status: string }[]; storeId: number | null };
@@ -156,9 +158,7 @@ function Shell() {
             <span>CPSU <b>Student Marketplace</b><small>Buy, sell and offer</small></span></Link>
           <HeaderSearch />
           {me && <nav className="actions" aria-label="Your activity">
-            {!isStaff && <><NavLink to="/saved"><Icon name="heart" size={22} /><span>Saved</span></NavLink>
-            <NavLink to="/inquiries" aria-label={unreadMessages > 0 ? `Messages, ${unreadMessages} unread` : undefined}>
-              <Icon name="chat" size={22} /><span>Messages{unreadMessages > 0 && <span className="nav-badge">{unreadMessages > 99 ? '99+' : unreadMessages}</span>}</span></NavLink></>}
+            {!isStaff && <NavLink to="/saved"><Icon name="heart" size={22} /><span>Saved</span></NavLink>}
             <NavLink to="/notifications" className="alerts" aria-label={unread > 0 ? `Alerts, ${unread} unread` : 'Alerts'}>
               <Icon name="bell" size={22} /><span>Alerts{unread > 0 && <span className="nav-badge">{unread}</span>}</span></NavLink>
             <NavLink to="/profile"><Icon name="user" size={22} /><span>Profile</span></NavLink>
@@ -173,7 +173,6 @@ function Shell() {
           <NavLink to="/" end>Home</NavLink>
           <NavLink to="/explore">Explore</NavLink>
           {!isStaff && <><NavLink to="/dashboard">Sell</NavLink>
-          <NavLink to="/inquiries">Messages</NavLink>
           <NavLink to="/transactions">Transactions</NavLink></>}
           <NavLink to="/profile">Profile</NavLink>
           <NavLink to="/guidelines">Guidelines</NavLink>
@@ -186,8 +185,8 @@ function Shell() {
           <Route path="/" element={<Home />} /><Route path="/explore" element={<Discover />} /><Route path="/listings/:id" element={<ListingDetail />} />
           <Route path="/stores/:id" element={<StorePage />} /><Route path="/guidelines" element={<Guidelines />} />
           <Route path="/login" element={<Login />} /><Route path="/register" element={<Register />} />
-          <Route path="/dashboard" element={signedOut ? <Navigate to="/login" /> : isStaff ? <Navigate to="/profile" replace /> : <Dashboard />} />
-          <Route path="/inquiries" element={signedOut ? <Navigate to="/login" /> : isStaff ? <Navigate to="/profile" replace /> : <Inquiries />} />
+          <Route path="/dashboard" element={!ready ? <p role="status">Checking session…</p> : signedOut ? <Navigate to="/login?next=%2Fdashboard" replace /> : isStaff ? <Navigate to="/profile" replace /> : <Dashboard />} />
+          <Route path="/inquiries" element={!ready ? <p role="status">Checking session…</p> : signedOut ? <Navigate to="/login?next=%2Finquiries" replace /> : isStaff ? <Navigate to="/profile" replace /> : <Inquiries />} />
           <Route path="/inquiries/:id" element={!ready ? <p role="status">Checking session…</p> : signedOut ? <Navigate to={`/login?next=${encodeURIComponent(window.location.pathname)}`} replace /> : isStaff ? <Navigate to="/profile" replace /> : <Thread />} /><Route path="/saved" element={!ready ? <p role="status">Checking session…</p> : signedOut ? <Navigate to="/login?next=%2Fsaved" replace /> : isStaff ? <Navigate to="/profile" replace /> : <Saved />} />
           <Route path="/transactions" element={!ready ? <p role="status">Checking session…</p> : signedOut ? <Navigate to="/login?next=%2Ftransactions" replace /> : isStaff ? <Navigate to="/profile" replace /> : <Transactions />} />
           <Route path="/transactions/:id" element={!ready ? <p role="status">Checking session…</p> : signedOut ? <Navigate to={`/login?next=${encodeURIComponent(window.location.pathname)}`} replace /> : isStaff ? <Navigate to="/profile" replace /> : <TransactionDetail />} />
@@ -198,18 +197,18 @@ function Shell() {
         </Routes>
       </div></main>
       <SiteFooter audience={!ready ? 'checking' : !me ? 'guest' : isStaff ? 'staff' : 'student'} canReview={Boolean(isReviewer)} />
+      <FloatingChat ready={ready} isStaff={Boolean(isStaff)} signedIn={Boolean(me)} unreadMessages={unreadMessages} onUnreadChanged={syncUnread} />
       <nav className="tabbar" aria-label="Primary">
         <NavLink to="/" end><Icon name="home" size={19} /><span>Home</span></NavLink>
         <NavLink to="/explore"><Icon name="search" size={19} /><span>Explore</span></NavLink>
-        {!isStaff && <><NavLink to="/dashboard"><Icon name="plus" size={20} /><span>Sell</span></NavLink>
-        <NavLink to="/inquiries" aria-label={unreadMessages > 0 ? `Messages, ${unreadMessages} unread` : undefined}><Icon name="chat" size={19} /><span>Messages</span>{unreadMessages > 0 && <span className="tab-badge" aria-hidden="true">{unreadMessages > 99 ? '99+' : unreadMessages}</span>}</NavLink></>}
+        {!isStaff && <NavLink to="/dashboard"><Icon name="plus" size={20} /><span>Sell</span></NavLink>}
         {isReviewer && <NavLink to="/admin"><Icon name="shield" size={19} /><span>Review</span></NavLink>}
         <NavLink to="/profile"><Icon name="user" size={19} /><span>Profile</span></NavLink>
       </nav>
     </Ctx.Provider>
   );
 }
-createRoot(document.getElementById('root')!).render(<React.StrictMode><BrowserRouter><Shell /></BrowserRouter></React.StrictMode>);
+createRoot(document.getElementById('root')!).render(<React.StrictMode><BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}><Shell /></BrowserRouter></React.StrictMode>);
 
 // Only the production web app installs the offline fallback. API responses and student
 // session data stay network-only; the service worker caches no personalized content.

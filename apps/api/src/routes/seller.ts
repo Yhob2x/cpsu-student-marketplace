@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import multer from 'multer';
+import rateLimit from 'express-rate-limit';
 import crypto from 'node:crypto';
 import fs from 'node:fs';
 import { z } from 'zod';
@@ -14,6 +15,8 @@ import { storeSanitizedMedia, deleteStoredMedia } from '../media-storage.js';
 import { canAddListingPhoto, MAX_LISTING_PHOTOS } from '../listing-photo-limit.js';
 import { makeListingCoverHandler } from '../listing-cover-handler.js';
 import { publishSellerAvatar } from '../seller-avatar-update.js';
+import { sellerAvatarUrl } from '../seller-avatar-url.js';
+import { screenSellerAvatar } from '../seller-avatar-screening.js';
 
 const r = Router();
 r.use(requireStudent);
@@ -25,6 +28,13 @@ const upload = multer({
   storage: multer.diskStorage({ destination: env.UPLOAD_DIR, filename: (_q, _f, cb) => cb(null, crypto.randomBytes(16).toString('hex') + '.upload') }),
   limits: { fileSize: 3 * 1024 * 1024, files: 1 },
   fileFilter: (_q, f, cb) => cb(null, ALLOWED_IMAGE_TYPES.has(f.mimetype)),
+});
+
+// Bound per-account classifier demand so an authenticated account cannot queue
+// unlimited expensive inference tasks. This limit is independent of listing uploads.
+const avatarUploadLimit = rateLimit({ windowMs: 15 * 60_000, limit: 10,
+  keyGenerator: req => `seller-avatar:${req.user!.id}`,
+  standardHeaders: 'draft-7', legacyHeaders: false,
 });
 
 const listingBody = z.object({
@@ -61,7 +71,7 @@ r.get('/store', async (req, res) => {
   res.json(store ? {
     id: store.id, storeName: store.storeName, description: store.description, campusId: store.campusId,
     approvalStatus: store.approvalStatus,
-    avatarUrl: store.avatarPath ? `/api/v1/media/seller-avatar/${store.id}` : null,
+    avatarUrl: sellerAvatarUrl(store.id, store.avatarPath),
   } : null);
 });
 
@@ -91,9 +101,10 @@ r.patch('/store', async (req, res) => {
   res.json(updated);
 });
 
-// The seller explicitly chooses and uploads a photo. A valid sanitized image
-// becomes public immediately, without reviewer approval.
+// The seller explicitly chooses a photo. It publishes only after sanitization
+// AND successful local explicit-content screening; no manual queue required.
 r.post('/store/avatar',
+  avatarUploadLimit,
   async (req, _res, next) => {
     try {
       const store = await prisma.sellerProfile.findFirst({ where: {
@@ -111,15 +122,20 @@ r.post('/store/avatar',
   async (req, res) => {
     if (!req.file) throw new HttpError(400, 'invalid_image', 'Select one JPEG, PNG or WebP image up to 3 MB.');
     const sanitized = await sanitizeListingImage(req.file, env.UPLOAD_DIR, { avatar: true });
-    const stored = await storeSanitizedMedia(sanitized);
+    let stored: { mediaPath: string; mimeType: string } | null = null;
     try {
+      // Screen the sanitized local image BEFORE publishing or uploading it to
+      // Google Drive. An unavailable or uncertain model fails closed.
+      await screenSellerAvatar(sanitized.mediaPath);
+      stored = await storeSanitizedMedia(sanitized);
       const published = await publishSellerAvatar(prisma, req.user!.id, stored.mediaPath);
       if (published.previousPath && published.previousPath !== stored.mediaPath)
         await deleteStoredMedia(published.previousPath).catch(() => console.error('Former seller avatar cleanup failed.'));
       res.setHeader('Cache-Control', 'private, no-store');
-      res.status(200).json({ avatarUrl: `/api/v1/media/seller-avatar/${published.id}` });
+      res.status(200).json({ avatarUrl: sellerAvatarUrl(published.id, stored.mediaPath) });
     } catch (error) {
-      await deleteStoredMedia(stored.mediaPath).catch(() => console.error('Avatar cleanup failed after database rollback.'));
+      await deleteStoredMedia(stored?.mediaPath ?? sanitized.mediaPath)
+        .catch(() => console.error('Avatar cleanup failed after upload rejection or database rollback.'));
       throw error;
     }
   },

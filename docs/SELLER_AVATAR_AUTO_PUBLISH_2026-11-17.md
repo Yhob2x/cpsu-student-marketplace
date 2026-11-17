@@ -1,6 +1,6 @@
 # CPSU Market — Seller profile photo instant publication
 Date: November 17, 2026 (Asia/Manila)
-Status: **source implemented; database activation and authenticated browser acceptance still pending**
+Status: **source implemented; seller-avatar column applied to local development on November 17, 2026; authenticated browser acceptance still pending**
 
 ## Owner decision
 The owner explicitly removed the reviewer approval step **for seller/store profile pictures only**. Store identity photos are manually selected and uploaded by the seller; they are not automatically harvested from student accounts or listing images. A successful authorized upload publishes the sanitized image immediately on the store and seller listing identities. Existing campus affiliation verification, seller eligibility, and product/listing-photo review continue unchanged.
@@ -42,5 +42,8 @@ The owner explicitly removed the reviewer approval step **for seller/store profi
 ## Migration safety preflight — November 17, 2026
 The exact one-column SQL passed a disposable temporary-table rehearsal in `cpsu_marketplace_test`. Read-only checks confirmed `avatarPath` is absent in development and both test schemas. No persistent migration was executed. A fresh protected, restorable backup and explicit approvals are still required. See `docs/SELLER_AVATAR_MIGRATION_PREFLIGHT_2026-11-17.md` for evidence and safeguards.
 
-## Activation gate
+## Development migration activation — November 17, 2026
+**Approved and completed:** the one-column seller-avatar migration was applied only to local `cpsu_marketplace`, with fresh protected backup, isolated restore rehearsal, Prisma ledger reconciliation, 24-table data integrity comparisons, and 14 targeted test passes. Both older managed-content migrations remain pending. See `docs/SELLER_AVATAR_DEV_ACTIVATION_2026-11-17.md` for details. Authenticated multipart browser acceptance remains open; do not deploy automatically.
+
+## Superseded activation-gate record
 The existing local development DB has additional earlier unapplied migrations, so do not blindly run `prisma migrate dev` or `db:deploy`. Reconcile the migration history, back up the database, and test the single-column migration and full upload/replacement/removal flow on an isolated restored database first. Explicitly authorize local development DB changes before applying, regenerate the standard Prisma Client after safely releasing its Windows DLL, and verify image rendering as a seller and guest. Do not deploy to production by default.

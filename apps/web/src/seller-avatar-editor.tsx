@@ -13,7 +13,6 @@ export function SellerAvatarEditor({ storeId, refreshVersion = 0 }: { storeId: n
   const [loading, setLoading] = useState(true);
   const [file, setFile] = useState<File | null>(null);
   const [fileKey, setFileKey] = useState(0);
-  const [photoRevision, setPhotoRevision] = useState(0);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
@@ -54,7 +53,6 @@ export function SellerAvatarEditor({ storeId, refreshVersion = 0 }: { storeId: n
       const form = new FormData(); form.append('image', file);
       const published = await api<{ avatarUrl: string }>('/seller/store/avatar', { form });
       setStore(previous => previous ? { ...previous, avatarUrl: published.avatarUrl } : previous);
-      setPhotoRevision(n => n + 1);
       setFile(null); setFileKey(n => n + 1);
       setNotice('Profile picture updated. It is now visible on your public store.');
     } catch (e) { setError(explain(e)); }
@@ -83,21 +81,21 @@ export function SellerAvatarEditor({ storeId, refreshVersion = 0 }: { storeId: n
     {store && <div className="seller-avatar-editor__content">
       <div className="seller-avatar-editor__photos">
         <div>
-          <SellerAvatar name={store.storeName} src={store.avatarUrl ? `${store.avatarUrl}?v=${photoRevision}` : null} size="large" />
+          <SellerAvatar name={store.storeName} src={store.avatarUrl} size="large" />
           <small>Current public picture</small>
         </div>
         {previewUrl && <div><SellerAvatar name={store.storeName} src={previewUrl} size="large" />
           <small>Selected photo preview</small></div>}
       </div>
       <div className="seller-avatar-editor__form">
-        <form className="stack" onSubmit={upload}>
+        <form className="stack" onSubmit={upload} aria-busy={busy}>
           <label className="field">Choose profile picture
             <input key={fileKey} type="file" accept="image/jpeg,image/png,image/webp"
               disabled={busy || loading} onChange={event => select(event.currentTarget.files?.[0] ?? null)} />
           </label>
-          <p className="muted">JPEG, PNG or WebP, up to 3 MB. The server square-crops your picture, removes metadata and publishes it after upload. Use only pictures that follow marketplace content rules.</p>
+          <p className="muted">JPEG, PNG or WebP, up to 3 MB. We check photos for explicit content on the server before publication. Safe pictures publish automatically; rejected or uncertain pictures leave your current picture unchanged. Automated screening may make mistakes.</p>
           <button type="submit" className="btn" disabled={!file || busy || loading}>
-            {busy ? 'Uploading…' : store.avatarUrl ? 'Replace profile picture' : 'Upload profile picture'}
+            {busy ? 'Uploading and checking…' : store.avatarUrl ? 'Replace profile picture' : 'Upload profile picture'}
           </button>
         </form>
         {store.avatarUrl && <button type="button" className="btn ghost seller-avatar-editor__remove"

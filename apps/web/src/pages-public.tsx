@@ -1,11 +1,11 @@
 import { FormEvent, useEffect, useRef, useState } from 'react';
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
-import { api, explain, peso } from './api';
+import { ApiError, api, explain, peso } from './api';
 import { useMe } from './main';
 import { Icon } from './icons';
 import { InstallApp } from './install-app';
 import { selectHomeListings } from './home-listings';
-import { MobileBrowseControls, SwipeableListingRail, useMouseDragToScroll } from './mobile-browse-controls';
+import { MobileBrowseControls, SwipeableListingRail } from './mobile-browse-controls';
 import { ListingGallery } from './listing-gallery';
 import { isPublicNotFound } from './public-resource-error';
 import { SellerAvatar } from './seller-avatar';
@@ -88,8 +88,17 @@ export function Home() {
   const [popular, setPopular] = useState<Listing[] | null>(null);
   const [cats, setCats] = useState<any[]>([]);
   const [homeError, setHomeError] = useState('');
-  const categoriesRef = useRef<HTMLDivElement>(null);
-  const categoryMouseDrag = useMouseDragToScroll(categoriesRef);
+  const shortCategoryName = (name: string) => ({
+    'Handmade goods': 'Made',
+    'Pre-loved items': 'Used',
+    'Books & notes (pre-loved)': 'Books',
+    'Food & drinks': 'Food',
+    'Printing & school supplies': 'Print',
+    'Design & creative': 'Design',
+    'Tutoring': 'Tutor',
+    'Tech & IT help': 'Tech',
+    'Photography & video': 'Photo',
+  } as Record<string, string>)[name] ?? name.split(/\s|&/)[0].slice(0, 6);
   const loadHome = () => {
     setHomeError('');
     const fail = (e: unknown) => setHomeError(explain(e));
@@ -140,20 +149,24 @@ export function Home() {
       </div>
     </section>
 
+    <section className="category-section" aria-label="Browse by category">
+      <div className="sec-head category-head"><h2>Explore by category</h2><Link to="/explore">View all <Icon name="arrow" size={15} /></Link></div>
+      <div className="cat-rail home-category-grid" role="group" aria-label="All categories"
+        style={{ gridTemplateColumns: `repeat(${Math.max(1, cats.length)}, minmax(0, 1fr))` }}>
+        {cats.map(c => <Link key={c.id} className="cat" to={`/explore?categoryId=${c.id}`}
+          aria-label={c.name} title={c.name}>
+          <span className="cat-ico" aria-hidden="true"><Icon name="tag" size={20} /></span>
+          <span className="category-label-full" aria-hidden="true">{c.name}</span>
+          <span className="category-label-short" aria-hidden="true">{shortCategoryName(c.name)}</span>
+        </Link>)}
+      </div>
+    </section>
+
     {block('Fresh listings', '/explore', fresh)}
 
     <InstallApp />
 
     <StudentAnnouncements />
-
-    <section className="category-section" aria-label="Browse by category">
-      <div className="sec-head category-head"><h2>Explore by category</h2><Link to="/explore">View all <Icon name="arrow" size={15} /></Link></div>
-      <div className="cat-rail browse-drag-scroll" ref={categoriesRef} role="region" aria-label="Browse categories" tabIndex={0}
-        {...categoryMouseDrag}>
-        {cats.slice(0, 8).map(c => <Link key={c.id} className="cat" to={`/explore?categoryId=${c.id}`}>
-          <span className="cat-ico"><Icon name="tag" size={24} /></span><span>{c.name}</span></Link>)}
-      </div>
-    </section>
 
     {block('Popular listings', '/explore', top)}
 
@@ -212,8 +225,17 @@ export function Discover() {
   const [campuses, setCampuses] = useState<any[]>([]); const [cats, setCats] = useState<any[]>([]);
   const [filterError, setFilterError] = useState(''); const [filtersLoading, setFiltersLoading] = useState(false);
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
+  const [compactControls, setCompactControls] = useState(false);
+  const controlHeaderRef = useRef<HTMLElement>(null);
+  useEffect(() => {
+    const update = () => setCompactControls(window.scrollY > 160);
+    window.addEventListener('scroll', update, { passive: true });
+    update();
+    return () => window.removeEventListener('scroll', update);
+  }, []);
   const [items, setItems] = useState<Listing[] | null>(null); const [total, setTotal] = useState<number | null>(null);
   const [error, setError] = useState('');
+  const [retryRequest, setRetryRequest] = useState(0);
   const currentPage = Math.max(1, Number(sp.get('page')) || 1);
   const pageCount = Math.ceil((total ?? 0) / 20);
   const navigatePage = (page: number) => { const next = new URLSearchParams(sp); next.set('page', String(page)); setSp(next); };
@@ -244,9 +266,14 @@ export function Discover() {
     setItems(null); setTotal(null); setError('');
     const t = setTimeout(() => api(`/listings?${query}`)
       .then(r => { if (active) { setItems(r.items); setTotal(r.total); setError(''); } })
-      .catch(e => { if (active) { setError(explain(e)); setItems([]); setTotal(null); } }), 250);
+      .catch(e => { if (active) {
+        setError(e instanceof ApiError && e.status === 429
+          ? 'Too many requests. Wait a few minutes before retrying.'
+          : 'Listings are temporarily unavailable. Check your connection and try again.');
+        setItems([]); setTotal(null);
+      } }), 250);
     return () => { active = false; clearTimeout(t); };
-  }, [query]);
+  }, [query, retryRequest]);
 
   const set = (k: keyof Filters) => (e: { target: { value: string } }) => {
     const next = { ...f, [k]: e.target.value };
@@ -263,8 +290,10 @@ export function Discover() {
   </div>;
 
   return <>
+    <section className="explore-control-header" ref={controlHeaderRef}
+      data-filters-open={mobileFiltersOpen} data-compact={compactControls && !mobileFiltersOpen} aria-label="Explore controls">
     <h1>Explore listings</h1>
-    <p className="muted" style={{ marginTop: '-.25rem' }}>Find pre-loved items and student services, then message the seller directly.</p>
+    <p className="muted explore-intro" style={{ marginTop: '-.25rem' }}>Find pre-loved items and student services, then message the seller directly.</p>
 
     <div className="explore-toolbar" role="search" aria-label="Explore listing search">
       <label className="field explore-search"><span className="explore-search-label">Search listings</span>
@@ -281,8 +310,12 @@ export function Discover() {
         {filtersLoading ? 'Retrying…' : 'Retry filters'}
       </button>
     </div>}
-    <button type="button" className="mobile-filter-toggle" aria-controls="explore-filter-fields"
-      aria-expanded={mobileFiltersOpen} onClick={() => setMobileFiltersOpen(open => !open)}>
+    <button type="button" className="mobile-filter-toggle" aria-label={mobileFiltersOpen ? 'Hide filters' : 'More filters'} aria-controls="explore-filter-fields"
+      aria-expanded={mobileFiltersOpen} onClick={() => {
+        const opening = !mobileFiltersOpen;
+        setMobileFiltersOpen(opening);
+        if (opening) requestAnimationFrame(() => controlHeaderRef.current?.scrollIntoView({ block: 'start', behavior: 'auto' }));
+      }}>
       <Icon name="sliders" size={18} /> <span>{mobileFiltersOpen ? 'Hide filters' : 'More filters'}</span>
       {advancedFilterCount > 0 && <span className="filter-count">{advancedFilterCount} active</span>}
       <Icon name={mobileFiltersOpen ? 'chevronUp' : 'chevronDown'} size={18} />
@@ -321,8 +354,13 @@ export function Discover() {
         </select>
       </label>
     </div>
+    </section>
 
-    {error && <p className="err" role="alert">{error}</p>}
+    {error && <section className="panel stack explore-listing-error" role="alert" aria-label="Listing loading problem">
+      <h2>Could not load listings</h2>
+      <p className="muted">{error}</p>
+      <div className="row"><button type="button" className="btn" onClick={() => setRetryRequest(n => n + 1)}>Retry listings</button></div>
+    </section>}
     {items === null && skel}
     {items !== null && items.length === 0 && !error && <div className="empty">
       <h2>No listings match</h2>

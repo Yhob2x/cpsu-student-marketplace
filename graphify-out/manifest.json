@@ -816,9 +816,9 @@
     "semantic_hash": ""
   },
   "apps/api/package.json": {
-    "mtime": 1794794752.4296765,
-    "seen": 1794797953.489614,
-    "ast_hash": "53aadc857742e39097ac199f32598f2e",
+    "mtime": 1794883081.7407281,
+    "seen": 1794884005.123854,
+    "ast_hash": "fd094aea5c6bfad5c2727d016dd48571",
     "semantic_hash": ""
   },
   "apps/api/prisma/seed.ts": {
@@ -966,9 +966,9 @@
     "semantic_hash": ""
   },
   "apps/api/src/routes/admin.ts": {
-    "mtime": 1794878281.1231256,
-    "seen": 1794878377.6324842,
-    "ast_hash": "704cf8476655e4c3b6f262362b813f92",
+    "mtime": 1794879457.7463312,
+    "seen": 1794881241.8578641,
+    "ast_hash": "240e4567fc76cd579fcedb407226b5fc",
     "semantic_hash": ""
   },
   "apps/api/src/routes/auth.ts": {
@@ -984,9 +984,9 @@
     "semantic_hash": ""
   },
   "apps/api/src/routes/public.ts": {
-    "mtime": 1794878221.0613291,
-    "seen": 1794878377.6328194,
-    "ast_hash": "e36674a3077f2a04a7409e586b30db65",
+    "mtime": 1794882350.7109675,
+    "seen": 1794882952.5777855,
+    "ast_hash": "460e83f066f6e9ad7d0233c21ba4e098",
     "semantic_hash": ""
   },
   "apps/api/src/routes/push.ts": {
@@ -996,9 +996,9 @@
     "semantic_hash": ""
   },
   "apps/api/src/routes/seller.ts": {
-    "mtime": 1794878312.8208857,
-    "seen": 1794878377.633155,
-    "ast_hash": "032e3f00a3867941378703392bef5a06",
+    "mtime": 1794882957.3997269,
+    "seen": 1794884005.1361332,
+    "ast_hash": "5113ce90de68f1f91f0a4cc35d7978f8",
     "semantic_hash": ""
   },
   "apps/api/src/rules.ts": {
@@ -1098,9 +1098,9 @@
     "semantic_hash": ""
   },
   "apps/web/src/api.ts": {
-    "mtime": 1794875660.0989294,
-    "seen": 1794876147.1064267,
-    "ast_hash": "5f9e5c75879326a9a9d2a6b07d4194bd",
+    "mtime": 1794883649.1690383,
+    "seen": 1794884005.144193,
+    "ast_hash": "b994cc6a374278d951c8dcc68514c4dc",
     "semantic_hash": ""
   },
   "apps/web/src/icons.tsx": {
@@ -1110,21 +1110,21 @@
     "semantic_hash": ""
   },
   "apps/web/src/main.tsx": {
-    "mtime": 1794878334.6545537,
-    "seen": 1794878377.6412983,
-    "ast_hash": "b4abe1ffe5b227f4f78f681042c79ff0",
+    "mtime": 1794883537.7219114,
+    "seen": 1794884005.1457644,
+    "ast_hash": "590a8c78bbc1be8803f467385f21b3fb",
     "semantic_hash": ""
   },
   "apps/web/src/pages-account.tsx": {
-    "mtime": 1794878138.1011941,
-    "seen": 1794878377.641654,
-    "ast_hash": "64ec4bc8eb8983955fe14a0f6fa15254",
+    "mtime": 1794879139.8110886,
+    "seen": 1794881241.866754,
+    "ast_hash": "0fb49147d76fe032c12b8173f5392a89",
     "semantic_hash": ""
   },
   "apps/web/src/pages-admin.tsx": {
-    "mtime": 1794878342.2717192,
-    "seen": 1794878377.641657,
-    "ast_hash": "b6cf49d85d18972b610649baa0f12156",
+    "mtime": 1794879493.9217248,
+    "seen": 1794881241.8667567,
+    "ast_hash": "6ee76ed8162c98950e03d5415ecc4dd2",
     "semantic_hash": ""
   },
   "apps/web/src/pages-profile.tsx": {
@@ -1134,9 +1134,9 @@
     "semantic_hash": ""
   },
   "apps/web/src/pages-public.tsx": {
-    "mtime": 1794878099.6391563,
-    "seen": 1794878377.6420486,
-    "ast_hash": "48fa801f169550119d792f301013cd81",
+    "mtime": 1794884497.0911868,
+    "seen": 1794884547.6216085,
+    "ast_hash": "24590f1b95080cc5b78f3dc4a21fcedc",
     "semantic_hash": ""
   },
   "apps/web/src/push-client.ts": {
@@ -2718,9 +2718,9 @@
     "semantic_hash": ""
   },
   "MASTER_BLUEPRINT.md": {
-    "mtime": 1794819947.636639,
-    "seen": 1794819990.7689416,
-    "ast_hash": "96c9de78488c784a7591ced669ecc0bc",
+    "mtime": 1794883005.3095145,
+    "seen": 1794884005.2030785,
+    "ast_hash": "fea13dcda784ca01cfb5c85d3d454867",
     "semantic_hash": ""
   },
   "README.md": {
@@ -2958,9 +2958,9 @@
     "semantic_hash": ""
   },
   "progress/DEVELOPMENT_LOG.md": {
-    "mtime": 1794877641.933316,
-    "seen": 1794877654.189326,
-    "ast_hash": "02f8a327e0957c2c505b66547c872f8b",
+    "mtime": 1794882925.9028592,
+    "seen": 1794882952.6691594,
+    "ast_hash": "768aa9ecf888a99175ccd26621929db6",
     "semantic_hash": ""
   },
   "progress/IMPLEMENTATION_STATUS.md": {
@@ -3276,9 +3276,9 @@
     "semantic_hash": ""
   },
   "apps/api/test/run-iphone-lan-pwa-api.ts": {
-    "mtime": 1794808392.598699,
-    "seen": 1794809117.1711273,
-    "ast_hash": "3dfc3f117f34e015e1e06d64ba721e51",
+    "mtime": 1794881173.210603,
+    "seen": 1794881241.8627965,
+    "ast_hash": "4c659e801c79d4532c473cbe67412b37",
     "semantic_hash": ""
   },
   "apps/api/test/wp3-gate-b-activation-safety.test.ts": {
@@ -3480,9 +3480,9 @@
     "semantic_hash": ""
   },
   "apps/api/scripts/wp3-iphone-qa-readonly.ts": {
-    "mtime": 1794817303.3147337,
-    "seen": 1794817839.9176915,
-    "ast_hash": "5da52b0fa0f068554796a4be1f17adb0",
+    "mtime": 1794880778.1879127,
+    "seen": 1794881241.8539588,
+    "ast_hash": "81d55c775fd7ac0799c7fe0084676282",
     "semantic_hash": ""
   },
   "apps/api/test/google-drive-real-http.test.ts": {
@@ -3492,9 +3492,9 @@
     "semantic_hash": ""
   },
   "scripts/wp3-iphone-lan-readiness-readonly.mjs": {
-    "mtime": 1794877592.9690416,
-    "seen": 1794877654.1319745,
-    "ast_hash": "d63e167914e46678a4d2dbe6241a31a2",
+    "mtime": 1794878832.157118,
+    "seen": 1794881241.8756287,
+    "ast_hash": "4d15ad408df786dec22e16d374085e6f",
     "semantic_hash": ""
   },
   ".agents/skills/impeccable/reference/foundations.md": {
@@ -3828,9 +3828,9 @@
     "semantic_hash": ""
   },
   "apps/web/src/auth-return.ts": {
-    "mtime": 1794874935.255304,
-    "seen": 1794875234.8410034,
-    "ast_hash": "957775a4ff3c2bae4434f4f987adcf8f",
+    "mtime": 1794883090.0252512,
+    "seen": 1794884005.144371,
+    "ast_hash": "c11ee76726b0d018618a8c18ab46eea8",
     "semantic_hash": ""
   },
   "apps/web/src/public-resource-error.ts": {
@@ -3840,9 +3840,9 @@
     "semantic_hash": ""
   },
   "apps/web/test/auth-return.test.ts": {
-    "mtime": 1794874922.9649892,
-    "seen": 1794875234.8441544,
-    "ast_hash": "23fdf53933287a17f8ed943aa15325b5",
+    "mtime": 1794883094.031438,
+    "seen": 1794884005.1500444,
+    "ast_hash": "6d9f77d348f0c37dc9a99e0c36141ecb",
     "semantic_hash": ""
   },
   "apps/web/test/public-resource-error.test.ts": {
@@ -3978,15 +3978,15 @@
     "semantic_hash": ""
   },
   "docs/EXPLORE_VERTICAL_GRID_2026-11-17.md": {
-    "mtime": 1794877858.2508736,
-    "seen": 1794877890.1874516,
-    "ast_hash": "9025a54179c0e7b14f138014cc97bcc2",
+    "mtime": 1794881398.4845555,
+    "seen": 1794881444.1145298,
+    "ast_hash": "9776abb7919ce47b5a28f8c6c15be13c",
     "semantic_hash": ""
   },
   "docs/IPHONE_SAFARI_CONVERSATION_ACCEPTANCE_2026-11-17.md": {
-    "mtime": 1794876632.0130448,
-    "seen": 1794877184.127963,
-    "ast_hash": "ab1679b3b83f86ab245006aa93ce43dd",
+    "mtime": 1794878415.1249368,
+    "seen": 1794881241.9234796,
+    "ast_hash": "4fedd9f03aee873ebc6f31a8af5b8e25",
     "semantic_hash": ""
   },
   "apps/web/src/profile-presentation.ts": {
@@ -4002,15 +4002,15 @@
     "semantic_hash": ""
   },
   "scripts/iphone-lan-preflight-status.mjs": {
-    "mtime": 1794877583.3480294,
-    "seen": 1794877654.130517,
-    "ast_hash": "6c0c9620bb8ce2e08be679a7a720c803",
+    "mtime": 1794878794.9834442,
+    "seen": 1794881241.8741744,
+    "ast_hash": "514a119e0838fe250ba409c0a8968584",
     "semantic_hash": ""
   },
   "scripts/iphone-lan-preflight-status.test.mjs": {
-    "mtime": 1794877571.677518,
-    "seen": 1794877654.1305196,
-    "ast_hash": "2e0c8b24eca4be02e3bf71c60a54331f",
+    "mtime": 1794878783.7650585,
+    "seen": 1794881241.874177,
+    "ast_hash": "912a1c59fa1958f1666a952fbe783b1e",
     "semantic_hash": ""
   },
   "docs/IPHONE_SAFARI_PREFLIGHT_FIREWALL_SERIALIZATION_2026-11-17.md": {
@@ -4032,9 +4032,9 @@
     "semantic_hash": ""
   },
   "apps/web/src/seller-avatar-editor.tsx": {
-    "mtime": 1794878324.004053,
-    "seen": 1794878377.6433938,
-    "ast_hash": "79b5d7412aea3f2582695c33792e0af9",
+    "mtime": 1794884015.648257,
+    "seen": 1794884127.3810382,
+    "ast_hash": "ecd77265c361995bcee096e71a0b752b",
     "semantic_hash": ""
   },
   "apps/web/src/seller-avatar.tsx": {
@@ -4050,15 +4050,375 @@
     "semantic_hash": ""
   },
   "apps/web/test/site-footer.test.tsx": {
-    "mtime": 1794878057.5457711,
-    "seen": 1794878377.64627,
-    "ast_hash": "48789d5a30f670301459da4746847bab",
+    "mtime": 1794878382.5778024,
+    "seen": 1794881241.8716207,
+    "ast_hash": "932388a9b3484c3267a49af91e9e473e",
     "semantic_hash": ""
   },
   "docs/FOOTER_UX_REFINEMENT_2026-11-17.md": {
     "mtime": 1794878343.9934118,
     "seen": 1794878377.696849,
     "ast_hash": "60aaa1cb1ebb990959a5a53a5a40630b",
+    "semantic_hash": ""
+  },
+  "apps/api/scripts/iphone-qa-migration.ts": {
+    "mtime": 1794880920.9554274,
+    "seen": 1794881241.8512418,
+    "ast_hash": "9e367d1f031592adeaa19ab4f09a1fb2",
+    "semantic_hash": ""
+  },
+  "apps/api/scripts/seller-avatar-backup-restore-acceptance.ts": {
+    "mtime": 1794881003.7423863,
+    "seen": 1794881241.8516066,
+    "ast_hash": "24151dbeb42c97ae7849cd253644b8b9",
+    "semantic_hash": ""
+  },
+  "apps/api/scripts/seller-avatar-migration-readonly.ts": {
+    "mtime": 1794880604.7074795,
+    "seen": 1794881241.8516097,
+    "ast_hash": "4504f5847e8a9f4c649a67e90fef7252",
+    "semantic_hash": ""
+  },
+  "apps/api/scripts/seller-avatar-migration-temp-table-test.ts": {
+    "mtime": 1794880665.2187378,
+    "seen": 1794881241.8516123,
+    "ast_hash": "2e7ed25a06c286ab8a6d3360d10aa55b",
+    "semantic_hash": ""
+  },
+  "apps/api/src/optional-seller-avatar.ts": {
+    "mtime": 1794880755.1645367,
+    "seen": 1794881241.8564663,
+    "ast_hash": "e176f74707f5ae9520d1aec857311594",
+    "semantic_hash": ""
+  },
+  "apps/api/src/seller-avatar-update.ts": {
+    "mtime": 1794879394.3621812,
+    "seen": 1794881241.8589685,
+    "ast_hash": "c77b6c60a21b7fe51ea24cb5da4f320d",
+    "semantic_hash": ""
+  },
+  "apps/api/test/iphone-safari-qa-fixture.ts": {
+    "mtime": 1794881071.9323974,
+    "seen": 1794881241.8611364,
+    "ast_hash": "ef49443350787da77aeaebf0cdd98de1",
+    "semantic_hash": ""
+  },
+  "apps/api/test/iphone-safari-qa-http-smoke.ts": {
+    "mtime": 1794881117.4124458,
+    "seen": 1794881241.861139,
+    "ast_hash": "2f2f0b680221d71b13aaf7c3e4b967a1",
+    "semantic_hash": ""
+  },
+  "apps/api/test/public-avatar-compat.test.ts": {
+    "mtime": 1794880932.7456427,
+    "seen": 1794881241.8618062,
+    "ast_hash": "80ad91bce1b1fb980c26da9948e17d6d",
+    "semantic_hash": ""
+  },
+  "apps/api/test/seller-avatar-update.test.ts": {
+    "mtime": 1794879550.2639818,
+    "seen": 1794881241.8633025,
+    "ast_hash": "a3d7ddf61738d43a77df5aa0e738702e",
+    "semantic_hash": ""
+  },
+  "apps/web/src/pages-storefront.tsx": {
+    "mtime": 1794879034.2307346,
+    "seen": 1794881241.8672497,
+    "ast_hash": "729f85246d9d80a9b580069765a3e060",
+    "semantic_hash": ""
+  },
+  "apps/web/src/seller-store-details.tsx": {
+    "mtime": 1794879130.5219574,
+    "seen": 1794881241.8686714,
+    "ast_hash": "014af937835bd558e6d3a2e764f15150",
+    "semantic_hash": ""
+  },
+  "apps/web/src/storefront-filter.ts": {
+    "mtime": 1794879016.4000223,
+    "seen": 1794881241.868839,
+    "ast_hash": "72b8723077f979d672de95c866203d90",
+    "semantic_hash": ""
+  },
+  "apps/web/src/stores-in-results.tsx": {
+    "mtime": 1794879078.1782453,
+    "seen": 1794881241.8688414,
+    "ast_hash": "4493a515f85f4f16b37d6458fb3e21a4",
+    "semantic_hash": ""
+  },
+  "apps/web/test/storefront-filter.test.ts": {
+    "mtime": 1794879018.7114632,
+    "seen": 1794881241.8716235,
+    "ast_hash": "c64c4c0e43d3415b9a5c1100dab4fb62",
+    "semantic_hash": ""
+  },
+  ".agents/skills/playwright-cli/SKILL.md": {
+    "mtime": 1794879213.7238295,
+    "seen": 1794881241.894551,
+    "ast_hash": "b4c813d355059d18dd8c56ab7d78e5dd",
+    "semantic_hash": ""
+  },
+  ".agents/skills/playwright-cli/references/element-attributes.md": {
+    "mtime": 1794879213.7025647,
+    "seen": 1794881241.8945537,
+    "ast_hash": "8b8ffc48e38a5b4a04baec18a2732cd7",
+    "semantic_hash": ""
+  },
+  ".agents/skills/playwright-cli/references/playwright-tests.md": {
+    "mtime": 1794879213.705306,
+    "seen": 1794881241.8945558,
+    "ast_hash": "99970dceff6228941c8f994e7dd71d27",
+    "semantic_hash": ""
+  },
+  ".agents/skills/playwright-cli/references/pr-attachments.md": {
+    "mtime": 1794879213.705306,
+    "seen": 1794881241.894558,
+    "ast_hash": "1177e18d35661616471a5dbc56d915b8",
+    "semantic_hash": ""
+  },
+  ".agents/skills/playwright-cli/references/request-mocking.md": {
+    "mtime": 1794879213.705306,
+    "seen": 1794881241.8945603,
+    "ast_hash": "3b74af1fc908062c9c7f2cef04be6a24",
+    "semantic_hash": ""
+  },
+  ".agents/skills/playwright-cli/references/running-code.md": {
+    "mtime": 1794879213.705306,
+    "seen": 1794881241.8945622,
+    "ast_hash": "34af4a810e9d3b3b1f01801ba7bc0058",
+    "semantic_hash": ""
+  },
+  ".agents/skills/playwright-cli/references/session-management.md": {
+    "mtime": 1794879213.7217345,
+    "seen": 1794881241.8945642,
+    "ast_hash": "911dd3af00bd5e8c8fa4515970d90dc1",
+    "semantic_hash": ""
+  },
+  ".agents/skills/playwright-cli/references/storage-state.md": {
+    "mtime": 1794879213.7298307,
+    "seen": 1794881241.8945658,
+    "ast_hash": "c08abef5555579182415cbf6fe38540b",
+    "semantic_hash": ""
+  },
+  ".agents/skills/playwright-cli/references/test-generation.md": {
+    "mtime": 1794879213.7318275,
+    "seen": 1794881241.8945677,
+    "ast_hash": "beb47388c77b47110c94e3c34739357f",
+    "semantic_hash": ""
+  },
+  ".agents/skills/playwright-cli/references/tracing.md": {
+    "mtime": 1794879213.733808,
+    "seen": 1794881241.8945696,
+    "ast_hash": "fd0e9fbd229a8954b2ac86a53c79308e",
+    "semantic_hash": ""
+  },
+  ".agents/skills/playwright-cli/references/video-recording.md": {
+    "mtime": 1794879213.7385516,
+    "seen": 1794881241.8945715,
+    "ast_hash": "839208845060c048ac8e23f114e11aab",
+    "semantic_hash": ""
+  },
+  "docs/IPHONE_ONLY_FIREWALL_RULE_2026-11-17.md": {
+    "mtime": 1794879049.6826186,
+    "seen": 1794881241.9234757,
+    "ast_hash": "9ccfc9cce779c452987ae566b4893eff",
+    "semantic_hash": ""
+  },
+  "docs/IPHONE_SAFARI_QA_MIGRATION_FIXTURES_PASS_2026-11-17.md": {
+    "mtime": 1794881214.3541348,
+    "seen": 1794881241.9236517,
+    "ast_hash": "35de5629229caee8f410cdb08f767459",
+    "semantic_hash": ""
+  },
+  "docs/IPHONE_SAFARI_QA_SCHEMA_APPROVAL_GATE_2026-11-17.md": {
+    "mtime": 1794881216.9146664,
+    "seen": 1794881241.9236543,
+    "ast_hash": "ffae5411b3e282336965712a2be6c2f1",
+    "semantic_hash": ""
+  },
+  "docs/LISTING_DISCOVERY_RECOVERY_2026-11-17.md": {
+    "mtime": 1794881194.898321,
+    "seen": 1794881241.9236567,
+    "ast_hash": "5e0a68a822973a10062a17c964fc6cc1",
+    "semantic_hash": ""
+  },
+  "docs/SELLER_AVATAR_AUTO_PUBLISH_2026-11-17.md": {
+    "mtime": 1794881563.007613,
+    "seen": 1794882119.946382,
+    "ast_hash": "6433a3000d05bbfc03137e87483e5e6b",
+    "semantic_hash": ""
+  },
+  "docs/SELLER_AVATAR_MIGRATION_PREFLIGHT_2026-11-17.md": {
+    "mtime": 1794881565.4471967,
+    "seen": 1794882119.946388,
+    "ast_hash": "fe39b1df3640397741cdd886bedf39ae",
+    "semantic_hash": ""
+  },
+  "docs/SELLER_PROFILE_PICTURE_2026-11-17.md": {
+    "mtime": 1794879647.5189264,
+    "seen": 1794881241.9292283,
+    "ast_hash": "ac922d8b176079e33704ad284777bd0c",
+    "semantic_hash": ""
+  },
+  "docs/SELLER_STOREFRONT_2026-11-17.md": {
+    "mtime": 1794879649.9563668,
+    "seen": 1794881241.9292305,
+    "ast_hash": "aec594b13a6a6e4729a2d61e563b7a0f",
+    "semantic_hash": ""
+  },
+  "apps/api/scripts/seller-avatar-approved-dev-activation.ts": {
+    "mtime": 1794881501.665681,
+    "seen": 1794882119.8785775,
+    "ast_hash": "220de6a989611ab931061fabed85a022",
+    "semantic_hash": ""
+  },
+  "docs/FOOTER_P3_ROUTER_WARNINGS_2026-11-17.md": {
+    "mtime": 1794882094.4198968,
+    "seen": 1794882119.9378638,
+    "ast_hash": "c69717a7d7dc14a132e92ded355ee9ef",
+    "semantic_hash": ""
+  },
+  "docs/SELLER_AVATAR_DEV_ACTIVATION_2026-11-17.md": {
+    "mtime": 1794881549.1277149,
+    "seen": 1794882119.9463854,
+    "ast_hash": "cba8fc56dc8aefba33f0e744d782dd61",
+    "semantic_hash": ""
+  },
+  "apps/api/scripts/iphone-qa-message-readonly.ts": {
+    "mtime": 1794883098.8241844,
+    "seen": 1794884005.1264608,
+    "ast_hash": "0e017ee6bfa8f77d892f7d7182a6cc13",
+    "semantic_hash": ""
+  },
+  "apps/api/scripts/seller-avatar-http-readonly-probe.ts": {
+    "mtime": 1794882397.0753129,
+    "seen": 1794882952.569551,
+    "ast_hash": "76044b37b9776abcc5406e30f81de7a7",
+    "semantic_hash": ""
+  },
+  "apps/api/scripts/seller-avatar-readonly-diagnostic.ts": {
+    "mtime": 1794882295.5293388,
+    "seen": 1794882952.5698938,
+    "ast_hash": "efd8e3b9607b1504bcf424c4563faa6a",
+    "semantic_hash": ""
+  },
+  "apps/api/src/seller-avatar-screening.ts": {
+    "mtime": 1794883640.922726,
+    "seen": 1794884005.1364803,
+    "ast_hash": "d6ba9f17d1feee032947fe842d53a53e",
+    "semantic_hash": ""
+  },
+  "apps/api/src/seller-avatar-url.ts": {
+    "mtime": 1794882329.0367734,
+    "seen": 1794882952.5787456,
+    "ast_hash": "703ac42765c57225c5e03cce79ad5189",
+    "semantic_hash": ""
+  },
+  "apps/api/test/seller-avatar-screening-model-smoke.ts": {
+    "mtime": 1794882881.9985888,
+    "seen": 1794882952.5842147,
+    "ast_hash": "ba8091fb36e6c7264870ea32fea5ec6c",
+    "semantic_hash": ""
+  },
+  "apps/api/test/seller-avatar-screening.test.ts": {
+    "mtime": 1794883651.8854795,
+    "seen": 1794884005.142283,
+    "ast_hash": "57d5f74dc43723d15dc39ab4a93d701d",
+    "semantic_hash": ""
+  },
+  "apps/api/test/seller-avatar-url.test.ts": {
+    "mtime": 1794882385.7713227,
+    "seen": 1794882952.5843937,
+    "ast_hash": "15419699ee4e2fef638f658c7f26022a",
+    "semantic_hash": ""
+  },
+  "docs/SELLER_AVATAR_REPLACEMENT_CACHE_FIX_2026-11-17.md": {
+    "mtime": 1794882445.5885468,
+    "seen": 1794882952.6618128,
+    "ast_hash": "e186e6a2763e2f08dc51b2e7ec138b31",
+    "semantic_hash": ""
+  },
+  "apps/api/test/seller-avatar-isolated-http.ts": {
+    "mtime": 1794883523.2836251,
+    "seen": 1794884005.1421044,
+    "ast_hash": "ee5b7c0343fcc28d4accdb505892efa1",
+    "semantic_hash": ""
+  },
+  "apps/api/test/seller-avatar-reject-isolated-http.ts": {
+    "mtime": 1794883584.2962413,
+    "seen": 1794884005.1421068,
+    "ast_hash": "0528406546e7affa1d76a9d8353e4f96",
+    "semantic_hash": ""
+  },
+  "apps/api/test/seller-avatar-screening-benchmark.ts": {
+    "mtime": 1794883956.8604355,
+    "seen": 1794884005.142109,
+    "ast_hash": "ba1c5aabff9661c9c597d7a75816df77",
+    "semantic_hash": ""
+  },
+  "apps/web/src/floating-chat-panel.tsx": {
+    "mtime": 1794884913.0508158,
+    "seen": 1794884977.5864215,
+    "ast_hash": "866b111878cbcda09a3db0d8e86ecda1",
+    "semantic_hash": ""
+  },
+  "apps/web/src/floating-chat.tsx": {
+    "mtime": 1794884848.088771,
+    "seen": 1794884977.5864244,
+    "ast_hash": "5bb09dcb87b1a576463d75db4c440587",
+    "semantic_hash": ""
+  },
+  "apps/web/test/floating-chat.test.tsx": {
+    "mtime": 1794883034.4584925,
+    "seen": 1794884005.150581,
+    "ast_hash": "dc91d8d3dd29f517eb2c68b808125654",
+    "semantic_hash": ""
+  },
+  "docs/FLOATING_CHAT_PANEL_2026-11-17.md": {
+    "mtime": 1794883933.844527,
+    "seen": 1794884005.206263,
+    "ast_hash": "96783b3bef033c3d9186d7e0d3e9dde0",
+    "semantic_hash": ""
+  },
+  "docs/SELLER_AVATAR_NSFW_SCREENING_2026-11-17.md": {
+    "mtime": 1794884030.4147763,
+    "seen": 1794884127.4554968,
+    "ast_hash": "3620d2a2c72e0d36a70bd8248fef3bee",
+    "semantic_hash": ""
+  },
+  "apps/api/scripts/seller-avatar-consented-evaluation.ts": {
+    "mtime": 1794884757.3289707,
+    "seen": 1794884977.5687053,
+    "ast_hash": "060828e4a5e26afbdc6a4ed2940d4624",
+    "semantic_hash": ""
+  },
+  "apps/api/test/seller-avatar-evaluation-harness-smoke.ts": {
+    "mtime": 1794884776.4803307,
+    "seen": 1794884977.5831237,
+    "ast_hash": "b6bd910610d7696f181d5123ce0167d0",
+    "semantic_hash": ""
+  },
+  "apps/web/test/seller-avatar-mobile-browser-smoke.ts": {
+    "mtime": 1794884662.51665,
+    "seen": 1794884977.5945694,
+    "ast_hash": "ca3caf9e12f30f758fc631e90e637942",
+    "semantic_hash": ""
+  },
+  "apps/web/test/fixtures/seller-avatar-mobile-qa.html": {
+    "mtime": 1794884694.2830987,
+    "seen": 1794884977.6450071,
+    "ast_hash": "fe6c5382fd9210b5d1fb1988277bf3de",
+    "semantic_hash": ""
+  },
+  "docs/FLOATING_CHAT_EMIL_MOTION_2026-11-17.md": {
+    "mtime": 1794884940.6848238,
+    "seen": 1794884977.6473303,
+    "ast_hash": "6c0afb47dbd3cfab88bea88f4f28da78",
+    "semantic_hash": ""
+  },
+  "docs/SELLER_AVATAR_RELEASE_QA_2026-11-17.md": {
+    "mtime": 1794884818.079535,
+    "seen": 1794884977.6563985,
+    "ast_hash": "7d35e9800b4ca2f9e901824ef7524109",
     "semantic_hash": ""
   },
   "package-lock.json": {

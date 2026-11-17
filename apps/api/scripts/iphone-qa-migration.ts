@@ -54,7 +54,8 @@ async function catalog(prisma: PrismaClient) {
   for(const {name} of tables) {
     if(!/^[A-Za-z_][A-Za-z0-9_]*$/.test(name)) throw new Error('Unsafe table identity');
     const n = await prisma.$queryRawUnsafe<Array<{c:bigint}>>('SELECT COUNT(*) AS c FROM `'+name+'`');
-    out[name] = Number(n[0]?.c ?? -1);
+    // Windows MariaDB lower_case_table_names=1 returns lowercase TABLE_NAME.
+    out[name.toLowerCase()] = Number(n[0]?.c ?? -1);
   }
   return out;
 }
@@ -95,8 +96,9 @@ try {
     throw new Error('REFUSED: isolated migration baseline is not exactly the expected six migrations.');
   }
   const baseline = await catalog(prisma);
-  if(Object.keys(baseline).length!==24 || baseline.Campus!==1 || baseline.User!==0 ||
-    baseline.Listing!==0 || baseline.SellerProfile!==0 || baseline._prisma_migrations!==6) {
+  console.log('QA_SNAPSHOT_COUNTS '+JSON.stringify({tableCount:Object.keys(baseline).length,campus:baseline.campus,users:baseline.user,listings:baseline.listing,sellerProfiles:baseline.sellerprofile,migrations:baseline._prisma_migrations}));
+  if(Object.keys(baseline).length!==24 || baseline.campus!==1 || baseline.user!==0 ||
+    baseline.listing!==0 || baseline.sellerprofile!==0 || baseline._prisma_migrations!==6) {
     throw new Error('REFUSED: unexpected isolated test DB data/catalog before schema upgrade.');
   }
   const currentHashes = migrationHashes();
@@ -129,7 +131,7 @@ try {
     const dumpBytes=readFileSync(dump);
     const dumpText=dumpBytes.toString('utf8');
     if(dumpBytes.length<12000 || !dumpText.includes('CREATE TABLE `_prisma_migrations`') ||
-      !dumpText.includes('CREATE TABLE `Campus`') || !dumpText.includes('Cauayan Campus') ||
+      !dumpText.includes('CREATE TABLE `campus`') || !dumpText.includes('Cauayan Campus') ||
       (dumpText.match(/CREATE TABLE `/g)??[]).length!==24) {
       throw new Error('REFUSED: test SQL dump incomplete; no migration performed.');
     }
@@ -181,9 +183,9 @@ try {
     const cols=await prisma.$queryRawUnsafe<Array<{COLUMN_NAME:string}>>(
       "SELECT COLUMN_NAME FROM information_schema.COLUMNS WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME='SellerProfile' AND COLUMN_NAME='avatarPath'");
     const afterCatalog=await catalog(prisma);
-    if(cols.length!==1 || afterCatalog.Campus!==1 || afterCatalog.User!==0 ||
-      afterCatalog.Listing!==0 || afterCatalog.SellerProfile!==0 ||
-      !('Announcement' in afterCatalog) || !('GuidelineContent' in afterCatalog)) {
+    if(cols.length!==1 || afterCatalog.campus!==1 || afterCatalog.user!==0 ||
+      afterCatalog.listing!==0 || afterCatalog.sellerprofile!==0 ||
+      !('announcement' in afterCatalog) || !('guidelinecontent' in afterCatalog)) {
       throw new Error('QA post-migration schema verification failed; inspect only test DB');
     }
     console.log('QA_MIGRATION_DEPLOY_PASS '+TEST_DB+'; applied='+migrationNames.join(','));

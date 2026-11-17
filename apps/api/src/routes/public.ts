@@ -8,6 +8,7 @@ import { reviewCampusIds } from '../auth.js';
 import { DEFAULT_GUIDELINES } from '../managed-content.js';
 import { freshListingIdsQuery } from '../fresh-listings-query.js';
 import { sellerAvatarColumnExists } from '../optional-seller-avatar.js';
+import { sellerAvatarUrl } from '../seller-avatar-url.js';
 
 const r = Router();
 export const publicListing = (l: any) => ({
@@ -17,7 +18,7 @@ export const publicListing = (l: any) => ({
   category: l.category && { id: l.category.id, name: l.category.name },
   campus: l.campus && { id: l.campus.id, code: l.campus.code, name: l.campus.name },
   seller: l.seller && { id: l.seller.id, storeName: l.seller.storeName, sellerType: l.seller.sellerType,
-    avatarUrl: l.seller.avatarPath ? `/api/v1/media/seller-avatar/${l.seller.id}` : null },
+    avatarUrl: sellerAvatarUrl(l.seller.id, l.seller.avatarPath) },
   images: (l.media ?? []).sort((a: any, b: any) => a.position - b.position).map((m: any) => `/api/v1/media/${m.id}`),
 });
 // Keep public reads compatible with the development schema until the separately
@@ -143,7 +144,7 @@ r.get('/seller-profiles/:id', async (req, res) => {
   res.json({ id: s.id, storeName: s.storeName, description: s.description,
     sellerType: s.sellerType, campusId: s.campusId, campus: s.campus, createdAt: s.createdAt,
     listingCount: s.listings.length,
-    avatarUrl: s.avatarPath ? `/api/v1/media/seller-avatar/${s.id}` : null,
+    avatarUrl: sellerAvatarUrl(s.id, s.avatarPath),
     badge: s.sellerType === 'student' ? 'Verified CPSU community member' : 'Campus establishment', listings: s.listings.map(publicListing) });
 });
 
@@ -168,7 +169,18 @@ async function sendSellerAvatar(req: Request, res: Response) {
 r.get('/media/seller-avatar/:id', sendSellerAvatar);
 
 r.get('/media/:id', async (req, res) => {
-  const m = await prisma.listingMedia.findUnique({ where: { id: Number(req.params.id) }, include: { listing: { include: { seller: { select: { ownerUserId: true, approvalStatus: true, owner: { select: { status: true } } } } } } } } });
+  const m = await prisma.listingMedia.findUnique({
+    where: { id: Number(req.params.id) },
+    include: {
+      listing: {
+        include: {
+          seller: {
+            select: { ownerUserId: true, approvalStatus: true, owner: { select: { status: true } } },
+          },
+        },
+      },
+    },
+  });
   if (!m) throw new HttpError(404, 'not_found');
   const u = req.user;
   const c = u ? reviewCampusIds(u) : [];

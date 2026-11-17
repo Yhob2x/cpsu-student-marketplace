@@ -181,6 +181,20 @@ try {
   } else if (mode === 'verify') {
     const s = readSecret();
     await assertFixtureMatches(s);
+    // Verify the private synthetic credentials against persisted Argon2 hashes
+    // without logging either password or creating a session.
+    const [buyer, seller, store, listing] = await Promise.all([
+      prisma.user.findUniqueOrThrow({ where: { id: s.buyer.id! } }),
+      prisma.user.findUniqueOrThrow({ where: { id: s.seller.id! } }),
+      prisma.sellerProfile.findUniqueOrThrow({ where: { id: s.sellerProfileId! } }),
+      prisma.listing.findUniqueOrThrow({ where: { id: s.listingId! } }),
+    ]);
+    if (!await argon2.verify(buyer.passwordHash, s.buyer.password) ||
+        !await argon2.verify(seller.passwordHash, s.seller.password) ||
+        buyer.status !== 'active' || seller.status !== 'active' ||
+        store.approvalStatus !== 'approved' || listing.status !== 'published') {
+      throw new Error('REFUSED: synthetic account credentials or listing approval state invalid.');
+    }
     const counts = await fixtureCounts();
     if (counts.users !== 2 || counts.campuses !== 1 || counts.categories !== 1 ||
         counts.sellers !== 1 || counts.listings !== 1) {

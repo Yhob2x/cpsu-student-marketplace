@@ -34,3 +34,6 @@
 Do **not** run `bunx prisma migrate deploy` against the ordinary application `.env` as a workaround. It may target the wrong database and, with the current SQL mismatch, it will not necessarily complete a compatible test schema.
 
 **Status:** Owner-approved synthetic fixture preparation was attempted, but migration reconciliation/isolated migration execution needs **separate explicit authorization**.
+
+## 2026-11-17 resolution — SUPERSEDED by verified results
+Approval for the isolated schema backup/upgrade was received. The current Prisma model was revised concurrently to require **only** `avatarPath`, matching its existing seller-avatar migration SQL; no migration source edit was necessary. Only `cpsu_marketplace_push_test` was backed up, upgraded to nine migrations, and populated with two synthetic student identities and one listing; prior historical blockers above are resolved. See `docs/IPHONE_SAFARI_QA_MIGRATION_FIXTURES_PASS_2026-11-17.md`. Physical Safari still not tested.

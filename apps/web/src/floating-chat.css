@@ -1,0 +1,382 @@
+/* Screenshot-inspired lower-right Chat launcher and non-modal quick inbox.
+ * Existing full-page messaging remains available; no chatbot or new backend.
+ */
+.floating-chat {
+  position: fixed;
+  right: max(20px, env(safe-area-inset-right, 0px));
+  bottom: max(20px, env(safe-area-inset-bottom, 0px));
+  z-index: 30;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: .5rem;
+  min-width: 96px;
+  min-height: 52px;
+  padding: .75rem 1rem;
+  border: 1px solid var(--mango);
+  border-radius: 12px 12px 4px 12px;
+  background: var(--mango);
+  color: var(--forest);
+  box-shadow: 0 6px 20px var(--shadow-card);
+  text-decoration: none;
+  font: 750 .94rem/1 var(--font-body);
+  isolation: isolate;
+  touch-action: manipulation;
+}
+.floating-chat svg { flex: 0 0 auto; }
+.floating-chat-badge {
+  position: absolute;
+  top: -10px;
+  right: -9px;
+  display: grid;
+  place-items: center;
+  min-width: 23px;
+  min-height: 23px;
+  padding: 0 4px;
+  border: 2px solid var(--paper);
+  border-radius: 999px;
+  color: var(--paper);
+  background: var(--danger);
+  font-size: .7rem;
+  font-weight: 750;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  pointer-events: none;
+}
+.floating-chat:focus-visible {
+  outline: 3px solid var(--forest);
+  outline-offset: 4px;
+}
+@media (hover: hover) and (pointer: fine) {
+  .floating-chat:hover { background: var(--mango); color: var(--forest); filter: brightness(.97); }
+}
+@media (max-width: 860px) {
+  /* Above the tabbar, never on top of its four primary targets. */
+  .floating-chat {
+    right: max(16px, env(safe-area-inset-right, 0px));
+    bottom: calc(78px + env(safe-area-inset-bottom, 0px));
+    min-height: 52px;
+    min-width: 100px;
+  }
+  /* Keep the shortcut away from on-screen keyboards and active form entry. */
+  body:has(input:focus, textarea:focus, select:focus) .floating-chat,
+  body[style*="--chat-visible-height"] .floating-chat {
+    display: none;
+  }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .floating-chat { transition: transform 140ms cubic-bezier(.23,1,.32,1), box-shadow 140ms ease; }
+  @media (hover: hover) and (pointer: fine) {
+    .floating-chat:hover { transform: translateY(-2px); }
+  }
+  .floating-chat:active { transform: scale(.97); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .floating-chat { transition: none; }
+}
+
+/* Non-modal floating inbox and conversation, anchored above the existing Chat launcher. */
+.floating-chat-panel {
+  position: fixed;
+  right: max(20px, env(safe-area-inset-right, 0px));
+  bottom: calc(86px + env(safe-area-inset-bottom, 0px));
+  z-index: 31;
+  display: flex;
+  flex-direction: column;
+  width: min(380px, calc(100vw - 24px));
+  height: min(550px, calc(100dvh - 102px));
+  min-height: 0;
+  overflow: hidden;
+  background: var(--paper);
+  color: var(--ink);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  box-shadow: 0 14px 48px rgb(7 59 42 / 20%);
+}
+.floating-chat-panel-head {
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+  flex: 0 0 auto;
+  padding: .7rem .8rem;
+  min-height: 61px;
+  background: var(--forest);
+  color: var(--paper);
+}
+.floating-chat-panel-head h2 {
+  flex: 1;
+  min-width: 0;
+  margin: 0;
+  color: inherit;
+  font: 750 1.06rem/1.35 var(--font-heading);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.floating-chat-panel-head h2:focus { outline: none; }
+.floating-chat-icon-button {
+  display: grid;
+  place-items: center;
+  flex: 0 0 37px;
+  width: 37px;
+  height: 37px;
+  padding: 0;
+  border: 0;
+  border-radius: 9px;
+  color: var(--paper);
+  background: transparent;
+  cursor: pointer;
+}
+.floating-chat-close { font-size: 1.7rem; line-height: 1; }
+.floating-chat-panel-body,
+.floating-chat-message-log {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
+}
+.floating-chat-panel-body { padding: .35rem .45rem; }
+.floating-chat-inbox-row {
+  width: 100%;
+  min-height: 72px;
+  display: flex;
+  align-items: center;
+  gap: .7rem;
+  padding: .7rem .55rem;
+  border: 0;
+  border-bottom: 1px solid var(--line);
+  background: transparent;
+  color: var(--ink);
+  text-align: left;
+  cursor: pointer;
+}
+.floating-chat-avatar {
+  flex: 0 0 40px;
+  width: 40px;
+  height: 40px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--mango-soft);
+  color: var(--forest);
+  font-size: .82rem;
+  font-weight: 800;
+}
+.floating-chat-inbox-copy { display: grid; gap: .23rem; min-width: 0; flex: 1; }
+.floating-chat-inbox-top { display: flex; justify-content: space-between; gap: .5rem; min-width: 0; }
+.floating-chat-inbox-top strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: .88rem; }
+.floating-chat-inbox-top time { flex: 0 0 auto; color: var(--ink-soft); font-size: .7rem; }
+.floating-chat-item-listing, .floating-chat-message-preview {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  font-size: .78rem;
+  line-height: 1.4;
+}
+.floating-chat-item-listing { color: var(--leaf); font-weight: 650; }
+.floating-chat-message-preview { color: var(--ink-soft); }
+.floating-chat-panel-foot {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex: 0 0 44px;
+  padding: .3rem .65rem;
+  border-top: 1px solid var(--line);
+  background: var(--paper);
+}
+.floating-chat-panel-foot a {
+  display: inline-flex;
+  gap: .45rem;
+  align-items: center;
+  justify-content: center;
+  min-height: 36px;
+  padding: .3rem .5rem;
+  color: var(--leaf);
+  font-size: .81rem;
+  font-weight: 700;
+  text-decoration: none;
+}
+.floating-chat-empty, .floating-chat-feedback {
+  display: grid;
+  justify-items: center;
+  align-content: center;
+  gap: .65rem;
+  padding: 2rem 1rem;
+  color: var(--ink-soft);
+  text-align: center;
+}
+.floating-chat-empty strong { color: var(--ink); }
+.floating-chat-empty p, .floating-chat-feedback p { font-size: .84rem; line-height: 1.5; margin: 0; }
+.floating-chat-empty a { color: var(--leaf); font-weight: 700; min-height: 44px; display: inline-flex; align-items: center; }
+.floating-chat-thread-context {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: .65rem;
+  min-height: 39px;
+  padding: .5rem .85rem;
+  background: var(--surface-soft);
+  border-bottom: 1px solid var(--line);
+  color: var(--ink-soft);
+  font-size: .76rem;
+}
+.floating-chat-thread-context a { color: var(--leaf); font-weight: 700; }
+.floating-chat-message-log { display: flex; flex-direction: column; gap: .48rem; padding: .85rem .75rem; background: #f6f8f6; }
+.floating-chat-message { display: flex; flex-direction: column; align-items: flex-start; gap: .18rem; max-width: 85%; flex: 0 0 auto; }
+.floating-chat-message.mine { align-self: flex-end; align-items: flex-end; }
+.floating-chat-bubble {
+  display: block;
+  width: fit-content;
+  max-width: 100%;
+  padding: .6rem .75rem;
+  border: 1px solid var(--line);
+  border-radius: 16px 16px 16px 5px;
+  background: var(--paper);
+  color: var(--ink);
+  font-size: .84rem;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.floating-chat-message.mine .floating-chat-bubble {
+  background: var(--leaf);
+  color: var(--paper);
+  border-color: var(--leaf);
+  border-radius: 16px 16px 5px 16px;
+}
+.floating-chat-message time { color: var(--ink-soft); font-size: .66rem; padding-inline: .25rem; }
+.floating-chat-typing, .floating-chat-closed {
+  flex: 0 0 auto;
+  margin: 0;
+  padding: .4rem .85rem;
+  color: var(--ink-soft);
+  background: var(--surface-soft);
+  font-size: .77rem;
+}
+.floating-chat-compose {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: flex-end;
+  gap: .5rem;
+  padding: .65rem .65rem;
+  border-top: 1px solid var(--line);
+  background: var(--paper);
+}
+.floating-chat-compose textarea {
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: 44px;
+  max-height: 104px;
+  resize: vertical;
+  padding: .7rem .75rem;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--paper);
+  font-size: max(.9rem, 16px);
+  line-height: 1.45;
+}
+.floating-chat-send {
+  display: grid;
+  place-items: center;
+  flex: 0 0 44px;
+  width: 44px;
+  height: 44px;
+  border: 0;
+  border-radius: 12px;
+  color: var(--paper);
+  background: var(--forest);
+  cursor: pointer;
+}
+.floating-chat-send:disabled { opacity: .45; cursor: not-allowed; }
+.floating-chat-compose-error { margin: 0; padding: .35rem .7rem; font-size: .79rem; color: var(--danger); }
+.floating-chat-panel :is(button,a,textarea):focus-visible {
+  outline: 3px solid var(--focus-green);
+  outline-offset: 2px;
+}
+.floating-chat-panel-head button:focus-visible { outline-color: var(--mango); }
+@media (hover: hover) and (pointer: fine) {
+  .floating-chat-inbox-row:hover { background: var(--mango-soft); }
+  .floating-chat-icon-button:hover { background: rgb(255 255 255 / 15%); }
+  .floating-chat-send:hover:not(:disabled) { background: var(--leaf); }
+}
+@media (max-width: 860px) {
+  .floating-chat-panel {
+    right: max(12px, env(safe-area-inset-right, 0px));
+    bottom: calc(140px + env(safe-area-inset-bottom, 0px));
+    width: min(380px, calc(100vw - 24px));
+    height: min(520px, calc(100dvh - 156px - env(safe-area-inset-bottom, 0px)));
+  }
+  body:has(.floating-chat-panel[data-keyboard-open="true"]) .tabbar { display: none; }
+  .floating-chat-panel[data-keyboard-open="true"] {
+    bottom: calc(8px + var(--floating-chat-keyboard-offset, 0px));
+    height: calc(var(--floating-chat-viewport-height, 100dvh) - 16px);
+    max-height: calc(var(--floating-chat-viewport-height, 100dvh) - 16px);
+  }
+}
+/*
+ * Emil Kowalski: short, purposeful motion anchored to the Chat trigger.
+ * A reversible transition, not mount-only keyframes, permits click-to-close and
+ * immediate re-opening without jumping back to a starting keyframe.
+ */
+.floating-chat-panel {
+  opacity: 1;
+  transform: translate3d(0, 0, 0) scale(1);
+  transform-origin: calc(100% - 32px) 100%;
+  transition: opacity 180ms cubic-bezier(.23, 1, .32, 1),
+    transform 180ms cubic-bezier(.23, 1, .32, 1);
+}
+.floating-chat-panel[data-motion-state="entering"],
+.floating-chat-panel[data-motion-state="exiting"] {
+  opacity: 0;
+  transform: translate3d(0, 8px, 0) scale(.975);
+}
+.floating-chat-panel[data-motion-state="exiting"] {
+  transition-duration: 125ms;
+  pointer-events: none;
+}
+.floating-chat-panel[data-motion="off"] {
+  opacity: 1;
+  transform: none;
+  transition: none;
+}
+@media (prefers-reduced-motion: no-preference) {
+  /* Navigate between inbox and thread without animating every message update. */
+  .floating-chat-panel[data-view-motion="on"] .floating-chat-panel-body {
+    animation: floating-chat-view-back 140ms cubic-bezier(.23, 1, .32, 1) both;
+  }
+  .floating-chat-panel[data-view-motion="on"] .floating-chat-message-log {
+    animation: floating-chat-view-enter 140ms cubic-bezier(.23, 1, .32, 1) both;
+  }
+  .floating-chat-panel[data-view-motion="on"] .floating-chat-panel-head h2 {
+    animation: floating-chat-title-enter 120ms cubic-bezier(.23, 1, .32, 1) both;
+  }
+}
+@keyframes floating-chat-view-enter {
+  from { opacity: .35; transform: translate3d(7px, 0, 0); }
+  to { opacity: 1; transform: translate3d(0, 0, 0); }
+}
+@keyframes floating-chat-view-back {
+  from { opacity: .35; transform: translate3d(-7px, 0, 0); }
+  to { opacity: 1; transform: translate3d(0, 0, 0); }
+}
+@keyframes floating-chat-title-enter {
+  from { opacity: .45; transform: translate3d(4px, 0, 0); }
+  to { opacity: 1; transform: translate3d(0, 0, 0); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .floating-chat-panel,
+  .floating-chat-panel[data-motion-state],
+  .floating-chat-panel :is(.floating-chat-panel-body, .floating-chat-message-log, .floating-chat-panel-head h2) {
+    opacity: 1;
+    transform: none;
+    transition: none !important;
+    animation: none !important;
+  }
+}
+/* Clear press feedback without competing with the panel's motion. */
+@media (hover: hover) and (pointer: fine) {
+  .floating-chat-icon-button:active,
+  .floating-chat-send:active:not(:disabled) { transform: scale(.97); }
+}

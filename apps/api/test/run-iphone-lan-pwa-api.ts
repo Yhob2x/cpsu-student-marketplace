@@ -2,7 +2,8 @@
  * iPhone LAN PWA QA API: only existing isolated test DB, never cpsu_marketplace.
  * No DB migrations, real pushes, public binds, or credentials printed.
  */
-import { networkInterfaces } from 'node:os';
+import { networkInterfaces, tmpdir } from 'node:os';
+import { join } from 'node:path';
 
 const source = new URL(process.env.DATABASE_URL ?? '');
 const ip = process.env.CPSU_IPHONE_LAN_IP ?? '';
@@ -24,6 +25,12 @@ process.env.PORT = '4400';
 process.env.BIND_HOST = '127.0.0.1';
 process.env.COOKIE_SECURE = 'true';
 process.env.CORS_ORIGINS = 'https://' + ip + ':8445';
+// Synthetic iPhone QA must NEVER inherit development Google Drive storage,
+// real image-upload directories or outbound push delivery credentials.
+process.env.MEDIA_STORAGE = 'local';
+process.env.UPLOAD_DIR = join(tmpdir(), 'cpsu-marketplace-iphone-qa-uploads');
+for (const key of ['GOOGLE_DRIVE_CLIENT_ID', 'GOOGLE_DRIVE_CLIENT_SECRET',
+  'GOOGLE_DRIVE_REFRESH_TOKEN', 'GOOGLE_DRIVE_FOLDER_ID']) process.env[key] = '';
 process.env.PUSH_SUBSCRIPTIONS_ENABLED = 'false';
 process.env.PUSH_DELIVERY_ENABLED = 'false';
 

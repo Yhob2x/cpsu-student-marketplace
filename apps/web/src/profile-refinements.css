@@ -1,13 +1,133 @@
 /* CPSU Market profile — task-first layout; existing forest/ivory/gold design tokens. */
-.profile-page { min-width: 0; }
+.profile-page {
+  min-width: 0;
+  /* Page-scoped accessible form colors; the sitewide brand tokens remain unchanged. */
+  --profile-control-border: #718878;
+  --profile-control-background: #f8fbf9;
+  --profile-help-ink: #3d5b49;
+  --profile-focus-ink: #0f6847;
+  --profile-disabled-background: #e2ebe5;
+  --profile-disabled-ink: #405a4b;
+}
+/* Explicit control boundaries (3.67:1 on the input surface) and dark text. */
+.profile-page :is(input, select, textarea) {
+  color: var(--ink);
+  background: var(--profile-control-background);
+  border: 1.5px solid var(--profile-control-border);
+  border-radius: 9px;
+  min-width: 0;
+}
+.profile-page :is(input, textarea)::placeholder { color: var(--profile-help-ink); opacity: 1; }
+.profile-page :is(input, select, textarea):focus {
+  border-color: var(--profile-focus-ink);
+  outline: 2px solid var(--profile-focus-ink);
+  outline-offset: 2px;
+}
+.profile-page input[aria-invalid="true"] { border-color: var(--danger); background: #fff9f8; }
+.profile-page :is(input, select, textarea):disabled {
+  opacity: 1;
+  background: var(--profile-disabled-background);
+  color: var(--profile-disabled-ink);
+  cursor: not-allowed;
+}
+.profile-page label.field {
+  color: var(--forest);
+  font-weight: 700;
+  font-size: .9rem;
+  line-height: 1.5;
+}
+.profile-page :is(.profile-name-help, .seller-store-settings__header p, .seller-avatar-editor__heading p),
+.profile-page .seller-avatar-editor__form .muted,
+.profile-page .seller-avatar-editor__photos small {
+  color: var(--profile-help-ink);
+  line-height: 1.6;
+}
+.profile-page .seller-avatar-editor__form form p { font-size: .875rem; }
+.profile-page .seller-avatar-editor__photos small { font-size: .8125rem; }
+.profile-page .profile-store-editors > .panel {
+  border-color: #b7c9bb;
+  box-shadow: 0 1px 3px rgb(7 59 42 / 5%);
+}
+.profile-page .profile-store-editors h2 { color: var(--forest); }
+.profile-page .profile-store-disclosure > summary {
+  border-color: #b7c9bb;
+  background: var(--profile-control-background);
+}
+.profile-page .profile-store-disclosure summary small { color: var(--profile-help-ink); }
+.profile-page .profile-store-editors a {
+  color: var(--forest);
+  text-decoration-thickness: 1.5px;
+  text-underline-offset: 3px;
+}
+.profile-page .profile-store-editors :is(a, .btn):focus-visible,
+.profile-page .profile-settings .btn:focus-visible {
+  outline: 3px solid var(--profile-focus-ink);
+  outline-offset: 3px;
+}
+/* The file chooser needs the same clear boundary as the text fields. */
+.profile-page input[type="file"] { padding: .45rem .55rem; }
+.profile-page input[type="file"]::file-selector-button {
+  min-height: 38px;
+  padding: .4rem .75rem;
+  border: 1px solid var(--profile-control-border);
+  border-radius: 7px;
+  background: #e6f2e9;
+  color: var(--forest);
+  font-weight: 700;
+}
+@media (hover: hover) and (pointer: fine) {
+  .profile-page input[type="file"]:not(:disabled)::file-selector-button:hover {
+    background: #d5e8da;
+  }
+}
+/* Preserve legible disabled actions instead of reducing opacity to .55. */
+.profile-page .btn:disabled {
+  opacity: 1;
+  background: var(--profile-disabled-background);
+  border: 1px solid #b3c7b8;
+  color: var(--profile-disabled-ink);
+  cursor: not-allowed;
+}
+.profile-page-intro { font-size: .9rem; line-height: 1.5; }
 .profile-page .profile-grid {
+  display: grid;
   grid-template-columns: minmax(0, 1fr);
   align-items: stretch;
   gap: 1rem;
 }
 .profile-page .profile-grid > * { min-width: 0; }
 .profile-page .profile-grid > .panel { margin: 0; padding: clamp(1rem, 2.5vw, 1.3rem); border-radius: 14px; }
+.profile-store-disclosure { scroll-margin-top: 10rem; }
+.profile-store-disclosure summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  min-height: 76px;
+  padding: .9rem 1.2rem;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--paper);
+  color: var(--forest);
+  cursor: pointer;
+  list-style: none;
+}
+.profile-store-disclosure summary::-webkit-details-marker { display: none; }
+.profile-store-disclosure summary::marker { content: ''; }
+.profile-store-disclosure summary span { display: grid; gap: .2rem; min-width: 0; }
+.profile-store-disclosure summary strong { font: 750 1.12rem/1.25 var(--font-heading); }
+.profile-store-disclosure summary small { color: var(--ink-soft); font-size: .84rem; line-height: 1.45; }
+.profile-store-disclosure summary svg { flex: 0 0 auto; }
+.profile-store-disclosure[open] summary svg { transform: rotate(180deg); }
+.profile-store-disclosure summary:focus-visible { outline: 3px solid var(--mango); outline-offset: 2px; }
+@media (hover: hover) and (pointer: fine) {
+  .profile-store-disclosure summary:hover { border-color: var(--sage); background: var(--surface-soft); }
+}
+.profile-store-editors { display: grid; gap: 1rem; margin-top: 1rem; }
+.profile-store-editors > .panel { min-width: 0; margin: 0; padding: clamp(1rem, 2.5vw, 1.3rem); border-radius: 14px; }
 .profile-page .panel h2 { font-size: clamp(1.12rem, 2vw, 1.3rem); margin-bottom: 1rem; }
+.profile-page .seller-store-settings__header h2,
+.profile-page .seller-avatar-editor__heading h2 { margin-bottom: .25rem; }
 .profile-identity { display: flex; gap: .85rem; align-items: center; min-width: 0; margin-bottom: 1.1rem; }
 .profile-avatar {
   display: grid;
@@ -28,6 +148,20 @@
 .profile-account-facts dd { overflow-wrap: anywhere; }
 .profile-privacy-note { display: flex; align-items: flex-start; gap: .45rem; font-size: .79rem; margin: .7rem 0 0; }
 .profile-privacy-note svg { flex: 0 0 auto; margin-top: .15rem; }
+.profile-registration { min-width: 0; }
+.profile-registration-heading { display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: .5rem 1rem; }
+.profile-page .profile-registration-heading h2 { margin-bottom: .35rem; }
+.profile-registration-heading p { margin: 0 0 .9rem; font-size: .86rem; line-height: 1.5; }
+.profile-registration-badge { display: inline-flex; align-items: center; min-height: 28px; padding: .3rem .65rem; border-radius: 999px; background: var(--surface-soft); color: var(--forest); font-size: .75rem; font-weight: 700; }
+.profile-registration-list { margin: 0; }
+.profile-registration-list > div { display: grid; grid-template-columns: minmax(10rem, .32fr) minmax(0, 1fr); gap: .35rem 1rem; padding: .8rem 0; border-top: 1px solid var(--line); }
+.profile-registration-list dt { color: var(--ink-soft); font-size: .86rem; font-weight: 650; }
+.profile-registration-list dd { display: grid; gap: .2rem; min-width: 0; margin: 0; overflow-wrap: anywhere; }
+.profile-registration-list dd strong { color: var(--ink); font-size: .9rem; font-weight: 650; }
+.profile-registration-list dd span { color: var(--ink-soft); font-size: .81rem; line-height: 1.45; }
+.profile-registration-note { margin: .85rem 0 0; color: var(--forest); font-size: .84rem; font-weight: 600; line-height: 1.5; }
+.profile-page .profile-registration > form { max-width: 34rem; margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--line); }
+.profile-settings-subheading { margin: 0 0 .2rem; color: var(--forest); font: 750 1.05rem/1.3 var(--font-heading); }
 .profile-review-state { display: flex; gap: .65rem; align-items: center; min-width: 0; margin-bottom: .75rem; }
 .profile-review-state h3 { color: var(--forest); font-size: 1.07rem; font-weight: 750; margin: 0; }
 .profile-review-symbol {
@@ -72,6 +206,7 @@
 .profile-save-button { justify-self: start; min-width: 135px; }
 .profile-save-success { display: inline-flex; align-items: center; gap: .4rem; font-size: .85rem; font-weight: 650; color: var(--leaf); margin: .3rem 0 0; }
 .profile-save-success svg { flex: 0 0 auto; }
+.profile-shortcuts-panel { min-width: 0; }
 .profile-shortcuts-panel nav { width: 100%; }
 .profile-shortcuts { list-style: none; padding: 0; margin: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .6rem; }
 .profile-shortcut {
@@ -97,18 +232,137 @@
 .profile-install .install-app--panel {
   margin: 0;
   display: flex;
-  flex-direction: row;
-  align-items: center;
-  gap: 1rem;
+  flex-direction: column;
+  align-items: stretch;
+  gap: .75rem;
 }
-.profile-install .install-app__intro { flex: 1 1 220px; }
-.profile-install .install-app__button { flex: 0 0 auto; align-self: center; }
-.profile-install .install-app__guide { flex: 1 0 100%; width: 100%; }
-@media (min-width: 820px) {
-  .profile-page .profile-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .profile-page .profile-install { grid-column: 1 / -1; }
+.profile-install .install-app__intro { flex: 0 1 auto; min-width: 0; }
+.profile-install .install-app__button { flex: 0 0 auto; align-self: flex-start; }
+.profile-install .install-app__guide { flex: 0 1 auto; width: 100%; }
+/* The Store profile remains full-width; Install app lives in the page header. */
+.profile-actions-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  min-width: 0;
+}
+.profile-actions-row > * { min-width: 0; }
+.profile-actions-row:empty { display: none; }
+
+/* Compact PWA install card at the upper-right of the Profile heading. */
+.profile-page .page-head { align-items: flex-start; }
+.profile-page .page-head > div:first-child { flex: 1 1 230px; min-width: 0; }
+.profile-page .profile-header-install {
+  flex: 0 1 400px;
+  width: min(100%, 400px);
+  min-width: 0;
+}
+.profile-page .profile-header-install:empty { display: none; }
+.profile-page .profile-header-install .install-app--panel {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: .6rem .8rem;
+  padding: .75rem .9rem;
+  min-height: 0;
+  height: auto;
+}
+.profile-page .profile-header-install .install-app__intro {
+  flex: initial;
+  min-width: 0;
+  gap: .65rem;
+}
+.profile-page .profile-header-install .install-app__intro img {
+  width: 38px;
+  height: 38px;
+  flex-basis: 38px;
+  border-radius: 10px;
+}
+.profile-page .profile-header-install .install-app__intro > div { min-width: 0; }
+.profile-page .profile-header-install .install-app h2 { font-size: .88rem; line-height: 1.3; }
+.profile-page .profile-header-install .install-app p { font-size: .77rem; line-height: 1.4; }
+.profile-page .profile-header-install .install-app__button {
+  justify-self: end;
+  align-self: center;
+  min-height: 44px;
+  padding: .5rem .7rem;
+  font-size: .8rem;
+}
+.profile-page .profile-header-install .install-app__guide,
+.profile-page .profile-header-install .install-app__feedback {
+  grid-column: 1 / -1;
+}
+@media (max-width: 650px) {
+  .profile-page .profile-header-install { flex: 1 1 100%; width: 100%; }
+}
+@media (max-width: 390px) {
+  .profile-page .profile-header-install .install-app--panel { grid-template-columns: minmax(0, 1fr); }
+  .profile-page .profile-header-install .install-app__button { justify-self: start; }
+}
+
+/* Two compact desktop columns; registration shares the height of settings and links.
+   Area maps keep keyboard/reading order unchanged in the JSX and the mobile stack. */
+@media (min-width: 720px) {
+  .profile-page .profile-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: stretch;
+    column-gap: 1rem;
+    row-gap: 1rem;
+  }
+  .profile-page .profile-grid--staff {
+    grid-template-areas:
+      "account settings"
+      "shortcuts .";
+  }
+  .profile-page .profile-grid--student {
+    grid-template-areas:
+      "account affiliation"
+      "registration settings"
+      "registration shortcuts";
+  }
+  .profile-page .profile-grid--seller {
+    grid-template-areas:
+      "account affiliation"
+      "registration settings"
+      "registration shortcuts"
+      "actions actions";
+  }
+  .profile-page .profile-account { grid-area: account; }
+  .profile-page .profile-affiliation { grid-area: affiliation; }
+  .profile-page .profile-registration { grid-area: registration; }
+  .profile-page .profile-settings { grid-area: settings; }
+  .profile-page .profile-shortcuts-panel { grid-area: shortcuts; }
+  .profile-page .profile-actions-row { grid-area: actions; }
+  /* Seller's two cards each occupy the complete page width, one row each. */
+  .profile-page .profile-grid--seller > .profile-actions-row {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .profile-page .profile-grid > .panel,
+  .profile-page .profile-actions-row > .profile-store-disclosure,
+  .profile-page .profile-actions-row > .profile-install {
+    align-self: stretch;
+  }
+  /* The store disclosure stays easy to click without consuming a full-height blank panel. */
+  .profile-page .profile-store-disclosure:not([open]) > summary {
+    min-height: 76px;
+  }
+  /* The expanded Store profile is full-width; put its two editor cards
+     alongside each other in equal tracks, without overflowing narrow forms. */
+  .profile-page .profile-store-editors {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: stretch;
+  }
+  .profile-page .profile-store-editors > .panel { min-width: 0; height: 100%; }
+  .profile-page .seller-avatar-editor__content { grid-template-columns: minmax(0, 1fr); }
+  .profile-page .seller-avatar-editor__form,
+  .profile-page .seller-store-settings__form { min-width: 0; }
+  .profile-registration-list > div { grid-template-columns: minmax(0, 1fr); gap: .2rem; padding: .7rem 0; }
+}
+@media (max-width: 860px) {
+  .profile-store-disclosure { scroll-margin-top: 1rem; }
 }
 @media (max-width: 480px) {
+  .profile-store-disclosure summary { padding: .85rem 1rem; }
+  .profile-store-editors > .panel { padding: 1rem; }
   .profile-page .profile-grid { gap: .8rem; }
   .profile-page .profile-grid > .panel { padding: 1rem; }
   .profile-shortcuts { gap: .45rem; }
@@ -117,6 +371,10 @@
   .profile-install .install-app__intro { flex: 0 1 auto; }
   .profile-install .install-app__button { align-self: stretch; }
   .profile-status-secondary { margin: .5rem 0 0; display: flex; }
+  .profile-registration-list > div { grid-template-columns: 1fr; gap: .2rem; padding: .7rem 0; }
+}
+@media (max-width: 359px) {
+  .profile-shortcuts { grid-template-columns: 1fr; }
 }
 
 /* Installed PWAs render no installation card; avoid a blank last grid row. */

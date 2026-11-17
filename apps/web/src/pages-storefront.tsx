@@ -87,7 +87,7 @@ export function StorefrontView({ store, isOwner, canFollow, onFollow, followBusy
             <Icon name="chat" size={17} /> Chat with seller
           </button>}
           <a className="btn ghost" href="#storefront-listings">Browse listings</a>
-          {isOwner && <Link className="btn ghost" to="/dashboard#store-profile">Edit my store</Link>}
+          {isOwner && <Link className="btn ghost" to="/profile#store-profile">Edit my store</Link>}
           {followMessage && <p className="storefront-follow-feedback" role="status">{followMessage}</p>}
           {!isOwner && canFollow && store.follow && !store.follow.available &&
             <p className="storefront-follow-feedback muted">Following is being prepared for this marketplace.</p>}

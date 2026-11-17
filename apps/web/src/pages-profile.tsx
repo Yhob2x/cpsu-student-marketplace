@@ -1,5 +1,5 @@
 import { FormEvent, useEffect, useRef, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { api, explain, timeAgo } from './api';
 import { useMe } from './main';
 import { useForegroundRefresh } from './foreground-refresh';
@@ -7,6 +7,8 @@ import { Icon, type IconName } from './icons';
 import { IconAction } from './icon-action';
 import { PushSettings } from './push-settings';
 import { InstallApp } from './install-app';
+import { SellerStoreDetails } from './seller-store-details';
+import { SellerAvatarEditor } from './seller-avatar-editor';
 import { affiliationLabel, campusStatusSummary, displayNameChange } from './profile-presentation';
 import { FOLLOWED_STORE_NOTICE_KIND, followedStoreNoticeText, followedStoreNoticeTarget } from './followed-store-notice';
 
@@ -56,12 +58,26 @@ export function noticeTarget(n: Notice): string | null {
 
 export function Profile() {
   const { me, reload } = useMe();
+  const location = useLocation();
   const [name, setName] = useState('');
+  const [storeDetailsVersion, setStoreDetailsVersion] = useState(0);
+  const storeProfileRef = useRef<HTMLDetailsElement>(null);
+  const storeProfileSummaryRef = useRef<HTMLElement>(null);
   const [busy, setBusy] = useState(false);
   const [ok, setOk] = useState('');
   const [err, setErr] = useState('');
 
   useEffect(() => { if (me) setName(me.displayName); }, [me?.displayName]);
+  useEffect(() => {
+    if (me?.storeId && location.hash === '#store-profile') {
+      if (storeProfileRef.current) storeProfileRef.current.open = true;
+      const frame = window.requestAnimationFrame(() => {
+        storeProfileSummaryRef.current?.focus();
+        storeProfileRef.current?.scrollIntoView({ block: 'start' });
+      });
+      return () => window.cancelAnimationFrame(frame);
+    }
+  }, [me?.storeId, location.hash]);
 
   if (!me) return <p className="muted" role="status">Loading your profile.</p>;
 
@@ -71,11 +87,13 @@ export function Profile() {
   const nameChange = displayNameChange(name, me.displayName);
   const showNameError = nameChange.changed && !nameChange.valid;
   const initials = me.displayName.trim().split(/\s+/).slice(0, 2).map(part => part.charAt(0)).join('').toUpperCase() || 'S';
+  const registeredCampuses = [...new Set(me.affiliations.map(a => a.campus.name))].join(', ');
   const links: { to: string; label: string; icon: IconName }[] = staff
     ? [...(reviewer ? [{ to: '/admin', label: 'Administration', icon: 'shield' as IconName }] : []),
         { to: '/notifications', label: 'Notifications', icon: 'bell' }]
     : [
         { to: '/dashboard', label: 'My listings', icon: 'store' },
+        ...(me.storeId ? [{ to: '/profile#store-profile', label: 'Store profile', icon: 'user' as IconName }] : []),
         { to: '/saved', label: 'Saved items', icon: 'heart' },
         { to: '/transactions', label: 'Transactions', icon: 'tag' },
         { to: '/notifications', label: 'Notifications', icon: 'bell' },
@@ -103,10 +121,14 @@ export function Profile() {
     <div className="page-head">
       <div>
         <h1>Profile</h1>
+        <p className="muted profile-page-intro">{staff ? 'Manage your staff account and notifications.' : me.storeId ? 'Manage your CPSU account, activity, and store.' : 'Manage your CPSU account and marketplace activity.'}</p>
+      </div>
+      <div className="profile-install profile-header-install">
+        <InstallApp variant="panel" />
       </div>
     </div>
 
-    <div className="profile-grid">
+    <div className={`profile-grid ${staff ? "profile-grid--staff" : me.storeId ? "profile-grid--seller" : "profile-grid--student"}`}>
       <section className="panel profile-account">
         <h2>Your account</h2>
         <div className="profile-identity">
@@ -143,8 +165,25 @@ export function Profile() {
         {status.state === 'rejected' && <Link className="profile-status-secondary" to="/guidelines">Read marketplace guidelines</Link>}
       </section>}
 
-      <section className="panel profile-settings">
-        <h2>Account settings</h2>
+      {!staff && <section className="panel profile-registration" aria-labelledby="profile-registration-heading">
+        <div className="profile-registration-heading">
+          <div>
+            <h2 id="profile-registration-heading">Registration information</h2>
+            <p className="muted">CISS verification is planned. No automated CISS check is active yet.</p>
+          </div>
+          <span className="profile-registration-badge">Future CISS check</span>
+        </div>
+        <dl className="profile-registration-list">
+          <div><dt>Student ID number</dt><dd><strong>Not displayed here yet</strong><span>Future: check against authorized CISS records.</span></dd></div>
+          <div><dt>Full name</dt><dd><strong>Not displayed here yet</strong><span>Future: match your official student record.</span></dd></div>
+          <div><dt>Campus</dt><dd><strong>{registeredCampuses || 'No campus on record'}</strong><span>Future: confirm your registered campus in CISS.</span></dd></div>
+          <div><dt>Enrollment status</dt><dd><strong>Not checked</strong><span>Future: check whether you are currently enrolled.</span></dd></div>
+        </dl>
+        <p className="profile-registration-note">Only your display name can be changed in Account settings. Student identity and enrollment checks require an approved CISS connection.</p>
+      </section>}
+
+      <section className="panel profile-settings" aria-labelledby="account-settings-heading">
+        <h2 id="account-settings-heading">Account settings</h2>
         <form className="stack" onSubmit={save}>
           <label className="field" htmlFor="profile-display-name">Display name</label>
           <input id="profile-display-name" value={name} disabled={busy} onChange={e => {
@@ -166,7 +205,13 @@ export function Profile() {
         <nav aria-label="Profile shortcuts">
           <ul className="profile-shortcuts">
             {links.map(item => <li key={item.to}>
-              <Link to={item.to} className="profile-shortcut">
+              <Link to={item.to} className="profile-shortcut" onClick={item.to === '/profile#store-profile' ? () => {
+                if (storeProfileRef.current) storeProfileRef.current.open = true;
+                requestAnimationFrame(() => {
+                  storeProfileSummaryRef.current?.focus();
+                  storeProfileRef.current?.scrollIntoView({ block: 'start' });
+                });
+              } : undefined}>
                 <Icon name={item.icon} size={19} />
                 <span>{item.label}</span>
                 <Icon name="arrow" size={16} />
@@ -176,8 +221,17 @@ export function Profile() {
         </nav>
       </section>
 
-      <div className="profile-install">
-        <InstallApp variant="panel" />
+      <div className="profile-actions-row">
+        {!staff && me.storeId && <details id="store-profile" className="profile-store-disclosure" ref={storeProfileRef}>
+          <summary ref={storeProfileSummaryRef}>
+            <span><strong>Store profile</strong><small>Manage the name, description, and picture students see.</small></span>
+            <Icon name="chevronDown" size={20} />
+          </summary>
+          <div className="profile-store-editors">
+            <SellerStoreDetails storeId={me.storeId} onSaved={() => setStoreDetailsVersion(n => n + 1)} />
+            <SellerAvatarEditor storeId={me.storeId} refreshVersion={storeDetailsVersion} />
+          </div>
+        </details>}
       </div>
     </div>
   </div>;

@@ -244,3 +244,23 @@ Sentence case for headings and buttons. Prices as `₱` on web (`Intl` en-PH, no
 - **Sound on / Sound off** and **Test sound** appear in both screens, with accessibility labels and mobile-friendly controls. The browser saves the opt-out, including the previous send-sound mute preference until a dedicated receive-sound choice is set.
 - On iPhone Safari the user should tap **Test sound** once to unlock audio; a silent user-gesture Web Audio preparation also runs when interacting with the chat. Browser autoplay limits, Silent Mode and Bluetooth output routing may prevent actual speaker playback. This remains **foreground in-app sound**, not background/lock-screen Web Push.
 - No third-party ringtone file is downloaded or embedded. The Zedge 'iPhone'/'ting' listing is only a style reference for the original synthesized WAV. No server, migration, permission, paid API or Web Push release-switch change. Validation and the physical device checklist: `docs/IPHONE_MESSAGE_RECEIVE_SOUND_2026-11-16.md`.
+
+## 20. Student listing actions and My Store task order — 17 November 2026
+
+- On a public listing, show the request action in its own "Ready to proceed?" area. Keep the inquiry control with the message field and style it as secondary so students can distinguish a purchase request from a question.
+- After an inquiry succeeds, link directly to its returned conversation route. Save and report feedback must not reuse that link.
+- Keep My Store focused on New listing and the paged listing collection. Place store name, description, and picture editors in the student Profile page at `/profile#store-profile`. Link there from My Store, Profile quick links, and the owner's public storefront.
+- The web TypeScript check and production build passed. Rendered mobile, keyboard, and physical-device checks remain pending.
+
+## 21. Student Profile hierarchy — 17 November 2026
+
+- Keep account identity and campus verification visible first. Place account editing and quick links before the longer store forms, so everyday student actions remain easy to find on phones.
+- Present store name, description, and picture editing inside a native disclosure in Profile. The Store profile shortcut and direct `/profile#store-profile` links open the disclosure and bring its summary into view.
+- Preserve the existing seller editors, server authorization, validation, save feedback, and public store links. Staff accounts never see the student store editor.
+
+## 22. Registration information in student Profile — 17 November 2026
+
+- Show Student ID number, full name, campus, enrollment status, and display name together in one Registration information card. The first four rows are read-only; the display-name field is the only editable registration detail. Staff retain their separate Account settings card. The campus row uses the student's current affiliation data; it must not imply a CISS match.
+- Within that card, place the read-only registration rows beside Account settings on wider screens. Stack them in the same reading order on phones, with no horizontal scrolling.
+- Explain the planned checks beside each field. Mark Student ID and full name as unavailable in Profile and enrollment as not checked while private identity reads and the CISS connection are not approved or active. Never fabricate an identifier or present campus review as automated enrollment verification.
+- Keep sensitive identity fields out of the public profile and existing `/me` response. No CISS request, identity read endpoint, collection switch, migration, or new verification decision is introduced by this UI preparation.

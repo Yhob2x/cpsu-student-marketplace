@@ -397,12 +397,13 @@ export function ListingDetail() {
   const { id } = useParams(); const { me, savedIds, toggleSaved } = useMe();
   const navigate = useNavigate();
   const [l, setL] = useState<Listing | null>(null); const [body, setBody] = useState(''); const [note, setNote] = useState(''); const [err, setErr] = useState('');
+  const [inquiryThreadId, setInquiryThreadId] = useState<number | null>(null);
   const [loadError, setLoadError] = useState<unknown>(null);
   const loadRequest = useRef(0);
   const [busy, setBusy] = useState(false); const [reporting, setReporting] = useState(false); const [reason, setReason] = useState('');
   const loadListing = () => {
     const request = ++loadRequest.current;
-    setL(null); setLoadError(null);
+    setL(null); setLoadError(null); setInquiryThreadId(null); setNote(''); setErr('');
     api<Listing>(`/listings/${id}`).then(row => { if (request === loadRequest.current) setL(row); })
       .catch(e => { if (request === loadRequest.current) setLoadError(e); });
   };
@@ -421,7 +422,7 @@ export function ListingDetail() {
   const staff = me?.roles.some(role => ['campus_reviewer', 'university_admin', 'system_admin', 'establishment'].includes(role.role));
   const isAvailable = l.availability === 'available';
   const canRequest = Boolean(me && me.roles.length === 0 && me.affiliations.some(a => a.status === 'verified'));
-  const send = async () => { setBusy(true); try { const r = await api('/inquiries', { body: { listingId: l.id, body } }); setBody(''); setNote(`Message sent. Continue in Inquiries (thread ${r.id}).`); setErr(''); } catch (e) { setErr(explain(e)); } finally { setBusy(false); } };
+  const send = async () => { setBusy(true); try { const r = await api<{ id: number }>('/inquiries', { body: { listingId: l.id, body } }); setBody(''); setInquiryThreadId(r.id); setNote('Message sent.'); setErr(''); } catch (e) { setErr(explain(e)); } finally { setBusy(false); } };
   const requestTransaction = async () => {
     setBusy(true); setErr('');
     try {
@@ -434,11 +435,11 @@ export function ListingDetail() {
     if (!me) { navigate(loginForListing); return; }
     setBusy(true);
     try {
-      if (await toggleSaved(l.id, !saved)) { setNote(saved ? 'Removed from your saved list.' : 'Saved to your list.'); setErr(''); }
+      if (await toggleSaved(l.id, !saved)) { setInquiryThreadId(null); setNote(saved ? 'Removed from your saved list.' : 'Saved to your list.'); setErr(''); }
       else setErr('Could not update your saved list. Check you are still signed in.');
     } finally { setBusy(false); }
   };
-  const report = async () => { setBusy(true); try { await api('/reports', { body: { listingId: l.id, reason } }); setReason(''); setReporting(false); setNote('Report sent to a campus reviewer.'); setErr(''); } catch (e) { setErr(explain(e)); } finally { setBusy(false); } };
+  const report = async () => { setBusy(true); try { await api('/reports', { body: { listingId: l.id, reason } }); setReason(''); setReporting(false); setInquiryThreadId(null); setNote('Report sent to a campus reviewer.'); setErr(''); } catch (e) { setErr(explain(e)); } finally { setBusy(false); } };
   // One button, two homes: over the first photo when there is one, in the action row when there is not.
   const heartLabel = !me ? 'Sign in to save this listing' : saved ? 'Remove from saved' : 'Save for later';
   const heart = <button className="heart-btn" aria-pressed={saved} aria-label={heartLabel}
@@ -456,19 +457,22 @@ export function ListingDetail() {
     <p className="listing-description">{l.description}</p>
     <p className="muted listing-seller seller-byline"><SellerAvatar name={l.seller.storeName} src={l.seller.avatarUrl} size="medium" /><span>Sold by <Link to={`/stores/${l.seller.id}`}>{l.seller.storeName}</Link> at {l.campus.name}. {l.handoffNote && `Handoff: ${l.handoffNote}.`}</span></p>
     <div className="panel stack">
-      <h2>Ask the seller</h2>
       {!isAvailable && <p className="muted" role="status">This listing is {l.availability}. New inquiries are disabled.</p>}
       {isOwner && <p className="muted">This is your own listing.</p>}
       {staff && <p className="muted">Staff accounts can browse and review listings. Student purchase, messaging and reporting actions use a separate student account.</p>}
-      {me && !staff && !isOwner && !canRequest && <p className="muted">Purchase requests require a verified student account.</p>}
       <p className="muted">Payment and handoff are arranged directly between you and the seller. The marketplace does not hold money or deliver items.</p>
-      {me && !staff ? <><label className="field">Your message to the seller
+      {me && !staff && !isOwner && isAvailable && <div className="listing-request-action">
+        <h2>Ready to proceed?</h2>
+        <p className="muted">Send a request for the seller to review. You can discuss the details in the conversation.</p>
+        {!canRequest && <p className="muted">Purchase requests require a verified student account.</p>}
+        <button type="button" className="btn" disabled={busy || !canRequest} onClick={() => void requestTransaction()}>
+          {l.type === 'service' ? 'Request service' : 'Request item'}
+        </button>
+      </div>}
+      {me && !staff ? <><h2>Ask the seller</h2><label className="field">Your message to the seller
         <textarea value={body} onChange={e => setBody(e.target.value)} maxLength={1000} placeholder="Is this still available? Where can we meet on campus?" />
       </label>
-        <div className="row"><button className="btn" disabled={busy || !body.trim() || !isAvailable || isOwner} onClick={send}>Send inquiry</button>
-          <button type="button" className="btn" disabled={busy || !isAvailable || isOwner || !canRequest} onClick={() => void requestTransaction()}>
-            {l.type === 'service' ? 'Request service' : 'Request item'}
-          </button>
+        <div className="row"><button className="btn ghost" disabled={busy || !body.trim() || !isAvailable || isOwner} onClick={send}>Send inquiry</button>
           {l.images.length === 0 && !isOwner && (isAvailable || saved) && heart}
           <button className="btn ghost" disabled={busy} onClick={() => { setReporting(!reporting); setErr(''); }}>Report</button></div>
         {reporting && <div className="stack">
@@ -478,7 +482,7 @@ export function ListingDetail() {
           <div className="row"><button className="btn danger" disabled={busy || reason.trim().length < 10} onClick={report}>Send report</button>
             <button className="btn ghost" disabled={busy} onClick={() => setReporting(false)}>Cancel</button></div></div>}</>
         : !me ? <p><Link to={loginForListing}>Sign in</Link> to message this seller.</p> : null}
-      {note && <p role="status">{note}</p>}{err && <p className="err" role="alert">{err}</p>}
+      {note && <p role="status">{note} {inquiryThreadId !== null && <Link to={`/inquiries/${inquiryThreadId}`}>Open conversation</Link>}</p>}{err && <p className="err" role="alert">{err}</p>}
     </div>
       </div>
     </div>

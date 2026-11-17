@@ -1,5 +1,5 @@
 .my-store { max-width: 960px; margin-inline: auto; }
-.store-profile-settings { display: grid; gap: .85rem; margin: .85rem 0 1.4rem; scroll-margin-top: 1rem; }
+.store-header-actions { flex-wrap: wrap; }
 .my-store .page-head { display: flex; justify-content: space-between; flex-wrap: wrap; align-items: center; gap: .7rem 1rem; }
 .my-store .page-head { margin-bottom: 1rem; }
 .store-affiliation { display: flex; align-items: center; flex-wrap: wrap; gap: .4rem 1.25rem; padding: .8rem 1rem; background: var(--surface-soft); }

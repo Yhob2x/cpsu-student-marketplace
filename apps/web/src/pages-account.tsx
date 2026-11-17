@@ -9,8 +9,6 @@ import { Icon } from './icons';
 import { MAX_LISTING_PHOTOS, selectedPhotosError, uploadListingPhotos } from './listing-photo-uploads';
 import { coverFirst } from './photo-cover-order';
 import { ExistingPhotoChoices, SelectedPhotoPreviews } from './selected-photo-previews';
-import { SellerAvatarEditor } from './seller-avatar-editor';
-import { SellerStoreDetails } from './seller-store-details';
 import { runExclusive } from './auth-submit';
 import { safeLoginReturn } from './auth-return';
 import { authFieldForError, type AuthField } from './auth-field-error';
@@ -190,7 +188,7 @@ function StoreListingPhoto({ media, title, type }: { media: { id: number; positi
 type RepeatListing = { id: number; categoryId: number; title: string; description: string; price: number; priceBasis?: string | null; condition?: string | null };
 
 export function Dashboard() {
-  const { me, reload } = useMe(); const location = useLocation(); const [listings, setListings] = useState<any[]>([]); const [cats, setCats] = useState<any[]>([]); const [err, setErr] = useState(''); const [ok, setOk] = useState('');
+  const { me, reload } = useMe(); const [listings, setListings] = useState<any[]>([]); const [cats, setCats] = useState<any[]>([]); const [err, setErr] = useState(''); const [ok, setOk] = useState('');
   const [pending, setPending] = useState<number | null>(null); const [editing, setEditing] = useState<any | null>(null);
   const [listingLoadError, setListingLoadError] = useState('');
   const [newCategoryId, setNewCategoryId] = useState('');
@@ -209,7 +207,6 @@ export function Dashboard() {
   const [listingStatus, setListingStatus] = useState('all');
   const [listingPage, setListingPage] = useState(1);
   const [repeatListing, setRepeatListing] = useState<RepeatListing | null>(null);
-  const [storeDetailsVersion, setStoreDetailsVersion] = useState(0);
   const [createDirty, setCreateDirty] = useState(false);
   const createInFlight = useRef(false);
   const editInFlight = useRef(false);
@@ -232,13 +229,6 @@ export function Dashboard() {
   useForegroundRefresh(() => {
     if (pending === null && !creatingListing && !savingEdit) return load(true);
   }, 6_000, Boolean(me?.storeId));
-  useEffect(() => {
-    if (me?.storeId && location.hash === '#store-profile') {
-      const frame = window.requestAnimationFrame(() =>
-        document.getElementById('store-profile')?.scrollIntoView({ block: 'start' }));
-      return () => window.cancelAnimationFrame(frame);
-    }
-  }, [me?.storeId, location.hash]);
   if (!me) return <p className="muted">Loading</p>;
   const verified = me.affiliations.some(a => a.status === 'verified');
   const visibleListings = listings.filter(l => !l.deletedAt);
@@ -372,7 +362,7 @@ export function Dashboard() {
   return <div className="my-store">
     <div className="page-head">
       <div><h1>My store</h1></div>
-      {me.storeId && <Link className="btn ghost" to={`/stores/${me.storeId}`}>View public store</Link>}
+      {me.storeId && <div className="row store-header-actions"><Link className="btn ghost" to="/profile#store-profile">Store profile</Link><Link className="btn ghost" to={`/stores/${me.storeId}`}>View public store</Link></div>}
     </div>
     <div className="panel store-affiliation"><h2 className="panel-heading-small">CPSU affiliation</h2>{me.affiliations.map(a => <p key={a.id}>{a.campus.name}: <span className={`status ${a.status}`}>{a.status}</span></p>)}
       {!verified && <p className="muted">A campus reviewer must verify you before you can sell.</p>}</div>
@@ -382,10 +372,6 @@ export function Dashboard() {
       <label className="field">Store description<textarea name="description" placeholder="What do you make or offer?" required minLength={10} maxLength={1000} /></label>
       <button className="btn">Open store</button></form>}
     {me.storeId && <>
-      <div id="store-profile" className="store-profile-settings" aria-label="Your storefront settings">
-        <SellerStoreDetails storeId={me.storeId} onSaved={() => setStoreDetailsVersion(n => n + 1)} />
-        <SellerAvatarEditor storeId={me.storeId} refreshVersion={storeDetailsVersion} />
-      </div>
       <details className="panel store-create" ref={createDetails}><summary><span>{repeatListing ? 'Sell again' : 'New listing'}</span><span className="store-create-hint">Save a draft</span></summary>
       <form key={repeatListing?.id ?? 'new'} className="stack seller-composer" onChange={() => setCreateDirty(true)} onSubmit={createListing}><p className="muted">{repeatListing ? 'Review this new draft. Your sold listing stays sold.' : 'Save a draft, then submit it for review.'}</p>
         {repeatListing && <button type="button" className="btn ghost store-start-blank" onClick={startBlankListing}>Start blank instead</button>}

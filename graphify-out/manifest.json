@@ -1116,9 +1116,9 @@
     "semantic_hash": ""
   },
   "apps/web/src/pages-account.tsx": {
-    "mtime": 1794900122.8875284,
-    "seen": 1794900254.6051776,
-    "ast_hash": "b047cef78fd51544e7fb28b9877d0b45",
+    "mtime": 1794903574.5274043,
+    "seen": 1794904977.3749924,
+    "ast_hash": "56d5ba4779d49b9242b0511134b64c39",
     "semantic_hash": ""
   },
   "apps/web/src/pages-admin.tsx": {
@@ -1128,15 +1128,15 @@
     "semantic_hash": ""
   },
   "apps/web/src/pages-profile.tsx": {
-    "mtime": 1794898698.6075096,
-    "seen": 1794898947.8844626,
-    "ast_hash": "0a39701680fa99dbe1a4d6b2805ec1a7",
+    "mtime": 1794905997.5075104,
+    "seen": 1794906076.232217,
+    "ast_hash": "2d6e4989091633e3e6a174c98c2f90ba",
     "semantic_hash": ""
   },
   "apps/web/src/pages-public.tsx": {
-    "mtime": 1794899979.5375285,
-    "seen": 1794900079.6179938,
-    "ast_hash": "22943c6c2fea1ca21c51f8cc8cbaf7d6",
+    "mtime": 1794903234.6502247,
+    "seen": 1794904977.3753676,
+    "ast_hash": "decb9f7192fb9ba76fcb8dc3a10f8d0a",
     "semantic_hash": ""
   },
   "apps/web/src/push-client.ts": {
@@ -2724,9 +2724,9 @@
     "semantic_hash": ""
   },
   "README.md": {
-    "mtime": 1794801134.3803482,
-    "seen": 1794801841.1676202,
-    "ast_hash": "ced267949c6fc44fcd16067cb368618b",
+    "mtime": 1794903304.636156,
+    "seen": 1794904977.4330986,
+    "ast_hash": "24c101d03ebf525bb1171f2602100e4e",
     "semantic_hash": ""
   },
   "apps/web/index.html": {
@@ -2892,9 +2892,9 @@
     "semantic_hash": ""
   },
   "docs/UI_UX_GUIDELINES.md": {
-    "mtime": 1794875334.5980153,
-    "seen": 1794875357.6612244,
-    "ast_hash": "cfa1abb5a61a9176a12f72147a3a5e76",
+    "mtime": 1794904480.566102,
+    "seen": 1794904977.452647,
+    "ast_hash": "a5119b0baa1e21375ca568462c190cb3",
     "semantic_hash": ""
   },
   "docs/UNIFIED_WEB_PWA_2026-11-12.md": {
@@ -4122,9 +4122,9 @@
     "semantic_hash": ""
   },
   "apps/web/src/pages-storefront.tsx": {
-    "mtime": 1794896925.184374,
-    "seen": 1794897056.6354384,
-    "ast_hash": "3e5567cf5c8f43bd31f1a98296f12213",
+    "mtime": 1794903625.881251,
+    "seen": 1794904977.375556,
+    "ast_hash": "bdd449665787c2e37adac7dac58ea949",
     "semantic_hash": ""
   },
   "apps/web/src/seller-store-details.tsx": {
@@ -4770,9 +4770,9 @@
     "semantic_hash": ""
   },
   "docs/STATISTICS_ALGORITHM_AUDIT_2026-11-17.md": {
-    "mtime": 1794901969.8653095,
-    "seen": 1794902004.0797184,
-    "ast_hash": "6f04aab4a72b5f26edfe1f9ccb7d652b",
+    "mtime": 1794902011.8509238,
+    "seen": 1794904977.4517703,
+    "ast_hash": "1f913f9bc6666989403d9018f920a182",
     "semantic_hash": ""
   },
   "package-lock.json": {

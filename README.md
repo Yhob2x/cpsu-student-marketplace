@@ -10,7 +10,6 @@ A **single mobile-first web application** for CPSU students, sellers and authori
 |---|---|---|
 | Shared mobile + desktop web app / PWA | React, TypeScript, Vite | `apps/web` |
 | REST API | Express, TypeScript, Prisma, MySQL, Zod | `apps/api` |
-| Historical native prototype (inactive) | React Native, Expo | `legacy/expo-mobile` |
 
 Both mobile and desktop web use **the same origin and `/api/v1`**. There is no `extra.apiUrl` setup, native client authentication, or duplicated frontend to maintain.
 

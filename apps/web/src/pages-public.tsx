@@ -487,12 +487,19 @@ export function ListingDetail() {
 }
 
 export function StorePage() {
-  const { id } = useParams(); const { me } = useMe(); const [s, setS] = useState<PublicStorefront | null>(null);
+  const { id } = useParams(); const { me } = useMe(); const navigate = useNavigate();
+  const [s, setS] = useState<PublicStorefront | null>(null);
   const [loadError, setLoadError] = useState<unknown>(null);
   const loadRequest = useRef(0);
   const [reporting, setReporting] = useState(false); const [reason, setReason] = useState('');
   const [reportBusy, setReportBusy] = useState(false); const [reportError, setReportError] = useState(''); const [reportNotice, setReportNotice] = useState('');
   const reportLock = useRef(false);
+  const followLock = useRef(false);
+  const [followBusy, setFollowBusy] = useState(false);
+  const [followMessage, setFollowMessage] = useState('');
+  const [chatBusy, setChatBusy] = useState(false);
+  const [chatError, setChatError] = useState('');
+  const chatLock = useRef(false);
   const loadStore = () => {
     const request = ++loadRequest.current;
     setS(null); setLoadError(null);
@@ -509,6 +516,47 @@ export function StorePage() {
   if (!s) return <p className="muted" role="status">Loading store…</p>;
   const staff = me?.roles.some(role => ['campus_reviewer', 'university_admin', 'system_admin', 'establishment'].includes(role.role));
   const isOwner = me?.storeId === s.id;
+  const toggleFollow = async () => {
+    if (!me) { navigate(`/login?next=${encodeURIComponent(`/stores/${s.id}`)}`); return; }
+    if (staff || isOwner || followLock.current || !s.follow?.available) return;
+    followLock.current = true;
+    setFollowBusy(true); setFollowMessage('');
+    try {
+      const result = await api<{ count: number; isFollowing: boolean }>(`/store-follows/${s.id}`, {
+        method: s.follow.isFollowing ? 'DELETE' : 'PUT',
+      });
+      setS(current => current?.id === s.id ? {
+        ...current, follow: { count: result.count, isFollowing: result.isFollowing, available: true },
+      } : current);
+      setFollowMessage(result.isFollowing ? 'You are following this store.' : 'You unfollowed this store.');
+    } catch (error) {
+      setFollowMessage(explain(error));
+    } finally {
+      followLock.current = false;
+      setFollowBusy(false);
+    }
+  };
+  const startStoreChat = async (listingId: number, body: string) => {
+    if (!me) {
+      navigate(`/login?next=${encodeURIComponent(`/stores/${s.id}`)}`);
+      return;
+    }
+    if (staff || isOwner || chatLock.current || !s.listings.some(item => item.id === listingId) ||
+      !body.trim()) return;
+    chatLock.current = true;
+    setChatBusy(true); setChatError('');
+    try {
+      const thread = await api<{ id: number }>('/inquiries', {
+        body: { listingId, body: body.trim() },
+      });
+      navigate(`/inquiries/${thread.id}`);
+    } catch (error) {
+      setChatError(explain(error));
+    } finally {
+      chatLock.current = false;
+      setChatBusy(false);
+    }
+  };
   const reportSeller = async () => {
     if (reportLock.current || !me || staff || isOwner || reason.trim().length < 10) return;
     reportLock.current = true; setReportBusy(true); setReportError(''); setReportNotice('');
@@ -518,7 +566,13 @@ export function StorePage() {
     } catch (e) { setReportError(explain(e)); }
     finally { reportLock.current = false; setReportBusy(false); }
   };
-  return <><StorefrontView key={s.id} store={s} isOwner={isOwner} renderListing={l => <ListingCard key={l.id} l={l} />} />
+  return <><StorefrontView key={s.id} store={s} isOwner={isOwner}
+    canFollow={!staff} onFollow={() => void toggleFollow()} followBusy={followBusy} followMessage={followMessage}
+    canChat={!staff && !isOwner} signedIn={Boolean(me)}
+    onChatSignIn={() => navigate(`/login?next=${encodeURIComponent(`/stores/${s.id}`)}`)}
+    onChat={(listingId, body) => void startStoreChat(listingId, body)}
+    chatBusy={chatBusy} chatError={chatError}
+    renderListing={l => <ListingCard key={l.id} l={l} />} />
     {me && !staff && !isOwner && <section className="panel stack" aria-label="Report seller" style={{ maxWidth: '42rem', marginBlock: '1rem' }}>
       <div className="row"><button type="button" className="btn ghost" aria-expanded={reporting} disabled={reportBusy}
         onClick={() => { setReporting(open => !open); setReportError(''); }}>Report this seller</button></div>

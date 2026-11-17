@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { api, explain, peso } from './api';
 import { useMe } from './main';
+import { useForegroundRefresh } from './foreground-refresh';
 
 type Status = 'pending' | 'accepted' | 'negotiating' | 'for_meetup' | 'completed' | 'cancelled';
 type TransactionRow = {
@@ -39,14 +40,15 @@ export function Transactions() {
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const fetchPage = useCallback(async () => {
-    setLoading(true);
+  const fetchPage = useCallback(async (quiet = false) => {
+    if (!quiet) setLoading(true);
     try {
       const result = await api<{ items: TransactionRow[]; total: number }>(`/transactions?page=${page}&pageSize=15`);
       setItems(result.items); setTotal(result.total); setError('');
-    } catch (e) { setError(explain(e)); } finally { setLoading(false); }
+    } catch (e) { setError(explain(e)); } finally { if (!quiet) setLoading(false); }
   }, [page]);
   useEffect(() => { void fetchPage(); }, [fetchPage]);
+  useForegroundRefresh(() => fetchPage(true), 7_000, Boolean(me));
 
   return <section className="stack" aria-labelledby="transactions-heading">
     <div className="page-head"><div><h1 id="transactions-heading">My transactions</h1>
@@ -101,13 +103,8 @@ export function TransactionDetail() {
   useEffect(() => { setData(null); setLoading(true); setError(''); void reload(); }, [reload]);
   // When the other student confirms, refresh status without requiring a full page reload.
   // Foreground-only polling never caches the participant's private transaction data.
-  useEffect(() => {
-    if (data?.status === 'completed' || data?.status === 'cancelled') return;
-    const timer = window.setInterval(() => {
-      if (document.visibilityState === 'visible') void reload();
-    }, 15_000);
-    return () => window.clearInterval(timer);
-  }, [reload, data?.status]);
+  useForegroundRefresh(() => reload(), 5_000,
+    Boolean(me && data && data.status !== 'completed' && data.status !== 'cancelled'));
 
   const act = async (suffix: string, body: unknown = {}) => {
     if (busy) return;

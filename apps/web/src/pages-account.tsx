@@ -2,6 +2,7 @@ import { FormEvent, useEffect, useRef, useState } from 'react';
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { api, explain, peso, setToken, timeAgo } from './api';
 import { useMe } from './main';
+import { useForegroundRefresh } from './foreground-refresh';
 import { ListingCard, Listing } from './pages-public';
 import { Icon } from './icons';
 import { MAX_LISTING_PHOTOS, selectedPhotosError, uploadListingPhotos } from './listing-photo-uploads';
@@ -179,17 +180,22 @@ export function Dashboard() {
   const listingsHeading = useRef<HTMLHeadingElement>(null);
   const createDetails = useRef<HTMLDetailsElement>(null);
   const createTitle = useRef<HTMLInputElement>(null);
-  const load = () => {
-    setListingsLoading(true);
+  const load = (quiet = false) => {
+    if (!quiet) setListingsLoading(true);
     return api('/seller/listings')
       .then(r => { setListings(r); setListingLoadError(''); })
       .catch(x => setListingLoadError(explain(x)))
-      .finally(() => setListingsLoading(false));
+      .finally(() => { if (!quiet) setListingsLoading(false); });
   };
   useEffect(() => {
-    if (me?.storeId) load();
+    if (me?.storeId) void load();
     api('/categories').then(setCats).catch(x => setErr(explain(x)));
   }, [me?.storeId]);
+  // Review decisions and availability changes appear in My Store with no page refresh.
+  // Quiet refreshes preserve the seller's open editor and unsaved form input.
+  useForegroundRefresh(() => {
+    if (pending === null && !creatingListing && !savingEdit) return load(true);
+  }, 6_000, Boolean(me?.storeId));
   useEffect(() => {
     if (me?.storeId && location.hash === '#store-profile') {
       const frame = window.requestAnimationFrame(() =>
@@ -363,9 +369,9 @@ export function Dashboard() {
         {creatingListing && photoProgress && <p role="status">{photoProgress}</p>}
         <p className="muted" id="new-photo-policy">Add at least 1 photo before submitting for review, with a maximum of {MAX_LISTING_PHOTOS} per listing. You may save a draft without a photo. Preview your selection and choose the cover before saving; it uploads first. No pornography, explicit sexual imagery, graphic violence, or other prohibited content. Photos must pass campus reviewer inspection before publication.</p>
         <button className="btn" disabled={creatingListing}>{creatingListing ? 'Saving draft…' : 'Save draft'}</button></form></details>
-      <div className="store-listings-head"><div><h2 ref={listingsHeading} tabIndex={-1}>Your listings</h2><p className="muted">Review status and availability for each item.</p></div>{!listingsLoading && !listingLoadError && <span className="store-listing-count">{visibleListings.length} {visibleListings.length === 1 ? 'listing' : 'listings'}</span>}</div>
+      <div className="store-listings-head"><div><h2 ref={listingsHeading} tabIndex={-1}>Your listings</h2><p className="muted">Review status and availability update automatically while this page is open.</p></div>{!listingsLoading && !listingLoadError && <span className="store-listing-count">{visibleListings.length} {visibleListings.length === 1 ? 'listing' : 'listings'}</span>}</div>
       {listingsLoading && <p className="muted" role="status">Loading your listings…</p>}
-      {listingLoadError && <p className="err" role="alert">Could not load your listings: {listingLoadError} <button type="button" className="btn ghost" onClick={load}>Retry</button></p>}
+      {listingLoadError && <p className="err" role="alert">Could not load your listings: {listingLoadError} <button type="button" className="btn ghost" onClick={() => { void load(); }}>Retry</button></p>}
       {!listingsLoading && !listingLoadError && visibleListings.length === 0 && <div className="panel store-empty"><h3>Your store is ready for its first listing</h3><p className="muted">Open New listing above, save a draft, then send it to a campus reviewer.</p></div>}
       {!listingsLoading && !listingLoadError && visibleListings.length > 0 && <>
         <div className="store-listing-filters">

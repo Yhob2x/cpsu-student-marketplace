@@ -15,6 +15,8 @@ import adminRoutes from './routes/admin.js';
 import reviewerRoutes from './routes/reviewers.js';
 import accountRoutes from './routes/account.js';
 import pushRoutes from './routes/push.js';
+import { makeStoreFollowRouter } from './store-follows.js';
+import { prisma } from './db.js';
 
 export function createApp() {
   const app = express();
@@ -31,6 +33,7 @@ export function createApp() {
   const v1 = express.Router();
   v1.use('/auth', rateLimit({ windowMs: 15 * 60_000, limit: env.NODE_ENV === 'production' ? 30 : 300 }), authRoutes);
   v1.use(publicRoutes);
+  v1.use('/store-follows', makeStoreFollowRouter(prisma));
   v1.use(accountRoutes);
   v1.use('/push', pushRoutes);
   v1.use('/seller', sellerRoutes);

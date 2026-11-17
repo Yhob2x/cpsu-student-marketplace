@@ -42,7 +42,7 @@ export const pushDeliveryReady = pushPolicy.deliveryEnabled;
 export function categoryForNotice(type: string): PushCategory | null {
   if (type === 'inquiry.new' || type === 'inquiry.reply') return 'messages';
   if (type === 'listing.decision' || type === 'listing.suspended') return 'listingReviews';
-  if (type === 'affiliation.decision') return 'accountUpdates';
+  if (type === 'affiliation.decision' || type === 'store.new_listing') return 'accountUpdates';
   return null;
 }
 
@@ -68,6 +68,11 @@ export function pushContent(type: string, data: EventData, notificationId: numbe
   } else if (type === 'affiliation.decision') {
     url = '/profile';
     body = 'Your CPSU account verification has an update.';
+  } else if (type === 'store.new_listing') {
+    const listingId = safeNumber(data.listingId);
+    if (listingId) url = `/listings/${listingId}`;
+    // Do not expose store names, item titles or buyer interests on the lock screen.
+    body = 'A store you follow has published a new listing.';
   }
   return { title: 'CPSU Market', body, url, tag: `cpsu-${notificationId}`, unread: Math.max(0, unread) };
 }

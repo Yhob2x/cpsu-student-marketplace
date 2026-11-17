@@ -33,8 +33,10 @@ r.get('/notifications/unread-count', async (req, res) => {
   ]);
   res.json({ total, messages });
 });
-r.get('/notifications', async (req, res) =>
-  res.json(await prisma.notification.findMany({ where: { userId: req.user!.id }, orderBy: { createdAt: 'desc' }, take: 50 })));
+r.get('/notifications', async (req, res) => {
+  res.setHeader('Cache-Control', 'no-store');
+  res.json(await prisma.notification.findMany({ where: { userId: req.user!.id }, orderBy: { createdAt: 'desc' }, take: 50 }));
+});
 r.post('/notifications/read', async (req, res) => {
   await prisma.notification.updateMany({ where: { userId: req.user!.id, readAt: null }, data: { readAt: new Date() } });
   res.status(204).end();

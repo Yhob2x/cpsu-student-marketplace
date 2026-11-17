@@ -1264,3 +1264,17 @@ The owner authorized adding automated explicit-content screening **for manually 
 Document Version: 1.0  
 Project: CPSU Student Marketplace  
 Scope: MVP Version 1.0
+
+## Approved change record — Store following and store category navigation (2026-11-17)
+
+The project owner explicitly requested a **Follow** function and visible **categories** on dedicated CPSU student storefronts, using a marketplace store screenshot as layout reference. This limited enhancement extends the approved storefront experience; it does not add ratings, paid promotion, sales analytics or unverified social signals. Only active student accounts may follow approved, active stores; owners may not follow their own store; campus staff cannot perform student follow actions. Follow/unfollow is idempotent and stores one relationship per (user, seller profile); public store pages may show the real follower count and the authenticated viewer's own follow state, but not follower identities. Categories derive only from available published listings in the current store, alongside existing Product/Service filtering and search. The new additive StoreFollow schema and migration are **prepared but unapplied**, subject to separate backup, isolated testing and development activation approval. Missing schema/client availability must disable following rather than invent follower data or fail silently. See `docs/STORE_FOLLOW_CATEGORIES_2026-11-17.md`.
+
+## Approved change record — Local StoreFollow activation and storefront chat (2026-11-17)
+
+The owner separately approved activating **only** the isolated-tested `20261117180000_store_follows` migration on local `cpsu_marketplace`; backup and postcheck passed, and the two earlier pending migrations remain unapplied. This supersedes the earlier source-only migration restriction for **local development only**. No production deployment is approved.
+
+The owner also requested a Chat button directly on a seller's public store. It uses the existing listing-scoped inquiry/messaging pipeline: signed-in student buyers choose an available published store listing, send a message and continue in Messages. Guests sign in and return to the exact store route; owners and staff cannot initiate buyer messaging. An empty store cannot receive a new inquiry because the existing conversation record requires a listing. No new standalone-store conversation table, fabricated listing, payment integration, or unrelated migration is authorized. See `docs/STORE_FOLLOW_CATEGORIES_2026-11-17.md`.
+
+## Approved change record — Followed store publication notifications (2026-11-17)
+
+Following a store also subscribes that account to **in-app notifications when a genuinely new, available product or service is first approved and published**. Approval is the publication trigger, not seller draft creation, review submission, or subsequent editing/re-approval. Notifications are stored transactionally with the guarded reviewer status change and delivered to active, non-staff followers, excluding owners and people who unfollowed. Notification links target the public listing. Optional generic-text phone/desktop push remains subject to the pre-existing opt-in and production release gate; push delivery is not activated in local development. Existing two unrelated pending migrations remain untouched. See `docs/FOLLOWED_STORE_NEW_LISTING_NOTIFICATIONS_2026-11-17.md`.

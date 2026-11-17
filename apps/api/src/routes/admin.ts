@@ -1,10 +1,14 @@
 import { Router } from 'express';
-import type { Prisma } from '@prisma/client';
+import { Prisma } from '@prisma/client';
 import { z } from 'zod';
 import { prisma } from '../db.js';
 import { HttpError } from '../http.js';
 import { requireAuth, requireReviewer, canReview, reviewCampusIds } from '../auth.js';
 import { audit, notify } from '../audit.js';
+import { deliverPush } from '../push.js';
+import {
+  createFollowerPublicationNotices, deliverFollowerPublicationPush,
+} from '../store-publication-notifications.js';
 import { requirePhotoReview } from '../photo-review.js';
 import { DEFAULT_GUIDELINES, plainContent } from '../managed-content.js';
 
@@ -24,13 +28,15 @@ const reportScope = (u: Express.Request['user']): Prisma.ReportWhereInput => {
 };
 
 r.get('/review-queue', async (req, res) => {
-  const [listings, affiliations] = await Promise.all([
+  const [listings, affiliations, reportsPending] = await Promise.all([
     prisma.listing.findMany({ where: { status: 'pending_review', deletedAt: null, ...scope(req.user) }, include: { category: true, seller: true, media: true, campus: true }, orderBy: { updatedAt: 'asc' } }),
     prisma.affiliation.findMany({ where: { verificationStatus: 'pending', ...scope(req.user) }, include: { user: { select: { id: true, displayName: true, email: true } }, campus: true }, orderBy: { id: 'asc' } }),
+    prisma.report.count({ where: { status: { in: ['open', 'reviewing'] }, ...reportScope(req.user) } }),
   ]);
+  res.setHeader('Cache-Control', 'no-store');
   res.json({ listings: listings.map(l => ({ id: l.id, title: l.title, description: l.description, price: Number(l.price), type: l.type, flags: l.flags ?? [],
     category: l.category.name, store: l.seller.storeName, campus: l.campus.code, images: l.media.map(m => `/api/v1/media/${m.id}`) })),
-    affiliations: affiliations.map(a => ({ id: a.id, user: a.user, campus: a.campus.code })) });
+    affiliations: affiliations.map(a => ({ id: a.id, user: a.user, campus: a.campus.code })), reportsPending });
 });
 
 r.post('/listings/:id/decision', async (req, res) => {
@@ -39,7 +45,8 @@ r.post('/listings/:id/decision', async (req, res) => {
     reason: z.string().trim().min(5).max(1000),
     photosReviewed: z.boolean().optional(),
   }).parse(req.body);
-  const l = await prisma.listing.findUnique({ where: { id: Number(req.params.id) }, include: { seller: true, media: true } });
+  const l = await prisma.listing.findUnique({ where: { id: Number(req.params.id) },
+    include: { seller: { include: { owner: { select: { status: true } } } }, media: true } });
   if (!l || !canReview(req.user!, l.campusId)) throw new HttpError(404, 'not_found'); // out-of-scope looks like not found
   if (l.deletedAt) throw new HttpError(409, 'listing_deleted');
   if (l.status !== 'pending_review') throw new HttpError(409, 'not_pending');
@@ -50,15 +57,48 @@ r.post('/listings/:id/decision', async (req, res) => {
     throw new HttpError(422, 'reason_too_short', 'Flagged listings need a documented reason of at least 20 characters.');
   const policy = await prisma.campusPolicy.findFirst({ where: { campusId: l.campusId }, orderBy: { version: 'desc' } });
   const status = { approved: 'published', changes_requested: 'changes_requested', rejected: 'rejected' }[b.decision] as any;
-  await prisma.$transaction([
-    prisma.listing.update({ where: { id: l.id }, data: { status } }),
-    prisma.listingReview.create({ data: { listingId: l.id, reviewerId: req.user!.id, decision: b.decision, reason: b.reason, policyVersionId: policy?.id } }),
-  ]);
-  await audit(req.user!.id, `listing.${b.decision}`, 'listing', l.id, {
-    policyVersionId: policy?.id,
-    ...(b.decision === 'approved' ? { photosReviewed: true, photoCount: l.media.length } : {}),
-  });
-  await notify(l.seller.ownerUserId, 'listing.decision', { listingId: l.id, title: l.title, decision: b.decision, reason: b.reason });
+  // Publish, review, audit and follower notifications commit together.
+  // The guarded transition prevents concurrent reviewers from creating duplicate alerts.
+  const recorded = await prisma.$transaction(async tx => {
+    const changed = await tx.listing.updateMany({
+      where: { id: l.id, status: 'pending_review', deletedAt: null },
+      data: { status },
+    });
+    if (changed.count !== 1) throw new HttpError(409, 'not_pending');
+    // A previously approved item that was edited/reviewed again is NOT a new listing.
+    const approvedBefore = b.decision === 'approved'
+      ? await tx.listingReview.count({ where: { listingId: l.id, decision: 'approved' } }) > 0
+      : false;
+    await tx.listingReview.create({ data: {
+      listingId: l.id, reviewerId: req.user!.id, decision: b.decision,
+      reason: b.reason, policyVersionId: policy?.id,
+    } });
+    await tx.auditLog.create({ data: {
+      actorUserId: req.user!.id, action: `listing.${b.decision}`, targetType: 'listing',
+      targetId: l.id, metadata: {
+        policyVersionId: policy?.id,
+        ...(b.decision === 'approved' ? { photosReviewed: true, photoCount: l.media.length } : {}),
+      },
+    } });
+    const decisionPayload = { listingId: l.id, title: l.title, decision: b.decision, reason: b.reason };
+    const ownerNotice = await tx.notification.create({ data: {
+      userId: l.seller.ownerUserId, type: 'listing.decision', payload: decisionPayload,
+    }, select: { id: true } });
+    const followerNotices = b.decision === 'approved' && !approvedBefore
+      && l.availabilityState === 'available' && l.seller.approvalStatus === 'approved'
+      && l.seller.owner.status === 'active'
+      ? await createFollowerPublicationNotices(tx, {
+          id: l.id, title: l.title, type: l.type, sellerProfileId: l.sellerProfileId,
+          storeName: l.seller.storeName, ownerUserId: l.seller.ownerUserId,
+        })
+      : [];
+    return { ownerNoticeId: ownerNotice.id, decisionPayload, followerNotices };
+  }, { isolationLevel: Prisma.TransactionIsolationLevel.Serializable, timeout: 20_000 });
+  // Push is optional and never blocks the committed in-app notifications.
+  void deliverPush(l.seller.ownerUserId, 'listing.decision',
+    recorded.decisionPayload, recorded.ownerNoticeId).catch(() =>
+      console.warn('Review decision push delivery skipped'));
+  deliverFollowerPublicationPush(recorded.followerNotices);
   res.json({ id: l.id, status });
 });
 

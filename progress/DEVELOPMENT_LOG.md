@@ -219,3 +219,15 @@ Owner requested closing the current transaction QA process and proceeding to the
 
 ## 2026-11-17 — iPhone PWA keyboard/scrolling accepted (manual)
 Owner confirmed CPSU Market launched from iPhone Home Screen and the floating message composer stays visible above the iOS keyboard while the conversation scrolls correctly. Record **PASS — user-confirmed on physical iPhone**, not automated cross-device verification. Continue to foreground unread-badge/incoming-sound acceptance. WP3 transaction work remains deferred, not passed.
+
+## 2026-11-17 — StoreFollow migration isolated acceptance (PASS; no development migration)
+
+Retained a private, checksum-verified 365,108-byte development SQL backup and 24 upload files. Restored and compared all 24 existing tables, applied **StoreFollow only to a disposable restored database**, verified composite uniqueness, foreign keys, secondary index, and synthetic follow/unfollow behavior. Source row hashes unchanged; disposable schema deleted; 0 errors. See `docs/STORE_FOLLOW_CATEGORIES_2026-11-17.md`. Development activation requires separate owner approval because two other migrations remain pending.
+
+## 2026-11-17 — Store Follow development activation and public-store chat
+
+Owner-approved development activation PASS: applied only StoreFollow; verified fresh private SQL+upload backup, unchanged old records and only two unrelated migrations remaining pending. Generated Prisma v6.1.0 in isolated directory to avoid a locked byte-identical Windows engine DLL; synchronized 11 generated metadata/type files, restarted API. Authenticated Follow HTTP tests and synthetic cleanup PASS. Added public-store Chat with seller inline composer using listing-scoped inquiries and existing inbox; authenticated synthetic messaging/notification test PASS and cleanup. Corrected strict safe-login return to include `/stores/:id`. Web 60/60 tests, API 5/5 Follow tests, typechecks and Vite build passed. Browser 320/390/1280 no page overflow; signed-in synthetic store chat form and login return verified. See `docs/STORE_FOLLOW_CATEGORIES_2026-11-17.md`. No deploy, commit or push.
+
+## 2026-11-17 — Followed-store new-product notifications
+
+Fixed missing fanout from first reviewer approval to active followers. Added transactional `store.new_listing` in-app notifications, safe direct listing link, seller/product/service feed text, bell-count refresh integration, and privacy-safe optional push through pre-existing account-and-store preferences. No alerts for drafts, rejected, edited/reapproved items, non-followers, suspended accounts, or unfollows. New synthetic HTTP acceptance passed with all QA rows deleted; Web 63/63, focused API/web 11/11, typechecks and build passed. Local push delivery remains gated off. See `docs/FOLLOWED_STORE_NEW_LISTING_NOTIFICATIONS_2026-11-17.md`. No new migration, deployment, commit or push.

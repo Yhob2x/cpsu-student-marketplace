@@ -13,7 +13,21 @@
 .storefront-campus { display: flex; gap: .35rem; align-items: center; margin: 0 0 .45rem; color: var(--ink-soft); font-size: .88rem; }
 .storefront-affiliation { display: inline-flex; align-items: center; gap: .3rem; font-size: .77rem; font-weight: 700; color: var(--forest); }
 .storefront-owner-actions { display: flex; gap: .55rem; flex-wrap: wrap; align-items: center; }
-.storefront-owner-actions .btn { min-height: 44px; }
+.storefront-owner-actions .btn { min-height: 44px; display: inline-flex; align-items: center; justify-content: center; gap: .4rem; }
+.storefront-owner-actions .btn[aria-pressed="true"] { border-color: var(--forest); color: var(--forest); }
+.storefront-owner-actions .btn:disabled { opacity: .65; cursor: not-allowed; }
+.storefront-follow-feedback { flex-basis: 100%; margin: .15rem 0 0; font-size: .81rem; color: var(--ink-soft); }
+.storefront-chat-note { flex: 1 0 100%; margin: 0; font-size: .8rem; }
+.storefront-chat-composer { flex: 1 0 100%; display: grid; gap: .6rem; padding: 1.1rem; min-width: 0; border-radius: 12px; border: 1px solid var(--line); background: var(--surface-soft); }
+.storefront-chat-composer h2 { margin: 0; font-size: 1.1rem; }
+.storefront-chat-composer p { margin: 0; font-size: .82rem; }
+.storefront-chat-composer label { font-weight: 650; font-size: .84rem; }
+.storefront-chat-composer select, .storefront-chat-composer textarea { min-height: 44px; width: 100%; min-width: 0; max-width: 100%; border: 1px solid var(--line); border-radius: 8px; padding: .7rem .75rem; background: var(--paper); color: var(--ink); font: inherit; }
+.storefront-chat-composer textarea { min-height: 100px; resize: vertical; }
+.storefront-chat-composer select:focus-visible, .storefront-chat-composer textarea:focus-visible { outline: 3px solid var(--focus-green); outline-offset: 2px; }
+.storefront-chat-actions { display: flex; gap: .6rem; flex-wrap: wrap; }
+.storefront-chat-actions .btn { display: inline-flex; align-items: center; gap: .4rem; justify-content: center; min-height: 44px; }
+.storefront-chat-composer .err { font-size: .82rem; margin: 0; }
 .storefront-facts { display: flex; flex-wrap: wrap; gap: .85rem 2rem; padding: 1rem clamp(1rem, 3vw, 1.8rem); border-top: 1px solid var(--line); background: var(--surface-soft); }
 .storefront-facts > div { display: grid; gap: .18rem; min-width: 105px; }
 .storefront-facts span { color: var(--ink-soft); font-size: .78rem; }
@@ -26,6 +40,12 @@
 .storefront-products-heading h2 { margin: 0 0 .2rem; font-size: 1.35rem; scroll-margin-top: 2rem; }
 .storefront-products-heading p { margin: 0; font-size: .84rem; }
 .storefront-results { flex: none; color: var(--ink-soft); font-size: .82rem; font-variant-numeric: tabular-nums; }
+.storefront-navigation { display: grid; gap: .55rem; padding: .4rem 0 .75rem; border-bottom: 1px solid var(--line); margin-bottom: 1.15rem; }
+.storefront-category-tabs { display: flex; flex-wrap: wrap; gap: .4rem; }
+.storefront-category-tabs button { min-height: 44px; max-width: 100%; padding: .5rem .9rem; background: var(--surface-soft); border: 1px solid var(--line); border-radius: 99px; color: var(--ink); font: 650 .8rem/1.3 var(--font-body); overflow-wrap: anywhere; text-align: center; cursor: pointer; }
+.storefront-category-tabs button[aria-pressed="true"] { background: var(--forest); color: var(--paper); border-color: var(--forest); }
+@media (hover: hover) and (pointer: fine) { .storefront-category-tabs button:hover:not([aria-pressed="true"]) { background: var(--mango-soft); } }
+.storefront-category-tabs button:focus-visible, .storefront-tabs button:focus-visible { outline: 3px solid var(--focus-green); outline-offset: 2px; }
 .storefront-browser { display: flex; flex-wrap: wrap; align-items: center; gap: .8rem 1rem; justify-content: space-between; padding: .2rem 0 1rem; }
 .storefront-tabs { display: flex; flex-wrap: wrap; gap: .25rem; }
 .storefront-tabs button { min-height: 44px; padding: .5rem .85rem; border: 1px solid transparent; background: transparent; border-radius: 9px; color: var(--ink); font: 650 .86rem/1.35 var(--font-body); cursor: pointer; }

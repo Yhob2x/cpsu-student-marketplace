@@ -164,8 +164,10 @@ r.delete('/store/avatar', async (req, res) => {
   res.status(204).end();
 });
 
-r.get('/listings', async (req, res) =>
-  res.json(await prisma.listing.findMany({ where: { seller: { ownerUserId: req.user!.id } }, include: { media: true, category: true }, orderBy: { updatedAt: 'desc' } })));
+r.get('/listings', async (req, res) => {
+  res.setHeader('Cache-Control', 'no-store');
+  res.json(await prisma.listing.findMany({ where: { seller: { ownerUserId: req.user!.id } }, include: { media: true, category: true }, orderBy: { updatedAt: 'desc' } }));
+});
 
 r.post('/listings', async (req, res) => {
   const b = listingBody.parse(req.body);

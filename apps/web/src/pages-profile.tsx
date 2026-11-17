@@ -2,10 +2,12 @@ import { FormEvent, useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { api, explain, timeAgo } from './api';
 import { useMe } from './main';
+import { useForegroundRefresh } from './foreground-refresh';
 import { Icon, type IconName } from './icons';
 import { PushSettings } from './push-settings';
 import { InstallApp } from './install-app';
 import { affiliationLabel, campusStatusSummary, displayNameChange } from './profile-presentation';
+import { FOLLOWED_STORE_NOTICE_KIND, followedStoreNoticeText, followedStoreNoticeTarget } from './followed-store-notice';
 
 type Notice = { id: number; type: string; payload: any; readAt: string | null; createdAt: string };
 
@@ -13,12 +15,13 @@ const DECISION: Record<string, string> = { approved: 'was approved', changes_req
 
 // Turns a stored notification row into one plain sentence. Unknown types stay visible but generic,
 // so adding an event on the server never leaves a blank entry here.
-function noticeText(n: Notice): string {
+export function noticeText(n: Notice): string {
   const p = n.payload ?? {};
   const title = typeof p.title === 'string' && p.title ? `"${p.title}"` : 'Your listing';
   switch (n.type) {
     case 'inquiry.new': return `New inquiry about ${p.listingTitle ?? 'your listing'}.`;
     case 'inquiry.reply': return `New reply about ${p.listingTitle ?? 'your listing'}.`;
+    case 'store.new_listing': return followedStoreNoticeText(p);
     case 'affiliation.decision':
       return p.decision === 'verified'
         ? 'Your CPSU affiliation was verified. You can open a store and publish listings.'
@@ -39,10 +42,11 @@ function noticeText(n: Notice): string {
 }
 
 // Where a notification takes you when clicked; null keeps the row a plain, non-clickable article.
-function noticeTarget(n: Notice): string | null {
+export function noticeTarget(n: Notice): string | null {
   const p = n.payload ?? {};
   if (n.type === 'inquiry.new' || n.type === 'inquiry.reply') return p.threadId ? `/inquiries/${p.threadId}` : null;
   if (n.type === 'listing.decision' || n.type === 'listing.suspended') return p.listingId ? `/listings/${p.listingId}` : null;
+  if (n.type === 'store.new_listing') return followedStoreNoticeTarget(p);
   if (n.type === 'affiliation.decision') return '/profile';
   if (n.type.startsWith('transaction.') && Number.isSafeInteger(p.transactionId) && p.transactionId > 0)
     return `/transactions/${p.transactionId}`;
@@ -193,10 +197,11 @@ function notificationGroup(createdAt: string): NoticeGroup {
   return 'Earlier';
 }
 
-function notificationKind(n: Notice): { title: string; label: string; icon: IconName; tone: string } {
+export function notificationKind(n: Notice): { title: string; label: string; icon: IconName; tone: string } {
   switch (n.type) {
     case 'inquiry.new': return { title: 'New inquiry', label: 'Messages', icon: 'chat', tone: 'message' };
     case 'inquiry.reply': return { title: 'New reply', label: 'Messages', icon: 'chat', tone: 'message' };
+    case 'store.new_listing': return FOLLOWED_STORE_NOTICE_KIND;
     case 'listing.decision': {
       const decision = n.payload?.decision;
       const title = decision === 'approved' ? 'Listing approved'
@@ -250,6 +255,11 @@ export function Notifications() {
 
   // Wait until the login session has been restored to avoid an unnecessary token refresh.
   useEffect(() => { if (me) void load(); }, [me?.id]);
+  // The open notification inbox follows new messages, approvals, and store publications.
+  // Skip automatic reloads during read actions to avoid a stale response overwriting them.
+  useForegroundRefresh(() => {
+    if (!busy && markingId === null && !refreshing) return load();
+  }, 4_000, Boolean(me));
 
   const unread = (rows ?? []).filter(r => !r.readAt).length;
   const visible = (rows ?? []).filter(r => filter === 'all' || !r.readAt);
@@ -298,7 +308,7 @@ export function Notifications() {
       <div>
         <span className="notifications-eyebrow"><Icon name="bell" size={15} /> YOUR ACTIVITY</span>
         <h1>Notifications</h1>
-        <p className="muted">Messages, listing reviews and CPSU account updates—all in one place.</p>
+        <p className="muted">Messages, new listings from followed stores, reviews and account updates—all in one place. Updates appear automatically while this page is open.</p>
       </div>
       <button type="button" className="notifications-refresh" onClick={() => void load(true)}
         disabled={refreshing || busy || markingId !== null} aria-label={refreshing ? 'Refreshing notifications' : 'Refresh notifications'}>
@@ -351,7 +361,7 @@ export function Notifications() {
     {rows !== null && rows.length === 0 && !err && <div className="notifications-empty">
       <span className="notifications-empty-icon" aria-hidden="true"><Icon name="bell" size={28} /></span>
       <h2>No notifications yet</h2>
-      <p>Your messages, listing decisions and account updates will appear here.</p>
+      <p>New listings from stores you follow, messages and account updates will appear here.</p>
       <Link className="btn" to="/explore">Explore listings <Icon name="arrow" size={16} /></Link>
     </div>}
 

@@ -60,6 +60,8 @@ const MESSAGES: Record<string, string> = {
   avatar_screening_busy: 'Too many photos are being checked right now. Your current picture is unchanged. Try again shortly.',
   photo_review_required: 'Inspect every listing photo and confirm the content rules before approving.',
   store_exists: 'You already have a store.', own_listing: 'This is your own listing.', validation_error: 'Please check the highlighted fields.',
+  own_store_follow: 'You cannot follow your own store.',
+  store_follows_unavailable: 'Store following is not available yet. Please try again after it is enabled.',
   rate_limited: 'Too many attempts. Wait a few minutes and try again.',
   student_verification_required: 'Purchase requests require an active, verified student account without an administrative role.',
   listing_unavailable: 'This listing is no longer available for a new request.',

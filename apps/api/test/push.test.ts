@@ -31,6 +31,7 @@ describe('Web Push security and privacy', () => {
       ['listing.decision', 'listingReviews', '/listings/19'],
       ['listing.suspended', 'listingReviews', '/listings/19'],
       ['affiliation.decision', 'accountUpdates', '/profile'],
+      ['store.new_listing', 'accountUpdates', '/listings/19'],
     ] as const;
     for (const [event, category, path] of events) {
       expect(categoryForNotice(event)).toBe(category);
@@ -43,6 +44,12 @@ describe('Web Push security and privacy', () => {
     }
     expect(pushContent('unrecognized', data, 1, 0)).toBe(null);
     expect(pushContent('inquiry.reply', { threadId: 'https://evil.invalid' }, 1, 0)?.url).toBe('/notifications');
+    expect(pushContent('store.new_listing', { listingId: 'https://evil.invalid',
+      storeName: 'PRIVATE STORE', listingTitle: 'PRIVATE ITEM' }, 2, 1)).toEqual({
+      title: 'CPSU Market',
+      body: 'A store you follow has published a new listing.',
+      url: '/notifications', tag: 'cpsu-2', unread: 1,
+    });
   });
 });
 

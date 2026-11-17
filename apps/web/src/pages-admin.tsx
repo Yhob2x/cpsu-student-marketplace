@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { api, explain, peso } from './api';
 import { useMe } from './main';
+import { useForegroundRefresh } from './foreground-refresh';
 import { ManagedContentAdmin } from './pages-managed-content';
 import { ReviewerAdmin } from './pages-reviewers';
 import './admin-workspace.css';
@@ -58,12 +59,25 @@ export function Admin() {
   const [auditCursor, setAuditCursor] = useState<number | null>(null);
   const [auditLoading, setAuditLoading] = useState(false);
   const [auditError, setAuditError] = useState('');
-  const load = () => {
-    api('/admin/review-queue').then(r => { setQ(r); setErr(''); void syncQueue(); }).catch(e => setErr(explain(e)));
-    api('/admin/reports').then(r => { setReports(r); setReportsError(''); }).catch(e => setReportsError(explain(e)));
-    api('/admin/analytics/overview').then(r => { setStats(r); setStatsError(''); }).catch(e => setStatsError(explain(e)));
-  };
+  const refreshQueues = () => Promise.all([
+    api('/admin/review-queue').then(r => {
+      setQ(r); setErr('');
+      void syncQueue(r.listings.length + r.affiliations.length + (r.reportsPending ?? 0));
+    }).catch(e => setErr(explain(e))),
+    api('/admin/reports').then(r => { setReports(r); setReportsError(''); }).catch(e => setReportsError(explain(e))),
+  ]);
+  const refreshStats = () => api('/admin/analytics/overview')
+    .then(r => { setStats(r); setStatsError(''); }).catch(e => setStatsError(explain(e)));
+  const load = () => { void refreshQueues(); void refreshStats(); };
   useEffect(() => { if (me) load(); }, [me?.id]);
+  // Queue, verification and report cases must appear for a reviewer without navigation.
+  // Do not touch in-progress decision text or photo confirmations.
+  useForegroundRefresh(() => {
+    if (!pending) refreshQueues();
+  }, 5_000, Boolean(me));
+  useForegroundRefresh(() => {
+    if (!pending) return refreshStats();
+  }, 15_000, Boolean(me));
   const loadTransactions = async (page = 1) => {
     setTransactionLoading(true);
     try {
@@ -180,7 +194,7 @@ export function Admin() {
   const changeSection = (id: string) => { setActiveSection(id); setNotice(''); };
   return <div className="admin-workspace">
     <div className="page-head"><div><h1>{accountAdmin ? 'University administration' : 'Campus review workspace'}</h1>
-      <p className="muted">{accountAdmin ? 'Manage campus operations, people and moderation activity.' : 'Review pending listings, verify affiliations and investigate reports for your authorized campus.'}</p></div></div>
+      <p className="muted">{accountAdmin ? 'Manage campus operations, people and moderation activity.' : 'Review pending listings, verify affiliations and investigate reports for your authorized campus. New cases appear automatically.'}</p></div></div>
     {notice && <p className="admin-action-notice" role="status">{notice}</p>}
     <label className="admin-workspace-mobile-nav field">Workspace section
       <select value={activeSection} onChange={event => changeSection(event.target.value)}>

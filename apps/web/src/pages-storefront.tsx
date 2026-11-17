@@ -14,6 +14,7 @@ export type PublicStorefront = {
   avatarUrl?: string | null;
   createdAt: string;
   listingCount: number;
+  follow?: { count: number | null; isFollowing: boolean; available: boolean };
   campus?: { code: string; name: string };
   listings: Listing[];
 };
@@ -24,14 +25,28 @@ const OPTIONS: { id: StoreFilter; name: string }[] = [
   { id: 'service', name: 'Services' },
 ];
 
-export function StorefrontView({ store, isOwner, renderListing }: {
+export function StorefrontView({ store, isOwner, canFollow, onFollow, followBusy, followMessage,
+  canChat, signedIn, onChatSignIn, onChat, chatBusy, chatError, renderListing }: {
   store: PublicStorefront;
   isOwner: boolean;
+  canFollow: boolean;
+  onFollow: () => void;
+  followBusy: boolean;
+  followMessage: string;
+  canChat: boolean;
+  signedIn: boolean;
+  onChatSignIn: () => void;
+  onChat: (listingId: number, message: string) => void;
+  chatBusy: boolean;
+  chatError: string;
   renderListing: (listing: Listing) => ReactNode;
 }) {
   const [filter, setFilter] = useState<StoreFilter>('all');
   const [query, setQuery] = useState('');
   const [category, setCategory] = useState('all');
+  const [chatOpen, setChatOpen] = useState(false);
+  const [chatListingId, setChatListingId] = useState(store.listings[0]?.id ?? 0);
+  const [chatBody, setChatBody] = useState('');
   const categories = useMemo(() => Array.from(new Set(store.listings.map(l => l.category.name)))
     .sort((a, b) => a.localeCompare(b)), [store.listings]);
   const visible = useMemo(() => filterStoreListings(store.listings, filter, category, query),
@@ -53,44 +68,94 @@ export function StorefrontView({ store, isOwner, renderListing }: {
           </div>
         </div>
         <div className="storefront-owner-actions">
-          <a className="btn" href="#storefront-listings">Browse listings</a>
+          {!isOwner && canFollow && <button type="button"
+            className={store.follow?.isFollowing ? 'btn ghost' : 'btn'}
+            aria-pressed={Boolean(store.follow?.isFollowing)}
+            disabled={followBusy || !store.follow?.available}
+            onClick={onFollow}>
+            <Icon name={store.follow?.isFollowing ? 'check' : 'plus'} size={17} />
+            {followBusy ? 'Updating…' : store.follow?.isFollowing ? 'Following' : 'Follow'}
+          </button>}
+          {canChat && <button type="button" className="btn ghost"
+            aria-expanded={signedIn && chatOpen}
+            aria-controls={signedIn && chatOpen ? 'storefront-chat-form' : undefined}
+            disabled={chatBusy || store.listings.length === 0}
+            onClick={() => {
+              if (!signedIn) { onChatSignIn(); return; }
+              setChatOpen(open => !open);
+            }}>
+            <Icon name="chat" size={17} /> Chat with seller
+          </button>}
+          <a className="btn ghost" href="#storefront-listings">Browse listings</a>
           {isOwner && <Link className="btn ghost" to="/dashboard#store-profile">Edit my store</Link>}
+          {followMessage && <p className="storefront-follow-feedback" role="status">{followMessage}</p>}
+          {!isOwner && canFollow && store.follow && !store.follow.available &&
+            <p className="storefront-follow-feedback muted">Following is being prepared for this marketplace.</p>}
+          {!isOwner && store.follow?.isFollowing &&
+            <p className="storefront-follow-feedback muted">New approved listings will appear in Notifications. Phone alerts require enabling push notifications.</p>}
         </div>
+        {canChat && store.listings.length === 0 &&
+          <p className="storefront-chat-note muted">Messaging becomes available once this store has a published, available listing.</p>}
+        {canChat && signedIn && chatOpen && store.listings.length > 0 && <form
+          id="storefront-chat-form" className="storefront-chat-composer"
+          onSubmit={event => {
+            event.preventDefault();
+            if (chatBody.trim() && chatListingId && !chatBusy)
+              onChat(chatListingId, chatBody.trim());
+          }}>
+          <h2>Message {store.storeName}</h2>
+          <p className="muted">Choose a listing to discuss. Your conversation continues in Messages.</p>
+          <label htmlFor="storefront-chat-listing">About which listing?</label>
+          <select id="storefront-chat-listing" value={chatListingId}
+            onChange={event => setChatListingId(Number(event.target.value))}
+            disabled={chatBusy}>
+            {store.listings.map(item => <option key={item.id} value={item.id}>{item.title}</option>)}
+          </select>
+          <label htmlFor="storefront-chat-message">Your message</label>
+          <textarea id="storefront-chat-message" value={chatBody}
+            placeholder="Hi! I'd like to ask about this listing."
+            onChange={event => setChatBody(event.target.value)} maxLength={1000}
+            rows={3} disabled={chatBusy} required />
+          <div className="storefront-chat-actions">
+            <button className="btn" type="submit" disabled={!chatBody.trim() || chatBusy}>
+              <Icon name="chat" size={17} /> {chatBusy ? 'Sending…' : 'Send message'}
+            </button>
+            <button className="btn ghost" type="button" disabled={chatBusy}
+              onClick={() => setChatOpen(false)}>Cancel</button>
+          </div>
+          {chatError && <p className="err" role="alert">{chatError}</p>}
+        </form>}
       </div>
       <div className="storefront-facts">
         <div><span>Available listings</span><strong>{store.listingCount ?? store.listings.length}</strong></div>
+        {store.follow?.available && <div><span>Followers</span><strong>{store.follow.count}</strong></div>}
         <div><span>Campus</span><strong>{store.campus?.code ?? 'CPSU'}</strong></div>
         {joined && <div><span>Store opened</span><strong>{joined}</strong></div>}
       </div>
     </section>
-    <section className="storefront-about" aria-label="About this store">
-      <h2>About the store</h2>
-      <p>{store.description}</p>
-      <p className="muted">Campus verification confirms eligibility for this marketplace, not a university endorsement of products or services. Contact sellers through individual listings.</p>
-    </section>
     <section className="storefront-products" aria-labelledby="storefront-listings">
+      <nav className="storefront-navigation" aria-label="Store listings and categories">
+        <div className="storefront-tabs" role="group" aria-label="Listing type">
+          {OPTIONS.map(option => <button key={option.id} type="button"
+            aria-pressed={filter === option.id && category === 'all'}
+            onClick={() => { setFilter(option.id); setCategory('all'); }}>
+            {option.name}
+          </button>)}
+        </div>
+        {categories.length > 0 && <div className="storefront-category-tabs" role="group" aria-label="Store categories">
+          {categories.map(name => <button type="button" key={name}
+            aria-pressed={category === name}
+            onClick={() => { setCategory(name); setFilter('all'); }}>{name}</button>)}
+        </div>}
+      </nav>
       <div className="storefront-products-heading">
         <div><h2 id="storefront-listings" tabIndex={-1}>Browse this store</h2><p className="muted">Only available, published listings appear here.</p></div>
         <span className="storefront-results">{visible.length} {visible.length === 1 ? 'result' : 'results'}</span>
       </div>
       <div className="storefront-browser">
-        <div className="storefront-tabs" role="group" aria-label="Listing type">
-          {OPTIONS.map(option => <button key={option.id} type="button"
-            aria-pressed={filter === option.id} onClick={() => { setFilter(option.id); setCategory('all'); }}>
-            {option.name}
-          </button>)}
-        </div>
-        <div className="storefront-search-filters">
-          <label className="storefront-search"><Icon name="search" size={17} /><span className="sr-only">Search this store</span>
-            <input type="search" placeholder="Search this store" value={query} maxLength={80}
-              onChange={event => setQuery(event.target.value)} /></label>
-          <label className="storefront-category">Category
-            <select value={category} onChange={event => setCategory(event.target.value)}>
-              <option value="all">All categories</option>
-              {categories.map(name => <option key={name} value={name}>{name}</option>)}
-            </select>
-          </label>
-        </div>
+        <label className="storefront-search"><Icon name="search" size={17} /><span className="sr-only">Search this store</span>
+          <input type="search" placeholder="Search products and services in this store" value={query} maxLength={80}
+            onChange={event => setQuery(event.target.value)} /></label>
       </div>
       {visible.length > 0
         ? <div className="grid listing-grid storefront-listings">{visible.map(renderListing)}</div>
@@ -101,6 +166,11 @@ export function StorefrontView({ store, isOwner, renderListing }: {
           {store.listings.length > 0 && <button type="button" className="btn ghost"
             onClick={() => { setFilter('all'); setQuery(''); setCategory('all'); }}>Clear filters</button>}
         </div>}
+    </section>
+    <section className="storefront-about" aria-label="About this store">
+      <h2>About the store</h2>
+      <p>{store.description}</p>
+      <p className="muted">Campus verification confirms eligibility for this marketplace, not a university endorsement of products or services. Contact sellers through individual listings.</p>
     </section>
   </div>;
 }

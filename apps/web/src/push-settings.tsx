@@ -10,7 +10,7 @@ import { Icon } from './icons';
 const CATEGORIES: { key: keyof PushPreferences; name: string; detail: string }[] = [
   { key: 'messages', name: 'Messages and inquiries', detail: 'Someone contacts you about a listing or replies.' },
   { key: 'listingReviews', name: 'Listing review decisions', detail: 'A listing is approved, rejected, or needs attention.' },
-  { key: 'accountUpdates', name: 'Account verification', detail: 'Your CPSU affiliation review has an update.' },
+  { key: 'accountUpdates', name: 'Account and followed stores', detail: 'CPSU affiliation updates and new public listings from stores you follow.' },
 ];
 const describeError = (error: unknown) =>
   error instanceof ApiError ? explain(error)

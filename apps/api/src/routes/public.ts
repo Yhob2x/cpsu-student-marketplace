@@ -9,6 +9,7 @@ import { DEFAULT_GUIDELINES } from '../managed-content.js';
 import { freshListingIdsQuery } from '../fresh-listings-query.js';
 import { sellerAvatarColumnExists } from '../optional-seller-avatar.js';
 import { sellerAvatarUrl } from '../seller-avatar-url.js';
+import { readStoreFollowSummary } from '../store-follows.js';
 
 const r = Router();
 export const publicListing = (l: any) => ({
@@ -140,10 +141,12 @@ r.get('/seller-profiles/:id', async (req, res) => {
         select: publicListingSelect(avatarColumnExists), orderBy: { createdAt: 'desc' } } },
   });
   if (!s) throw new HttpError(404, 'not_found');
-  res.setHeader('Cache-Control', 'no-store');
+  const follow = await readStoreFollowSummary(prisma, s.id, req.user?.id);
+  res.setHeader('Cache-Control', 'private, no-store');
   res.json({ id: s.id, storeName: s.storeName, description: s.description,
     sellerType: s.sellerType, campusId: s.campusId, campus: s.campus, createdAt: s.createdAt,
     listingCount: s.listings.length,
+    follow,
     avatarUrl: sellerAvatarUrl(s.id, s.avatarPath),
     badge: s.sellerType === 'student' ? 'Verified CPSU community member' : 'Campus establishment', listings: s.listings.map(publicListing) });
 });

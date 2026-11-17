@@ -189,6 +189,7 @@ model User {
   sessions              Session[]
   listingReviews        ListingReview[]      @relation("ListingReviewer")
   savedListings         SavedListing[]
+  storeFollows          StoreFollow[]
   buyerThreads          InquiryThread[]
   reportedItems         Report[]             @relation("ReportReporter")
   assignedReports       Report[]             @relation("ReportAssignee")
@@ -285,9 +286,23 @@ model SellerProfile {
   owner          User            @relation(fields: [ownerUserId], references: [id])
   listings       Listing[]
   inquiryThreads InquiryThread[]
+  storeFollows   StoreFollow[]
   campus  Campus   @relation(fields: [campusId], references: [id], onDelete: Restrict, onUpdate: Cascade)
   reports Report[] @relation("ReportSeller")
 
+}
+
+// A student can follow a given store at most once. No personal follower list is public.
+model StoreFollow {
+  userId          Int
+  sellerProfileId Int
+  createdAt       DateTime @default(now())
+
+  user  User          @relation(fields: [userId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  store SellerProfile @relation(fields: [sellerProfileId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+
+  @@id([userId, sellerProfileId])
+  @@index([sellerProfileId, createdAt])
 }
 
 model Listing {

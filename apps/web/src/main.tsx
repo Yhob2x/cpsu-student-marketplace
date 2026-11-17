@@ -7,6 +7,7 @@ import { Discover, Home, ListingDetail, Guidelines, StorePage } from './pages-pu
 import { Icon } from './icons';
 import { SiteFooter } from './site-footer';
 import { FloatingChat } from './floating-chat';
+import { useForegroundRefresh } from './foreground-refresh';
 import { Login, Register, Dashboard, Inquiries, Thread, Saved } from './pages-account';
 import { Profile, Notifications } from './pages-profile';
 import { Admin } from './pages-admin';
@@ -72,7 +73,7 @@ function Shell() {
   const [logoutError, setLogoutError] = useState('');
   const logoutLock = useRef(false);
 
-  const reload = async () => { try { const current = await api<Me>('/me'); setMe(current); return current; } catch { setMe(null); return null; } };
+  const reload = async () => { try { const current = await api<Me>('/me'); setMe(prev => JSON.stringify(prev) === JSON.stringify(current) ? prev : current); return current; } catch { setMe(null); return null; } };
   const syncUnread = async () => {
     try {
       const counts = await api<{ total: number; messages: number }>('/notifications/unread-count');
@@ -101,8 +102,8 @@ function Shell() {
   const syncQueue = async (known?: number) => {
     if (known !== undefined) { setQueue(known); return; }
     try {
-      const r = await api<{ listings: unknown[]; affiliations: unknown[] }>('/admin/review-queue');
-      setQueue(r.listings.length + r.affiliations.length);
+      const r = await api<{ listings: unknown[]; affiliations: unknown[]; reportsPending?: number }>('/admin/review-queue');
+      setQueue(r.listings.length + r.affiliations.length + (r.reportsPending ?? 0));
     } catch { /* keep the previous count */ }
   };
   useEffect(() => {
@@ -126,20 +127,25 @@ function Shell() {
     }
   };
   useEffect(() => { void updateAppBadge(me ? unread : null); }, [me?.id, unread]);
+  // Keep unread messages, followed-store alerts and review/report counts current.
+  useForegroundRefresh(async () => {
+    await syncUnread();
+    if (isReviewer) await syncQueue();
+  }, 5_000, Boolean(me));
+  // Affiliation decisions also update the profile and seller permissions without navigation.
+  useForegroundRefresh(async () => {
+    try {
+      const current = await api<Me>('/me');
+      setMe(prev => JSON.stringify(prev) === JSON.stringify(current) ? prev : current);
+    } catch { /* transient network failures must not sign the user out */ }
+  }, 15_000, Boolean(me));
   useEffect(() => {
     if (!me) return;
-    const refresh = () => { if (document.visibilityState === 'visible') void syncUnread(); };
-    const timer = window.setInterval(refresh, 30_000);
-    window.addEventListener('focus', refresh);
-    document.addEventListener('visibilitychange', refresh);
-    const sw = (event: MessageEvent) => { if (event.data?.type === 'CPSU_PUSH_RECEIVED') refresh(); };
-    navigator.serviceWorker?.addEventListener('message', sw);
-    return () => {
-      window.clearInterval(timer);
-      window.removeEventListener('focus', refresh);
-      document.removeEventListener('visibilitychange', refresh);
-      navigator.serviceWorker?.removeEventListener('message', sw);
+    const onPush = (event: MessageEvent) => {
+      if (event.data?.type === 'CPSU_PUSH_RECEIVED') void syncUnread();
     };
+    navigator.serviceWorker?.addEventListener('message', onPush);
+    return () => navigator.serviceWorker?.removeEventListener('message', onPush);
   }, [me?.id]);
   const signedOut = ready && !me;
 
@@ -208,7 +214,11 @@ function Shell() {
     </Ctx.Provider>
   );
 }
-createRoot(document.getElementById('root')!).render(<React.StrictMode><BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}><Shell /></BrowserRouter></React.StrictMode>);
+// Keep the entrypoint inert when notification-formatting helpers are imported by unit tests.
+if (typeof document !== 'undefined') {
+  const root = document.getElementById('root');
+  if (root) createRoot(root).render(<React.StrictMode><BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}><Shell /></BrowserRouter></React.StrictMode>);
+}
 
 // Only the production web app installs the offline fallback. API responses and student
 // session data stay network-only; the service worker caches no personalized content.

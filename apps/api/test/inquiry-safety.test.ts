@@ -7,6 +7,16 @@ import { HttpError } from '../src/http';
 const inquiries = readFileSync(new URL('../src/routes/inquiries.ts', import.meta.url), 'utf8');
 
 describe('conversation close safety', () => {
+  test('the guarded Stage 1 runner includes real MySQL conversation closure acceptance', () => {
+    const runner = readFileSync(new URL('./run-integration.ts', import.meta.url), 'utf8');
+    expect(runner).toContain("'test/integration/inquiry-close.test.ts'");
+  });
+
+  test('guarded runner includes sequential bounded close/send stress acceptance', () => {
+    const runner = readFileSync(new URL('./run-integration.ts', import.meta.url), 'utf8');
+    expect(runner).toContain("'test/integration/inquiry-close-stress.test.ts'");
+  });
+
   test('messages are allowed only when the thread is open', () => {
     expect(inquiryAllowsMessage('open')).toBe(true);
     expect(inquiryAllowsMessage('closed')).toBe(false);
@@ -14,9 +24,15 @@ describe('conversation close safety', () => {
   });
 
   test('both inquiry entry points reject closed threads and re-check inside a serializable transaction', () => {
-    expect((inquiries.match(/if \(!inquiryAllowsMessage\(t.status\)\) throw new HttpError\(409, 'thread_closed'\)/g) ?? []).length).toBe(2);
+    // Both message paths plus typing and presence must reject closed conversations.
+    expect((inquiries.match(/if \(!inquiryAllowsMessage\(t.status\)\) throw new HttpError\(409, 'thread_closed'\)/g) ?? []).length).toBe(4);
     expect((inquiries.match(/prisma\.\$transaction\(tx => appendMessageToOpenThread\(tx,/g) ?? []).length).toBe(2);
     expect((inquiries.match(/isolationLevel: Prisma\.TransactionIsolationLevel\.Serializable/g) ?? []).length).toBe(3);
+  });
+
+  test('closed chat responses mask stale in-memory typing and presence state', () => {
+    expect(inquiries).toContain("typing: inquiryAllowsMessage(t.status) &&");
+    expect(inquiries).toContain("otherActiveInChat: inquiryAllowsMessage(t.status) &&");
   });
 
   test('only authorized participants can close and the close and audit share one transaction', () => {

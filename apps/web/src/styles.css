@@ -211,6 +211,12 @@ label.field { display: grid; gap: .4rem; font-weight: 600; font-size: .9rem; }
 .auth-form .btn { width: 100%; }
 /* In-form navigation links should be as easy to tap as the primary action. */
 .auth-form p a { display: inline-flex; align-items: center; min-height: 44px; }
+.auth-form .field-error { margin: -.75rem 0 0; color: var(--danger); font-size: .82rem; line-height: 1.4; }
+.auth-form [aria-invalid="true"] { border-color: var(--danger); }
+.not-found-page { max-width: 42rem; margin: clamp(2rem, 10vh, 5rem) auto; padding: clamp(1.25rem, 4vw, 2rem); border: 1px solid var(--line); border-radius: 16px; background: var(--paper); }
+.not-found-page h1 { margin: 0 0 .45rem; font-size: clamp(1.7rem, 4vw, 2.4rem); }
+.not-found-page p { margin: 0 0 1.25rem; color: var(--ink-soft); line-height: 1.55; }
+.not-found-page .row { gap: .65rem; flex-wrap: wrap; }
 input[type="file"] { max-width: 100%; min-width: 0; padding: .4rem .55rem; font-size: 1rem; }
 input[type="file"]::file-selector-button { min-height: 34px; margin-right: .65rem; padding: .35rem .75rem; font: inherit; font-weight: 600; border: 1px solid var(--line); border-radius: 7px; background: var(--mango-soft); color: var(--ink); cursor: pointer; }
 /* Notification rows: one tinted dot marks unread, so the badge count and the list agree. */
@@ -584,6 +590,7 @@ label.field input, label.field select, label.field textarea { width: 100%; }
   line-height: 1.36;
   letter-spacing: -.015em;
 }
+.explore-results .product-card h3 { height: auto; min-height: 0; }
 .product-card .listing-subline {
   display: flex;
   flex-wrap: wrap;
@@ -623,8 +630,8 @@ label.field input, label.field select, label.field textarea { width: 100%; }
 }
 .product-card .card-foot {
   min-height: 2.05rem;
-  margin-top: auto;
-  padding-top: .5rem;
+  margin-top: .05rem;
+  padding-top: 0;
   display: flex;
   align-items: baseline;
   flex-wrap: wrap;
@@ -674,6 +681,54 @@ label.field input, label.field select, label.field textarea { width: 100%; }
   font-size: .75rem;
   font-weight: 650;
   text-transform: capitalize;
+}
+/* Explore uses a quiet browsing canvas so each real listing reads as a card. */
+.explore-results {
+  gap: clamp(.65rem, 1.5vw, 1rem);
+  padding: clamp(.65rem, 1.5vw, 1rem);
+  border-radius: 18px;
+  background: var(--surface-neutral);
+}
+.explore-results .product-card {
+  background: var(--paper);
+  border: 1px solid var(--surface-stroke);
+  border-radius: 13px;
+  box-shadow: 0 2px 9px var(--shadow-card);
+  overflow: hidden;
+}
+.explore-results .product-card:focus-within {
+  outline: 3px solid var(--focus-green);
+  outline-offset: 2px;
+}
+.explore-results .product-card .product-photo {
+  aspect-ratio: 1;
+  border-radius: 0;
+  background: var(--surface-soft);
+}
+.explore-results .product-card .body {
+  min-height: 152px;
+  padding: .75rem;
+  gap: .25rem;
+}
+.explore-results .product-card .card-foot {
+  min-height: 0;
+  margin-top: .05rem;
+}
+.explore-results .product-card .price { color: var(--forest); }
+.explore-results .product-card .card-campus {
+  margin-top: auto;
+  padding-top: .35rem;
+}
+.explore-results .skel.card {
+  border-color: var(--surface-stroke);
+  border-radius: 13px;
+}
+@media (hover: hover) and (pointer: fine) {
+  .explore-results .product-card:hover { box-shadow: 0 6px 16px var(--shadow-card); }
+}
+@media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
+  .explore-results .product-card { transition: box-shadow .16s ease, transform .16s ease; }
+  .explore-results .product-card:hover { transform: translateY(-2px); }
 }
 /* Preserve the existing 3 / 4 / 5-column breakpoints at normal text size. */
 @media (min-width: 620px) {

@@ -67,8 +67,9 @@ or institutional approval; those carry the module that owns them.
 | Only participants can read or write a thread | Enforced | `participantThread()`; others get `404`. |
 | Sellers cannot inquire on their own listing | Enforced | `400 own_listing`. |
 | Only published listings can receive inquiries | Enforced | `POST /inquiries` filters `status:'published'`. |
-| Participants can end a conversation (listing-scoped, for both parties) | Enforced in source (integration acceptance pending) | `POST /inquiries/:id/close` requires `participantThread`, atomically marks `closed` and audits the actor. Does not globally block a student. |
-| Closed threads reject new messages | Enforced in source (real concurrent-DB acceptance pending) | Both inquiry message entry paths re-check inside Prisma `Serializable` transactions before insert; a closed thread returns `409 thread_closed`. |
+| Participants can end a conversation (listing-scoped, for both parties) | Guarded real-MySQL integration passed | `POST /inquiries/:id/close` requires `participantThread`, atomically marks `closed` and audits once. Repeated close is idempotent. Does not globally block a student. |
+| Closed threads reject new messages | Guarded real-MySQL integration passed (five race samples; stress QA pending) | Both message entry paths re-check under Prisma `Serializable` transactions. Closed threads return `409 thread_closed` without new messages/notifications. |
+| Closed threads suppress typing and presence | Guarded real-MySQL integration passed | Typing/presence POSTs reject `409 thread_closed`; thread reads mask stale cached activity. |
 | Messages are bounded to 1000 characters | Enforced | Zod. |
 | Block users / report a conversation | Not implemented | — |
 
@@ -88,6 +89,7 @@ or institutional approval; those carry the module that owns them.
 | A system administrator cannot approve listings | Enforced | `canReview` ignores `system_admin`; unit-tested. |
 | A listing decision requires a reason of ≥ 5 characters | Enforced | Zod on the decision endpoint (and 20 chars when flagged for academic integrity). |
 | Only pending listings can be decided | Enforced | `409 not_pending`. |
+| Public listing and seller reports validate their target | Enforced in source (isolated HTTP acceptance pending) | `reportRequestSchema` accepts exactly one target, the server verifies public visibility and non-ownership, and writes report plus audit in one transaction. Private-message reports still require approval. |
 | Every privileged action is audited | Partial | Verify, listing decisions, suspend, report resolution, submit. Missing where features are missing. |
 | Analytics never expose an individual student | Enforced | Counts between 1 and 4 render as `<5`. |
 | Administrators only access authorized operational data | Enforced | Campus scope on queue, decisions, analytics. |

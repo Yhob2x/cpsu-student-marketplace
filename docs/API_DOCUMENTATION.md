@@ -59,7 +59,7 @@ There is no OpenAPI document; this file is the contract of record and must chang
 | GET | `/saved` | Saved listings still published. |
 | PUT | `/saved/:listingId` | Idempotent add. `404` if not published. **No own-listing check.** |
 | DELETE | `/saved/:listingId` | Idempotent remove, `204`. |
-| POST | `/reports` | `reason` (10–1000) + at least one of `listingId`, `sellerProfileId`. Audited. |
+| POST | `/reports` | Authenticated student only. Exactly one positive integer `listingId` **or** `sellerProfileId`, plus a trimmed `reason` (10–1000); no additional fields. Target must be a published, nondeleted listing with approved/active seller, or an approved/active seller profile. Cannot report own listing/store. Missing/nonpublic: `404`; self-report: `400`; malformed: `400`. Report and audit recorded atomically. Private conversation reports not enabled. |
 
 ## 6. Seller — `/seller` (authenticated)
 
@@ -71,9 +71,10 @@ There is no OpenAPI document; this file is the contract of record and must chang
 | POST | `/seller/listings` | `type`, `categoryId`, `title` (3–120), `description` (10–3000), `price` (>0, ≤1,000,000), `priceBasis`, `availability`, `handoffNote?`. Requires an approved store; creates a `draft`. |
 | PATCH | `/seller/listings/:id` | Partial body. `409 not_editable` for `pending_review`/`suspended`/`rejected`. A material edit to a published listing reverts it to `draft`. |
 | POST | `/seller/listings/:id/media` | Authenticated owner only, checked **before writing upload bytes**. `multipart/form-data` field `image`; declared JPEG/PNG/WebP ≤ 3 MB, fully decoded format must match MIME, ≤ 24 MP, single frame. Re-encodes to WebP (up to 2400px, strips metadata). Max 5 photos (at least 1 required for review; drafts may have none). The browser supports selecting several images together and sends each sequentially to this single-image endpoint; it reports partial success instead of retrying already uploaded photos. Adding a photo to a published listing returns it to draft for renewed campus review. Errors: `400 invalid_image`, `409 too_many_images`/`not_editable`. |
+| PATCH | `/seller/listings/:id/media/cover` | Authenticated student owner only. Strict JSON `{ "mediaId": positiveInteger }`; photo must belong to this editable, nondeleted, unreserved listing. Atomically makes the selected attached photo position 0, normalizes remaining positions, and writes an audit row. Existing approved photos may be reordered without adding unreviewed bytes; uploading new photos still returns a published listing to draft. Response `{ "coverMediaId": number }`. Missing/foreign listing or photo: `404`; locked listing: `409`. |
 | POST | `/seller/listings/:id/submit` | Runs the rules engine; `422 category_prohibited` for a prohibited category, `422 incomplete_listing` for no image or bad price. Moves to `pending_review` and audits the flags. |
 
-**Not present:** `DELETE /seller/listings/:id`, mark-as-sold, reorder/delete a photo, close a thread.
+**Not present:** a per-photo deletion endpoint. Listing removal, availability updates, and thread closing are documented in their current sections.
 
 ## 7. Inquiries — `/inquiries` (authenticated)
 
@@ -82,10 +83,11 @@ There is no OpenAPI document; this file is the contract of record and must chang
 | GET | `/inquiries` | Participant-only threads. Each row includes `otherStudentName` (the other participant's profile display name), listing title, viewer role, and last message with `mine` and `receipt` (`sent`, `delivered`, `read`). Only authorized participants can see the name; no email or credentials are included. |
 | POST | `/inquiries` | `listingId`, `body` (1–1000). Published listings only; `400 own_listing` on your own listing. Creates or reuses the thread and notifies the seller. |
 | GET | `/inquiries/:id/messages` | Participants only. Returns thread (including `thread.otherStudentName`), `listing` context (`id`, `title`, `type`, numeric `price`, `priceBasis`, `condition`, `availability`, `imageUrl`), messages with `mine`, author name, `receipt`, `seenAt`, handoff and `typing`. `imageUrl` is the first photo ordered by media position; it is `null` and `availability` becomes `unavailable` when the listing is no longer publicly visible. Only participants can fetch this response. On recipient retrieval, previously undelivered incoming messages receive `deliveredAt` (real delivery). Response also includes `otherActiveInChat` from a short-lived, participant-only heartbeat. |
-| POST | `/inquiries/:id/messages` | `body` (1–1000). `409 thread_closed`. Notifies the other party. |
-| POST | `/inquiries/:id/typing` | 5-second heartbeat; in-memory, per instance. |
+| POST | `/inquiries/:id/messages` | `body` (1–1000). `409 thread_closed`; never inserts/alerts after close. Notifies the other party on successful send. |
+| POST | `/inquiries/:id/close` | Buyer or seller participant only. Idempotent `204`; atomically marks closed + audits once. Rejects further messages via both entry paths and suppresses typing/presence signals. History remains readable; not a global block. |
+| POST | `/inquiries/:id/typing` | Participant-only 5-second heartbeat; in-memory, per instance. Closed thread returns `409 thread_closed`; no new typing signal. |
 | POST | `/inquiries/:id/seen` | Participants only. Body `{ upToId: positive integer }`. Recipient's client calls after the incoming message is visible and the page is active. Sets `seenAt` only on incoming messages in that thread with `id <= upToId`, and ensures `deliveredAt`; `204`, no body. Author cannot acknowledge own messages. Others get `404`. |
-| POST | `/inquiries/:id/presence` | Participants only; 204. Refreshes ephemeral 25-second presence in **this thread**, not global user status. Frontend only heartbeats while the conversation is in a visible, focused tab. Other participants can read `otherActiveInChat` in the thread response. No database migration. |
+| POST | `/inquiries/:id/presence` | Participants only; 204 on open threads. Refreshes ephemeral 25-second presence in **this thread**, not global user status. Closed thread returns `409 thread_closed`. Conversation reads mask stale presence/typing after closure; no database migration. |
 | PUT | `/inquiries/:id/handoff` | `method`, `timeWindow` (≤80), `generalLocation` (≤120), `status` (default `proposed`). Upserts one handoff per thread. Self-reported, **not** a transaction record. |
 
 ## 8. Administration — `/admin` (authenticated + review scope)

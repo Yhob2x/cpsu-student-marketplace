@@ -5,6 +5,7 @@ import { api, setToken, tryRestoreSession } from './api';
 import { disconnectPushOnLogout, updateAppBadge } from './push-client';
 import { Discover, Home, ListingDetail, Guidelines, StorePage } from './pages-public';
 import { Icon } from './icons';
+import { SiteFooter } from './site-footer';
 import { Login, Register, Dashboard, Inquiries, Thread, Saved } from './pages-account';
 import { Profile, Notifications } from './pages-profile';
 import { Admin } from './pages-admin';
@@ -19,6 +20,10 @@ import './push-settings.css';
 import './my-store.css';
 import './listing-gallery.css';
 import './image-zoom.css';
+import './student-emphasis.css';
+import './student-motion.css';
+import './profile-refinements.css';
+import './footer-refinements.css';
 
 export type Me = { id: number; email: string; displayName: string; roles: { role: string; campusId: number | null }[];
   affiliations: { id: number; campus: { id: number; name: string }; status: string }[]; storeId: number | null };
@@ -46,29 +51,12 @@ function HeaderSearch() {
   </form>;
 }
 
-function SiteFooter() {
-  return <footer className="site-foot">
-    <div className="wrap foot-grid">
-      <div className="foot-brand">
-        <strong>CPSU Student Marketplace</strong>
-        <p>A student-to-student marketplace for Central Philippines State University. Listings are reviewed by campus reviewers;
-          payment and handoff are arranged directly between students.</p>
-      </div>
-      <nav aria-label="Marketplace"><h2>Marketplace</h2>
-        <Link to="/explore">All listings</Link><Link to="/explore?type=physical_product">Products</Link>
-        <Link to="/explore?type=service">Student services</Link><Link to="/explore?sort=price_asc">Lowest price first</Link></nav>
-      <nav aria-label="Your account"><h2>Your account</h2>
-        <Link to="/dashboard">Sell an item</Link><Link to="/saved">Saved listings</Link>
-        <Link to="/inquiries">Messages</Link><Link to="/transactions">My transactions</Link><Link to="/profile">Profile</Link></nav>
-      <nav aria-label="Support"><h2>Support</h2>
-        <Link to="/guidelines">Marketplace guidelines</Link><Link to="/guidelines">Reporting a listing</Link>
-        <Link to="/register">Create an account</Link><Link to="/login">Sign in</Link></nav>
-    </div>
-    <div className="wrap foot-base">
-      <p>© {new Date().getFullYear()} CPSU Student Marketplace</p>
-      <p>Central Philippines State University · Student-built MVP</p>
-    </div>
-  </footer>;
+function NotFound() {
+  return <section className="not-found-page">
+    <h1>Page not found</h1>
+    <p>The address may have changed, or the page may no longer be available.</p>
+    <div className="row"><Link className="btn" to="/">Go home</Link><Link className="btn ghost" to="/explore">Explore listings</Link></div>
+  </section>;
 }
 
 function Shell() {
@@ -206,9 +194,10 @@ function Shell() {
           <Route path="/profile" element={signedOut ? <Navigate to="/login?next=%2Fprofile" /> : <Profile />} />
           <Route path="/notifications" element={signedOut ? <Navigate to="/login?next=%2Fnotifications" /> : <Notifications />} />
           <Route path="/admin" element={ready && !isReviewer ? <Navigate to="/" /> : <Admin />} />
+          <Route path="*" element={<NotFound />} />
         </Routes>
       </div></main>
-      <SiteFooter />
+      <SiteFooter audience={!ready ? 'checking' : !me ? 'guest' : isStaff ? 'staff' : 'student'} canReview={Boolean(isReviewer)} />
       <nav className="tabbar" aria-label="Primary">
         <NavLink to="/" end><Icon name="home" size={19} /><span>Home</span></NavLink>
         <NavLink to="/explore"><Icon name="search" size={19} /><span>Explore</span></NavLink>

@@ -10,6 +10,7 @@ import { readFileSync, existsSync } from 'node:fs';
 import { networkInterfaces } from 'node:os';
 import { join } from 'node:path';
 import { spawnSync } from 'node:child_process';
+import { namedFirewallProfileEnabled, wifiPrivateProfile, hasUnsafeBunInboundRules } from './iphone-lan-preflight-status.mjs';
 
 const prestart=process.argv.length===4 && process.argv[3]==='--prestart';
 if ((process.argv.length!==3 && !prestart) || process.argv[2]!=='--read-only')
@@ -43,16 +44,31 @@ const ip=wifi[0]?.ip;
 let profiles=[];
 try {profiles=objects(runPS('Get-NetFirewallProfile | Select-Object Name, Enabled | ConvertTo-Json -Compress')); }
 catch{report(false,'Windows Firewall state readable');}
-if(profiles.length) {
-  for(const p of profiles)report(p.Enabled===true, 'Windows Firewall '+p.Name,'must be enabled for controlled device QA');
+// Require exactly one enabled copy of EACH Windows firewall profile.
+// An empty or incomplete PowerShell result must never silently pass.
+for (const name of ['Domain', 'Private', 'Public']) {
+  report(namedFirewallProfileEnabled(profiles, name), 'Windows Firewall '+name,
+    'must be enabled for controlled device QA');
 }
 let nets=[];
 try {nets=objects(runPS('Get-NetConnectionProfile | Select-Object InterfaceAlias, NetworkCategory | ConvertTo-Json -Compress')); }
 catch{report(false,'Wi-Fi network trust category readable');}
-if(wifi.length===1 && nets.length){
-  const chosen=nets.find(n=>String(n.InterfaceAlias).toLowerCase()===wifi[0].alias.toLowerCase());
-  report(!!chosen && chosen.NetworkCategory===1 || chosen?.NetworkCategory==='Private',
-    'Wi-Fi trust category','expected Private for owner-controlled home network, not Public');
+// A missing, duplicated or untrusted Windows network profile must block LAN QA.
+if (wifi.length === 1) {
+  report(wifiPrivateProfile(nets, wifi[0].alias),
+    'Wi-Fi trust category', 'expected Private for owner-controlled home network, not Public');
+}
+
+// Fail closed on Windows-generated unrestricted Bun allow rules. An existing Bun
+// dev API listening on all interfaces can be reachable even with a narrow HTTPS
+// port-8445 allowance. Never change/remove firewall rules from a read-only audit.
+try {
+  const activeBunRules = objects(runPS(String.raw`$found=@(Get-NetFirewallRule -Direction Inbound -Enabled True -Action Allow -ErrorAction Stop | Where-Object { $_.Name -match 'bun[.]exe' -or $_.DisplayName -match 'bun[.]exe' }); $rows=@(foreach($r in $found) { $p=$r | Get-NetFirewallPortFilter; $a=$r | Get-NetFirewallAddressFilter; [pscustomobject]@{ Name=[string]$r.Name; Profile=[int]$r.Profile; LocalPort=[string]$p.LocalPort; RemoteAddress=($a.RemoteAddress -join ',') } }); ConvertTo-Json -InputObject $rows -Compress`));
+  report(!hasUnsafeBunInboundRules(activeBunRules), 'no unrestricted Bun inbound firewall allowance',
+    'narrow or disable existing Any-port/Any-remote Bun allow rules before phone QA');
+} catch {
+  report(false, 'Bun inbound firewall allowance state readable',
+    'unable to verify unrestricted runtime rules; aborting LAN QA');
 }
 
 const base=join(process.env.LOCALAPPDATA??'', 'CPSU-Marketplace','iphone-lan-https');

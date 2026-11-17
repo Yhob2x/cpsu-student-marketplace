@@ -21,7 +21,7 @@ module, and PART XI STEP 5 requires the agent to actually run them. This file re
 `apps/api/test/permissions.test.ts` covers: campus reviewer limited to their campus, global admin reviewing any campus, system administrator
 denied review, plain student has no scope, and material-change detection.
 
-**No test exercises an HTTP route, the database, or a UI.** Every "Verified" claim elsewhere in these docs is code inspection, not a test run.
+**Historical (11 November) statement:** That initial five-case baseline did not exercise HTTP, the database, or a UI. As of 17 November, dedicated isolated DB integration tests exist as opt-in suites, and `apps/api/test/report-http.test.ts` exercises reporting with real Express + Supertest against synthetic in-memory database stubs. It does **not** prove real-MySQL rollback or two-student end-to-end behavior. See `docs/SECURITY_REPORT_HTTP_B2A_2026-11-17.md`.
 
 ## 2. Test layers to add, in order
 
@@ -87,3 +87,14 @@ cd apps/api && bunx prisma migrate status
 - No load, accessibility-audit, or browser-matrix testing has been performed.
 - No backup/restore drill has been run in this environment.
 - Mobile behavior has never been executed here; the code typechecks only when its dependencies are installed.
+
+## 2026-11-17 — Isolated real-MySQL public reporting acceptance
+The opt-in `cd apps/api && bun run test:integration` now executes Stage 1 (36 passed) and a new reporting suite (4 passed) **sequentially** against only `cpsu_marketplace_test`. New cases cover report/audit persistence, denied roles and invalid/hidden targets, reviewer campus scoping and resolution, and true Prisma/MySQL transaction rollback when a test audit write throws. The test subprocess now forces local-only media storage and clears Drive credentials; the fixtures guard rejects nonlocal media mode. Ordinary `bun test` still skips integration. Full ordinary API: 97 pass/5 skipped; web: 34 pass; API typecheck/build/PWA checks passed. See `docs/SECURITY_REPORT_MYSQL_B2A_2026-11-17.md` for the initial inherited-Drive incident and cautious cleanup note. This is not a production migration or real-device QA pass.
+
+## 2026-11-17 — Real isolated-MySQL conversation closure acceptance (B1.2)
+The guarded `cd apps/api && bun run test:integration` now runs **three independent suites sequentially** in the local `cpsu_marketplace_test` database: Stage 1 36/36, public reports 4/4, and conversation closure 4/4; no student DB writes. The new suite checks two participant roles, outsider/staff denial, idempotent close + one audit, retained history, both post-close message entry paths, no rejected-send notification, typing/presence suppression, and **five simultaneous send/close races**. It exposed the previously accepted post-close heartbeat bug (204) and verified the new `409 thread_closed` safeguard; thread responses now mask stale cached activity. Regular API `bun test`: 103 pass / 6 opt-in skips; web: 42 pass; API TypeScript/web build/PWA pass. See `docs/CONVERSATION_SAFETY_B1_MYSQL_2026-11-17.md`. These checks are not a replacement for a full concurrency stress test or physical iPhone/Safari QA.
+
+## 2026-11-17 — B1.3 bounded MySQL contention and iPhone preflight
+The opt-in integration runner now adds `test/integration/inquiry-close-stress.test.ts` after the 36 Stage 1, 4 public-report, and 4 conversation-close cases. The additional stress suite passes 40 send-versus-close rounds (three sends each), 20 two-party close rounds, 10 post-close replay waves and one rate-limit boundary test. Observed 31 conflict responses under deliberate contention, with idempotent close retries in test only; no post-close writes or duplicate closure audits. No production middleware is weakened: each independent phase uses a fresh `createApp()` instance, and the 301st /health request on one fresh instance returns 429. Synthetic DB only, local media storage, Drive credentials cleared. Full ordinary API 104 pass/7 opt-in skipped; web 42 pass; API typecheck, Vite build, PWA, diff check pass. Physical iPhone Safari preflight returned NOT READY: Windows Firewall Domain/Private/Public disabled and Wi-Fi Public. See `docs/CONVERSATION_STRESS_SAFARI_B2_GATE_2026-11-17.md`, `docs/IPHONE_SAFARI_CONVERSATION_ACCEPTANCE_2026-11-17.md`. No physical device acceptance has been claimed.
+
+**B1.3 final worktree caveat:** A subsequent entire-repository `git diff --check` failed on an unrelated concurrently modified `apps/web/src/mobile-refinements.css` EOF blank line; B1.3's tracked-file-only diff check passed. Do not mark the whole worktree whitespace-clean until that independent edit is reviewed.

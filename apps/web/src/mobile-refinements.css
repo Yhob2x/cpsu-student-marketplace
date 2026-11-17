@@ -5,6 +5,35 @@
 .mobile-filter-toggle,
 .explore-type-chips { display: none; }
 
+@media (min-width: 861px) {
+  header.top { position: sticky; top: 0; z-index: 20; }
+  html { scroll-padding-top: 9rem; }
+}
+@media (max-width: 860px) {
+  .explore-toolbar {
+    position: sticky;
+    top: 0;
+    z-index: 9;
+    margin-inline: -1rem;
+    padding: max(.5rem, env(safe-area-inset-top, 0px)) 1rem .55rem;
+    background: var(--paper);
+    border-bottom: 1px solid var(--line);
+    box-shadow: 0 3px 12px var(--shadow-card);
+  }
+  .explore-search-label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
+  .explore-toolbar .explore-search .input-icon input { min-height: 48px; }
+}
+
 @media (max-width: 640px) {
   /* Content first: don't require a full screen of decorative hero art before browsing. */
   .hero {
@@ -89,13 +118,21 @@
     white-space: nowrap;
   }
   .filters.filter-panel[data-mobile-open="false"] { display: none; }
+  .filters.filter-panel .explore-type-filter { display: none; }
   .filters.filter-panel[data-mobile-open="true"] {
     margin: .55rem 0 .5rem;
     padding: .9rem;
   }
-  .results { margin-top: .65rem; margin-bottom: .85rem; gap: .45rem; }
+  .results { margin-top: .35rem; margin-bottom: .45rem; padding-block: .25rem .4rem; gap: .45rem; }
   .results .field { align-self: center; }
   .listing-grid { gap: 1rem .7rem; }
+  .explore-results {
+    margin-inline: -1rem;
+    padding: .7rem 1rem 1rem;
+    border-radius: 0;
+    gap: .7rem;
+  }
+  .explore-results .product-card .body { padding: .7rem .6rem .65rem; }
 
   /* Readable listing details, while retaining the approved two-column mobile layout. */
   .product-card .body { padding: .75rem .5rem .5rem; }
@@ -548,10 +585,8 @@
 }
 
 /*
- * 2¼-card discoverability cue for touch browsing.
- * Show two complete listings plus a visible slice of the third so horizontal
- * swiping is suggested by the real content, not a decorative arrow or overlay.
- * Desktop grids, Saved, store pages and all API pagination remain unchanged.
+ * Home listing rails retain their partial-card browsing cue.
+ * Explore uses the ordinary two-column vertical results grid.
  */
 @media (max-width: 640px) {
   /* Home Popular / Fresh / Services strips already scroll horizontally. */
@@ -570,61 +605,27 @@
     scroll-snap-align: start;
   }
 
-  /* Explore: retain sorting/filters and server pagination, but let the actual
-     results peek into the next column on phones. Four or fewer stay one row. */
-  .results ~ .grid.listing-grid:has(> .product-card:nth-child(3)) {
-    display: grid;
-    grid-auto-flow: column;
-    grid-template-columns: none;
-    grid-template-rows: auto;
-    grid-auto-columns: calc((100% - 1.5rem) / 2.25);
-    gap: .75rem;
-    align-items: stretch;
-    overflow-x: auto;
-    overflow-y: hidden;
-    overscroll-behavior-x: contain;
-    scroll-snap-type: x proximity;
-    scroll-padding-inline: 0;
-    -webkit-overflow-scrolling: touch;
-    padding: 0 0 .85rem;
-  }
-  /* With many search results, show two stacked rows for quicker scanning while
-     still revealing the next *column* to swipe toward. */
-  .results ~ .grid.listing-grid:has(> .product-card:nth-child(5)) {
-    grid-template-rows: repeat(2, auto);
-  }
-  .results ~ .grid.listing-grid:has(> .product-card:nth-child(3)) > .product-card {
-    box-sizing: border-box;
-    min-width: 0;
-    scroll-snap-align: start;
-  }
-  /* Fewer than three results: preserve standard, non-scrollable grid cards. */
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .rail,
-  .results ~ .grid.listing-grid { scroll-behavior: auto; }
+  .rail { scroll-behavior: auto; }
 }
 
 @media (max-width: 640px) {
   /* Subtle browser-visible track on desktop emulation; iOS Safari will show
      its native transient indicator. The partial card remains the main cue. */
-  .rail:has(.product-card:nth-child(3)),
-  .results ~ .grid.listing-grid:has(> .product-card:nth-child(3)) {
+  .rail:has(.product-card:nth-child(3)) {
     scrollbar-width: thin;
     scrollbar-color: var(--surface-stroke) transparent;
   }
-  .rail:has(.product-card:nth-child(3))::-webkit-scrollbar,
-  .results ~ .grid.listing-grid:has(> .product-card:nth-child(3))::-webkit-scrollbar {
+  .rail:has(.product-card:nth-child(3))::-webkit-scrollbar {
     height: 4px;
   }
-  .rail:has(.product-card:nth-child(3))::-webkit-scrollbar-thumb,
-  .results ~ .grid.listing-grid:has(> .product-card:nth-child(3))::-webkit-scrollbar-thumb {
+  .rail:has(.product-card:nth-child(3))::-webkit-scrollbar-thumb {
     background: var(--surface-stroke);
     border-radius: 999px;
   }
-  .rail:has(.product-card:nth-child(3))::-webkit-scrollbar-track,
-  .results ~ .grid.listing-grid:has(> .product-card:nth-child(3))::-webkit-scrollbar-track {
+  .rail:has(.product-card:nth-child(3))::-webkit-scrollbar-track {
     background: transparent;
   }
 }
@@ -674,10 +675,8 @@
     outline-offset: 2px;
   }
   .mobile-browse-prev svg { transform: rotate(180deg); }
-  /* Explicitly allow native horizontal and vertical panning from a listing
-     card; children remain real, independently tappable links and Save buttons. */
-  .rail:has(.product-card:nth-child(3)),
-  .results ~ .grid.listing-grid:has(> .product-card:nth-child(3)) {
+  /* Home listing rails retain native touch panning. */
+  .rail:has(.product-card:nth-child(3)) {
     touch-action: pan-x pan-y;
   }
 }

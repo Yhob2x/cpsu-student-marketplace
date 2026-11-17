@@ -1,0 +1,123 @@
+/* CPSU Market profile — task-first layout; existing forest/ivory/gold design tokens. */
+.profile-page { min-width: 0; }
+.profile-page .profile-grid {
+  grid-template-columns: minmax(0, 1fr);
+  align-items: stretch;
+  gap: 1rem;
+}
+.profile-page .profile-grid > * { min-width: 0; }
+.profile-page .profile-grid > .panel { margin: 0; padding: clamp(1rem, 2.5vw, 1.3rem); border-radius: 14px; }
+.profile-page .panel h2 { font-size: clamp(1.12rem, 2vw, 1.3rem); margin-bottom: 1rem; }
+.profile-identity { display: flex; gap: .85rem; align-items: center; min-width: 0; margin-bottom: 1.1rem; }
+.profile-avatar {
+  display: grid;
+  place-items: center;
+  flex: 0 0 52px;
+  width: 52px;
+  height: 52px;
+  border-radius: 14px;
+  background: var(--forest);
+  color: var(--on-forest);
+  font: 750 1.05rem/1 var(--font-heading);
+  letter-spacing: -.015em;
+}
+.profile-identity-copy { display: grid; gap: .15rem; min-width: 0; }
+.profile-identity-copy strong { font: 750 1.13rem/1.25 var(--font-heading); color: var(--forest); overflow-wrap: anywhere; }
+.profile-identity-copy span { font-size: .83rem; line-height: 1.4; color: var(--ink-soft); }
+.profile-account-facts { margin-bottom: .7rem; }
+.profile-account-facts dd { overflow-wrap: anywhere; }
+.profile-privacy-note { display: flex; align-items: flex-start; gap: .45rem; font-size: .79rem; margin: .7rem 0 0; }
+.profile-privacy-note svg { flex: 0 0 auto; margin-top: .15rem; }
+.profile-review-state { display: flex; gap: .65rem; align-items: center; min-width: 0; margin-bottom: .75rem; }
+.profile-review-state h3 { color: var(--forest); font-size: 1.07rem; font-weight: 750; margin: 0; }
+.profile-review-symbol {
+  display: grid;
+  place-items: center;
+  flex: 0 0 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: var(--mango-soft);
+  color: var(--forest);
+}
+.profile-review-symbol--pending { background: #fff0c8; }
+.profile-review-symbol--rejected { background: #fff0ed; color: var(--danger); }
+.profile-review-symbol--missing { background: var(--mango-soft); }
+.profile-campus-list { margin: 0; padding: 0; list-style: none; display: grid; gap: .5rem; }
+.profile-campus-list li { display: flex; gap: .5rem; flex-wrap: wrap; align-items: center; justify-content: space-between; overflow-wrap: anywhere; }
+.profile-campus-list li > span:first-child { font-weight: 600; font-size: .89rem; }
+.profile-review-description { font-size: .87rem; line-height: 1.65; margin: .75rem 0 1rem; }
+.profile-status-action {
+  display: inline-flex;
+  gap: .55rem;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  padding: .55rem .85rem;
+  border-radius: 9px;
+  background: var(--forest);
+  color: var(--on-forest);
+  font-size: .89rem;
+  font-weight: 650;
+  text-decoration: none;
+}
+.profile-status-action:hover { background: var(--pine); color: var(--on-forest); }
+.profile-status-action svg { flex: 0 0 auto; }
+.profile-status-secondary { display: inline-flex; align-items: center; min-height: 44px; margin-left: .5rem; font-size: .85rem; font-weight: 650; }
+.profile-settings .stack { max-width: none; gap: .55rem; }
+.profile-settings .field { display: block; margin: 0; }
+.profile-settings input { width: 100%; min-width: 0; }
+.profile-settings input[aria-invalid="true"] { border-color: var(--danger); }
+.profile-name-help { font-size: .81rem; line-height: 1.55; margin: .1rem 0 .5rem; }
+.profile-field-error { margin: -.1rem 0 .4rem; font-size: .81rem; color: var(--danger); }
+.profile-save-button { justify-self: start; min-width: 135px; }
+.profile-save-success { display: inline-flex; align-items: center; gap: .4rem; font-size: .85rem; font-weight: 650; color: var(--leaf); margin: .3rem 0 0; }
+.profile-save-success svg { flex: 0 0 auto; }
+.profile-shortcuts-panel nav { width: 100%; }
+.profile-shortcuts { list-style: none; padding: 0; margin: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .6rem; }
+.profile-shortcut {
+  display: flex;
+  align-items: center;
+  gap: .55rem;
+  min-height: 55px;
+  width: 100%;
+  padding: .7rem .7rem;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  color: var(--forest);
+  text-decoration: none;
+  font-size: .83rem;
+  font-weight: 650;
+}
+.profile-shortcut svg { flex: 0 0 auto; }
+.profile-shortcut span { flex: 1; min-width: 0; }
+.profile-shortcut svg:last-child { width: 15px; }
+.profile-shortcut:hover { background: var(--mango-soft); border-color: var(--sage); }
+.profile-shortcut:focus-visible, .profile-status-action:focus-visible { outline: 3px solid var(--mango); outline-offset: 2px; }
+.profile-install { margin: 0; }
+.profile-install .install-app--panel {
+  margin: 0;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 1rem;
+}
+.profile-install .install-app__intro { flex: 1 1 220px; }
+.profile-install .install-app__button { flex: 0 0 auto; align-self: center; }
+.profile-install .install-app__guide { flex: 1 0 100%; width: 100%; }
+@media (min-width: 820px) {
+  .profile-page .profile-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .profile-page .profile-install { grid-column: 1 / -1; }
+}
+@media (max-width: 480px) {
+  .profile-page .profile-grid { gap: .8rem; }
+  .profile-page .profile-grid > .panel { padding: 1rem; }
+  .profile-shortcuts { gap: .45rem; }
+  .profile-shortcut { padding: .6rem .55rem; font-size: .8rem; }
+  .profile-install .install-app--panel { flex-direction: column; align-items: stretch; }
+  .profile-install .install-app__intro { flex: 0 1 auto; }
+  .profile-install .install-app__button { align-self: stretch; }
+  .profile-status-secondary { margin: .5rem 0 0; display: flex; }
+}
+
+/* Installed PWAs render no installation card; avoid a blank last grid row. */
+.profile-install:empty { display: none; }

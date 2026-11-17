@@ -34,6 +34,23 @@ describe('untrusted photo sanitation (local synthetic files only)', () => {
     });
   });
 
+  test('seller profile picture is a square, metadata-free WebP and the original is discarded', async () => {
+    await withTempDir(async dir => {
+      const original = await sharp({
+        create: { width: 800, height: 500, channels: 3, background: '#28543c' },
+      }).png().withExif({ IFD0: { Artist: 'Synthetic avatar uploader' } }).toBuffer();
+      const input = path.join(dir, 'avatar.upload');
+      await fs.writeFile(input, original);
+      const result = await sanitizeListingImage(sample(input, 'image/png'), dir, { avatar: true });
+      const image = await sharp(await fs.readFile(path.join(dir, result.mediaPath))).metadata();
+      expect(image.format).toBe('webp');
+      expect(image.width).toBe(512);
+      expect(image.height).toBe(512);
+      expect(image.exif).toBeUndefined();
+      expect(await fs.readdir(dir)).toEqual([result.mediaPath]);
+    });
+  });
+
   test('rejects PNG bytes falsely declared to be JPEG and cleans up', async () => {
     await withTempDir(async dir => {
       const bytes = await sharp({

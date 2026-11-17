@@ -1,0 +1,10 @@
+.seller-store-settings { display: grid; gap: 1rem; }
+.seller-store-settings__header { display: flex; align-items: start; flex-wrap: wrap; justify-content: space-between; gap: .6rem 1rem; }
+.seller-store-settings__header h2 { margin: 0 0 .25rem; font-size: 1.08rem; }
+.seller-store-settings__header p { margin: 0; }
+.seller-store-settings__header > a { display: inline-flex; align-items: center; min-height: 44px; font-size: .9rem; font-weight: 650; }
+.seller-store-settings__form { display: grid; gap: .9rem; }
+.seller-store-settings__form .field { min-width: 0; }
+.seller-store-settings__form input, .seller-store-settings__form textarea { width: 100%; }
+.seller-store-settings__actions { display: flex; align-items: center; flex-wrap: wrap; gap: .5rem; }
+.seller-store-settings__notice { margin: 0; color: var(--forest); font-weight: 650; }

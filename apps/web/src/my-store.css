@@ -1,4 +1,6 @@
 .my-store { max-width: 960px; margin-inline: auto; }
+.store-profile-settings { display: grid; gap: .85rem; margin: .85rem 0 1.4rem; scroll-margin-top: 1rem; }
+.my-store .page-head { display: flex; justify-content: space-between; flex-wrap: wrap; align-items: center; gap: .7rem 1rem; }
 .my-store .page-head { margin-bottom: 1rem; }
 .store-affiliation { display: flex; align-items: center; flex-wrap: wrap; gap: .4rem 1.25rem; padding: .8rem 1rem; background: var(--surface-soft); }
 .store-affiliation h2 { margin: 0; font-size: .95rem; }
@@ -15,6 +17,16 @@
 .store-create .seller-composer { max-width: none; padding: 0 1.1rem 1.2rem; gap: 1rem; }
 .store-create .seller-composer > .muted:first-child { margin: 0; }
 .store-create .seller-composer > .btn { justify-self: start; }
+.selected-photo-previews { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 112px), 1fr)); gap: .65rem; }
+.selected-photo-preview { display: grid; align-content: start; gap: .35rem; min-width: 0; padding: .4rem; border: 1px solid var(--line); border-radius: 11px; background: var(--paper); }
+.selected-photo-preview-image { display: grid; place-items: center; width: 100%; aspect-ratio: 1; overflow: hidden; border-radius: 7px; background: var(--surface-neutral); color: var(--ink-soft); text-align: center; font-size: .78rem; }
+.selected-photo-preview-image img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.selected-photo-cover { min-height: 44px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface-soft); color: var(--forest); font: 700 .78rem/1.3 var(--font-body); cursor: pointer; }
+.selected-photo-cover[aria-pressed="true"] { background: var(--forest); color: var(--pure-white); border-color: var(--forest); }
+.selected-photo-cover:disabled { opacity: .6; cursor: not-allowed; }
+.selected-photo-cover:focus-visible { outline: 3px solid var(--focus-green); outline-offset: 2px; }
+.selected-photo-position { color: var(--forest); font-size: .78rem; font-weight: 700; }
+.selected-photo-preview small { overflow-wrap: anywhere; color: var(--ink-soft); font-size: .75rem; line-height: 1.35; }
 .store-listings-head { display: flex; justify-content: space-between; align-items: center; gap: .75rem; margin: 1.8rem 0 .9rem; }
 .store-listings-head h2 { margin: 0; }
 .store-listings-head h2:focus { scroll-margin-top: 1rem; }

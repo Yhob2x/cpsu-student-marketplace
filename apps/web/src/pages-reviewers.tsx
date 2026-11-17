@@ -9,7 +9,7 @@ type Reviewer = {
 };
 type Editor = { displayName: string; email: string; campusId: string; status: 'active' | 'suspended'; password: string; reason: string };
 
-export function ReviewerAdmin({ active, campuses }: { active: boolean; campuses: Campus[] }) {
+export function ReviewerAdmin({ active, campuses, campusesError, onRetryCampuses }: { active: boolean; campuses: Campus[]; campusesError: string; onRetryCampuses: () => void }) {
   const [items, setItems] = useState<Reviewer[]>([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
@@ -78,6 +78,7 @@ export function ReviewerAdmin({ active, campuses }: { active: boolean; campuses:
     <div className="sec-head"><div><h2 id="staff-management-heading">Reviewer accounts</h2><p className="muted">Staff logins are separate from student accounts. Campus reviewers can moderate only their assigned campus.</p></div>
       <button type="button" className="btn" onClick={() => { setShowCreate(previous => !previous); setError(''); setNotice(''); }}>{showCreate ? 'Cancel' : 'Add reviewer'}</button></div>
     {error && <p className="err" role="alert">{error}</p>}
+    {campusesError && <p className="err" role="alert">Could not load campus choices: {campusesError}. <button className="btn ghost" type="button" onClick={onRetryCampuses}>Retry campuses</button></p>}
     {notice && <p role="status">{notice}</p>}
     {showCreate && <form className="panel stack admin-reviewer-form" onSubmit={createReviewer}>
       <h3>New campus reviewer</h3>
@@ -111,7 +112,7 @@ export function ReviewerAdmin({ active, campuses }: { active: boolean; campuses:
           <label className="field">Account status<select value={edit.status} onChange={e => setEdit(previous => ({ ...previous, status: e.target.value as Editor['status'] }))}><option value="active">Active</option><option value="suspended">Suspended</option></select></label>
           <label className="field">New password (optional)<input type="password" minLength={12} maxLength={128} autoComplete="new-password" value={edit.password} onChange={e => setEdit(previous => ({ ...previous, password: e.target.value }))} /></label>
           <label className="field">Reason for change<input required minLength={10} maxLength={500} value={edit.reason} onChange={e => setEdit(previous => ({ ...previous, reason: e.target.value }))} /></label>
-          <button className="btn" disabled={saving}>{saving ? 'Saving…' : 'Save reviewer'}</button>
+          <button className="btn" disabled={saving || !campuses.length}>{saving ? 'Saving…' : 'Save reviewer'}</button>
         </form>}
       </aside>
     </div>}

@@ -21,7 +21,7 @@ export function ImageZoomDialog({ photos, title, initialIndex, onClose }: {
   photos: readonly string[];
   title: string;
   initialIndex: number;
-  onClose: () => void;
+  onClose: (index: number) => void;
 }) {
   const [index, setIndex] = useState(() => clampPhotoIndex(initialIndex, photos.length));
   const [scale, setScale] = useState(1);
@@ -32,6 +32,7 @@ export function ImageZoomDialog({ photos, title, initialIndex, onClose }: {
   const surfaceRef = useRef<HTMLDivElement>(null);
   const dialogRef = useRef<HTMLDivElement>(null);
   const closeRef = useRef<HTMLButtonElement>(null);
+  const filmstripRef = useRef<HTMLDivElement>(null);
   const pointers = useRef(new Map<number, Point>());
   const drag = useRef<{ start: Point; offset: Offset } | null>(null);
   const pinch = useRef<{ distance: number; scale: number; midpoint: Point; offset: Offset } | null>(null);
@@ -49,6 +50,14 @@ export function ImageZoomDialog({ photos, title, initialIndex, onClose }: {
       if (previousFocus?.isConnected) previousFocus.focus();
     };
   }, []);
+
+  useEffect(() => {
+    const strip = filmstripRef.current;
+    const selected = strip?.children[index] as HTMLElement | undefined;
+    if (!strip || !selected) return;
+    const left = selected.offsetLeft - strip.offsetLeft - (strip.clientWidth - selected.clientWidth) / 2;
+    strip.scrollTo({ left, behavior: window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth' });
+  }, [index]);
 
   const updateZoom = (nextScale: number, nextOffset: Offset = offsetRef.current) => {
     const value = clampZoom(nextScale);
@@ -74,8 +83,8 @@ export function ImageZoomDialog({ photos, title, initialIndex, onClose }: {
     updateZoom(1, { x: 0, y: 0 });
   };
 
-  const showPhoto = (next: number) => {
-    if (scaleRef.current > 1.01) return;
+  const showPhoto = (next: number, fromThumbnail = false) => {
+    if (scaleRef.current > 1.01 && !fromThumbnail) return;
     setIndex(clampPhotoIndex(next, photos.length));
     resetView();
   };
@@ -159,7 +168,7 @@ export function ImageZoomDialog({ photos, title, initialIndex, onClose }: {
   };
 
   const onKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
-    if (event.key === 'Escape') { event.preventDefault(); onClose(); return; }
+    if (event.key === 'Escape') { event.preventDefault(); onClose(index); return; }
     if (event.key === 'Tab') {
       const focusable = Array.from(dialogRef.current?.querySelectorAll<HTMLButtonElement>('button:not(:disabled)') ?? []);
       const first = focusable[0];
@@ -187,19 +196,19 @@ export function ImageZoomDialog({ photos, title, initialIndex, onClose }: {
     <div className="image-zoom-overlay" ref={dialogRef} role="dialog" aria-modal="true" aria-labelledby={headingId} onKeyDown={onKeyDown}>
       <div className="image-zoom-toolbar">
         <div className="image-zoom-heading">
-          <strong id={headingId}>Product photo</strong>
-          <span>{index + 1} / {photos.length}</span>
+          <strong id={headingId}>{title}</strong>
+          <span aria-live="polite" aria-label={`Photo ${index + 1} of ${photos.length}`}>{index + 1} / {photos.length}</span>
         </div>
         <div className="image-zoom-actions">
           <button type="button" aria-label="Zoom out" disabled={scale <= 1} onClick={() => updateZoom(scaleRef.current - .5)}>−</button>
           <span className="image-zoom-value" aria-live="off">{Math.round(scale * 100)}%</span>
           <button type="button" aria-label="Zoom in" disabled={scale >= MAX_ZOOM} onClick={() => updateZoom(scaleRef.current + .5)}>+</button>
           <button type="button" className="image-zoom-reset" onClick={() => updateZoom(1, { x: 0, y: 0 })}>Reset</button>
-          <button type="button" ref={closeRef} className="image-zoom-close" aria-label="Close photo zoom" onClick={onClose}>×</button>
+          <button type="button" ref={closeRef} className="image-zoom-close" aria-label="Close photo zoom" onClick={() => onClose(index)}>×</button>
         </div>
       </div>
       <div className="image-zoom-view">
-        {photos.length > 1 && <button type="button" className="image-zoom-prev" aria-label="Previous zoom photo" disabled={index === 0 || scale > 1} onClick={() => showPhoto(index - 1)}>‹</button>}
+        {photos.length > 1 && <button type="button" className="image-zoom-prev" aria-label="Previous zoom photo" disabled={index === 0 || scale > 1} onClick={() => showPhoto(index - 1)}><Icon name="chevronLeft" size={24} /></button>}
         <div className="image-zoom-surface" ref={surfaceRef}
           onPointerDown={onPointerDown} onPointerMove={onPointerMove} onPointerUp={onPointerEnd}
           onPointerCancel={onPointerEnd} onWheel={onWheel}
@@ -210,8 +219,18 @@ export function ImageZoomDialog({ photos, title, initialIndex, onClose }: {
                 draggable={false} style={{ transform: 'translate3d(' + offset.x + 'px, ' + offset.y + 'px, 0) scale(' + scale + ')' }}
                 onError={() => setFailed(values => values.includes(index) ? values : [...values, index])} />}
         </div>
-        {photos.length > 1 && <button type="button" className="image-zoom-next" aria-label="Next zoom photo" disabled={index === photos.length - 1 || scale > 1} onClick={() => showPhoto(index + 1)}>›</button>}
+        {photos.length > 1 && <button type="button" className="image-zoom-next" aria-label="Next zoom photo" disabled={index === photos.length - 1 || scale > 1} onClick={() => showPhoto(index + 1)}><Icon name="chevronRight" size={24} /></button>}
       </div>
+      {photos.length > 1 && <div className="image-zoom-filmstrip" ref={filmstripRef} role="group" aria-label="Choose a photo in full screen">
+        {photos.map((photo, photoIndex) => <button type="button" key={`${photo}-${photoIndex}`}
+          className="image-zoom-thumb" aria-label={`Show photo ${photoIndex + 1} of ${photos.length}`}
+          aria-pressed={index === photoIndex} onClick={() => showPhoto(photoIndex, true)}>
+          {failed.includes(photoIndex)
+            ? <span className="image-zoom-thumb-failed"><Icon name="tag" size={17}/></span>
+            : <img src={photo} alt="" loading="lazy" decoding="async" draggable={false}
+                onError={() => setFailed(values => values.includes(photoIndex) ? values : [...values, photoIndex])} />}
+        </button>)}
+      </div>}
       <p className="image-zoom-help">Pinch or double-tap to zoom · Drag to move · Swipe photos when not zoomed</p>
     </div>, document.body
   );

@@ -7,9 +7,13 @@ import { InstallApp } from './install-app';
 import { selectHomeListings } from './home-listings';
 import { MobileBrowseControls, SwipeableListingRail, useMouseDragToScroll } from './mobile-browse-controls';
 import { ListingGallery } from './listing-gallery';
+import { isPublicNotFound } from './public-resource-error';
+import { SellerAvatar } from './seller-avatar';
+import { StorefrontView, type PublicStorefront } from './pages-storefront';
+import { StoresInResults } from './stores-in-results';
 
 export type Listing = { id: number; type: string; title: string; description: string; price: number; priceBasis: string; availability: string; condition?: 'new' | 'like_new' | 'good' | 'fair' | null;
-  handoffNote?: string; category: { name: string }; campus: { code: string; name: string }; seller: { id: number; storeName: string }; images: string[]; status?: string };
+  handoffNote?: string; category: { name: string }; campus: { code: string; name: string }; seller: { id: number; storeName: string; avatarUrl?: string | null }; images: string[]; status?: string };
 
 export function ListingCard({ l }: { l: Listing }) {
   const nav = useNavigate();
@@ -30,7 +34,7 @@ export function ListingCard({ l }: { l: Listing }) {
   const flip = async () => {
     if (!canSave || busy) return;
     setSaveError('');
-    if (!me) { nav('/login'); return; }
+    if (!me) { nav(`/login?next=${encodeURIComponent(`/listings/${l.id}`)}`); return; }
     setBusy(true);
     try {
       if (!await toggleSaved(l.id, !saved)) setSaveError('Could not update saved listings. Try again.');
@@ -54,15 +58,15 @@ export function ListingCard({ l }: { l: Listing }) {
       </div>
       <div className="body">
         <h3 title={l.title}>{l.title}</h3>
-        <div className="listing-subline">
-          <p className="product-category" title={l.category.name}>{l.category.name}</p>
-          {l.condition && <span className="listing-condition">{l.condition.replace('_', ' ')}</span>}
-        </div>
-        <p className="seller" title={l.seller.storeName}>By {l.seller.storeName}</p>
         <div className="card-foot">
           <span className="price">{peso(l.price)}</span>
           {/[a-z]/i.test(l.priceBasis ?? '') && <span className="price-unit" title={l.priceBasis}>{l.priceBasis}</span>}
         </div>
+        <div className="listing-subline">
+          <p className="product-category" title={l.category.name}>{l.category.name}</p>
+          {l.condition && <span className="listing-condition">{l.condition.replace('_', ' ')}</span>}
+        </div>
+        <p className="seller seller-byline" title={l.seller.storeName}><SellerAvatar name={l.seller.storeName} src={l.seller.avatarUrl} size="small" /><span>By <Link className="seller-store-link" to={`/stores/${l.seller.id}`}>{l.seller.storeName}</Link></span></p>
         <p className="meta card-campus" title={l.campus.name}><Icon name="pin" size={13} /><span>{l.campus.name}</span></p>
         {l.availability !== 'available' && <p className="listing-availability">{l.availability.replaceAll('_', ' ')}</p>}
         {saveError && <p className="card-save-feedback" role="alert">{saveError}</p>}
@@ -136,6 +140,8 @@ export function Home() {
       </div>
     </section>
 
+    {block('Fresh listings', '/explore', fresh)}
+
     <InstallApp />
 
     <StudentAnnouncements />
@@ -160,7 +166,6 @@ export function Home() {
         <p>Set up your store and publish your first listing.</p><span className="more">Start selling <Icon name="arrow" size={14} /></span></Link>}
     </section>
 
-    {block('Fresh listings', '/explore', fresh)}
     {block('Student services', '/explore?type=service', serviceRows)}
 
     <section className="steps">
@@ -208,8 +213,6 @@ export function Discover() {
   const [filterError, setFilterError] = useState(''); const [filtersLoading, setFiltersLoading] = useState(false);
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
   const [items, setItems] = useState<Listing[] | null>(null); const [total, setTotal] = useState<number | null>(null);
-  const browseRef = useRef<HTMLDivElement>(null);
-  const browseMouseDrag = useMouseDragToScroll(browseRef);
   const [error, setError] = useState('');
   const currentPage = Math.max(1, Number(sp.get('page')) || 1);
   const pageCount = Math.ceil((total ?? 0) / 20);
@@ -236,8 +239,6 @@ export function Discover() {
   if (f.condition) queryParams.set('type', 'physical_product');
   else queryParams.delete('condition');
   const query = queryParams.toString();
-  // Reset swipe position when search, filters, sorting or pagination changes.
-  useEffect(() => { if (browseRef.current) browseRef.current.scrollLeft = 0; }, [query]);
   useEffect(() => {
     let active = true;
     setItems(null); setTotal(null); setError('');
@@ -257,15 +258,17 @@ export function Discover() {
   const dirty = (Object.keys(NO_FILTERS) as (keyof Filters)[]).some(k => k !== 'sort' && f[k] !== '');
   const advancedFilterCount = (['campusId', 'categoryId', 'condition', 'minPrice', 'maxPrice'] as (keyof Filters)[])
     .filter(k => f[k] !== '').length;
-  const skel = <div className="grid listing-grid">{Array.from({ length: 8 }, (_, i) => <div key={i} className="skel card" aria-hidden="true" />)}</div>;
+  const skel = <div className="grid listing-grid explore-results" aria-label="Loading listing results">
+    {Array.from({ length: 8 }, (_, i) => <div key={i} className="skel card" aria-hidden="true" />)}
+  </div>;
 
   return <>
     <h1>Explore listings</h1>
     <p className="muted" style={{ marginTop: '-.25rem' }}>Find pre-loved items and student services, then message the seller directly.</p>
 
-    <div className="explore-toolbar">
-      <label className="field explore-search">Search listings
-        <span className="input-icon"><Icon name="search" size={18} /><input placeholder="Title or description" maxLength={80} value={f.q} onChange={set('q')} /></span>
+    <div className="explore-toolbar" role="search" aria-label="Explore listing search">
+      <label className="field explore-search"><span className="explore-search-label">Search listings</span>
+        <span className="input-icon"><Icon name="search" size={18} /><input placeholder="Search items or services" maxLength={80} value={f.q} onChange={set('q')} /></span>
       </label>
     </div>
     <div className="explore-type-chips" role="group" aria-label="Listing type">
@@ -291,7 +294,7 @@ export function Discover() {
       <label className="field">Category
         <select value={f.categoryId} onChange={set('categoryId')}><option value="">All categories</option>{cats.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}</select>
       </label>
-      <label className="field">Type
+      <label className="field explore-type-filter">Type
         <select value={f.type} onChange={set('type')}><option value="">All types</option><option value="physical_product">Products</option><option value="service">Services</option></select>
       </label>
       <label className="field">Condition
@@ -326,10 +329,11 @@ export function Discover() {
       <p className="muted">{dirty ? 'One of your filters is too narrow. Clear them and start again, or try another campus.' : 'Nothing is published yet. Check back soon — new listings appear here as soon as a reviewer approves them.'}</p>
       {dirty && <button className="btn ghost" onClick={reset}>Clear filters</button>}
     </div>}
+    {items !== null && !error && <StoresInResults listings={items} query={f.q} />}
     {items !== null && items.length > 0 && <h2 className="sr-only">Listing results</h2>}
-    <div className="grid listing-grid browse-drag-scroll" ref={browseRef} role="region" aria-label="Explore listing results" tabIndex={0}
-      {...browseMouseDrag}>{items?.map(l => <ListingCard key={l.id} l={l} />)}</div>
-    {items !== null && <MobileBrowseControls targetRef={browseRef} itemCount={items.length} label="Explore listings" />}
+    {items !== null && items.length > 0 && <div className="grid listing-grid explore-results" role="region" aria-label="Explore listing results">
+      {items.map(l => <ListingCard key={l.id} l={l} />)}
+    </div>}
     {pageCount > 1 && <nav className="row" aria-label="Listing pages" style={{ justifyContent: 'center', marginTop: '1rem' }}>
       <button type="button" className="btn ghost" disabled={currentPage <= 1} onClick={() => navigatePage(currentPage - 1)}>Previous</button>
       <span className="muted" role="status">Page {currentPage} of {pageCount}</span>
@@ -342,10 +346,24 @@ export function ListingDetail() {
   const { id } = useParams(); const { me, savedIds, toggleSaved } = useMe();
   const navigate = useNavigate();
   const [l, setL] = useState<Listing | null>(null); const [body, setBody] = useState(''); const [note, setNote] = useState(''); const [err, setErr] = useState('');
+  const [loadError, setLoadError] = useState<unknown>(null);
+  const loadRequest = useRef(0);
   const [busy, setBusy] = useState(false); const [reporting, setReporting] = useState(false); const [reason, setReason] = useState('');
-  useEffect(() => { api(`/listings/${id}`).then(setL).catch(e => setErr(explain(e))); }, [id]);
-  if (err && !l) return <p className="err">This listing is not available.</p>;
-  if (!l) return <p className="muted">Loading</p>;
+  const loadListing = () => {
+    const request = ++loadRequest.current;
+    setL(null); setLoadError(null);
+    api<Listing>(`/listings/${id}`).then(row => { if (request === loadRequest.current) setL(row); })
+      .catch(e => { if (request === loadRequest.current) setLoadError(e); });
+  };
+  useEffect(() => { loadListing(); return () => { loadRequest.current++; }; }, [id]);
+  if (loadError && !l) return <section className="panel stack" role="alert">
+    <h1>{isPublicNotFound(loadError) ? 'Listing unavailable' : 'Could not load this listing'}</h1>
+    <p>{isPublicNotFound(loadError) ? 'This listing may have been removed or is no longer public.' : 'The server or connection may be unavailable. Try again.'}</p>
+    <div className="row">{!isPublicNotFound(loadError) && <button type="button" className="btn" onClick={loadListing}>Retry listing</button>}
+      <Link className="btn ghost" to="/explore">Browse listings</Link></div>
+  </section>;
+  if (!l) return <p className="muted" role="status">Loading listing…</p>;
+  const loginForListing = `/login?next=${encodeURIComponent(`/listings/${l.id}`)}`;
   // Saved state comes from the shell (one fetch at sign-in), shared with the hearts on every card.
   const saved = savedIds.includes(l.id);
   const isOwner = me?.storeId === l.seller.id;
@@ -362,6 +380,7 @@ export function ListingDetail() {
     finally { setBusy(false); }
   };
   const save = async () => {
+    if (!me) { navigate(loginForListing); return; }
     setBusy(true);
     try {
       if (await toggleSaved(l.id, !saved)) { setNote(saved ? 'Removed from your saved list.' : 'Saved to your list.'); setErr(''); }
@@ -370,20 +389,21 @@ export function ListingDetail() {
   };
   const report = async () => { setBusy(true); try { await api('/reports', { body: { listingId: l.id, reason } }); setReason(''); setReporting(false); setNote('Report sent to a campus reviewer.'); setErr(''); } catch (e) { setErr(explain(e)); } finally { setBusy(false); } };
   // One button, two homes: over the first photo when there is one, in the action row when there is not.
-  const heart = <button className="heart-btn" aria-pressed={saved} aria-label={saved ? 'Remove from saved' : 'Save for later'}
-    title={saved ? 'Remove from saved' : 'Save for later'} disabled={busy} onClick={save}>
+  const heartLabel = !me ? 'Sign in to save this listing' : saved ? 'Remove from saved' : 'Save for later';
+  const heart = <button className="heart-btn" aria-pressed={saved} aria-label={heartLabel}
+    title={heartLabel} disabled={busy} onClick={save}>
     <Icon name="heart" filled={saved} size={22} /></button>;
   return <article className="listing-detail">
     <Link className="listing-back" to="/explore">← Browse all listings</Link>
     <div className="listing-detail-layout">
       <ListingGallery key={l.id} photos={l.images} title={l.title}
-        saveControl={me && !staff && !isOwner && (isAvailable || saved) ? heart : undefined} />
+        saveControl={!staff && !isOwner && (isAvailable || saved) ? heart : undefined} />
       <div className="listing-detail-content">
     <h1 className="listing-detail-title">{l.title}</h1>
     {/* Only show a basis that carries meaning; a value like "1" would render as "₱150 1". */}
     <div className="row listing-facts"><span className="tag">{peso(l.price)}</span>{/[a-z]/i.test(l.priceBasis ?? '') && <span className="muted">{l.priceBasis}</span>}<span className="status">{l.category.name}</span>{l.condition && <span className="status">Condition: {l.condition.replace('_',' ')}</span>}<span className="status">{l.availability}</span>{l.status && <span className={`status ${l.status}`}>{l.status.replace('_', ' ')}</span>}</div>
     <p className="listing-description">{l.description}</p>
-    <p className="muted listing-seller">Sold by <Link to={`/stores/${l.seller.id}`}>{l.seller.storeName}</Link> at {l.campus.name}. {l.handoffNote && `Handoff: ${l.handoffNote}.`}</p>
+    <p className="muted listing-seller seller-byline"><SellerAvatar name={l.seller.storeName} src={l.seller.avatarUrl} size="medium" /><span>Sold by <Link to={`/stores/${l.seller.id}`}>{l.seller.storeName}</Link> at {l.campus.name}. {l.handoffNote && `Handoff: ${l.handoffNote}.`}</span></p>
     <div className="panel stack">
       <h2>Ask the seller</h2>
       {!isAvailable && <p className="muted" role="status">This listing is {l.availability}. New inquiries are disabled.</p>}
@@ -406,7 +426,7 @@ export function ListingDetail() {
           </label>
           <div className="row"><button className="btn danger" disabled={busy || reason.trim().length < 10} onClick={report}>Send report</button>
             <button className="btn ghost" disabled={busy} onClick={() => setReporting(false)}>Cancel</button></div></div>}</>
-        : !me ? <p><Link to="/login">Sign in</Link> to message this seller.</p> : null}
+        : !me ? <p><Link to={loginForListing}>Sign in</Link> to message this seller.</p> : null}
       {note && <p role="status">{note}</p>}{err && <p className="err" role="alert">{err}</p>}
     </div>
       </div>
@@ -415,12 +435,26 @@ export function ListingDetail() {
 }
 
 export function StorePage() {
-  const { id } = useParams(); const { me } = useMe(); const [s, setS] = useState<any>(null);
+  const { id } = useParams(); const { me } = useMe(); const [s, setS] = useState<PublicStorefront | null>(null);
+  const [loadError, setLoadError] = useState<unknown>(null);
+  const loadRequest = useRef(0);
   const [reporting, setReporting] = useState(false); const [reason, setReason] = useState('');
   const [reportBusy, setReportBusy] = useState(false); const [reportError, setReportError] = useState(''); const [reportNotice, setReportNotice] = useState('');
   const reportLock = useRef(false);
-  useEffect(() => { api(`/seller-profiles/${id}`).then(setS).catch(() => setS(false)); }, [id]);
-  if (s === false) return <p className="err">Store not found.</p>; if (!s) return <p className="muted">Loading</p>;
+  const loadStore = () => {
+    const request = ++loadRequest.current;
+    setS(null); setLoadError(null);
+    api<PublicStorefront>(`/seller-profiles/${id}`).then(row => { if (request === loadRequest.current) setS(row); })
+      .catch(e => { if (request === loadRequest.current) setLoadError(e); });
+  };
+  useEffect(() => { loadStore(); return () => { loadRequest.current++; }; }, [id]);
+  if (loadError && !s) return <section className="panel stack" role="alert">
+    <h1>{isPublicNotFound(loadError) ? 'Store not found' : 'Could not load this store'}</h1>
+    <p>{isPublicNotFound(loadError) ? 'This store is not available.' : 'The server or connection may be unavailable. Try again.'}</p>
+    <div className="row">{!isPublicNotFound(loadError) && <button type="button" className="btn" onClick={loadStore}>Retry store</button>}
+      <Link className="btn ghost" to="/explore">Browse listings</Link></div>
+  </section>;
+  if (!s) return <p className="muted" role="status">Loading store…</p>;
   const staff = me?.roles.some(role => ['campus_reviewer', 'university_admin', 'system_admin', 'establishment'].includes(role.role));
   const isOwner = me?.storeId === s.id;
   const reportSeller = async () => {
@@ -432,8 +466,7 @@ export function StorePage() {
     } catch (e) { setReportError(explain(e)); }
     finally { reportLock.current = false; setReportBusy(false); }
   };
-  return <><h1>{s.storeName}</h1><p><span className="status">{s.badge}</span></p><p style={{ maxWidth: '60ch' }}>{s.description}</p>
-    <p className="muted">This badge confirms campus affiliation only. It is not an endorsement of products or services by the university.</p>
+  return <><StorefrontView key={s.id} store={s} isOwner={isOwner} renderListing={l => <ListingCard key={l.id} l={l} />} />
     {me && !staff && !isOwner && <section className="panel stack" aria-label="Report seller" style={{ maxWidth: '42rem', marginBlock: '1rem' }}>
       <div className="row"><button type="button" className="btn ghost" aria-expanded={reporting} disabled={reportBusy}
         onClick={() => { setReporting(open => !open); setReportError(''); }}>Report this seller</button></div>
@@ -449,7 +482,7 @@ export function StorePage() {
       </>}
       {reportNotice && <p role="status">{reportNotice}</p>}{reportError && <p className="err" role="alert">{reportError}</p>}
     </section>}
-    <div className="grid listing-grid">{s.listings.map((l: Listing) => <ListingCard key={l.id} l={l} />)}</div></>;
+    </>;
 }
 
 export function Guidelines() {

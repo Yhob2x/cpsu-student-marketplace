@@ -106,14 +106,16 @@ r.get('/:id/messages', async (req, res) => {
   }, messages: messages.map(m => ({
     id: m.id, body: m.body, createdAt: m.createdAt, mine: m.authorUserId === req.user!.id,
     author: m.author.displayName, receipt: receipt(m), seenAt: m.seenAt })), handoff,
-    typing: (typing.get(`${t.id}:${other}`) ?? 0) > Date.now(),
-    otherActiveInChat: (presence.get(`${t.id}:${other}`) ?? 0) > Date.now() });
+    // Never disclose stale heartbeats for a closed thread, even if a heartbeat races closure.
+    typing: inquiryAllowsMessage(t.status) && (typing.get(`${t.id}:${other}`) ?? 0) > Date.now(),
+    otherActiveInChat: inquiryAllowsMessage(t.status) && (presence.get(`${t.id}:${other}`) ?? 0) > Date.now() });
 });
 
 // Participant-only presence, in-memory, expires if the conversation is not foregrounded.
 // It never reveals activity outside this particular conversation.
 r.post('/:id/presence', async (req, res) => {
   const t = await participantThread(req.user!.id, Number(req.params.id));
+  if (!inquiryAllowsMessage(t.status)) throw new HttpError(409, 'thread_closed');
   presence.set(`${t.id}:${req.user!.id}`, Date.now() + PRESENCE_MS);
   res.status(204).end();
 });
@@ -146,6 +148,7 @@ r.post('/:id/seen', async (req, res) => {
 // Heartbeat while the other person is typing; expires on its own after TYPING_MS.
 r.post('/:id/typing', async (req, res) => {
   const t = await participantThread(req.user!.id, Number(req.params.id));
+  if (!inquiryAllowsMessage(t.status)) throw new HttpError(409, 'thread_closed');
   typing.set(`${t.id}:${req.user!.id}`, Date.now() + TYPING_MS);
   res.status(204).end();
 });

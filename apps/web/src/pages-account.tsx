@@ -5,68 +5,137 @@ import { useMe } from './main';
 import { ListingCard, Listing } from './pages-public';
 import { Icon } from './icons';
 import { MAX_LISTING_PHOTOS, selectedPhotosError, uploadListingPhotos } from './listing-photo-uploads';
+import { coverFirst } from './photo-cover-order';
+import { ExistingPhotoChoices, SelectedPhotoPreviews } from './selected-photo-previews';
+import { SellerAvatarEditor } from './seller-avatar-editor';
+import { SellerStoreDetails } from './seller-store-details';
 import { runExclusive } from './auth-submit';
+import { safeLoginReturn } from './auth-return';
+import { authFieldForError, type AuthField } from './auth-field-error';
 import { hasNewIncomingMessage, messageReceiveSoundEnabled, playMessageReceiveSound, prepareMessageReceiveSound, setMessageReceiveSoundEnabled, unlockMessageReceiveSound } from './message-receive-sound';
 
 export function Login() {
   const nav = useNavigate(); const location = useLocation(); const { reload } = useMe(); const [err, setErr] = useState('');
+  const [fieldErrors, setFieldErrors] = useState<Partial<Record<AuthField, string>>>({});
+  const emailRef = useRef<HTMLInputElement>(null); const passwordRef = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState(false); const submitLock = useRef(false);
-  // Deep links from push notifications return only to explicitly allowed in-app paths.
-  const requested = new URLSearchParams(location.search).get('next') ?? '';
-  const next = /^\/(inquiries\/\d+|transactions(?:\/\d+)?|notifications|profile|saved)$/.test(requested) ? requested : '/';
+  const next = safeLoginReturn(new URLSearchParams(location.search).get('next'));
+  const clearField = (field: AuthField) => setFieldErrors(previous => ({ ...previous, [field]: '' }));
   const go = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault(); const d = Object.fromEntries(new FormData(e.currentTarget));
     await runExclusive(submitLock, async () => {
-      setBusy(true); setErr('');
+      setBusy(true); setErr(''); setFieldErrors({});
       try {
         const r = await api('/auth/login', { body: d }); setToken(r.accessToken);
         const current = await reload();
         const staff = current?.roles.some(role => ['campus_reviewer', 'university_admin', 'system_admin', 'establishment'].includes(role.role));
         const reviewer = current?.roles.some(role => ['campus_reviewer', 'university_admin'].includes(role.role));
         nav(next === '/' && staff ? reviewer ? '/admin' : '/profile' : next, { replace: true });
-      } catch (x) { setErr(explain(x)); }
+      } catch (x) {
+        const field = authFieldForError('login', x);
+        if (field) {
+          setFieldErrors({ [field]: explain(x) });
+          requestAnimationFrame(() => (field === 'password' ? passwordRef : emailRef).current?.focus());
+        } else setErr(explain(x));
+      }
       finally { setBusy(false); }
     });
   };
   return <form className="stack auth-form" aria-busy={busy} onSubmit={go}><h1>Sign in</h1>
     <label className="field">Email
-      <input name="email" type="email" placeholder="Your email address" autoComplete="email" required />
+      <input ref={emailRef} name="email" type="email" placeholder="Your email address" autoComplete="email" required
+        aria-invalid={Boolean(fieldErrors.email)} aria-describedby={fieldErrors.email ? 'login-email-error' : undefined}
+        onInvalid={() => setFieldErrors(previous => ({ ...previous, email: 'Enter a valid email address.' }))}
+        onChange={() => clearField('email')} />
     </label>
+    {fieldErrors.email && <p className="field-error" id="login-email-error" role="alert">{fieldErrors.email}</p>}
     <label className="field">Password
-      <input name="password" type="password" autoComplete="current-password" required />
+      <input ref={passwordRef} name="password" type="password" autoComplete="current-password" required
+        aria-invalid={Boolean(fieldErrors.password)} aria-describedby={fieldErrors.password ? 'login-password-error' : undefined}
+        onInvalid={() => setFieldErrors(previous => ({ ...previous, password: 'Enter your password.' }))}
+        onChange={() => clearField('password')} />
     </label>
+    {fieldErrors.password && <p className="field-error" id="login-password-error" role="alert">{fieldErrors.password}</p>}
     {err && <p className="err" role="alert">{err}</p>}<button className="btn" disabled={busy}>{busy ? 'Signing in…' : 'Sign in'}</button>
-    <p className="muted">New here? <Link to="/register">Create an account</Link></p></form>;
+    <p className="muted">New here? <Link to={next === '/' ? '/register' : `/register?next=${encodeURIComponent(next)}`}>Create an account</Link></p></form>;
 }
 
 export function Register() {
-  const nav = useNavigate(); const { reload } = useMe(); const [err, setErr] = useState(''); const [campuses, setCampuses] = useState<any[]>([]);
+  const nav = useNavigate(); const location = useLocation(); const { reload } = useMe();
+  const next = safeLoginReturn(new URLSearchParams(location.search).get('next'));
+  const [err, setErr] = useState(''); const [campuses, setCampuses] = useState<{ id: number; name: string }[]>([]);
+  const [fieldErrors, setFieldErrors] = useState<Partial<Record<AuthField, string>>>({});
+  const emailRef = useRef<HTMLInputElement>(null); const campusRef = useRef<HTMLSelectElement>(null);
+  const [campusStatus, setCampusStatus] = useState<'loading' | 'ready' | 'error'>('loading');
+  const [campusError, setCampusError] = useState('');
+  const campusRequest = useRef(0);
   const [busy, setBusy] = useState(false); const submitLock = useRef(false);
-  useEffect(() => { api('/campuses').then(setCampuses).catch(x => setErr(explain(x))); }, []);
+  const clearField = (field: AuthField) => setFieldErrors(previous => ({ ...previous, [field]: '' }));
+  const loadCampuses = () => {
+    const request = ++campusRequest.current;
+    setCampusStatus('loading'); setCampusError('');
+    api<{ id: number; name: string }[]>('/campuses').then(rows => {
+      if (request !== campusRequest.current) return;
+      setCampuses(rows);
+      if (rows.length) setCampusStatus('ready');
+      else { setCampusStatus('error'); setCampusError('No active campuses are available right now.'); }
+    }).catch(x => {
+      if (request !== campusRequest.current) return;
+      setCampusStatus('error'); setCampusError(explain(x));
+    });
+  };
+  useEffect(() => { loadCampuses(); return () => { campusRequest.current++; }; }, []);
   const go = async (e: FormEvent<HTMLFormElement>) => {
-    e.preventDefault(); const d: any = Object.fromEntries(new FormData(e.currentTarget)); d.campusId = Number(d.campusId);
+    e.preventDefault();
+    if (campusStatus !== 'ready') return;
+    const d: any = Object.fromEntries(new FormData(e.currentTarget)); d.campusId = Number(d.campusId);
     await runExclusive(submitLock, async () => {
-      setBusy(true); setErr('');
-      try { const r = await api('/auth/register', { body: d }); setToken(r.accessToken); await reload(); nav('/dashboard'); }
-      catch (x) { setErr(explain(x)); }
+      setBusy(true); setErr(''); setFieldErrors({});
+      try { const r = await api('/auth/register', { body: d }); setToken(r.accessToken); await reload(); nav(next === '/' ? '/dashboard' : next, { replace: true }); }
+      catch (x) {
+        const field = authFieldForError('register', x);
+        if (field) {
+          setFieldErrors({ [field]: explain(x) });
+          requestAnimationFrame(() => (field === 'campusId' ? campusRef : emailRef).current?.focus());
+        } else setErr(explain(x));
+      }
       finally { setBusy(false); }
     });
   };
   return <form className="stack auth-form" aria-busy={busy} onSubmit={go}><h1>Create your account</h1>
     <label className="field">Display name
-      <input name="displayName" placeholder="Name shown to others" required minLength={2} maxLength={80} />
+      <input name="displayName" placeholder="Name shown to others" required minLength={2} maxLength={80}
+        aria-invalid={Boolean(fieldErrors.displayName)} aria-describedby={fieldErrors.displayName ? 'register-name-error' : undefined}
+        onInvalid={() => setFieldErrors(previous => ({ ...previous, displayName: 'Enter a name with at least 2 characters.' }))}
+        onChange={() => clearField('displayName')} />
     </label>
+    {fieldErrors.displayName && <p className="field-error" id="register-name-error" role="alert">{fieldErrors.displayName}</p>}
     <label className="field">Email
-      <input name="email" type="email" autoComplete="email" required />
+      <input ref={emailRef} name="email" type="email" autoComplete="email" required
+        aria-invalid={Boolean(fieldErrors.email)} aria-describedby={fieldErrors.email ? 'register-email-error' : undefined}
+        onInvalid={() => setFieldErrors(previous => ({ ...previous, email: 'Enter a valid email address.' }))}
+        onChange={() => clearField('email')} />
     </label>
+    {fieldErrors.email && <p className="field-error" id="register-email-error" role="alert">{fieldErrors.email}</p>}
     <label className="field">Password (10 or more characters)
-      <input name="password" type="password" autoComplete="new-password" required minLength={10} maxLength={128} />
+      <input name="password" type="password" autoComplete="new-password" required minLength={10} maxLength={128}
+        aria-invalid={Boolean(fieldErrors.password)} aria-describedby={fieldErrors.password ? 'register-password-error' : undefined}
+        onInvalid={() => setFieldErrors(previous => ({ ...previous, password: 'Use 10 to 128 characters.' }))}
+        onChange={() => clearField('password')} />
     </label>
+    {fieldErrors.password && <p className="field-error" id="register-password-error" role="alert">{fieldErrors.password}</p>}
     <label className="field">Campus
-      <select name="campusId" required defaultValue=""><option value="" disabled>Select a campus</option>{campuses.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}</select>
+      <select ref={campusRef} name="campusId" required defaultValue="" disabled={campusStatus !== 'ready'}
+        aria-invalid={Boolean(fieldErrors.campusId)} aria-describedby={fieldErrors.campusId ? 'register-campus-error' : undefined}
+        onInvalid={() => setFieldErrors(previous => ({ ...previous, campusId: 'Choose your campus.' }))}
+        onChange={() => clearField('campusId')}><option value="" disabled>Select a campus</option>{campuses.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}</select>
     </label>
+    {fieldErrors.campusId && <p className="field-error" id="register-campus-error" role="alert">{fieldErrors.campusId}</p>}
+    {campusStatus === 'loading' && <p className="muted" role="status">Loading campuses…</p>}
+    {campusStatus === 'error' && <div className="stack" role="alert"><p className="err">Campus options could not load. {campusError}</p>
+      <button type="button" className="btn ghost" onClick={loadCampuses}>Retry campuses</button></div>}
     <p className="muted">A campus reviewer confirms you are part of the CPSU community before you can sell. Browsing and messaging work right away.</p>
-    {err && <p className="err" role="alert">{err}</p>}<button className="btn" disabled={busy}>{busy ? 'Creating account…' : 'Create account'}</button></form>;
+    {err && <p className="err" role="alert">{err}</p>}<button className="btn" disabled={busy || campusStatus !== 'ready'}>{busy ? 'Creating account…' : 'Create account'}</button></form>;
 }
 
 function StoreListingPhoto({ media, title, type }: { media: { id: number; position: number }[]; title: string; type: string }) {
@@ -84,7 +153,7 @@ function StoreListingPhoto({ media, title, type }: { media: { id: number; positi
 type RepeatListing = { id: number; categoryId: number; title: string; description: string; price: number; priceBasis?: string | null; condition?: string | null };
 
 export function Dashboard() {
-  const { me, reload } = useMe(); const [listings, setListings] = useState<any[]>([]); const [cats, setCats] = useState<any[]>([]); const [err, setErr] = useState(''); const [ok, setOk] = useState('');
+  const { me, reload } = useMe(); const location = useLocation(); const [listings, setListings] = useState<any[]>([]); const [cats, setCats] = useState<any[]>([]); const [err, setErr] = useState(''); const [ok, setOk] = useState('');
   const [pending, setPending] = useState<number | null>(null); const [editing, setEditing] = useState<any | null>(null);
   const [listingLoadError, setListingLoadError] = useState('');
   const [newCategoryId, setNewCategoryId] = useState('');
@@ -92,8 +161,10 @@ export function Dashboard() {
   const [listingsLoading, setListingsLoading] = useState(true);
   const [creatingListing, setCreatingListing] = useState(false);
   const [savingEdit, setSavingEdit] = useState(false);
-  const [newSelectedCount, setNewSelectedCount] = useState(0);
-  const [editSelectedCount, setEditSelectedCount] = useState(0);
+  const [newFiles, setNewFiles] = useState<File[]>([]);
+  const [newCoverIndex, setNewCoverIndex] = useState(0);
+  const [editFiles, setEditFiles] = useState<File[]>([]);
+  const [editCover, setEditCover] = useState<{ source: 'existing'; id: number } | { source: 'new'; index: number } | null>(null);
   const [newSelectionError, setNewSelectionError] = useState('');
   const [editSelectionError, setEditSelectionError] = useState('');
   const [photoProgress, setPhotoProgress] = useState('');
@@ -101,6 +172,7 @@ export function Dashboard() {
   const [listingStatus, setListingStatus] = useState('all');
   const [listingPage, setListingPage] = useState(1);
   const [repeatListing, setRepeatListing] = useState<RepeatListing | null>(null);
+  const [storeDetailsVersion, setStoreDetailsVersion] = useState(0);
   const [createDirty, setCreateDirty] = useState(false);
   const createInFlight = useRef(false);
   const editInFlight = useRef(false);
@@ -118,6 +190,13 @@ export function Dashboard() {
     if (me?.storeId) load();
     api('/categories').then(setCats).catch(x => setErr(explain(x)));
   }, [me?.storeId]);
+  useEffect(() => {
+    if (me?.storeId && location.hash === '#store-profile') {
+      const frame = window.requestAnimationFrame(() =>
+        document.getElementById('store-profile')?.scrollIntoView({ block: 'start' }));
+      return () => window.cancelAnimationFrame(frame);
+    }
+  }, [me?.storeId, location.hash]);
   if (!me) return <p className="muted">Loading</p>;
   const verified = me.affiliations.some(a => a.status === 'verified');
   const visibleListings = listings.filter(l => !l.deletedAt);
@@ -136,7 +215,7 @@ export function Dashboard() {
     if (createDirty && !window.confirm('Replace the unsaved details in your new listing form?')) return;
     setRepeatListing(listing);
     setNewCategoryId(String(listing.categoryId));
-    setNewSelectedCount(0); setNewSelectionError('');
+    setNewFiles([]); setNewCoverIndex(0); setNewSelectionError('');
     setCreateDirty(false);
     if (createDetails.current) createDetails.current.open = true;
     requestAnimationFrame(() => createTitle.current?.focus());
@@ -145,7 +224,7 @@ export function Dashboard() {
     if (createDirty && !window.confirm('Clear the unsaved details in your new listing form?')) return;
     setRepeatListing(null);
     setNewCategoryId('');
-    setNewSelectedCount(0); setNewSelectionError('');
+    setNewFiles([]); setNewCoverIndex(0); setNewSelectionError('');
     setCreateDirty(false);
     requestAnimationFrame(() => createTitle.current?.focus());
   };
@@ -153,7 +232,7 @@ export function Dashboard() {
   const uploadOnePhoto = async (id: number, file: File) => {
     const fd = new FormData();
     fd.append('image', file);
-    await api(`/seller/listings/${id}/media`, { form: fd });
+    return api<{ id: number }>(`/seller/listings/${id}/media`, { form: fd });
   };
   const createListing = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -161,7 +240,7 @@ export function Dashboard() {
     const form = e.currentTarget;
     const d: any = Object.fromEntries(new FormData(form));
     const cat = cats.find(c => c.id === Number(d.categoryId));
-    const files = Array.from((form.elements.namedItem('image') as HTMLInputElement).files ?? []);
+    const files = coverFirst(newFiles, newCoverIndex);
     const invalidPhotos = selectedPhotosError(files);
     if (invalidPhotos || !cat) { setErr(invalidPhotos || 'Choose a valid category.'); return; }
     createInFlight.current = true;
@@ -177,7 +256,7 @@ export function Dashboard() {
           uploadFailure = `${result.uploaded} of ${files.length} photos uploaded. ${explain(result.error)}`;
       }
       setPhotoProgress('');
-      form.reset(); setNewSelectedCount(0); setNewSelectionError('');
+      form.reset(); setNewFiles([]); setNewCoverIndex(0); setNewSelectionError('');
       setNewCategoryId(''); setRepeatListing(null); setCreateDirty(false);
       await load();
       if (uploadFailure) {
@@ -214,7 +293,8 @@ export function Dashboard() {
     const form = e.currentTarget;
     const d: any = Object.fromEntries(new FormData(form));
     const cat = cats.find(c => c.id === Number(d.categoryId));
-    const files = Array.from((form.elements.namedItem('image') as HTMLInputElement).files ?? []);
+    const files = editFiles;
+    const coverChoice = editCover;
     const invalidPhotos = selectedPhotosError(files, editing.media.length);
     if (invalidPhotos || !cat) { setErr(invalidPhotos || 'Choose a valid category.'); return; }
     editInFlight.current = true;
@@ -222,23 +302,35 @@ export function Dashboard() {
     try {
       await api(`/seller/listings/${editing.id}`, { method: 'PATCH', body: { type: cat.listingType, categoryId: cat.id, title: d.title, description: d.description, price: Number(d.price), priceBasis: d.priceBasis || undefined, condition: cat.listingType === 'physical_product' ? d.condition || null : null } });
       let uploadFailure = '';
+      let coverFailure = '';
+      const uploadedIds: number[] = [];
       if (files.length) {
-        const result = await uploadListingPhotos(editing.id, files, uploadOnePhoto,
+        const result = await uploadListingPhotos(editing.id, files, async (id, file) => {
+          const photo = await uploadOnePhoto(id, file);
+          uploadedIds.push(photo.id);
+        },
           (done, total) => setPhotoProgress(`Uploading photos: ${done} of ${total}`));
         if (result.failedIndex !== null)
           uploadFailure = `${result.uploaded} of ${files.length} new photos uploaded. ${explain(result.error)}`;
       }
+      const coverMediaId = coverChoice?.source === 'existing' ? coverChoice.id
+        : coverChoice?.source === 'new' ? uploadedIds[coverChoice.index] : null;
+      if (coverMediaId) {
+        try { await api(`/seller/listings/${editing.id}/media/cover`, { method: 'PATCH', body: { mediaId: coverMediaId } }); }
+        catch (x) { coverFailure = `Cover photo was not changed. ${explain(x)}`; }
+      }
       setPhotoProgress('');
-      setEditing(null); setEditSelectedCount(0); setEditSelectionError('');
+      setEditing(null); setEditFiles([]); setEditCover(null); setEditSelectionError('');
       await load();
-      if (uploadFailure) setErr(`Listing details were saved. ${uploadFailure} Select Edit to retry only the remaining photos.`);
+      if (uploadFailure || coverFailure) setErr(`Listing details were saved. ${uploadFailure ? `${uploadFailure} Select Edit to retry only the remaining photos. ` : ''}${coverFailure}`.trim());
       else setOk(files.length ? `${files.length} ${files.length === 1 ? 'photo' : 'photos'} saved. Submit the listing for review again before it appears publicly.` : 'Listing updated.');
     } catch (x) { setErr(explain(x)); }
     finally { editInFlight.current = false; setSavingEdit(false); setPhotoProgress(''); }
   };
   return <div className="my-store">
     <div className="page-head">
-      <div><h1>My store</h1><p className="muted">Create listings, manage drafts, and follow reviewer decisions.</p></div>
+      <div><h1>My store</h1><p className="muted">Personalize your storefront, manage listings and follow reviewer decisions.</p></div>
+      {me.storeId && <Link className="btn ghost" to={`/stores/${me.storeId}`}>View public store</Link>}
     </div>
     <div className="panel store-affiliation"><h2 className="panel-heading-small">CPSU affiliation</h2>{me.affiliations.map(a => <p key={a.id}>{a.campus.name}: <span className={`status ${a.status}`}>{a.status}</span></p>)}
       {!verified && <p className="muted">Pending until a campus reviewer confirms you. You can still browse and message sellers.</p>}</div>
@@ -248,6 +340,10 @@ export function Dashboard() {
       <label className="field">Store description<textarea name="description" placeholder="What do you make or offer?" required minLength={10} maxLength={1000} /></label>
       <button className="btn">Open store</button></form>}
     {me.storeId && <>
+      <div id="store-profile" className="store-profile-settings" aria-label="Your storefront settings">
+        <SellerStoreDetails storeId={me.storeId} onSaved={() => setStoreDetailsVersion(n => n + 1)} />
+        <SellerAvatarEditor storeId={me.storeId} refreshVersion={storeDetailsVersion} />
+      </div>
       <details className="panel store-create" ref={createDetails}><summary><span>{repeatListing ? 'Sell again' : 'New listing'}</span><span className="store-create-hint">Save a draft</span></summary>
       <form key={repeatListing?.id ?? 'new'} className="stack seller-composer" onChange={() => setCreateDirty(true)} onSubmit={createListing}><p className="muted">{repeatListing ? 'Review the copied details and upload a photo or portfolio image. This makes a new draft; the sold listing stays sold.' : 'Add the essential details first. Save your draft, then submit it for review.'}</p>
         {repeatListing && <button type="button" className="btn ghost store-start-blank" onClick={startBlankListing}>Start blank instead</button>}
@@ -261,9 +357,11 @@ export function Dashboard() {
           <label className="field">Price (PHP)<input name="price" type="number" min="1" max="1000000" step="1" defaultValue={repeatListing ? Number(repeatListing.price) : ''} required /></label>
           <label className="field">Price basis (optional)<input name="priceBasis" placeholder="Per item or per hour" defaultValue={repeatListing?.priceBasis ?? ''} maxLength={40} /></label>
         </div>
-        <label className="field">Photos (select up to {MAX_LISTING_PHOTOS}, JPEG, PNG or WebP, 3 MB each) <input name="image" type="file" multiple accept="image/jpeg,image/png,image/webp" disabled={creatingListing} aria-describedby="new-photo-policy" onChange={e => { const photos = Array.from(e.currentTarget.files ?? []); setNewSelectedCount(photos.length); setNewSelectionError(selectedPhotosError(photos)); }} /></label>
-        <p className="muted" role="status">{newSelectedCount} of {MAX_LISTING_PHOTOS} photos selected</p>{newSelectionError && <p className="err" role="alert">{newSelectionError}</p>}{creatingListing && photoProgress && <p role="status">{photoProgress}</p>}
-        <p className="muted" id="new-photo-policy">Add at least 1 photo before submitting for review, with a maximum of {MAX_LISTING_PHOTOS} per listing. You may save a draft without a photo. You can select multiple photos at once. They upload in order and the first becomes the cover. No pornography, explicit sexual imagery, graphic violence, or other prohibited content. Photos must pass campus reviewer inspection before publication.</p>
+        <label className="field">Photos (select up to {MAX_LISTING_PHOTOS}, JPEG, PNG or WebP, 3 MB each) <input name="image" type="file" multiple accept="image/jpeg,image/png,image/webp" disabled={creatingListing} aria-describedby="new-photo-policy" onChange={e => { const photos = Array.from(e.currentTarget.files ?? []); setNewFiles(photos); setNewCoverIndex(0); setNewSelectionError(selectedPhotosError(photos)); }} /></label>
+        <p className="muted" role="status">{newFiles.length} of {MAX_LISTING_PHOTOS} photos selected</p>{newSelectionError && <p className="err" role="alert">{newSelectionError}</p>}
+        {!newSelectionError && <SelectedPhotoPreviews files={newFiles} coverIndex={newCoverIndex} onCoverChange={setNewCoverIndex} disabled={creatingListing} />}
+        {creatingListing && photoProgress && <p role="status">{photoProgress}</p>}
+        <p className="muted" id="new-photo-policy">Add at least 1 photo before submitting for review, with a maximum of {MAX_LISTING_PHOTOS} per listing. You may save a draft without a photo. Preview your selection and choose the cover before saving; it uploads first. No pornography, explicit sexual imagery, graphic violence, or other prohibited content. Photos must pass campus reviewer inspection before publication.</p>
         <button className="btn" disabled={creatingListing}>{creatingListing ? 'Saving draft…' : 'Save draft'}</button></form></details>
       <div className="store-listings-head"><div><h2 ref={listingsHeading} tabIndex={-1}>Your listings</h2><p className="muted">Review status and availability for each item.</p></div>{!listingsLoading && !listingLoadError && <span className="store-listing-count">{visibleListings.length} {visibleListings.length === 1 ? 'listing' : 'listings'}</span>}</div>
       {listingsLoading && <p className="muted" role="status">Loading your listings…</p>}
@@ -289,13 +387,24 @@ export function Dashboard() {
               <label className="field">Price basis (optional)<input name="priceBasis" defaultValue={l.priceBasis} maxLength={40} /></label>
             </div>
             <p className="muted">{l.media.length} {l.media.length === 1 ? 'photo' : 'photos'} · {MAX_LISTING_PHOTOS} maximum{l.media.length >= MAX_LISTING_PHOTOS && ' (limit reached)'}</p>
-            <label className="field">Add photos (JPEG, PNG or WebP, 3 MB each) <input name="image" type="file" multiple accept="image/jpeg,image/png,image/webp" disabled={savingEdit || l.media.length >= MAX_LISTING_PHOTOS} aria-describedby="edit-photo-policy" onChange={e => { const photos = Array.from(e.currentTarget.files ?? []); setEditSelectedCount(photos.length); setEditSelectionError(selectedPhotosError(photos, l.media.length)); }} /></label>
-             <p className="muted" role="status">{editSelectedCount} new {editSelectedCount === 1 ? 'photo' : 'photos'} selected · {Math.max(0, MAX_LISTING_PHOTOS - l.media.length)} remaining</p>{editSelectionError && <p className="err" role="alert">{editSelectionError}</p>}{savingEdit && photoProgress && <p role="status">{photoProgress}</p>}
-            <p className="muted" id="edit-photo-policy">You can select several photos at once, up to the remaining slots. Explicit or harmful photos are prohibited. Adding photos to a published listing returns it to draft for another campus review.</p>
-            <div className="row"><button className="btn" disabled={savingEdit}>{savingEdit ? 'Saving…' : 'Save changes'}</button><button type="button" className="btn ghost" disabled={savingEdit} onClick={() => setEditing(null)}>Cancel</button></div></form>
+            <ExistingPhotoChoices media={l.media} coverMediaId={editCover?.source === 'existing' ? editCover.id : null}
+              onCoverChange={id => setEditCover({ source: 'existing', id })} disabled={savingEdit} />
+            <label className="field">Add photos (JPEG, PNG or WebP, 3 MB each) <input name="image" type="file" multiple accept="image/jpeg,image/png,image/webp" disabled={savingEdit || l.media.length >= MAX_LISTING_PHOTOS} aria-describedby="edit-photo-policy" onChange={e => {
+              const photos = Array.from(e.currentTarget.files ?? []);
+              setEditFiles(photos); setEditSelectionError(selectedPhotosError(photos, l.media.length));
+              setEditCover(previous => previous?.source === 'existing' ? previous : l.media.length
+                ? { source: 'existing', id: l.media.slice().sort((a: any, b: any) => a.position - b.position || a.id - b.id)[0].id }
+                : photos.length ? { source: 'new', index: 0 } : null);
+            }} /></label>
+             <p className="muted" role="status">{editFiles.length} new {editFiles.length === 1 ? 'photo' : 'photos'} selected · {Math.max(0, MAX_LISTING_PHOTOS - l.media.length)} remaining</p>{editSelectionError && <p className="err" role="alert">{editSelectionError}</p>}
+            {!editSelectionError && <SelectedPhotoPreviews files={editFiles} coverIndex={editCover?.source === 'new' ? editCover.index : -1}
+              onCoverChange={index => setEditCover({ source: 'new', index })} disabled={savingEdit} />}
+            {savingEdit && photoProgress && <p role="status">{photoProgress}</p>}
+            <p className="muted" id="edit-photo-policy">You can select several photos at once, up to the remaining slots, and choose any existing or new photo as the cover. Explicit or harmful photos are prohibited. Adding photos to a published listing returns it to draft for another campus review.</p>
+            <div className="row"><button className="btn" disabled={savingEdit}>{savingEdit ? 'Saving…' : 'Save changes'}</button><button type="button" className="btn ghost" disabled={savingEdit} onClick={() => { setEditing(null); setEditFiles([]); setEditCover(null); }}>Cancel</button></div></form>
         : <article key={l.id} className="panel store-listing"><StoreListingPhoto media={l.media} title={l.title} type={l.type} /><div className="store-listing-main"><div className="store-listing-title"><h3>{l.title}</h3><strong>{peso(Number(l.price))}</strong></div><p className="store-listing-category">{l.category?.name}</p><div className="store-listing-meta"><span className={`status ${l.status}`}>{l.status.replace('_', ' ')}</span>{l.status === 'published' && <span className="status">{l.availabilityState || 'available'}</span>}</div>
             <p className="muted store-listing-help">{l.status === 'draft' ? 'Draft only · submit for campus review when ready.' : l.status === 'changes_requested' ? 'Changes requested · edit and resubmit for review.' : l.status === 'pending_review' ? 'Waiting for a campus reviewer.' : l.status === 'published' ? l.availabilityState === 'sold' ? 'Sold · use Sell again to make a new draft.' : 'Published · manage availability below.' : l.status === 'rejected' ? 'Not approved for publication.' : l.status === 'suspended' ? 'Removed from public browsing by a reviewer.' : 'Check this listing’s review status.'}</p>{l.status === 'published' && <Link className="store-listing-view" to={`/listings/${l.id}`}>View listing <Icon name="arrow" size={15} /></Link>}</div>
-            <div className="store-listing-actions">{!['pending_review', 'suspended', 'rejected'].includes(l.status) && l.availabilityState !== 'sold' && <button type="button" className="btn ghost" onClick={() => { setEditing(l); setEditCategoryId(String(l.categoryId)); setEditSelectedCount(0); setEditSelectionError(''); setErr(''); setOk(''); }}>Edit</button>}
+            <div className="store-listing-actions">{!['pending_review', 'suspended', 'rejected'].includes(l.status) && l.availabilityState !== 'sold' && <button type="button" className="btn ghost" onClick={() => { setEditing(l); setEditCategoryId(String(l.categoryId)); setEditFiles([]); setEditCover(l.media.length ? { source: 'existing', id: l.media.slice().sort((a: any, b: any) => a.position - b.position || a.id - b.id)[0].id } : null); setEditSelectionError(''); setErr(''); setOk(''); }}>Edit</button>}
             {['draft', 'changes_requested'].includes(l.status) && <button type="button" className="btn" disabled={pending === l.id} onClick={() => submit(l.id)}>{pending === l.id ? 'Submitting…' : 'Submit for review'}</button>}
             {l.status === 'published' && l.availabilityState !== 'sold' && <select aria-label={`Availability for ${l.title}`} value={l.availabilityState || 'available'} disabled={pending === l.id} onChange={async e => { const next = e.target.value as 'available' | 'reserved' | 'sold'; if (!(await changeAvailability(l.id, next))) e.target.value = l.availabilityState || 'available'; }}><option value="available">Available</option><option value="reserved">Reserved</option><option value="sold">Sold (final)</option></select>}
             {l.status === 'published' && l.availabilityState === 'sold' && <button type="button" className="btn" aria-label={`Sell ${l.title} again`} disabled={creatingListing} onClick={() => sellAgain(l)}>Sell again</button>}

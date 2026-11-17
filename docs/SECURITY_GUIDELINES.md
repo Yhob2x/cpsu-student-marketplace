@@ -28,6 +28,7 @@ Not legal advice — CPSU's data protection officer must review (`docs/privacy-a
 | Error hygiene | Typed JSON errors; unexpected errors log server-side and return `500 internal_error` with no stack trace | `src/http.ts` |
 | Audit trail | Actor, action, target type/id, JSON metadata, timestamp for every privileged action | `src/audit.ts` |
 | Analytics privacy | Counts of 1–4 suppressed as `<5` so a single student cannot be identified | `routes/admin.ts` |
+| Public report integrity | Only one public target, positive ID, visible/approved status, not reporter-owned; creation + audit are atomic | `src/report-safety.ts`, `routes/account.ts` |
 | Data minimization | No student ID images, phone numbers, schedules, or exact location collected; public payloads whitelisted | `routes/public.ts`, `docs/privacy-and-retention.md` |
 | Suspended-account exclusion | Non-`active` users fail authentication on every request | `src/auth.ts` |
 

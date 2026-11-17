@@ -26,4 +26,6 @@
 - No deployment or migrations, external provider connections or configuration changes, no local/real student data writes, and no administrator access to private messages.
 - Closing a thread does not constitute durable per-user blocking, nor an official complaint/report. Full blocking, complaint evidence, recovery and verification policy remain pending privacy/security decisions described in B2 design.
 
-**Status:** Implemented locally and checked by tests/build; requires authorized integration and live-device acceptance before release.
+**Status at original implementation:** Source/unit/build tested; real DB and live-device acceptance pending.
+
+**Follow-up, 2026-11-17:** Real isolated-MySQL acceptance passed: 4 closure cases (including five concurrent send/close trials), after 36 Stage 1 and 4 reporting tests passed. Fixed the integration-discovered typing/presence acceptance bug; closed threads reject both heartbeats, and reads mask stale cached activity. API 103 pass / 6 guarded skips; web 42 pass, TypeScript, build and PWA pass. **Real-device QA and stress testing still pending.** See `docs/CONVERSATION_SAFETY_B1_MYSQL_2026-11-17.md`.

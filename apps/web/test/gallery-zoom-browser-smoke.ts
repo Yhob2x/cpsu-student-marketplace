@@ -10,8 +10,8 @@ try {
     '--headless=new','--no-first-run','--no-default-browser-check',
     '--disable-background-networking','--disable-extensions','--disable-sync',
     '--disable-gpu','--no-sandbox','--user-data-dir=' + profile,
-    '--window-size=390,844','--virtual-time-budget=7000','--dump-dom',
-    'http://127.0.0.1:5198/zoom-smoke.html',
+    '--window-size=' + (process.env.GALLERY_QA_SIZE || '390,844'),'--virtual-time-budget=7000','--dump-dom',
+    'http://127.0.0.1:5198/test/fixtures/gallery-zoom.html',
   ], { stdout: 'pipe', stderr: 'pipe' });
   const [dom, errors] = await Promise.all([
     new Response(task.stdout).text(), new Response(task.stderr).text()

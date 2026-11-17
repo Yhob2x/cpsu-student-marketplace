@@ -3,7 +3,7 @@ import { z } from 'zod';
 import { prisma } from '../db.js';
 import { HttpError } from '../http.js';
 import { requireAuth, requireStudent } from '../auth.js';
-import { audit } from '../audit.js';
+import { makePublicReportHandler } from '../report-handler.js';
 import { publicListing } from './public.js';
 
 const r = Router();
@@ -71,11 +71,5 @@ r.delete('/saved/:listingId', async (req, res) => {
   res.status(204).end();
 });
 
-r.post('/reports', async (req, res) => {
-  const b = z.object({ listingId: z.number().int().optional(), sellerProfileId: z.number().int().optional(), reason: z.string().trim().min(10).max(1000) })
-    .refine(v => v.listingId || v.sellerProfileId, 'target required').parse(req.body);
-  const rep = await prisma.report.create({ data: { ...b, reporterUserId: req.user!.id } });
-  await audit(req.user!.id, 'report.create', 'report', rep.id);
-  res.status(201).json({ id: rep.id });
-});
+r.post('/reports', makePublicReportHandler(prisma));
 export default r;

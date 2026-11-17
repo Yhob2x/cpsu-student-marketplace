@@ -12,6 +12,8 @@ import { evaluateListing, isMaterialChange } from '../rules.js';
 import { sanitizeListingImage } from '../upload-security.js';
 import { storeSanitizedMedia, deleteStoredMedia } from '../media-storage.js';
 import { canAddListingPhoto, MAX_LISTING_PHOTOS } from '../listing-photo-limit.js';
+import { makeListingCoverHandler } from '../listing-cover-handler.js';
+import { publishSellerAvatar } from '../seller-avatar-update.js';
 
 const r = Router();
 r.use(requireStudent);
@@ -49,7 +51,102 @@ r.post('/store', async (req, res) => {
   const s = await prisma.sellerProfile.create({ data: { ...b, ownerUserId: req.user!.id, campusId: aff.campusId, sellerType: 'student', approvalStatus: 'approved' } });
   res.status(201).json(s);
 });
-r.get('/store', async (req, res) => res.json(await prisma.sellerProfile.findFirst({ where: { ownerUserId: req.user!.id } })));
+r.get('/store', async (req, res) => {
+  const store = await prisma.sellerProfile.findFirst({
+    where: { ownerUserId: req.user!.id },
+    select: { id: true, storeName: true, description: true, campusId: true, approvalStatus: true,
+      avatarPath: true },
+  });
+  res.setHeader('Cache-Control', 'private, no-store');
+  res.json(store ? {
+    id: store.id, storeName: store.storeName, description: store.description, campusId: store.campusId,
+    approvalStatus: store.approvalStatus,
+    avatarUrl: store.avatarPath ? `/api/v1/media/seller-avatar/${store.id}` : null,
+  } : null);
+});
+
+// Store settings belong to the owner. Photo media is only changed through
+// explicit owner-authenticated upload endpoints, not through JSON.
+r.patch('/store', async (req, res) => {
+  const change = z.object({
+    storeName: z.string().trim().min(2).max(80),
+    description: z.string().trim().min(10).max(1000),
+  }).strict().parse(req.body);
+  const store = await prisma.sellerProfile.findFirst({
+    where: { ownerUserId: req.user!.id, approvalStatus: 'approved' },
+    select: { id: true },
+  });
+  if (!store) throw new HttpError(404, 'not_found');
+  const updated = await prisma.$transaction(async tx => {
+    const current = await tx.sellerProfile.update({
+      where: { id: store.id }, data: change,
+      select: { id: true, storeName: true, description: true },
+    });
+    await tx.auditLog.create({ data: { actorUserId: req.user!.id,
+      action: 'seller.store_updated', targetType: 'seller_profile', targetId: current.id,
+    } });
+    return current;
+  });
+  res.setHeader('Cache-Control', 'private, no-store');
+  res.json(updated);
+});
+
+// The seller explicitly chooses and uploads a photo. A valid sanitized image
+// becomes public immediately, without reviewer approval.
+r.post('/store/avatar',
+  async (req, _res, next) => {
+    try {
+      const store = await prisma.sellerProfile.findFirst({ where: {
+        ownerUserId: req.user!.id, approvalStatus: 'approved',
+      }, select: { id: true } });
+      if (!store) throw new HttpError(403, 'no_approved_store');
+      next();
+    } catch (error) { next(error); }
+  },
+  (req, res, next) => upload.single('image')(req, res, error => {
+    if (error instanceof multer.MulterError)
+      return next(new HttpError(400, 'invalid_image', 'Select one JPEG, PNG or WebP image up to 3 MB.'));
+    next(error);
+  }),
+  async (req, res) => {
+    if (!req.file) throw new HttpError(400, 'invalid_image', 'Select one JPEG, PNG or WebP image up to 3 MB.');
+    const sanitized = await sanitizeListingImage(req.file, env.UPLOAD_DIR, { avatar: true });
+    const stored = await storeSanitizedMedia(sanitized);
+    try {
+      const published = await publishSellerAvatar(prisma, req.user!.id, stored.mediaPath);
+      if (published.previousPath && published.previousPath !== stored.mediaPath)
+        await deleteStoredMedia(published.previousPath).catch(() => console.error('Former seller avatar cleanup failed.'));
+      res.setHeader('Cache-Control', 'private, no-store');
+      res.status(200).json({ avatarUrl: `/api/v1/media/seller-avatar/${published.id}` });
+    } catch (error) {
+      await deleteStoredMedia(stored.mediaPath).catch(() => console.error('Avatar cleanup failed after database rollback.'));
+      throw error;
+    }
+  },
+);
+
+// Removing a public profile picture is immediate and always seller-controlled.
+r.delete('/store/avatar', async (req, res) => {
+  const old = await prisma.$transaction(async tx => {
+    const store = await tx.sellerProfile.findFirst({
+      where: { ownerUserId: req.user!.id }, select: { id: true, avatarPath: true },
+    });
+    if (!store) throw new HttpError(404, 'not_found');
+    if (!store.avatarPath) return null;
+    const changed = await tx.sellerProfile.updateMany({
+      where: { id: store.id, avatarPath: store.avatarPath },
+      data: { avatarPath: null },
+    });
+    if (changed.count !== 1) throw new HttpError(409, 'avatar_changed');
+    await tx.auditLog.create({ data: {
+      actorUserId: req.user!.id, action: 'seller.avatar_removed',
+      targetType: 'seller_profile', targetId: store.id,
+    } });
+    return store.avatarPath;
+  });
+  if (old) await deleteStoredMedia(old).catch(() => console.error('Removed avatar cleanup failed.'));
+  res.status(204).end();
+});
 
 r.get('/listings', async (req, res) =>
   res.json(await prisma.listing.findMany({ where: { seller: { ownerUserId: req.user!.id } }, include: { media: true, category: true }, orderBy: { updatedAt: 'desc' } })));
@@ -143,6 +240,8 @@ r.post('/listings/:id/media',
     }
   },
 );
+
+r.patch('/listings/:id/media/cover', makeListingCoverHandler(prisma));
 
 r.post('/listings/:id/submit', async (req, res) => {
   const l = await ownListing(req.user!.id, Number(req.params.id));

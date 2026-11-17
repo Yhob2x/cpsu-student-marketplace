@@ -27,6 +27,12 @@ const env = {
   NODE_ENV: 'test',
   DATABASE_URL: testUrl.toString(),
   UPLOAD_DIR: path.join(os.tmpdir(), 'cpsu-marketplace-stage1-test-uploads'),
+  // Never let an operator's development Google Drive configuration receive synthetic test files.
+  MEDIA_STORAGE: 'local',
+  GOOGLE_DRIVE_CLIENT_ID: '',
+  GOOGLE_DRIVE_CLIENT_SECRET: '',
+  GOOGLE_DRIVE_REFRESH_TOKEN: '',
+  GOOGLE_DRIVE_FOLDER_ID: '',
   CPSU_INTEGRATION_TESTS: '1',
 };
 
@@ -52,5 +58,11 @@ async function run(label: string, args: string[]) {
 
 await run('deploy existing migrations to isolated test database', ['bunx', 'prisma', 'migrate', 'deploy']);
 await run('run Stage 1 integration tests', ['bun', 'test', 'test/integration/stage1.test.ts']);
+// Sequential suites: each resets its own synthetic fixtures in the SAME guarded test database.
+// Never run these files together in one Bun test process; parallel fixture cleanup would conflict.
+await run('run real MySQL public-report security acceptance', ['bun', 'test', 'test/integration/report.test.ts']);
+await run('run real MySQL conversation-closure safety acceptance', ['bun', 'test', 'test/integration/inquiry-close.test.ts']);
+// Bounded contention is isolated in its own process and fixture lifecycle.
+await run('run bounded synthetic close/send MySQL stress', ['bun', 'test', 'test/integration/inquiry-close-stress.test.ts']);
 await run('audit foreign keys, orphan rows and discovery indexes without mutation', ['bun', 'scripts/integrity-audit.ts']);
 console.log('\nStage 1 integration suite completed; application database was not used for test fixtures.');

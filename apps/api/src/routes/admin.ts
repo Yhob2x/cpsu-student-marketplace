@@ -114,17 +114,23 @@ r.get('/reports', async (req, res) => res.json(await prisma.report.findMany({
 })));
 r.post('/reports/:id/resolve', async (req, res) => {
   const id = z.coerce.number().int().positive().parse(req.params.id);
-  const b = z.object({ status: z.enum(['resolved', 'dismissed']) }).parse(req.body);
+  const b = z.object({ status: z.enum(['resolved', 'dismissed']), reason: z.string().trim().min(10).max(1000) }).parse(req.body);
   const where = { id, ...reportScope(req.user) };
   const report = await prisma.report.findFirst({ where, select: { status: true } });
   if (!report) throw new HttpError(404, 'not_found');
   if (!['open', 'reviewing'].includes(report.status)) throw new HttpError(409, 'already_resolved');
-  const result = await prisma.report.updateMany({
-    where: { ...where, status: { in: ['open', 'reviewing'] } },
-    data: { status: b.status, assignedReviewerId: req.user!.id },
+  // Resolve and record the finding atomically: a failed audit must not close the report.
+  await prisma.$transaction(async tx => {
+    const result = await tx.report.updateMany({
+      where: { ...where, status: { in: ['open', 'reviewing'] } },
+      data: { status: b.status, assignedReviewerId: req.user!.id },
+    });
+    if (result.count !== 1) throw new HttpError(409, 'already_resolved');
+    await tx.auditLog.create({ data: {
+      actorUserId: req.user!.id, action: `report.${b.status}`,
+      targetType: 'report', targetId: id, metadata: { reason: b.reason },
+    } });
   });
-  if (result.count !== 1) throw new HttpError(409, 'already_resolved');
-  await audit(req.user!.id, `report.${b.status}`, 'report', id);
   res.status(204).end();
 });
 

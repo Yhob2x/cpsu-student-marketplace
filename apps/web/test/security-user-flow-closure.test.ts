@@ -7,7 +7,7 @@ test('saved route waits for session readiness and redirects guests with safe ret
   const shell = src('main.tsx');
   expect(shell).toContain('path="/saved" element={!ready ?');
   expect(shell).toContain('/login?next=%2Fsaved');
-  expect(src('pages-account.tsx')).toMatch(/inquiries\\\/\\d\\+\\|transactions.*saved/);
+  expect(src('pages-account.tsx')).toContain('safeLoginReturn');
 });
 
 test('sign-in and registration prevent duplicate submissions and announce pending state', () => {

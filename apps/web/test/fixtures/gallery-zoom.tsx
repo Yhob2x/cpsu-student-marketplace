@@ -1,9 +1,9 @@
 import React from 'react';
 import { createRoot } from 'react-dom/client';
-import { ListingGallery } from './src/listing-gallery';
-import './src/styles.css';
-import './src/listing-gallery.css';
-import './src/image-zoom.css';
+import { ListingGallery } from '../../src/listing-gallery';
+import '../../src/styles.css';
+import '../../src/listing-gallery.css';
+import '../../src/image-zoom.css';
 
 const svg = (label: string) => 'data:image/svg+xml,' + encodeURIComponent(
   '<svg xmlns="http://www.w3.org/2000/svg" width="300" height="300"><rect width="300" height="300" fill="#d0e1d4"/><text x="30" y="150" font-size="46">' + label + '</text></svg>'
@@ -30,6 +30,7 @@ const pause = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
     await pause(180);
     checks.zoomOpens = Boolean(document.querySelector('.image-zoom-overlay[role="dialog"][aria-modal="true"]'));
     checks.bodyLocked = document.body.style.overflow === 'hidden';
+    checks.viewerFitsViewport = (document.querySelector('.image-zoom-overlay') as HTMLElement).scrollWidth <= window.innerWidth;
     (document.querySelector('button[aria-label="Zoom in"]') as HTMLButtonElement).click();
     await pause(120);
     checks.zoomChangesScale = document.querySelector('.image-zoom-value')?.textContent === '150%';
@@ -68,9 +69,15 @@ const pause = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
     (document.querySelector('button[aria-label="Next zoom photo"]') as HTMLButtonElement).click();
     await pause(100);
     checks.zoomViewerNextPhoto = document.querySelector('.image-zoom-heading span')?.textContent?.includes('3 / 3') === true;
+    checks.viewerFilmstripFollowsPhoto = document.querySelectorAll('.image-zoom-thumb[aria-pressed="true"]').length === 1 &&
+      document.querySelectorAll('.image-zoom-thumb')[2].getAttribute('aria-pressed') === 'true';
+    (document.querySelectorAll('.image-zoom-thumb')[0] as HTMLButtonElement).click();
+    await pause(90);
+    checks.viewerFilmstripNavigates = document.querySelector('.image-zoom-heading span')?.textContent?.includes('1 / 3') === true;
     document.querySelector('.image-zoom-overlay')?.dispatchEvent(new KeyboardEvent('keydown', { bubbles: true, key: 'Escape' }));
     await pause(100);
     checks.escapeCloses = !document.querySelector('.image-zoom-overlay') && document.body.style.overflow === '';
+    checks.galleryFollowsViewer = document.querySelector('.product-gallery-count')?.textContent?.includes('1 / 3') === true;
   } catch (error) {
     (checks as any).error = String(error);
   }

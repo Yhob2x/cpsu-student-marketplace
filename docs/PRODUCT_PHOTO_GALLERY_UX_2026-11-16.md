@@ -21,4 +21,20 @@ bun run build
 bun test test/gallery-navigation.test.mjs test/home-listings.test.mjs test/listing-photo-uploads.test.mjs
 ```
 
-Manual acceptance required on iPhone Safari and Android Chrome with a published listing containing at least three photos: swipe left and right; check photo counter and thumbnail selection; use arrows; try keyboard navigation on desktop; confirm the page still scrolls vertically and the Save control works. A physical-device check has **not** been claimed until performed.
+## Zoom and swipe continuation — November 17, 2026
+
+The product gallery offers a full-screen photo viewer with pinch-to-zoom (up to 4×), double-tap zoom, mouse dragging, zoom buttons, reset, previous/next photo controls, and an Escape/Close action. The image viewer uses its own scroll/gesture surface rather than swiping the listing details or the Explore grid. Mobile Explore retains its two-row horizontal-column browsing behavior outside the photo viewer. No API, database, authorization, or Drive settings changed.
+
+The moved, isolated synthetic browser smoke fixture is now usable again from `apps/web/test/fixtures/gallery-zoom.html`. To reproduce safely from `apps/web`, run the following in **two separate terminals**:
+
+```powershell
+bun run dev --host 127.0.0.1 --port 5198 --strictPort
+```
+
+```powershell
+bun test/gallery-zoom-browser-smoke.ts
+```
+
+The browser harness requires a local Chrome browser and uses a disposable Chrome profile. On November 17, 2026: **13/13 headless Chrome checks passed** at a 390×844 viewport, including simulated two-pointer pinch, zoom-image drag, double tap, counter/thumb synchronization, and Escape closing with body-scroll restoration; the web TypeScript/Vite build passed and 11 focused web unit tests passed. Browser-simulated pointer events are not a substitute for real touch hardware.
+
+Manual acceptance is still required on iPhone Safari and Android Chrome with a published listing containing at least three photos: swipe left and right; check counter and thumbnail selection; open the zoom viewer; pinch with two fingers; double-tap; drag while zoomed; close the overlay and verify normal vertical scrolling resumes. A physical-device check has **not** been claimed until performed.

@@ -714,17 +714,17 @@ if (process.env.CPSU_INTEGRATION_TESTS === '1') {
       expect(bQueue.body.some((rep: any) => rep.id === b.id)).toBe(true);
       expect(bQueue.body.some((rep: any) => rep.id === a.id)).toBe(false);
       const rejected = await request(app).post('/api/v1/admin/reports/' + b.id + '/resolve')
-        .set(token(fx.reviewerA.id)).send({ status: 'resolved' });
+        .set(token(fx.reviewerA.id)).send({ status: 'resolved', reason: 'Not authorized for this campus report' });
       expect(rejected.status).toBe(404);
       expect((await prisma.report.findUniqueOrThrow({ where: { id: b.id } })).status).toBe('open');
       expect(await prisma.auditLog.count({ where: { action: 'report.resolved', targetId: b.id } })).toBe(0);
       const global = await request(app).get('/api/v1/admin/reports').set(token(fx.globalAdmin.id));
       expect(global.body.some((rep: any) => rep.id === b.id)).toBe(true);
       const allowed = await request(app).post('/api/v1/admin/reports/' + b.id + '/resolve')
-        .set(token(fx.reviewerB.id)).send({ status: 'resolved' });
+        .set(token(fx.reviewerB.id)).send({ status: 'resolved', reason: 'Reviewed the synthetic report and resolved it' });
       expect(allowed.status).toBe(204);
       const replay = await request(app).post('/api/v1/admin/reports/' + b.id + '/resolve')
-        .set(token(fx.reviewerB.id)).send({ status: 'dismissed' });
+        .set(token(fx.reviewerB.id)).send({ status: 'dismissed', reason: 'Repeat report decision must be rejected' });
       expect(replay.status).toBe(409);
     });
 

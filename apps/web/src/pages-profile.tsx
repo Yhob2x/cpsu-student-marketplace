@@ -5,6 +5,7 @@ import { useMe } from './main';
 import { Icon, type IconName } from './icons';
 import { PushSettings } from './push-settings';
 import { InstallApp } from './install-app';
+import { affiliationLabel, campusStatusSummary, displayNameChange } from './profile-presentation';
 
 type Notice = { id: number; type: string; payload: any; readAt: string | null; createdAt: string };
 
@@ -49,7 +50,7 @@ function noticeTarget(n: Notice): string | null {
 }
 
 export function Profile() {
-  const { me, reload, logout } = useMe();
+  const { me, reload } = useMe();
   const [name, setName] = useState('');
   const [busy, setBusy] = useState(false);
   const [ok, setOk] = useState('');
@@ -57,75 +58,125 @@ export function Profile() {
 
   useEffect(() => { if (me) setName(me.displayName); }, [me?.displayName]);
 
-  if (!me) return <p className="muted">Loading your profile</p>;
+  if (!me) return <p className="muted" role="status">Loading your profile.</p>;
+
   const staff = me.roles.some(role => ['campus_reviewer', 'university_admin', 'system_admin', 'establishment'].includes(role.role));
+  const reviewer = me.roles.some(role => ['campus_reviewer', 'university_admin'].includes(role.role));
+  const status = campusStatusSummary(me.affiliations, Boolean(me.storeId));
+  const nameChange = displayNameChange(name, me.displayName);
+  const showNameError = nameChange.changed && !nameChange.valid;
+  const initials = me.displayName.trim().split(/\s+/).slice(0, 2).map(part => part.charAt(0)).join('').toUpperCase() || 'S';
+  const links: { to: string; label: string; icon: IconName }[] = staff
+    ? [...(reviewer ? [{ to: '/admin', label: 'Administration', icon: 'shield' as IconName }] : []),
+        { to: '/notifications', label: 'Notifications', icon: 'bell' }]
+    : [
+        { to: '/dashboard', label: 'My listings', icon: 'store' },
+        { to: '/saved', label: 'Saved items', icon: 'heart' },
+        { to: '/transactions', label: 'Transactions', icon: 'tag' },
+        { to: '/notifications', label: 'Notifications', icon: 'bell' },
+      ];
 
   const save = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    if (busy || !nameChange.canSave) return;
     setBusy(true);
+    setOk('');
+    setErr('');
     try {
-      await api('/me', { method: 'PATCH', body: { displayName: name.trim() } });
-      await reload();
-      setOk('Profile updated.');
-      setErr('');
-    } catch (x) { setErr(explain(x)); } finally { setBusy(false); }
+      await api('/me', { method: 'PATCH', body: { displayName: nameChange.trimmed } });
+      const updated = await reload();
+      if (updated) setOk('Display name updated.');
+      else setErr('Your name was saved, but your account could not refresh. Reload the page to check your profile.');
+    } catch (x) {
+      setErr(explain(x));
+    } finally {
+      setBusy(false);
+    }
   };
 
-  return <>
+  return <div className="profile-page">
     <div className="page-head">
       <div>
         <h1>Profile</h1>
-        <p className="muted">{staff ? 'Your staff account and notification settings.' : 'How you appear to other students, and where your CPSU affiliation stands.'}</p>
+        <p className="muted">{staff ? 'Your staff account and notification settings.' : 'Your student account, CPSU affiliation and settings.'}</p>
       </div>
     </div>
 
     <div className="profile-grid">
-      <InstallApp variant="panel" />
-      <section className="panel">
+      <section className="panel profile-account">
         <h2>Your account</h2>
-        <dl className="facts">
-          <div><dt>{staff ? 'Name' : 'Name shown to others'}</dt><dd>{me.displayName}</dd></div>
-          <div><dt>Email</dt><dd>{me.email}</dd></div>
+        <div className="profile-identity">
+          <span className="profile-avatar" aria-hidden="true">{initials}</span>
+          <div className="profile-identity-copy">
+            <strong>{me.displayName}</strong>
+            <span>{staff ? 'Staff account' : 'CPSU student account'}</span>
+          </div>
+        </div>
+        <dl className="facts profile-account-facts">
+          <div><dt>Email address</dt><dd>{me.email}</dd></div>
         </dl>
-        <p className="muted">Your email is never shown publicly.</p>
+        <p className="muted profile-privacy-note"><Icon name="shield" size={15} /> Your email is not displayed publicly.</p>
       </section>
 
-      {!staff && <section className="panel">
+      {!staff && <section className={'panel profile-affiliation profile-affiliation--' + status.state}>
         <h2>CPSU affiliation</h2>
-        {me.affiliations.length === 0 && <p className="muted">No campus affiliation on record.</p>}
-        {me.affiliations.map(a => <p key={a.id}>{a.campus.name} <span className={`status ${a.status}`}>{a.status}</span></p>)}
-        {!me.storeId && <p className="muted">A campus reviewer confirms your affiliation before you can sell. Browsing and messaging work right away.</p>}
+        <div className="profile-review-state">
+          <span className={'profile-review-symbol profile-review-symbol--' + status.state} aria-hidden="true">
+            <Icon name={status.state === 'verified' ? 'check' : status.state === 'rejected' ? 'flag' : 'shield'} size={19} />
+          </span>
+          <h3>{status.title}</h3>
+        </div>
+        {me.affiliations.length > 0 && <ul className="profile-campus-list">
+          {me.affiliations.map(a => <li key={a.id}>
+            <span>{a.campus.name}</span>
+            <span className={'status ' + (['verified', 'pending', 'rejected'].includes(a.status) ? a.status : '')}>
+              {affiliationLabel(a.status)}
+            </span>
+          </li>)}
+        </ul>}
+        <p className="muted profile-review-description">{status.description}</p>
+        <Link className="profile-status-action" to={status.actionHref}>{status.actionLabel}<Icon name="arrow" size={16} /></Link>
+        {status.state === 'rejected' && <Link className="profile-status-secondary" to="/guidelines">Read marketplace guidelines</Link>}
       </section>}
 
-      <section className="panel">
-        <h2>Where to go</h2>
-        <ul className="quick">
-          {staff ? (me.roles.some(role => ['campus_reviewer', 'university_admin'].includes(role.role)) && <li><Link to="/admin">Administration</Link><span className="muted">Review listings and campus activity</span></li>) : <>
-          <li><Link to="/dashboard">My listings</Link><span className="muted">{me.storeId ? 'Manage your drafts, reviews and listings' : 'Open a store once your affiliation is verified'}</span></li>
-          <li><Link to="/saved">Favorites</Link><span className="muted">Listings you saved for later</span></li>
-          <li><Link to="/inquiries">Messages</Link><span className="muted">Conversations with buyers and sellers</span></li>
-          <li><Link to="/transactions">My transactions</Link><span className="muted">Purchase requests, arrangements and mutual completion records</span></li></>}
-          <li><Link to="/notifications">Notifications</Link><span className="muted">Review decisions, replies and affiliation updates</span></li>
-        </ul>
-      </section>
-
-      <section className="panel">
+      <section className="panel profile-settings">
         <h2>Account settings</h2>
-        <form className="stack" onSubmit={save} style={{ maxWidth: 'none' }}>
-          <label className="field">Display name
-            <input value={name} onChange={e => setName(e.target.value)} required minLength={2} maxLength={80} autoComplete="nickname" />
-          </label>
-          <div className="row">
-            <button className="btn" disabled={busy || name.trim().length < 2}>{busy ? 'Saving…' : 'Save name'}</button>
-            <button type="button" className="btn ghost" onClick={logout}>Sign out</button>
-          </div>
-          {ok && <p role="status">{ok}</p>}
+        <form className="stack" onSubmit={save}>
+          <label className="field" htmlFor="profile-display-name">Display name</label>
+          <input id="profile-display-name" value={name} disabled={busy} onChange={e => {
+            setName(e.target.value);
+            setOk('');
+            setErr('');
+          }} required minLength={2} maxLength={80} autoComplete="nickname"
+            aria-invalid={showNameError} aria-describedby={showNameError ? 'profile-name-help profile-name-error' : 'profile-name-help'} />
+          <p id="profile-name-help" className="muted profile-name-help">Shown to students and reviewers. Changing your name does not affect campus verification.</p>
+          {showNameError && <p className="profile-field-error" id="profile-name-error">Enter 2–80 characters for your display name.</p>}
+          <button className="btn profile-save-button" disabled={busy || !nameChange.canSave}>{busy ? 'Saving...' : 'Save changes'}</button>
+          {ok && <p className="profile-save-success" role="status"><Icon name="check" size={16} />{ok}</p>}
           {err && <p className="err" role="alert">{err}</p>}
         </form>
-        <p className="muted">Changing your name does not change your verification. Reviewers and students see the new name everywhere it is shown.</p>
       </section>
+
+      <section className="panel profile-shortcuts-panel">
+        <h2>Quick links</h2>
+        <nav aria-label="Profile shortcuts">
+          <ul className="profile-shortcuts">
+            {links.map(item => <li key={item.to}>
+              <Link to={item.to} className="profile-shortcut">
+                <Icon name={item.icon} size={19} />
+                <span>{item.label}</span>
+                <Icon name="arrow" size={16} />
+              </Link>
+            </li>)}
+          </ul>
+        </nav>
+      </section>
+
+      <div className="profile-install">
+        <InstallApp variant="panel" />
+      </div>
     </div>
-  </>;
+  </div>;
 }
 
 type NoticeGroup = 'Today' | 'Yesterday' | 'Earlier';
@@ -252,8 +303,6 @@ export function Notifications() {
       </button>
     </header>
 
-    <PushSettings />
-
     <div className="notifications-summary">
       <span className="notifications-summary-icon" aria-hidden="true"><Icon name="bell" size={23} /></span>
       <div className="notifications-summary-copy">
@@ -361,5 +410,9 @@ export function Notifications() {
         </div>
       </section>)}
     </div>}
+    <details className="notifications-preferences">
+      <summary>Notification preferences <Icon name="chevronDown" size={19} /></summary>
+      <PushSettings />
+    </details>
   </section>;
 }

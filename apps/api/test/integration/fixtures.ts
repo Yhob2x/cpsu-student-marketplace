@@ -5,6 +5,7 @@ export function assertIsolatedTestDatabase() {
   const db = decodeURIComponent(u.pathname.replace(/^\//, ''));
   if (process.env.NODE_ENV !== 'test' || process.env.CPSU_INTEGRATION_TESTS !== '1' ||
       db !== 'cpsu_marketplace_test' || !['127.0.0.1', 'localhost', '::1'].includes(u.hostname) ||
+      process.env.MEDIA_STORAGE !== 'local' ||
       !process.env.UPLOAD_DIR?.includes('stage1-test-uploads')) {
     throw new Error('REFUSING destructive fixture work: isolated local test environment not confirmed.');
   }

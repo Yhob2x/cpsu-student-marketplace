@@ -37,6 +37,12 @@ The native Expo app was not modified by this web-specific request and retains it
 | --surface-soft | #F5F7F5 | Category cards and filters |
 | --surface-neutral | #F2F4F2 | Hero and product placeholders |
 
+### November 17, 2026 — Controlled gold emphasis
+
+The user approved the existing white / forest green / soft-neutral palette and requested more visual distinction **without a new dominant color**. Use the pre-existing warm gold `--mango` / `#E0BB46` selectively: the homepage's primary **Explore listings** action and the small active-page marker in the mobile bottom tab bar. Dark-green foreground on gold maintains readable contrast (approximately 6.81:1). Preserve existing CTA wording, secondary green actions, product-price typography, category surfaces, and semantic status colors. Do not repeat gold indiscriminately across every card or add extra decorative effects.
+
+Implementation: `apps/web/src/student-emphasis.css`, imported after the established component styles in `main.tsx`. Chrome CDP device-emulated checks at 390px and 768px confirmed the exact token colors and no page-level horizontal overflow; web build and focused tests passed. Actual iPhone touch/VoiceOver acceptance remains separate.
+
 Typefaces remain Plus Jakarta Sans for headings and Inter for body text, with system fallbacks.
 Dark-green sections use light keyboard focus outlines. No new dependencies or APIs were introduced.
 

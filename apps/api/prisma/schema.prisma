@@ -278,6 +278,8 @@ model SellerProfile {
   description     String         @db.Text
   sellerType      SellerType     @default(student)
   approvalStatus  ApprovalStatus @default(pending)
+  // Store-owner photos publish immediately after file validation and sanitization.
+  avatarPath      String?        @db.VarChar(255)
   createdAt       DateTime       @default(now())
 
   owner          User            @relation(fields: [ownerUserId], references: [id])

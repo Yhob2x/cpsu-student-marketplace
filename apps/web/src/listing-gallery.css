@@ -82,7 +82,6 @@
   z-index: 2;
   touch-action: manipulation;
 }
-.product-gallery-arrow span { font-family: Arial, sans-serif; font-size: 2rem; line-height: 1; margin-top: -.2rem; font-weight: 300; }
 .product-gallery-prev { left: .65rem; }
 .product-gallery-next { right: .65rem; }
 .product-gallery-arrow:disabled { opacity: 0; pointer-events: none; }

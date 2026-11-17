@@ -345,3 +345,16 @@ Reconstructed from migrations `20261110063101_init` and `20261110090354_message_
 - **Fixed:** Initial loading failures no longer appear as an empty inbox; failed refreshes preserve already loaded notifications. Unknown/unclickable notifications can be marked as read individually. Action and refresh feedback is announced without a toast dependency.
 - **Accessibility:** 44px touch targets, keyboard focus, filter pressed state, one contextual status message, and reduced-motion support.
 - **Verified:** Frontend build; headless responsive and interaction tests at 320–1440px with mock notification payloads. Backend contracts, database, permissions, and production records unchanged; physical-device and screen-reader acceptance remain open.
+
+## 2026-11-17 — Messaging closure safety, isolated database verification
+- **Tested:** End conversation with two synthetic student accounts in the guarded local MySQL test DB. Four new HTTP/MySQL cases and five simultaneous send/close races. Existing Stage 1 36, report safety 4, conversation 4 all passed.
+- **Fixed:** After a thread is closed, `/typing` and `/presence` now reject with `409 thread_closed`; thread reads suppress stale status from racing heartbeats. History and message read acknowledgements remain available.
+- **Validated:** API unit 103 passed (six opt-in skips); web 42 passed; API typecheck, web build and PWA validation passed. No schema migration, external service changes, production data writes, commit or deployment. Device/browser and full concurrency stress acceptance remain pending.
+- **Details:** `docs/CONVERSATION_SAFETY_B1_MYSQL_2026-11-17.md`.
+
+## 2026-11-17 — B1.3 bounded concurrency QA and B2 approval preparation
+- **Added:** 4-case opt-in test suite with 40 send/close races, 20 double-close races, 10 blocked replay waves and rate-limit regression, running sequentially in local `cpsu_marketplace_test`.
+- **Passed:** 48 isolated MySQL test cases (36 Stage 1, 4 reports, 4 B1.2 close, 4 stress); 104 ordinary API tests (7 gated skips); 42 web tests; typecheck, build, PWA, git diff.
+- **Observed:** 31 explicit 409 concurrency conflicts under deliberately overlapping operations; no duplicate closure audits or messages after close. A benign but meaningful release UX follow-up is bounded retry of **idempotent close only** (not sends).
+- **Blocked:** physical Safari QA (firewall disabled on all three profiles; Wi-Fi Public). Readiness-only preflight; no listener started or OS security changed.
+- **Documented:** separate CPSU owner/DPO decision matrix for durable blocking and private-message reporting; no schema, private-message evidence access or endpoints activated.

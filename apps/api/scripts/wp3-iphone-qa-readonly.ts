@@ -35,6 +35,29 @@ try {
     console.log('BLOCKER: WP3 transactions migration is not applied to isolated iPhone QA schema.');
     problems++;
   }
+  // Current checkout has further migrations. Treat them as pending until reviewed
+  // and separately approved for this isolated schema; never auto-deploy here.
+  for (const name of [
+    '20261116220000_managed_student_content',
+    '20261116221000_pending_announcement_edits',
+    '20261117123000_seller_avatar_review',
+  ]) {
+    if (!migrations.some(m => m.migration_name === name && m.finished_at && !m.rolled_back_at)) {
+      console.log('BLOCKER: isolated iPhone QA schema does not include repository migration ' + name);
+      problems++;
+    }
+  }
+  // The current seller-avatar Prisma model and reviewed SQL require only avatarPath.
+  // This was reconciled without editing the in-progress migration or schema.
+  const avatarCols = await prisma.$queryRawUnsafe<{name:string}[]>(
+    "SELECT COLUMN_NAME AS name FROM information_schema.COLUMNS WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME='SellerProfile' AND COLUMN_NAME='avatarPath'"
+  );
+  const haveAvatar = new Set(avatarCols.map(c => c.name));
+  const missingAvatar = ['avatarPath'].filter(c => !haveAvatar.has(c));
+  if (missingAvatar.length) {
+    console.log('BLOCKER: SellerProfile columns required by Prisma are absent: ' + missingAvatar.join(', '));
+    problems++;
+  }
   const counts:Record<string,number>={};
   for(const tableName of ['User','Session','Listing','Transaction','TransactionStatusLog']){
     if(!present.has(tableName.toLowerCase())){console.log('MISSING TEST TABLE '+tableName);continue;}

@@ -14,7 +14,7 @@ const FORMAT_BY_MIME: Record<string, string> = {
 const MAX_PIXELS = 24_000_000;
 const MAX_STORED_BYTES = 3 * 1024 * 1024;
 
-export async function sanitizeListingImage(file: Express.Multer.File, uploadDir: string) {
+export async function sanitizeListingImage(file: Express.Multer.File, uploadDir: string, options: { avatar?: boolean } = {}) {
   let storedName: string | null = null;
   try {
     const image = sharp(file.path, { failOn: 'warning', limitInputPixels: MAX_PIXELS });
@@ -29,7 +29,8 @@ export async function sanitizeListingImage(file: Express.Multer.File, uploadDir:
     // source metadata by default and drops extraneous file content.
     const output = await sharp(file.path, { failOn: 'warning', limitInputPixels: MAX_PIXELS })
       .rotate()
-      .resize({ width: 2400, height: 2400, fit: 'inside', withoutEnlargement: true })
+      .resize(options.avatar ? { width: 512, height: 512, fit: 'cover', position: 'centre' } :
+        { width: 2400, height: 2400, fit: 'inside', withoutEnlargement: true })
       .webp({ quality: 82, effort: 4 })
       .toBuffer();
     if (output.byteLength > MAX_STORED_BYTES) {

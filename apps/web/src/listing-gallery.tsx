@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { KeyboardEvent, ReactNode, UIEvent } from 'react';
 import { Icon } from './icons';
 import { adjacentPhotoIndex, clampPhotoIndex, photoIndexFromScroll } from './gallery-navigation';
@@ -21,6 +21,14 @@ export function ListingGallery({ photos, title, saveControl }: ListingGalleryPro
   const [zoomIndex, setZoomIndex] = useState<number | null>(null);
   const total = photos.length;
   const multiple = total > 1;
+
+  useEffect(() => {
+    const strip = thumbnailsViewport.current;
+    const selected = strip?.children[activeIndex] as HTMLElement | undefined;
+    if (!strip || !selected) return;
+    const left = selected.offsetLeft - strip.offsetLeft - (strip.clientWidth - selected.clientWidth) / 2;
+    strip.scrollTo({ left, behavior: window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth' });
+  }, [activeIndex]);
 
   function goTo(index: number) {
     const next = clampPhotoIndex(index, total);
@@ -82,12 +90,12 @@ export function ListingGallery({ photos, title, saveControl }: ListingGalleryPro
             <button type="button" className="product-gallery-arrow product-gallery-prev"
               disabled={activeIndex <= 0} aria-label="Previous photo"
               onClick={() => goTo(adjacentPhotoIndex(activeIndex, -1, total))}>
-              <span aria-hidden="true">‹</span>
+              <Icon name="chevronLeft" size={24} />
             </button>
             <button type="button" className="product-gallery-arrow product-gallery-next"
               disabled={activeIndex >= total - 1} aria-label="Next photo"
               onClick={() => goTo(adjacentPhotoIndex(activeIndex, 1, total))}>
-              <span aria-hidden="true">›</span>
+              <Icon name="chevronRight" size={24} />
             </button>
           </>}
         </>
@@ -114,6 +122,6 @@ export function ListingGallery({ photos, title, saveControl }: ListingGalleryPro
       <span className="sr-only" role="status">Photo {activeIndex + 1} of {total}</span>
     </>}
     {zoomIndex !== null && total > 0 && <ImageZoomDialog photos={photos} title={title} initialIndex={zoomIndex}
-      onClose={() => setZoomIndex(null)} />}
+      onClose={(index) => { setZoomIndex(null); goTo(index); }} />}
   </section>;
 }

@@ -4,6 +4,7 @@ import { api, explain, peso } from './api';
 import { useMe } from './main';
 import { ManagedContentAdmin } from './pages-managed-content';
 import { ReviewerAdmin } from './pages-reviewers';
+import './admin-workspace.css';
 
 const FLAG_TEXT: Record<string, string> = {
   sensitive_category: 'Sensitive category', restricted_review: 'Campus restriction: review', possible_establishment_overlap: 'May overlap with a campus establishment',
@@ -17,6 +18,7 @@ const AUDIT_ACTION_TEXT: Record<string, string> = {
   'report.resolved': 'Report resolved', 'report.dismissed': 'Report dismissed',
   'user.suspended': 'Student suspended', 'user.reactivated': 'Student reactivated',
   'reviewer.created': 'Reviewer account created', 'reviewer.updated': 'Reviewer account updated',
+  'seller.avatar_published': 'Seller photo updated', 'seller.avatar_removed': 'Seller photo removed',
 };
 
 export function Admin() {
@@ -24,10 +26,15 @@ export function Admin() {
   const accountAdmin = Boolean(me?.roles.some(role => role.role === 'university_admin' && role.campusId === null));
   const [q, setQ] = useState<any>(null); const [stats, setStats] = useState<any>(null); const [err, setErr] = useState(''); const [reasons, setReasons] = useState<Record<string, string>>({});
   const [pending, setPending] = useState('');
-  const [activeSection, setActiveSection] = useState('listings');
+  const [activeSection, setActiveSection] = useState(() => accountAdmin ? 'overview' : 'listings');
+  useEffect(() => { if (me) setActiveSection(accountAdmin ? 'overview' : 'listings'); }, [me?.id, accountAdmin]);
+  const [selectedListingId, setSelectedListingId] = useState<number | null>(null);
   const [photosReviewed, setPhotosReviewed] = useState<Record<number, boolean>>({});
   const [reports, setReports] = useState<any[] | null>(null);
   const [reportsError, setReportsError] = useState('');
+  const [reportActionError, setReportActionError] = useState('');
+  const [reportReasons, setReportReasons] = useState<Record<number, string>>({});
+  const [notice, setNotice] = useState('');
   const [monitoredTransactions, setMonitoredTransactions] = useState<any[]>([]);
   const [transactionCount, setTransactionCount] = useState(0);
   const [transactionPage, setTransactionPage] = useState(1);
@@ -43,6 +50,7 @@ export function Admin() {
   const [studentTotal, setStudentTotal] = useState(0);
   const [selectedStudentId, setSelectedStudentId] = useState<number | null>(null);
   const [campuses, setCampuses] = useState<{ id: number; name: string }[]>([]);
+  const [campusesError, setCampusesError] = useState('');
   const [students, setStudents] = useState<any[] | null>(null);
   const [studentsError, setStudentsError] = useState('');
   const [studentsLoading, setStudentsLoading] = useState(false);
@@ -51,11 +59,11 @@ export function Admin() {
   const [auditLoading, setAuditLoading] = useState(false);
   const [auditError, setAuditError] = useState('');
   const load = () => {
-    api('/admin/review-queue').then(r => { setQ(r); setErr(''); syncQueue(r.listings.length + r.affiliations.length); }).catch(e => setErr(explain(e)));
+    api('/admin/review-queue').then(r => { setQ(r); setErr(''); void syncQueue(); }).catch(e => setErr(explain(e)));
     api('/admin/reports').then(r => { setReports(r); setReportsError(''); }).catch(e => setReportsError(explain(e)));
     api('/admin/analytics/overview').then(r => { setStats(r); setStatsError(''); }).catch(e => setStatsError(explain(e)));
   };
-  useEffect(load, []);
+  useEffect(() => { if (me) load(); }, [me?.id]);
   const loadTransactions = async (page = 1) => {
     setTransactionLoading(true);
     try {
@@ -65,7 +73,7 @@ export function Admin() {
     } catch (e) { setTransactionError(explain(e)); }
     finally { setTransactionLoading(false); }
   };
-  useEffect(() => { void loadTransactions(); }, []);
+  useEffect(() => { if (me) void loadTransactions(); }, [me?.id]);
   const searchStudents = async (filters = studentApplied, page = 1, keepSelection = false) => {
     setStudentsLoading(true);
     try {
@@ -95,7 +103,11 @@ export function Admin() {
     } catch (e) { setAuditError(explain(e)); }
     finally { setAuditLoading(false); }
   };
-  useEffect(() => { if (accountAdmin) { void searchStudents(); void loadAudit(); api<{ id: number; name: string }[]>('/campuses').then(setCampuses).catch(() => {}); } }, [accountAdmin]);
+  const loadCampuses = async () => {
+    try { setCampuses(await api<{ id: number; name: string }[]>('/campuses')); setCampusesError(''); }
+    catch (e) { setCampusesError(explain(e)); }
+  };
+  useEffect(() => { if (accountAdmin) { void searchStudents(); void loadAudit(); void loadCampuses(); } }, [accountAdmin]);
   const changeAccountStatus = async (id: number, status: 'active' | 'suspended') => {
     const reason = (reasons[`u${id}`] ?? '').trim();
     if (reason.length < 10) return;
@@ -104,49 +116,119 @@ export function Admin() {
       await api(`/admin/users/${id}/status`, { method: 'PATCH', body: { status, reason } });
       setReasons(previous => ({ ...previous, [`u${id}`]: '' }));
       setErr('');
+      setNotice(`Student #${id} ${status === 'suspended' ? 'suspended' : 'reactivated'}.`);
       await searchStudents(studentApplied, studentPage, true);
     } catch (e) { setErr(explain(e)); }
     finally { setPending(''); }
   };
   const resolveReport = async (id: number, status: 'resolved' | 'dismissed') => {
-    setPending(`r${id}`);
-    try { await api(`/admin/reports/${id}/resolve`, { body: { status } }); setErr(''); load(); } catch (e) { setErr(explain(e)); } finally { setPending(''); }
+    const reason = (reportReasons[id] ?? '').trim();
+    if (reason.length < 10) return;
+    setPending(`r${id}`); setReportActionError(''); setNotice('');
+    try {
+      await api(`/admin/reports/${id}/resolve`, { body: { status, reason } });
+      setReportReasons(previous => ({ ...previous, [id]: '' }));
+      setNotice(`Report #${id} ${status === 'resolved' ? 'resolved' : 'dismissed'}. Your reason was recorded.`);
+      load();
+    } catch (e) { setReportActionError(explain(e)); }
+    finally { setPending(''); }
   };
   const decide = async (id: number, decision: string) => {
     setPending(`l${id}`);
     try { await api(`/admin/listings/${id}/decision`, { body: {
-      decision, reason: reasons[`l${id}`] ?? '',
+      decision, reason: (reasons[`l${id}`] ?? '').trim(),
       ...(decision === 'approved' ? { photosReviewed: photosReviewed[id] === true } : {}),
-    } }); setErr(''); setPhotosReviewed(prev => ({ ...prev, [id]: false })); load(); } catch (e) { setErr(explain(e)); } finally { setPending(''); }
+    } }); setErr(''); setPhotosReviewed(prev => ({ ...prev, [id]: false }));
+      setReasons(prev => ({ ...prev, [`l${id}`]: '' }));
+      setNotice(`Listing #${id}: ${decision === 'approved' ? 'approved' : decision === 'rejected' ? 'rejected' : 'changes requested'}.`);
+      load(); } catch (e) { setErr(explain(e)); } finally { setPending(''); }
   };
   const verify = async (id: number, decision: string) => {
     setPending(`a${id}`);
-    try { await api(`/admin/affiliations/${id}/verify`, { body: { decision, reason: reasons[`a${id}`].trim() } }); setErr(''); load(); } catch (e) { setErr(explain(e)); } finally { setPending(''); }
+    try { await api(`/admin/affiliations/${id}/verify`, { body: { decision, reason: (reasons[`a${id}`] ?? '').trim() } });
+      setErr(''); setReasons(prev => ({ ...prev, [`a${id}`]: '' }));
+      setNotice(`Student affiliation #${id} ${decision === 'verified' ? 'verified' : 'rejected'}.`);
+      load(); } catch (e) { setErr(explain(e)); } finally { setPending(''); }
   };
-  const field = (k: string, ph: string) => <label className="field moderation-reason">
+  const field = (k: string, ph: string, min = 5) => <label className="field moderation-reason">
     {k.startsWith('a') ? 'Verification reason' : 'Decision reason'}
-    <input placeholder={ph} value={reasons[k] ?? ''} onChange={e => setReasons({ ...reasons, [k]: e.target.value })} required minLength={5} />
+    <input placeholder={ph} value={reasons[k] ?? ''} onChange={e => setReasons({ ...reasons, [k]: e.target.value })} required minLength={min} maxLength={k.startsWith('a') ? 500 : 1000} />
   </label>;
-  const reasonOk = (k: string) => (reasons[k] ?? '').trim().length >= 5;
+  const reasonOk = (k: string, min = 5) => (reasons[k] ?? '').trim().length >= min;
   const selectedStudent = students?.find(student => student.id === selectedStudentId);
-  return <>
-    <div className="page-head"><div><h1>Administration</h1><p className="muted">Review campus activity and manage the work assigned to your role.</p></div></div>
-    <nav className="admin-section-nav" aria-label="Administration sections">
-      {([['listings', 'Listings', q?.listings.length], ['affiliations', 'Affiliations', q?.affiliations.length], ['reports', 'Reports', reports?.length], ['transactions', 'Transactions'], ...(accountAdmin ? [['students', 'Students'], ['staff', 'Staff'], ['content', 'Content'], ['audit', 'Audit history']] : []), ['overview', 'Overview']] as [string, string, number?][]).map(([key, label, count]) =>
-        <button key={key} type="button" aria-pressed={activeSection === key} onClick={() => setActiveSection(key)}>{label} {count != null && <span>{count}</span>}</button>)}
-    </nav>
+  const selectedListing = q?.listings.find((listing: any) => listing.id === selectedListingId) ?? q?.listings[0];
+  type NavItem = { id: string; label: string; count?: number };
+  const navGroups: { title: string; items: NavItem[] }[] = accountAdmin
+    ? [
+      { title: 'Dashboard', items: [{ id: 'overview', label: 'Overview' }] },
+      { title: 'Management', items: [{ id: 'students', label: 'Students' }, { id: 'staff', label: 'Reviewer accounts' }, { id: 'content', label: 'Content' }] },
+      { title: 'Review & safety', items: [
+        { id: 'listings', label: 'Listing reviews', count: q?.listings.length },
+        { id: 'affiliations', label: 'Verifications', count: q?.affiliations.length },
+        { id: 'reports', label: 'Reports', count: reports?.length },
+      ] },
+      { title: 'Monitoring', items: [{ id: 'transactions', label: 'Transactions' }, { id: 'audit', label: 'Audit history' }] },
+    ]
+    : [
+      { title: 'Review queue', items: [
+        { id: 'listings', label: 'Listing reviews', count: q?.listings.length },
+        { id: 'affiliations', label: 'Verifications', count: q?.affiliations.length },
+        { id: 'reports', label: 'Reports', count: reports?.length },
+      ] },
+      { title: 'Monitoring', items: [{ id: 'transactions', label: 'Transactions' }, { id: 'overview', label: 'Campus overview' }] },
+    ];
+  const changeSection = (id: string) => { setActiveSection(id); setNotice(''); };
+  return <div className="admin-workspace">
+    <div className="page-head"><div><h1>{accountAdmin ? 'University administration' : 'Campus review workspace'}</h1>
+      <p className="muted">{accountAdmin ? 'Manage campus operations, people and moderation activity.' : 'Review pending listings, verify affiliations and investigate reports for your authorized campus.'}</p></div></div>
+    {notice && <p className="admin-action-notice" role="status">{notice}</p>}
+    <label className="admin-workspace-mobile-nav field">Workspace section
+      <select value={activeSection} onChange={event => changeSection(event.target.value)}>
+        {navGroups.map(group => <optgroup label={group.title} key={group.title}>{group.items.map(item =>
+          <option key={item.id} value={item.id}>{item.label}{item.count !== undefined ? ` (${item.count})` : ''}</option>)}</optgroup>)}
+      </select>
+    </label>
+    <div className="admin-workspace-layout">
+      <nav className="admin-workspace-nav" aria-label="Administration sections">
+        {navGroups.map(group => <div className="admin-workspace-nav-group" key={group.title}>
+          <p className="admin-workspace-nav-title">{group.title}</p>
+          {group.items.map(item => <button type="button" key={item.id}
+            aria-current={activeSection === item.id ? 'page' : undefined}
+            className="admin-workspace-nav-item" onClick={() => changeSection(item.id)}>
+            <span>{item.label}</span>{item.count !== undefined && <span className="admin-workspace-count">{item.count}</span>}
+          </button>)}
+        </div>)}
+      </nav>
+      <div className="admin-workspace-main" id="admin-workspace-main">
     <div hidden={activeSection !== 'affiliations'}>
     {err && <p className="err" role="alert">{err} <button type="button" className="btn ghost" onClick={load}>Retry</button></p>}
     {q === null && !err && <p role="status" className="muted">Loading review queue…</p>}
-    <h2 id="admin-affiliations">Affiliations to verify</h2>{q?.affiliations.length === 0 && <p className="muted">All caught up.</p>}
-    {q?.affiliations.map((a: any) => <div key={a.id} className="panel row"><div style={{ flex: 1 }}><h3>{a.user.displayName}</h3><span className="muted">{a.campus}</span></div>
+    <h2 id="admin-affiliations">Affiliations to verify</h2><p className="muted">This queue does not contain proof of enrollment. Confirm affiliation using authorized campus records before deciding.</p>{q?.affiliations.length === 0 && <p className="muted">All caught up.</p>}
+    {q?.affiliations.map((a: any) => <div key={a.id} className="panel row"><div style={{ flex: 1 }}><h3>{a.user.displayName}</h3><span className="muted">{a.campus} · {a.user.email} · Affiliation #{a.id}</span></div>
       {field(`a${a.id}`, 'Reason (5+ characters)')}<button className="btn" disabled={pending === `a${a.id}` || !reasonOk(`a${a.id}`)} onClick={() => verify(a.id, 'verified')}>Verify</button><button className="btn danger" disabled={pending === `a${a.id}` || !reasonOk(`a${a.id}`)} onClick={() => verify(a.id, 'rejected')}>Reject</button></div>)}
     </div>
     <div hidden={activeSection !== 'listings'}>
     {err && <p className="err" role="alert">{err} <button type="button" className="btn ghost" onClick={load}>Retry</button></p>}
     {q === null && !err && <p role="status" className="muted">Loading review queue…</p>}
     <h2 id="admin-listings">Listings to review</h2>{q?.listings.length === 0 && <p className="muted">No listings waiting.</p>}
-    {q?.listings.map((l: any) => <article key={l.id} className="panel stack review-listing">
+    {q?.listings.length > 0 && <div className="admin-review-layout">
+      <label className="field admin-review-mobile-picker">Choose a listing to review
+        <select value={selectedListing?.id ?? ''} onChange={event => setSelectedListingId(Number(event.target.value))}>
+          {q.listings.map((listing: any) => <option value={listing.id} key={listing.id}>{listing.title} · {listing.campus}</option>)}
+        </select>
+      </label>
+      <section className="admin-review-queue" aria-label="Pending listing queue">
+        <p className="muted">Choose a listing to inspect its description, photos and policy flags.</p>
+        {q.listings.map((listing: any) => <button type="button" key={listing.id}
+          className="admin-review-queue-item" aria-pressed={selectedListing?.id === listing.id}
+          onClick={() => setSelectedListingId(listing.id)}>
+          <strong>{listing.title}</strong>
+          <span>{listing.campus} · {listing.store}</span>
+          <span>{listing.flags.length ? `${listing.flags.length} policy flag${listing.flags.length === 1 ? '' : 's'}` : 'Awaiting photo review'}</span>
+        </button>)}
+      </section>
+      <div className="admin-review-detail">
+        {q.listings.filter((listing: any) => listing.id === selectedListing?.id).map((l: any) => <article key={l.id} className="panel stack review-listing">
       <div className="review-listing-heading"><div><h3>{l.title}</h3><p className="muted">{l.store} · {l.campus} · {l.category}</p></div><span className="tag">{peso(l.price)}</span></div>
       <p className="review-description">{l.description}</p>
       <div className="row">{l.flags.map((f: string) => <span key={f} className="flag">{FLAG_TEXT[f] ?? f}</span>)}{l.flags.length === 0 && <span className="muted">No text/category flags — photos still need human review</span>}</div>
@@ -159,11 +241,13 @@ export function Admin() {
           disabled={l.images.length === 0 || pending === `l${l.id}`} />
         <span>I personally inspected all {l.images.length} photos and confirm they do not contain pornography, explicit sexual imagery, graphic violence, or other prohibited content.</span>
       </label>
-      <div className="review-decision">{field(`l${l.id}`, 'Reason (required, 5+ characters, shown to the seller)')}{!reasonOk(`l${l.id}`) && <span className="muted">Enter a reason of at least 5 characters to enable a decision.</span>}
-        <div className="review-actions"><button className="btn" disabled={pending === `l${l.id}` || !reasonOk(`l${l.id}`) || !photosReviewed[l.id] || l.images.length === 0} onClick={() => decide(l.id, 'approved')}>{pending === `l${l.id}` ? 'Saving decision…' : 'Approve'}</button><button className="btn ghost" disabled={pending === `l${l.id}` || !reasonOk(`l${l.id}`)} onClick={() => decide(l.id, 'changes_requested')}>Request changes</button><button className="btn danger" disabled={pending === `l${l.id}` || !reasonOk(`l${l.id}`)} onClick={() => decide(l.id, 'rejected')}>Reject</button></div></div></article>)}
+      <div className="review-decision">{field(`l${l.id}`, 'Reason (required, 5+ characters, shown to the seller)')}{!reasonOk(`l${l.id}`) && <span className="muted">Enter a reason of at least 5 characters to enable a decision.</span>}{l.flags.includes('academic_integrity_concern') && <span className="muted">Academic-integrity flag: approval requires a documented reason of at least 20 characters.</span>}
+        <div className="review-actions"><button className="btn" disabled={pending === `l${l.id}` || !reasonOk(`l${l.id}`, l.flags.includes('academic_integrity_concern') ? 20 : 5) || !photosReviewed[l.id] || l.images.length === 0} onClick={() => decide(l.id, 'approved')}>{pending === `l${l.id}` ? 'Saving decision…' : 'Approve'}</button><button className="btn ghost" disabled={pending === `l${l.id}` || !reasonOk(`l${l.id}`)} onClick={() => decide(l.id, 'changes_requested')}>Request changes</button><button className="btn danger" disabled={pending === `l${l.id}` || !reasonOk(`l${l.id}`)} onClick={() => decide(l.id, 'rejected')}>Reject</button></div></div></article>)}
+      </div>
+    </div>}
     </div>
     <div hidden={activeSection !== 'reports'}>
-    <h2 id="admin-reports">Reports from students</h2>{reportsError && <p className="err" role="alert">Reports could not load: {reportsError} <button type="button" className="btn ghost" onClick={load}>Retry</button></p>}
+    <h2 id="admin-reports">Reports from students</h2><p className="muted">Inspect the reported listing or store, record your findings, then resolve or dismiss. Closing a report does not automatically suspend its subject.</p>{reportsError && <p className="err" role="alert">Reports could not load: {reportsError} <button type="button" className="btn ghost" onClick={load}>Retry</button></p>}{reportActionError && <p className="err" role="alert">Could not save the report decision: {reportActionError}. Your findings are retained; check and retry the decision.</p>}
     {reports === null && !reportsError && <p className="muted" role="status">Loading reports…</p>}
     {reports?.length === 0 && !reportsError && <p className="muted">No open reports.</p>}
     {!reportsError && reports?.map(rep => <div key={rep.id} className="panel row"><div style={{ flex: 1, minWidth: 0 }}>
@@ -173,8 +257,11 @@ export function Admin() {
         {rep.sellerProfileId && <><Link to={`/stores/${rep.sellerProfileId}`}>View store</Link> · </>}
         {new Date(rep.createdAt).toLocaleString()}
       </p></div>
-      <button className="btn" disabled={pending === `r${rep.id}`} onClick={() => resolveReport(rep.id, 'resolved')}>Resolve</button>
-      <button className="btn ghost" disabled={pending === `r${rep.id}`} onClick={() => resolveReport(rep.id, 'dismissed')}>Dismiss</button></div>)}
+      <label className="field moderation-reason">Investigation findings for report #{rep.id}
+        <textarea rows={2} minLength={10} maxLength={1000} value={reportReasons[rep.id] ?? ''} onChange={e => setReportReasons(previous => ({ ...previous, [rep.id]: e.target.value }))} placeholder="Record what you checked and why this decision is appropriate" />
+      </label>
+      <button className="btn" disabled={pending === `r${rep.id}` || (reportReasons[rep.id] ?? '').trim().length < 10} onClick={() => resolveReport(rep.id, 'resolved')}>Resolve</button>
+      <button className="btn ghost" disabled={pending === `r${rep.id}` || (reportReasons[rep.id] ?? '').trim().length < 10} onClick={() => resolveReport(rep.id, 'dismissed')}>Dismiss</button></div>)}
     </div>
     <section hidden={activeSection !== 'transactions'} aria-labelledby="admin-transactions-heading">
       <h2 id="admin-transactions-heading">Transaction monitoring</h2>
@@ -219,7 +306,7 @@ export function Admin() {
       </div>}
       {!studentsError && studentTotal > 25 && <nav className="admin-student-pages" aria-label="Student result pages"><button className="btn ghost" type="button" disabled={studentsLoading || studentPage <= 1} onClick={() => void searchStudents(studentApplied, studentPage - 1)}>Previous</button><span>Page {studentPage} of {Math.ceil(studentTotal / 25)}</span><button className="btn ghost" type="button" disabled={studentsLoading || studentPage * 25 >= studentTotal} onClick={() => void searchStudents(studentApplied, studentPage + 1)}>Next</button></nav>}
     </section>}
-    {accountAdmin && activeSection === 'staff' && <ReviewerAdmin active campuses={campuses} />}
+    {accountAdmin && activeSection === 'staff' && <ReviewerAdmin active campuses={campuses} campusesError={campusesError} onRetryCampuses={() => void loadCampuses()} />}
     {accountAdmin && activeSection === 'content' && <ManagedContentAdmin />}
     {accountAdmin && <section hidden={activeSection !== 'audit'} aria-labelledby="audit-history-heading">
       <h2 id="audit-history-heading">Administrative audit history</h2>
@@ -241,11 +328,19 @@ export function Admin() {
       {auditCursor !== null && !auditLoading && !auditError && <button type="button" className="btn ghost" onClick={() => void loadAudit(auditCursor)}>Load older events</button>}
     </section>}
     <div hidden={activeSection !== 'overview'}>
-    <h2 id="admin-overview">Campus overview</h2>{statsError && <p className="err" role="alert">Campus overview could not load: {statsError} <button type="button" className="btn ghost" onClick={load}>Retry</button></p>}
+    <h2 id="admin-overview">{accountAdmin ? 'University dashboard' : 'Campus overview'}</h2>
+    {accountAdmin && <div className="admin-overview-shortcuts" role="group" aria-label="Pending administration work">
+      <button type="button" onClick={() => changeSection('listings')}><strong>{q?.listings.length ?? '—'}</strong><span>Listing reviews</span></button>
+      <button type="button" onClick={() => changeSection('affiliations')}><strong>{q?.affiliations.length ?? '—'}</strong><span>Verifications</span></button>
+      <button type="button" onClick={() => changeSection('reports')}><strong>{reports?.length ?? '—'}</strong><span>Open reports</span></button>
+    </div>}
+    {statsError && <p className="err" role="alert">Campus overview could not load: {statsError} <button type="button" className="btn ghost" onClick={load}>Retry</button></p>}
     {!stats && !statsError && <p className="muted" role="status">Loading campus overview…</p>}
     {stats && !statsError && <><p className="muted">{stats.note}</p>
       <div className="grid">{stats.campuses.map((c: any) => <div key={c.campus} className="panel"><h3>{c.campus}</h3>
         <p>Storefronts: {c.activeStorefronts}<br />Published listings: {c.publishedListings}<br />Services: {c.serviceListings}<br />Pending review: {c.pendingReview}<br />Inquiries: {c.inquiries}</p></div>)}</div></>}
     </div>
-  </>;
+      </div>
+    </div>
+  </div>;
 }

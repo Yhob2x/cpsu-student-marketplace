@@ -7,6 +7,8 @@ const PATHS: Record<string, ReactNode> = {
   sliders: <><path d="M4 7h16M4 17h16" /><circle cx="9" cy="7" r="2.2" fill="var(--paper)" /><circle cx="16" cy="17" r="2.2" fill="var(--paper)" /></>,
   chevronDown: <path d="m6 9 6 6 6-6" />,
   chevronUp: <path d="m6 15 6-6 6 6" />,
+  chevronLeft: <path d="m15 6-6 6 6 6" />,
+  chevronRight: <path d="m9 6 6 6-6 6" />,
   home: <><path d="m3 10 9-7 9 7v10H3Z" /><path d="M9 20v-7h6v7" /></>,
   plus: <><path d="M12 5v14M5 12h14" /></>,
   download: <><path d="M12 3v12m-4-4 4 4 4-4" /><path d="M5 17v3h14v-3" /></>,

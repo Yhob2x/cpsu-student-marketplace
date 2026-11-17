@@ -12,6 +12,11 @@
   background: #071711;
   color: white;
   overscroll-behavior: contain;
+  animation: photo-viewer-enter 200ms cubic-bezier(.23, 1, .32, 1) both;
+}
+@keyframes photo-viewer-enter {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 .image-zoom-toolbar {
   display: flex;
@@ -23,7 +28,7 @@
   background: rgb(255 255 255 / 4%);
   flex: 0 0 auto;
 }
-.image-zoom-heading { display: grid; gap: 0; font-size: .94rem; min-width: 0; }
+.image-zoom-heading { display: grid; gap: 0; font-size: .94rem; min-width: 0; max-width: min(45vw, 26rem); }
 .image-zoom-heading > strong { font-weight: 650; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .image-zoom-heading > span { font-size: .75rem; color: #cbdbd2; font-variant-numeric: tabular-nums; }
 .image-zoom-actions { display: flex; flex-wrap: nowrap; gap: .25rem; align-items: center; }
@@ -67,6 +72,42 @@
 .image-zoom-surface:active { cursor: grabbing; }
 .image-zoom-surface > img { display: block; width: 100%; height: 100%; object-fit: contain; max-width: 100%; max-height: 100%; will-change: transform; -webkit-user-drag: none; user-select: none; pointer-events: none; }
 .image-zoom-unavailable { display: grid; place-items: center; gap: .5rem; color: #b9cdc1; }
+.image-zoom-filmstrip {
+  display: flex;
+  justify-content: safe center;
+  gap: .45rem;
+  flex: 0 0 auto;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scroll-snap-type: x proximity;
+  scrollbar-width: thin;
+  scrollbar-color: #8eaa98 transparent;
+  padding: .4rem .8rem;
+}
+.image-zoom-thumb {
+  flex: 0 0 54px;
+  width: 54px;
+  height: 54px;
+  padding: 2px;
+  border: 2px solid transparent;
+  border-radius: 8px;
+  background: transparent;
+  cursor: pointer;
+  scroll-snap-align: center;
+  transition: border-color 160ms cubic-bezier(.23, 1, .32, 1);
+}
+.image-zoom-thumb[aria-pressed="true"] { border-color: #b5e4c4; }
+.image-zoom-thumb img, .image-zoom-thumb-failed {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  height: 100%;
+  border-radius: 4px;
+  object-fit: cover;
+  background: #173327;
+  color: #cbd8d0;
+}
+.image-zoom-thumb:focus-visible { outline: 3px solid #b5e4c4; outline-offset: 2px; }
 .image-zoom-help { flex: 0 0 auto; margin: 0; padding: .55rem .8rem .95rem; text-align: center; color: #cbd8d0; font-size: .75rem; line-height: 1.45; }
 @media (max-width: 560px) {
   .image-zoom-toolbar { padding: .65rem .7rem; gap: .35rem; }
@@ -84,5 +125,7 @@
   .image-zoom-value { min-width: 3rem; }
 }
 @media (prefers-reduced-motion: reduce) {
+  .image-zoom-overlay { animation-duration: 100ms; }
+  .image-zoom-thumb { transition-duration: 100ms; }
   .image-zoom-surface > img { will-change: auto; }
 }

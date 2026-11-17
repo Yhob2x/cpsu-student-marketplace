@@ -8,6 +8,7 @@ async function raw(path: string, init: RequestInit) {
 }
 async function refreshNow() {
   const r = await fetch('/api/v1/auth/refresh', { method: 'POST', credentials: 'include' });
+  if (r.status === 204) { token = null; return false; }
   if (!r.ok) { token = null; return false; }
   token = (await r.json()).accessToken; return true;
 }
@@ -48,6 +49,7 @@ export const timeAgo = (iso: string) => {
 const MESSAGES: Record<string, string> = {
   invalid_credentials: 'Email or password is incorrect.', email_taken: 'That email already has an account.',
   invalid_campus: 'Choose an active CPSU campus.',
+  student_identity_registration_unavailable: 'Private student ID collection is not enabled yet. Refresh this form or contact campus support.',
   student_account_required: 'Staff accounts cannot use student marketplace actions.',
   reviewer_scope_changed: 'This reviewer changed while you were editing. Reload and try again.',
   affiliation_not_verified: 'Your CPSU affiliation is still being verified. You can sell once a reviewer approves it.',

@@ -411,6 +411,26 @@ if (process.env.CPSU_INTEGRATION_TESTS === '1') {
       expect(mine.status).toBe(401);
     });
 
+    test('guest browser refresh has no session while mobile tokenless refresh is unauthorized', async () => {
+      const guest = await request(app).post('/api/v1/auth/refresh');
+      expect(guest.status).toBe(204);
+      expect(guest.headers['set-cookie']).toBeUndefined();
+      const stale = await request(app).post('/api/v1/auth/refresh').set('Cookie', 'refresh=invalid-test-token');
+      expect(stale.status).toBe(204);
+      expect(stale.headers['set-cookie']?.some((cookie: string) => cookie.startsWith('refresh=;'))).toBe(true);
+      const mobile = await request(app).post('/api/v1/auth/refresh').set('X-Client', 'mobile');
+      expect(mobile.status).toBe(401);
+      expect(mobile.body.error.code).toBe('no_session');
+      const login = await request(app).post('/api/v1/auth/login')
+        .send({ email: fx.buyer.email, password: 'TestPassphrase-Stage1-2026!' });
+      expect(login.status).toBe(200);
+      const refreshCookie = login.headers['set-cookie']?.find((cookie: string) => cookie.startsWith('refresh='));
+      expect(refreshCookie).toBeDefined();
+      const restored = await request(app).post('/api/v1/auth/refresh').set('Cookie', refreshCookie!.split(';')[0]);
+      expect(restored.status).toBe(200);
+      expect(typeof restored.body.accessToken).toBe('string');
+    });
+
     test('failed login is throttled by account across forwarded addresses', async () => {
       const email = fx.pending.email;
       for (let i = 0; i < 10; i++) {

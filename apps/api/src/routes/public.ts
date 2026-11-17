@@ -10,6 +10,8 @@ import { freshListingIdsQuery } from '../fresh-listings-query.js';
 import { sellerAvatarColumnExists } from '../optional-seller-avatar.js';
 import { sellerAvatarUrl } from '../seller-avatar-url.js';
 import { readStoreFollowSummary } from '../store-follows.js';
+import { readMostFollowedStores } from '../most-followed-stores.js';
+import { popularListingOrderBy } from '../popular-listing-ranking.js';
 
 const r = Router();
 export const publicListing = (l: any) => ({
@@ -98,7 +100,8 @@ r.get('/listings/popular', async (_q, res) => {
     status: 'published', availabilityState: 'available', deletedAt: null,
     seller: { approvalStatus: 'approved', owner: { status: 'active' } }, savedListings: { some: {} },
   },
-    select, orderBy: { savedListings: { _count: 'desc' } }, take: 8 });
+    // Stable tie-break: equal save counts must not shuffle between refreshes.
+    select, orderBy: popularListingOrderBy, take: 8 });
   res.json({ items: rows.map(publicListing) });
 });
 
@@ -127,6 +130,13 @@ r.get('/listings/:id', async (req, res) => {
   const publiclyVisible = !l.deletedAt && l.status === 'published' && l.seller.approvalStatus === 'approved' && l.seller.owner.status === 'active';
   if (!publiclyVisible && !owner && !reviewer) throw new HttpError(404, 'not_found'); // drafts / deleted listings never leak
   res.json({ ...publicListing(l), status: owner || reviewer ? l.status : undefined });
+});
+
+// Public store discovery is ranked strictly by real StoreFollow rows.
+r.get('/stores/most-followed', async (_req, res) => {
+  const result = await readMostFollowedStores(prisma, await sellerAvatarColumnExists());
+  res.setHeader('Cache-Control', 'no-store');
+  res.json(result);
 });
 
 r.get('/seller-profiles/:id', async (req, res) => {

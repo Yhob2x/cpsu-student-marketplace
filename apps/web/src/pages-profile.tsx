@@ -322,9 +322,11 @@ export function Notifications() {
           : unread > 0 ? 'See what needs your attention.' : 'No unread updates right now.'}</p>
       </div>
       <button type="button" className="btn notifications-mark-all" onClick={() => void markAll()}
-        disabled={rows === null || busy || markingId !== null || unread === 0} aria-busy={busy}>
-        <Icon name="checks" size={17} />
-        {busy ? 'Marking…' : 'Mark all read'}
+        disabled={rows === null || busy || markingId !== null || unread === 0} aria-busy={busy}
+        aria-label={busy ? 'Marking all notifications as read' : 'Mark all notifications as read'}
+        title={busy ? 'Marking all notifications as read' : 'Mark all notifications as read'}>
+        <Icon name="checks" size={19} />
+        <span className="notifications-mark-all-copy">{busy ? 'Marking…' : 'Mark all read'}</span>
       </button>
     </div>
 

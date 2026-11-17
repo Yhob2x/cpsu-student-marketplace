@@ -10,6 +10,7 @@ import {
   createFollowerPublicationNotices, deliverFollowerPublicationPush,
 } from '../store-publication-notifications.js';
 import { requirePhotoReview } from '../photo-review.js';
+import { suppressSmallCount } from '../analytics-privacy.js';
 import { DEFAULT_GUIDELINES, plainContent } from '../managed-content.js';
 
 const r = Router();
@@ -342,20 +343,18 @@ r.patch('/users/:id/status', async (req, res) => {
   res.json({ id, status });
 });
 
-const MIN_COUNT = 5; // small counts are suppressed so one student cannot be singled out
 r.get('/analytics/overview', async (req, res) => {
   const campuses = await prisma.campus.findMany({ where: { active: true, ...(reviewCampusIds(req.user!) === 'all' ? {} : { id: { in: reviewCampusIds(req.user!) as number[] } }) } });
   const out = [];
   for (const c of campuses) {
     const [stores, published, flagged, inquiries, services] = await Promise.all([
-      prisma.sellerProfile.count({ where: { campusId: c.id, approvalStatus: 'approved' } }),
-      prisma.listing.count({ where: { campusId: c.id, status: 'published', deletedAt: null, availabilityState: 'available' } }),
+      prisma.sellerProfile.count({ where: { campusId: c.id, approvalStatus: 'approved', owner: { status: 'active' } } }),
+      prisma.listing.count({ where: { campusId: c.id, status: 'published', deletedAt: null, availabilityState: 'available', seller: { approvalStatus: 'approved', owner: { status: 'active' } } } }),
       prisma.listing.count({ where: { campusId: c.id, status: 'pending_review', deletedAt: null } }),
       prisma.inquiryThread.count({ where: { listing: { campusId: c.id } } }),
-      prisma.listing.count({ where: { campusId: c.id, status: 'published', type: 'service', deletedAt: null, availabilityState: 'available' } }),
+      prisma.listing.count({ where: { campusId: c.id, status: 'published', type: 'service', deletedAt: null, availabilityState: 'available', seller: { approvalStatus: 'approved', owner: { status: 'active' } } } }),
     ]);
-    const s = (n: number) => (n > 0 && n < MIN_COUNT ? `<${MIN_COUNT}` : n);
-    out.push({ campus: c.code, activeStorefronts: s(stores), publishedListings: s(published), serviceListings: s(services), pendingReview: flagged, inquiries: s(inquiries) });
+    out.push({ campus: c.code, activeStorefronts: suppressSmallCount(stores), publishedListings: suppressSmallCount(published), serviceListings: suppressSmallCount(services), pendingReview: suppressSmallCount(flagged), inquiries: suppressSmallCount(inquiries) });
   }
   res.json({ note: 'Counts below 5 are suppressed. Inquiries are not completed sales.', campuses: out });
 });

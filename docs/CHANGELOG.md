@@ -1,5 +1,11 @@
 # Changelog
 
+## 2026-11-17 — Private student identity registration fields (prepared, collection OFF)
+
+- Added Full name and Student ID number inputs to Create account, with a clear private-data notice and fail-closed registration-policy check. Inputs are visible but disabled until CPSU privacy approval and a separately tested schema migration; the existing account registration flow stays available.
+- Prepared a separate private `StudentIdentity` model, unapplied additive migration, an API collection switch requiring a recorded policy reference, and server-side validation preserving leading zeros. New identifiers are not exposed in public profile responses.
+- Local synthetic validation and full API/web suites passed; Prisma schema valid, but Windows DLL locking prevented fresh Prisma client regeneration. No real identifiers, DB migration, deployment or Git commit. See `docs/PRIVATE_STUDENT_ID_REGISTRATION_2026-11-17.md`.
+
 ## 2026-11-16 — Incoming messages ring; outgoing messages silent
 
 - Reversed the chat sound behavior: **sending is silent**, while a **new incoming** student message detected in an active foreground conversation or Messages inbox rings once with the original ~580ms bell tone. First-load history, repeat polls, outgoing messages and background catch-up do not trigger audio.

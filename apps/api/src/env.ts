@@ -10,6 +10,9 @@ const schema = z.object({
   CORS_ORIGINS: z.string().default('http://localhost:5173'),
   COOKIE_SECURE: z.enum(['true', 'false']).default('false'),
   UPLOAD_DIR: z.string().default('./uploads'),
+  // Sensitive student-number collection is disabled until CPSU DPO approval AND a separately applied migration.
+  STUDENT_ID_COLLECTION_ENABLED: z.enum(['true', 'false']).default('false'),
+  STUDENT_ID_PRIVACY_APPROVAL_REF: z.string().trim().optional(),
   // Local is retained until OAuth, private folder setup, backup and verification are complete.
   MEDIA_STORAGE: z.enum(['local', 'google_drive']).default('local'),
   GOOGLE_DRIVE_CLIENT_ID: z.string().optional(),
@@ -24,6 +27,9 @@ const schema = z.object({
   PUSH_DELIVERY_ENABLED: z.enum(['true', 'false']).default('false'),
 });
 const checked = schema.parse(process.env);
+if (checked.STUDENT_ID_COLLECTION_ENABLED === 'true' && !checked.STUDENT_ID_PRIVACY_APPROVAL_REF) {
+  throw new Error('Student identity collection requires a recorded CPSU privacy approval reference');
+}
 if (checked.NODE_ENV === 'production' &&
     (checked.BIND_HOST !== '127.0.0.1' || checked.COOKIE_SECURE !== 'true')) {
   throw new Error('Unsafe production configuration: bind to loopback and enable secure cookies');

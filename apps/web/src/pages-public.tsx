@@ -11,6 +11,7 @@ import { isPublicNotFound } from './public-resource-error';
 import { SellerAvatar } from './seller-avatar';
 import { StorefrontView, type PublicStorefront } from './pages-storefront';
 import { StoresInResults } from './stores-in-results';
+import { MostFollowedStores, type MostFollowedStore } from './most-followed-stores';
 
 export type Listing = { id: number; type: string; title: string; description: string; price: number; priceBasis: string; availability: string; condition?: 'new' | 'like_new' | 'good' | 'fair' | null;
   handoffNote?: string; category: { name: string }; campus: { code: string; name: string }; seller: { id: number; storeName: string; avatarUrl?: string | null }; images: string[]; status?: string };
@@ -85,6 +86,7 @@ export function Home() {
   const [feed, setFeed] = useState<Listing[] | null>(null);
   const [services, setServices] = useState<Listing[] | null>(null);
   const [popular, setPopular] = useState<Listing[] | null>(null);
+  const [mostFollowed, setMostFollowed] = useState<MostFollowedStore[]>([]);
   const [cats, setCats] = useState<any[]>([]);
   const [homeError, setHomeError] = useState('');
   const shortCategoryName = (name: string) => ({
@@ -104,6 +106,9 @@ export function Home() {
     api('/listings/fresh').then(r => setFeed(r.items)).catch(e => { setFeed([]); fail(e); });
     api('/listings?type=service&pageSize=8').then(r => setServices(r.items)).catch(e => { setServices([]); fail(e); });
     api('/listings/popular').then(r => setPopular(r.items)).catch(e => { setPopular([]); fail(e); });
+    api<{ available: boolean; items: MostFollowedStore[] }>('/stores/most-followed')
+      .then(r => setMostFollowed(r.available ? r.items : []))
+      .catch(e => { setMostFollowed([]); fail(e); });
     api('/categories').then(setCats).catch(fail);
   };
   useEffect(loadHome, []);
@@ -160,6 +165,7 @@ export function Home() {
       {block('Student services', '/explore?type=service', serviceRows)}
     </div>
 
+    <MostFollowedStores stores={mostFollowed} />
     <StudentAnnouncements />
 
     <section className="steps">

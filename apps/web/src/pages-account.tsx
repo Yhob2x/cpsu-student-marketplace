@@ -68,6 +68,8 @@ export function Register() {
   const [err, setErr] = useState(''); const [campuses, setCampuses] = useState<{ id: number; name: string }[]>([]);
   const [fieldErrors, setFieldErrors] = useState<Partial<Record<AuthField, string>>>({});
   const emailRef = useRef<HTMLInputElement>(null); const campusRef = useRef<HTMLSelectElement>(null);
+  const [identityStatus, setIdentityStatus] = useState<'checking' | 'active' | 'inactive' | 'error'>('checking');
+  const identityRequest = useRef(0);
   const [campusStatus, setCampusStatus] = useState<'loading' | 'ready' | 'error'>('loading');
   const [campusError, setCampusError] = useState('');
   const campusRequest = useRef(0);
@@ -87,9 +89,17 @@ export function Register() {
     });
   };
   useEffect(() => { loadCampuses(); return () => { campusRequest.current++; }; }, []);
+  const loadIdentityPolicy = () => {
+    const request = ++identityRequest.current;
+    setIdentityStatus('checking');
+    api<{ studentIdentityRequired: boolean }>('/auth/registration-policy')
+      .then(policy => { if (identityRequest.current === request) setIdentityStatus(policy.studentIdentityRequired ? 'active' : 'inactive'); })
+      .catch(() => { if (identityRequest.current === request) setIdentityStatus('error'); });
+  };
+  useEffect(() => { loadIdentityPolicy(); return () => { identityRequest.current++; }; }, []);
   const go = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if (campusStatus !== 'ready') return;
+    if (campusStatus !== 'ready' || (identityStatus !== 'active' && identityStatus !== 'inactive')) return;
     const d: any = Object.fromEntries(new FormData(e.currentTarget)); d.campusId = Number(d.campusId);
     await runExclusive(submitLock, async () => {
       setBusy(true); setErr(''); setFieldErrors({});
@@ -112,6 +122,31 @@ export function Register() {
         onChange={() => clearField('displayName')} />
     </label>
     {fieldErrors.displayName && <p className="field-error" id="register-name-error" role="alert">{fieldErrors.displayName}</p>}
+    <label className="field">Full name
+      <input name="fullName" autoComplete="name" placeholder="Your full name for campus verification"
+        required={identityStatus === 'active'} disabled={identityStatus !== 'active'} minLength={2} maxLength={120}
+        aria-invalid={Boolean(fieldErrors.fullName)}
+        aria-describedby={fieldErrors.fullName ? 'register-full-name-error register-private-identity-info' : 'register-private-identity-info'}
+        onInvalid={() => setFieldErrors(previous => ({ ...previous, fullName: 'Enter your full name.' }))}
+        onChange={() => clearField('fullName')} />
+    </label>
+    {fieldErrors.fullName && <p className="field-error" id="register-full-name-error" role="alert">{fieldErrors.fullName}</p>}
+    <label className="field">Student ID number
+      <input name="studentIdNumber" type="text" inputMode="text" autoComplete="off"
+        placeholder="Enter your CPSU student ID number" required={identityStatus === 'active'}
+        disabled={identityStatus !== 'active'} minLength={3} maxLength={48}
+        aria-invalid={Boolean(fieldErrors.studentIdNumber)}
+        aria-describedby={fieldErrors.studentIdNumber ? 'register-student-id-error register-private-identity-info' : 'register-private-identity-info'}
+        onInvalid={() => setFieldErrors(previous => ({ ...previous, studentIdNumber: 'Enter your student ID number as printed by CPSU.' }))}
+        onChange={() => clearField('studentIdNumber')} />
+    </label>
+    {fieldErrors.studentIdNumber && <p className="field-error" id="register-student-id-error" role="alert">{fieldErrors.studentIdNumber}</p>}
+    <p className="muted" id="register-private-identity-info">These details are private, separate from your display name, and do not automatically verify your campus affiliation.
+      {identityStatus === 'inactive' && ' Collection is waiting for CPSU privacy approval; you can still create an account without these details.'}
+      {identityStatus === 'checking' && ' Checking whether private registration is available…'}
+    </p>
+    {identityStatus === 'error' && <div className="stack" role="alert"><p className="err">Could not check the current registration requirements.</p>
+      <button type="button" className="btn ghost" onClick={loadIdentityPolicy}>Retry registration check</button></div>}
     <label className="field">Email
       <input ref={emailRef} name="email" type="email" autoComplete="email" required
         aria-invalid={Boolean(fieldErrors.email)} aria-describedby={fieldErrors.email ? 'register-email-error' : undefined}
@@ -137,7 +172,7 @@ export function Register() {
     {campusStatus === 'error' && <div className="stack" role="alert"><p className="err">Campus options could not load. {campusError}</p>
       <button type="button" className="btn ghost" onClick={loadCampuses}>Retry campuses</button></div>}
     <p className="muted">You can browse and message now. A campus reviewer must verify you before you can sell.</p>
-    {err && <p className="err" role="alert">{err}</p>}<button className="btn" disabled={busy || campusStatus !== 'ready'}>{busy ? 'Creating account…' : 'Create account'}</button></form>;
+    {err && <p className="err" role="alert">{err}</p>}<button className="btn" disabled={busy || campusStatus !== 'ready' || (identityStatus !== 'active' && identityStatus !== 'inactive')}>{busy ? 'Creating account…' : 'Create account'}</button></form>;
 }
 
 function StoreListingPhoto({ media, title, type }: { media: { id: number; position: number }[]; title: string; type: string }) {

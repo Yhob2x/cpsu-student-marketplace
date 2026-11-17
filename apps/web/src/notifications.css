@@ -8,6 +8,28 @@
   margin: .25rem auto 3.5rem;
   color: var(--ink);
 }
+/* Compact mobile header alert: keep the bell, unread count and accessible name.
+   Hide only the redundant visible word, not the count or navigation target. */
+@media (max-width: 860px) {
+  .actions .alerts {
+    position: relative;
+    display: flex; align-items: center; justify-content: center;
+    width: 44px; min-width: 44px; min-height: 44px;
+    padding: 0;
+  }
+  .actions .alerts > .alerts-copy {
+    position: absolute; inset-inline-end: -2px; top: -3px;
+    pointer-events: none;
+  }
+  .actions .alerts .alerts-word { display: none; }
+  .actions .alerts .nav-badge {
+    display: grid; place-items: center;
+    min-width: 19px; min-height: 19px;
+    padding: 0 4px; margin: 0;
+    border: 2px solid var(--paper);
+    font-size: .68rem; line-height: 1.15;
+  }
+}
 .notifications-preferences { margin-top: 1.8rem; border-top: 1px solid var(--line); padding-top: .65rem; }
 .notifications-preferences > summary { display: flex; align-items: center; justify-content: space-between; gap: .6rem; min-height: 48px; padding: .5rem .25rem; color: var(--forest); font: 750 .94rem/1.4 var(--font-heading); cursor: pointer; list-style: none; }
 .notifications-preferences > summary::-webkit-details-marker { display: none; }
@@ -98,6 +120,8 @@
   background: white; color: var(--forest);
   border: 1px solid white; white-space: nowrap; font-size: .83rem;
 }
+/* Keep visible bulk-action wording on wide screens; phones use its double-check icon. */
+.notifications-mark-all-copy { min-width: 0; }
 .notifications-mark-all.btn:disabled {
   background: rgb(255 255 255 / 15%);
   border-color: rgb(255 255 255 / 22%);
@@ -307,13 +331,20 @@
   .notifications-heading p { font-size: .85rem; }
   .notifications-refresh { padding: .5rem .72rem; font-size: .78rem; }
   .notifications-summary {
-    grid-template-columns: 42px minmax(0,1fr);
-    gap: .7rem .85rem; border-radius: 14px; padding: 1rem;
+    grid-template-columns: minmax(0, 1fr) 44px;
+    gap: .7rem .65rem; border-radius: 14px; padding: 1rem;
   }
-  .notifications-summary-icon { width: 42px; height: 42px; border-radius: 11px; }
+  /* The header already carries a bell on mobile: prioritize readable status text. */
+  .notifications-summary-icon { display: none; }
+  .notifications-summary-copy { grid-column: 1; grid-row: 1; }
   .notifications-summary-copy strong { font-size: 1rem; }
   .notifications-summary-copy p { font-size: .77rem; }
-  .notifications-mark-all.btn { grid-column: 1 / -1; width: 100%; }
+  .notifications-mark-all.btn {
+    grid-column: 2; grid-row: 1;
+    width: 44px; min-width: 44px; min-height: 44px; height: 44px;
+    padding: 0; align-self: start;
+  }
+  .notifications-mark-all-copy { display: none; }
   .notifications-toolbar { align-items: flex-start; margin-top: 1.05rem; }
   .notifications-filters { width: 100%; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .notifications-filters button {

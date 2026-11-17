@@ -181,6 +181,8 @@ model User {
   displayName  String
   passwordHash String
   status       UserStatus @default(active)
+  // Private student identity is never included in public profile selects.
+  studentIdentity StudentIdentity?
 
   affiliations   Affiliation[]
   roles          UserRole[]
@@ -201,6 +203,17 @@ model User {
   sellingTransactions   Transaction[] @relation("TransactionSeller")
   transactionEvents     TransactionStatusLog[] @relation("TransactionEventActor")
 
+}
+
+// Separate 1:1 private record. Collection remains off pending CPSU DPO approval.
+// Do not add a global uniqueness rule for student numbers without CPSU policy.
+model StudentIdentity {
+  userId           Int      @id
+  fullName         String   @db.VarChar(120)
+  studentIdNumber  String   @db.VarChar(48)
+  createdAt        DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Restrict, onUpdate: Cascade)
 }
 
 model Affiliation {

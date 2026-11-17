@@ -27,9 +27,10 @@ There is no OpenAPI document; this file is the contract of record and must chang
 
 | Method | Path | Auth | Body | Notes |
 |---|---|---|---|---|
-| POST | `/auth/register` | none | `email`, `password` (10–128), `displayName` (2–80), `campusId` | Creates the user plus a **pending** affiliation. `201` with `{ accessToken }` (+ `refreshToken` for mobile). Errors: `400 invalid_campus`, `409 email_taken`. |
+| GET | `/auth/registration-policy` | none | — | `{ studentIdentityRequired: boolean }`; `Cache-Control: no-store`. Default **false** pending CPSU privacy approval and database activation. |
+| POST | `/auth/register` | none | `email`, `password` (10–128), `displayName` (2–80), `campusId`. If `studentIdentityRequired=true`, also `fullName` (2–120) and `studentIdNumber` (3–48, text). | Creates the user plus a **pending** affiliation. A private one-to-one StudentIdentity is created atomically **only when the approved collection switch is on and schema exists**. When disabled, sending identity fields returns `409 student_identity_registration_unavailable`; ordinary registration remains unchanged. `201` with `{ accessToken }` (+ `refreshToken` for mobile). Errors: `400 invalid_campus`, `409 email_taken`. No private identity data is returned. |
 | POST | `/auth/login` | none | `email`, `password` | `401 invalid_credentials` for wrong password **and** for a suspended account. Sets cookies on web. |
-| POST | `/auth/refresh` | refresh token (cookie or body) | — | Rotates the token. Reuse of a spent token revokes every session for that user (`401 session_expired`). `401 no_session` when absent. |
+| POST | `/auth/refresh` | refresh token (cookie or body) | — | Rotates a valid token. A browser with no valid cookie receives `204` and stale cookies are cleared; spent-token reuse still revokes every session for that user. Legacy mobile requests (`X-Client: mobile`) receive `401 no_session` when absent or `401 session_expired` when invalid. |
 | POST | `/auth/logout` | optional | — | Revokes the presented refresh token, clears cookies, `204`. |
 
 **Missing versus blueprint MODULE 01:** password recovery, email verification, session listing/revocation per device.

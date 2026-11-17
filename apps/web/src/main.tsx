@@ -12,6 +12,7 @@ import { Login, Register, Dashboard, Inquiries, Thread, Saved } from './pages-ac
 import { Profile, Notifications } from './pages-profile';
 import { Admin } from './pages-admin';
 import { Transactions, TransactionDetail } from './pages-transactions';
+import './shadcn.css';
 import './styles.css';
 import './storefront-theme.css';
 import './message-motion.css';
@@ -167,12 +168,16 @@ function Shell() {
           {me && <nav className="actions" aria-label="Your activity">
             {!isStaff && <NavLink to="/saved"><Icon name="heart" size={22} /><span>Saved</span></NavLink>}
             <NavLink to="/notifications" className="alerts" aria-label={unread > 0 ? `Alerts, ${unread} unread` : 'Alerts'}>
-              <Icon name="bell" size={22} /><span>Alerts{unread > 0 && <span className="nav-badge">{unread}</span>}</span></NavLink>
+              <Icon name="bell" size={22} /><span className="alerts-copy"><span className="alerts-word">Alerts</span>{unread > 0 && <span className="nav-badge" aria-hidden="true">{unread}</span>}</span></NavLink>
             <NavLink to="/profile"><Icon name="user" size={22} /><span>Profile</span></NavLink>
           </nav>}
-          <div className="who">
+          <div className={me ? 'who' : 'who who-guest'}>
             {me ? <button className="btn ghost" onClick={() => void logout()} disabled={loggingOut}>{loggingOut ? 'Signing out…' : 'Sign out'}</button>
-              : <><NavLink className="signin" to="/login">Sign in</NavLink><Link className="btn" to="/register">Create account</Link></>}
+              : <><NavLink className="signin" to="/login">Sign in</NavLink>
+                  <Link className="btn signup-action" to="/register" aria-label="Create account">
+                    <span className="signup-label-desktop">Create account</span>
+                    <span className="signup-label-mobile" aria-hidden="true">Sign up</span>
+                  </Link></>}
           </div>
         </div>
         <div className="wrap navrow">

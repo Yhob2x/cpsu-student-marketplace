@@ -1,6 +1,6 @@
 import { ApiError } from './api';
 
-export type AuthField = 'displayName' | 'email' | 'password' | 'campusId';
+export type AuthField = 'displayName' | 'fullName' | 'studentIdNumber' | 'email' | 'password' | 'campusId';
 
 export function authFieldForError(form: 'login' | 'register', error: unknown): AuthField | null {
   if (!(error instanceof ApiError)) return null;

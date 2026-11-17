@@ -803,3 +803,44 @@
   .browse-touch-copy { display: none; }
   .browse-mouse-copy { display: inline; }
 }
+
+/* Mobile guest header: keep the registration CTA legible without crowding the brand.
+   The two labels share one real /register link; text is never duplicated visually. */
+.signup-label-mobile { display: none; }
+@media (max-width: 560px) {
+  .masthead .who-guest { min-width: 0; gap: .45rem; }
+  .masthead .who-guest .signup-action {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 44px;
+    white-space: nowrap;
+    flex: 0 0 auto;
+  }
+  .signup-label-desktop { display: none; }
+  .signup-label-mobile { display: inline; }
+}
+@media (max-width: 350px) {
+  /* On the narrowest phones, avoid squeezing the full CPSU name into a sliver. */
+  .masthead:has(.who-guest) {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: .3rem;
+  }
+  .masthead:has(.who-guest) > .brand {
+    grid-column: 1;
+    margin-right: 0;
+    width: max-content;
+    max-width: 100%;
+  }
+  .masthead:has(.who-guest) > .who-guest {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-column: 1;
+    justify-self: stretch;
+    gap: .5rem;
+  }
+  .masthead .who-guest .signin {
+    justify-content: center;
+  }
+}

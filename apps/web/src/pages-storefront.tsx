@@ -92,7 +92,7 @@ export function StorefrontView({ store, isOwner, canFollow, onFollow, followBusy
           {!isOwner && canFollow && store.follow && !store.follow.available &&
             <p className="storefront-follow-feedback muted">Following is being prepared for this marketplace.</p>}
           {!isOwner && store.follow?.isFollowing &&
-            <p className="storefront-follow-feedback muted">New approved listings will appear in Notifications. Phone alerts require enabling push notifications.</p>}
+            <p className="storefront-follow-feedback muted">New approved listings appear in Notifications. Turn on push for phone alerts.</p>}
         </div>
         {canChat && store.listings.length === 0 &&
           <p className="storefront-chat-note muted">Messaging becomes available once this store has a published, available listing.</p>}
@@ -104,7 +104,7 @@ export function StorefrontView({ store, isOwner, canFollow, onFollow, followBusy
               onChat(chatListingId, chatBody.trim());
           }}>
           <h2>Message {store.storeName}</h2>
-          <p className="muted">Choose a listing to discuss. Your conversation continues in Messages.</p>
+          <p className="muted">Choose a listing to discuss.</p>
           <label htmlFor="storefront-chat-listing">About which listing?</label>
           <select id="storefront-chat-listing" value={chatListingId}
             onChange={event => setChatListingId(Number(event.target.value))}
@@ -149,7 +149,7 @@ export function StorefrontView({ store, isOwner, canFollow, onFollow, followBusy
         </div>}
       </nav>
       <div className="storefront-products-heading">
-        <div><h2 id="storefront-listings" tabIndex={-1}>Browse this store</h2><p className="muted">Only available, published listings appear here.</p></div>
+        <div><h2 id="storefront-listings" tabIndex={-1}>Browse this store</h2></div>
         <span className="storefront-results">{visible.length} {visible.length === 1 ? 'result' : 'results'}</span>
       </div>
       <div className="storefront-browser">

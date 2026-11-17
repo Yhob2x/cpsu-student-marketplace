@@ -52,7 +52,7 @@ export function ManagedContentAdmin() {
   const selected = announcements.find(a => a.id === selectedId);
   return <div className="admin-content-editor">
     <h2>Student-facing content</h2>
-    <p className="muted">Only global university administrators can save and publish this content. Confirm institutional approval before publishing policy text.</p>
+    <p className="muted">Confirm institutional approval before publishing policy text.</p>
     {error && <p className="err" role="alert">{error} <button className="btn ghost" type="button" onClick={() => void load()}>Retry</button></p>}
     {notice && <p role="status" className="muted">{notice}</p>}
     {!guidelines && !error && <p role="status">Loading content…</p>}
@@ -67,7 +67,7 @@ export function ManagedContentAdmin() {
     </section>}
     <section aria-labelledby="announcement-editor-title">
       <h3 id="announcement-editor-title">Announcements</h3>
-      <p className="muted">Drafts and edits to published announcements stay private until published. Archived announcements leave the student view.</p>
+      <p className="muted">Drafts stay private. Archived announcements disappear from student view.</p>
       <div className="admin-content-grid"><div className="admin-content-list"><button type="button" className="btn ghost" onClick={() => select(null)}>New announcement</button>
         {announcements.map(a => <button type="button" key={a.id} className="admin-content-item" aria-pressed={selectedId === a.id} onClick={() => select(a)}><strong>{a.pendingTitle ?? a.title}</strong><span>{a.status}{a.pendingBody != null ? ' · unpublished edits' : ''}</span></button>)}
       </div><div className="panel stack">

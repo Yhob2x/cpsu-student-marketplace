@@ -4,6 +4,7 @@ import { api, explain, timeAgo } from './api';
 import { useMe } from './main';
 import { useForegroundRefresh } from './foreground-refresh';
 import { Icon, type IconName } from './icons';
+import { IconAction } from './icon-action';
 import { PushSettings } from './push-settings';
 import { InstallApp } from './install-app';
 import { affiliationLabel, campusStatusSummary, displayNameChange } from './profile-presentation';
@@ -102,7 +103,6 @@ export function Profile() {
     <div className="page-head">
       <div>
         <h1>Profile</h1>
-        <p className="muted">{staff ? 'Your staff account and notification settings.' : 'Your student account, CPSU affiliation and settings.'}</p>
       </div>
     </div>
 
@@ -153,7 +153,7 @@ export function Profile() {
             setErr('');
           }} required minLength={2} maxLength={80} autoComplete="nickname"
             aria-invalid={showNameError} aria-describedby={showNameError ? 'profile-name-help profile-name-error' : 'profile-name-help'} />
-          <p id="profile-name-help" className="muted profile-name-help">Shown to students and reviewers. Changing your name does not affect campus verification.</p>
+          <p id="profile-name-help" className="muted profile-name-help">Shown to students and reviewers. Changes do not affect campus verification.</p>
           {showNameError && <p className="profile-field-error" id="profile-name-error">Enter 2–80 characters for your display name.</p>}
           <button className="btn profile-save-button" disabled={busy || !nameChange.canSave}>{busy ? 'Saving...' : 'Save changes'}</button>
           {ok && <p className="profile-save-success" role="status"><Icon name="check" size={16} />{ok}</p>}
@@ -308,11 +308,10 @@ export function Notifications() {
       <div>
         <span className="notifications-eyebrow"><Icon name="bell" size={15} /> YOUR ACTIVITY</span>
         <h1>Notifications</h1>
-        <p className="muted">Messages, new listings from followed stores, reviews and account updates—all in one place. Updates appear automatically while this page is open.</p>
       </div>
       <button type="button" className="notifications-refresh" onClick={() => void load(true)}
-        disabled={refreshing || busy || markingId !== null} aria-label={refreshing ? 'Refreshing notifications' : 'Refresh notifications'}>
-        {refreshing ? 'Refreshing…' : 'Refresh'}
+        disabled={refreshing || busy || markingId !== null} aria-busy={refreshing} aria-label={refreshing ? 'Checking notifications' : 'Check notifications now'}>
+        {refreshing ? 'Checking…' : 'Check now'}
       </button>
     </header>
 
@@ -325,7 +324,7 @@ export function Notifications() {
           : unread > 0 ? 'See what needs your attention.' : 'No unread updates right now.'}</p>
       </div>
       <button type="button" className="btn notifications-mark-all" onClick={() => void markAll()}
-        disabled={rows === null || busy || markingId !== null || unread === 0}>
+        disabled={rows === null || busy || markingId !== null || unread === 0} aria-busy={busy}>
         <Icon name="checks" size={17} />
         {busy ? 'Marking…' : 'Mark all read'}
       </button>
@@ -393,7 +392,7 @@ export function Notifications() {
                   <strong>{kind.title}</strong>
                   <time dateTime={n.createdAt} title={absoluteTime}>{timeAgo(n.createdAt)}</time>
                 </span>
-                <span className="notification-description">{noticeText(n)}</span>
+                <span className="notification-description" id={`notice-description-${n.id}`}>{noticeText(n)}</span>
                 <span className="notification-meta">
                   <span>{kind.label}</span>
                   {!n.readAt && <span className="notification-new"><span className="notification-new-dot" aria-hidden="true" /> New</span>}
@@ -403,21 +402,17 @@ export function Notifications() {
             return <article className={'notification-item' + (!n.readAt ? ' is-unread' : '')} key={n.id}>
               {to
                 ? <Link to={to} className="notification-body-link"
-                    onClick={() => { if (!n.readAt) void markOne(n.id); }}>{content}</Link>
+                    onClick={() => { if (!n.readAt) void markOne(n.id); }}>{content}<Icon name="arrow" size={17} /></Link>
                 : <div className="notification-body-static">{content}</div>}
-              <div className="notification-actions">
-                {to && <Link to={to} className="notification-open"
-                  onClick={() => { if (!n.readAt) void markOne(n.id); }}
-                  aria-label={'Open ' + kind.title}>
-                  View <Icon name="arrow" size={16} />
-                </Link>}
-                {!n.readAt && <button type="button" className="notification-mark-one"
+              {!n.readAt && <div className="notification-actions">
+                <button type="button" className="notification-mark-one"
                   onClick={() => void markOne(n.id)}
                   disabled={busy || markingId !== null}
+                  aria-busy={markingId === n.id}
                   aria-label={'Mark ' + kind.title + ' as read'}>
                   {markingId === n.id ? 'Marking…' : 'Mark read'}
-                </button>}
-              </div>
+                </button>
+              </div>}
             </article>;
           })}
         </div>

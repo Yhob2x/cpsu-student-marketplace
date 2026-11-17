@@ -135,7 +135,7 @@ export function Register() {
     {campusStatus === 'loading' && <p className="muted" role="status">Loading campuses…</p>}
     {campusStatus === 'error' && <div className="stack" role="alert"><p className="err">Campus options could not load. {campusError}</p>
       <button type="button" className="btn ghost" onClick={loadCampuses}>Retry campuses</button></div>}
-    <p className="muted">A campus reviewer confirms you are part of the CPSU community before you can sell. Browsing and messaging work right away.</p>
+    <p className="muted">You can browse and message now. A campus reviewer must verify you before you can sell.</p>
     {err && <p className="err" role="alert">{err}</p>}<button className="btn" disabled={busy || campusStatus !== 'ready'}>{busy ? 'Creating account…' : 'Create account'}</button></form>;
 }
 
@@ -335,11 +335,11 @@ export function Dashboard() {
   };
   return <div className="my-store">
     <div className="page-head">
-      <div><h1>My store</h1><p className="muted">Personalize your storefront, manage listings and follow reviewer decisions.</p></div>
+      <div><h1>My store</h1></div>
       {me.storeId && <Link className="btn ghost" to={`/stores/${me.storeId}`}>View public store</Link>}
     </div>
     <div className="panel store-affiliation"><h2 className="panel-heading-small">CPSU affiliation</h2>{me.affiliations.map(a => <p key={a.id}>{a.campus.name}: <span className={`status ${a.status}`}>{a.status}</span></p>)}
-      {!verified && <p className="muted">Pending until a campus reviewer confirms you. You can still browse and message sellers.</p>}</div>
+      {!verified && <p className="muted">A campus reviewer must verify you before you can sell.</p>}</div>
     {err && <p className="err" role="alert">{err}</p>}{ok && <p role="status">{ok}</p>}
     {verified && !me.storeId && <form className="panel stack" onSubmit={createStore}><h2>Open your store</h2>
       <label className="field">Store name<input name="storeName" placeholder="Name students will see" required minLength={2} maxLength={80} /></label>
@@ -351,7 +351,7 @@ export function Dashboard() {
         <SellerAvatarEditor storeId={me.storeId} refreshVersion={storeDetailsVersion} />
       </div>
       <details className="panel store-create" ref={createDetails}><summary><span>{repeatListing ? 'Sell again' : 'New listing'}</span><span className="store-create-hint">Save a draft</span></summary>
-      <form key={repeatListing?.id ?? 'new'} className="stack seller-composer" onChange={() => setCreateDirty(true)} onSubmit={createListing}><p className="muted">{repeatListing ? 'Review the copied details and upload a photo or portfolio image. This makes a new draft; the sold listing stays sold.' : 'Add the essential details first. Save your draft, then submit it for review.'}</p>
+      <form key={repeatListing?.id ?? 'new'} className="stack seller-composer" onChange={() => setCreateDirty(true)} onSubmit={createListing}><p className="muted">{repeatListing ? 'Review this new draft. Your sold listing stays sold.' : 'Save a draft, then submit it for review.'}</p>
         {repeatListing && <button type="button" className="btn ghost store-start-blank" onClick={startBlankListing}>Start blank instead</button>}
         <label className="field">Title<input ref={createTitle} name="title" placeholder="What are you offering?" defaultValue={repeatListing?.title ?? ''} required minLength={3} maxLength={120} /></label>
         <label className="field">Category
@@ -367,9 +367,9 @@ export function Dashboard() {
         <p className="muted" role="status">{newFiles.length} of {MAX_LISTING_PHOTOS} photos selected</p>{newSelectionError && <p className="err" role="alert">{newSelectionError}</p>}
         {!newSelectionError && <SelectedPhotoPreviews files={newFiles} coverIndex={newCoverIndex} onCoverChange={setNewCoverIndex} disabled={creatingListing} />}
         {creatingListing && photoProgress && <p role="status">{photoProgress}</p>}
-        <p className="muted" id="new-photo-policy">Add at least 1 photo before submitting for review, with a maximum of {MAX_LISTING_PHOTOS} per listing. You may save a draft without a photo. Preview your selection and choose the cover before saving; it uploads first. No pornography, explicit sexual imagery, graphic violence, or other prohibited content. Photos must pass campus reviewer inspection before publication.</p>
+        <p className="muted" id="new-photo-policy">Add 1–{MAX_LISTING_PHOTOS} photos to submit; drafts need none. Choose the cover before saving; it uploads first. No pornography, sexual imagery, graphic violence or other prohibited content. A campus reviewer checks photos before publication.</p>
         <button className="btn" disabled={creatingListing}>{creatingListing ? 'Saving draft…' : 'Save draft'}</button></form></details>
-      <div className="store-listings-head"><div><h2 ref={listingsHeading} tabIndex={-1}>Your listings</h2><p className="muted">Review status and availability update automatically while this page is open.</p></div>{!listingsLoading && !listingLoadError && <span className="store-listing-count">{visibleListings.length} {visibleListings.length === 1 ? 'listing' : 'listings'}</span>}</div>
+      <div className="store-listings-head"><div><h2 ref={listingsHeading} tabIndex={-1}>Your listings</h2></div>{!listingsLoading && !listingLoadError && <span className="store-listing-count">{visibleListings.length} {visibleListings.length === 1 ? 'listing' : 'listings'}</span>}</div>
       {listingsLoading && <p className="muted" role="status">Loading your listings…</p>}
       {listingLoadError && <p className="err" role="alert">Could not load your listings: {listingLoadError} <button type="button" className="btn ghost" onClick={() => { void load(); }}>Retry</button></p>}
       {!listingsLoading && !listingLoadError && visibleListings.length === 0 && <div className="panel store-empty"><h3>Your store is ready for its first listing</h3><p className="muted">Open New listing above, save a draft, then send it to a campus reviewer.</p></div>}
@@ -406,7 +406,7 @@ export function Dashboard() {
             {!editSelectionError && <SelectedPhotoPreviews files={editFiles} coverIndex={editCover?.source === 'new' ? editCover.index : -1}
               onCoverChange={index => setEditCover({ source: 'new', index })} disabled={savingEdit} />}
             {savingEdit && photoProgress && <p role="status">{photoProgress}</p>}
-            <p className="muted" id="edit-photo-policy">You can select several photos at once, up to the remaining slots, and choose any existing or new photo as the cover. Explicit or harmful photos are prohibited. Adding photos to a published listing returns it to draft for another campus review.</p>
+            <p className="muted" id="edit-photo-policy">Choose a cover from existing or new photos. Explicit or harmful images are prohibited. Adding photos to a published listing sends it back for review.</p>
             <div className="row"><button className="btn" disabled={savingEdit}>{savingEdit ? 'Saving…' : 'Save changes'}</button><button type="button" className="btn ghost" disabled={savingEdit} onClick={() => { setEditing(null); setEditFiles([]); setEditCover(null); }}>Cancel</button></div></form>
         : <article key={l.id} className="panel store-listing"><StoreListingPhoto media={l.media} title={l.title} type={l.type} /><div className="store-listing-main"><div className="store-listing-title"><h3>{l.title}</h3><strong>{peso(Number(l.price))}</strong></div><p className="store-listing-category">{l.category?.name}</p><div className="store-listing-meta"><span className={`status ${l.status}`}>{l.status.replace('_', ' ')}</span>{l.status === 'published' && <span className="status">{l.availabilityState || 'available'}</span>}</div>
             <p className="muted store-listing-help">{l.status === 'draft' ? 'Draft only · submit for campus review when ready.' : l.status === 'changes_requested' ? 'Changes requested · edit and resubmit for review.' : l.status === 'pending_review' ? 'Waiting for a campus reviewer.' : l.status === 'published' ? l.availabilityState === 'sold' ? 'Sold · use Sell again to make a new draft.' : 'Published · manage availability below.' : l.status === 'rejected' ? 'Not approved for publication.' : l.status === 'suspended' ? 'Removed from public browsing by a reviewer.' : 'Check this listing’s review status.'}</p>{l.status === 'published' && <Link className="store-listing-view" to={`/listings/${l.id}`}>View listing <Icon name="arrow" size={15} /></Link>}</div>
@@ -494,7 +494,7 @@ export function Inquiries() {
     onPointerDownCapture={() => unlockMessageReceiveSound()}
     onKeyDownCapture={e => { if (e.key === 'Enter' || e.key === ' ') unlockMessageReceiveSound(); }}>
     <div className="page-head messages-heading">
-      <div><h1>Messages</h1><p className="muted">Your conversations with other CPSU students about listings.</p></div>
+      <div><h1>Messages</h1></div>
       <div className="messages-audio-actions">
         <button type="button" className="btn ghost conversation-sound-toggle"
           aria-label={receiveSoundOn ? 'Mute incoming message sound' : 'Enable incoming message sound'}

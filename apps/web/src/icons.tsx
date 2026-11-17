@@ -11,6 +11,8 @@ const PATHS: Record<string, ReactNode> = {
   chevronRight: <path d="m9 6 6 6-6 6" />,
   home: <><path d="m3 10 9-7 9 7v10H3Z" /><path d="M9 20v-7h6v7" /></>,
   plus: <><path d="M12 5v14M5 12h14" /></>,
+  minus: <path d="M5 12h14" />,
+  close: <path d="M5 5l14 14M19 5 5 19" />,
   download: <><path d="M12 3v12m-4-4 4 4 4-4" /><path d="M5 17v3h14v-3" /></>,
   tag: <><path d="M20.6 13.4 13.4 20.6a2 2 0 0 1-2.8 0l-6.2-6.2A2 2 0 0 1 3.8 13V4.8a1 1 0 0 1 1-1H13a2 2 0 0 1 1.4.6l6.2 6.2a2 2 0 0 1 0 2.8Z" /><circle cx="8" cy="8" r="1.4" /></>,
   grid: <><rect x="3.5" y="3.5" width="7" height="7" rx="2" /><rect x="13.5" y="3.5" width="7" height="7" rx="2" /><rect x="3.5" y="13.5" width="7" height="7" rx="2" /><rect x="13.5" y="13.5" width="7" height="7" rx="2" /></>,
@@ -24,6 +26,7 @@ const PATHS: Record<string, ReactNode> = {
   arrow: <><path d="M5 12h13" /><path d="m12.5 5.5 6.5 6.5-6.5 6.5" /></>,
   store: <><path d="M4 9.5V20h16V9.5" /><path d="M3 9.5 5 4h14l2 5.5Z" /><path d="M9.5 20v-5h5v5" /></>,
   leaf: <><path d="M20 4c0 9-5.5 14-13 14H4c0-8 5-14 13-14Z" /><path d="M4 20 12 12" /></>,
+  refresh: <><path d="M20 7v5h-5" /><path d="M4 17v-5h5" /><path d="M6.2 9A7 7 0 0 1 18.5 7L20 12M4 12l1.5 5A7 7 0 0 0 17.8 15" /></>,
   check: <path d="m5 12.5 4.5 4.5L19 7" />,
   checks: <><path d="m2.5 12.5 4.5 4.5L16 7" /><path d="m10 16.5 2.5 2.5L22 8" /></>,
 };

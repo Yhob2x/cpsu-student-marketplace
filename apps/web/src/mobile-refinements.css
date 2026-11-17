@@ -55,6 +55,41 @@
   .explore-control-header h1 { margin-bottom: .35rem; }
   .explore-control-header .explore-toolbar { margin-top: .4rem; }
 }
+@media (max-width: 640px) {
+  .explore-control-header[data-compact="true"] {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 48px;
+    align-items: center;
+    gap: .35rem .5rem;
+    padding-block: .45rem;
+  }
+  .explore-control-header[data-compact="true"] > h1,
+  .explore-control-header[data-compact="true"] > .explore-intro,
+  .explore-control-header[data-compact="true"] > .results { display: none; }
+  .explore-control-header[data-compact="true"] .explore-toolbar {
+    grid-column: 1;
+    grid-row: 1;
+    margin: 0;
+  }
+  .explore-control-header[data-compact="true"] .mobile-filter-toggle {
+    grid-column: 2;
+    grid-row: 1;
+    width: 48px;
+    min-height: 48px;
+    padding: 0;
+    justify-content: center;
+  }
+  .explore-control-header[data-compact="true"] .mobile-filter-toggle > span,
+  .explore-control-header[data-compact="true"] .mobile-filter-toggle > svg:last-child { display: none; }
+  .explore-control-header[data-compact="true"] .explore-type-chips {
+    grid-column: 1 / -1;
+    grid-row: 2;
+    margin: 0;
+    padding: .2rem;
+  }
+  .explore-control-header[data-compact="true"] .explore-type-chips button { min-height: 40px; }
+  .explore-control-header[data-compact="true"] > .panel.row { grid-column: 1 / -1; }
+}
 
 @media (max-width: 640px) {
   /* Content first: don't require a full screen of decorative hero art before browsing. */

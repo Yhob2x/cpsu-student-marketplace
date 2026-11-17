@@ -15,11 +15,13 @@ The supplied shopping-app screenshot informed the relationship between the brows
 
 ## Search access while browsing
 
-On phone and tablet widths, the Explore control group sticks to the top of the viewport as the listing grid scrolls: title, introduction, search, type tabs, filter button, result count, and sort. The search input retains an accessible label and a descriptive placeholder. On narrow or short screens the introduction is hidden to leave room for listings. If text enlargement makes the group taller than the usable viewport, the group itself can scroll to reveal every control while leaving product space below. Opening the detailed filters returns the group to normal page flow and scrolls it into view; closing them restores its sticky behavior. On desktop widths, the existing masthead, which contains the global listing search, stays visible. The mobile bottom navigation and listing controls remain independent.
+On phone and tablet widths, the Explore control group sticks to the top of the viewport as the listing grid scrolls. After scrolling 160 px on phones, it contracts to search, an icon-sized filter button, and the type tabs so listings remain visible. The full title, introduction, result count, and sort return near the top or when filters open. The search input retains an accessible label and a descriptive placeholder. If text enlargement makes the group taller than the usable viewport, the group itself can scroll to reveal every control. Opening the detailed filters returns the group to normal page flow and scrolls it into view. On desktop widths, the existing masthead, which contains the global listing search, stays visible. The mobile bottom navigation and listing controls remain independent.
 
 Headless Chrome confirmed the mobile toolbar at the viewport top after scrolling at 320, 390, and 430 px, with a 48 px input, no horizontal overflow, and a focusable labelled field. At 200% text size on 320 px it remained sticky without overflow. The desktop header search stayed visible at 1024 px. Physical iPhone Safari keyboard and safe-area behavior still need device acceptance.
 
 The full pinned group was then checked with synthetic listings at 320, 390, and 430 px, plus 320 × 568 and 200% text. It stayed at viewport top without document overflow. At 200% text its inner scroll revealed the sort control; expanded filters remained in normal page flow and returned to view when opened. The browser used intercepted sample API responses, so no student data or database writes were involved.
+
+The compact state was checked against the local API at 320, 390, and 430 px. It measured about 117 px high at normal text size, stayed at the top while scrolling, and had no horizontal overflow. At 200% text size on 320 px, it measured 219 px without overflow. Opening filters restored the full header and brought it into view.
 
 No API, database, migration, or business-rule change was required.
 

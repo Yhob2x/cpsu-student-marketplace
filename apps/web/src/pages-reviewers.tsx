@@ -75,7 +75,7 @@ export function ReviewerAdmin({ active, campuses, campusesError, onRetryCampuses
   };
 
   return <section aria-labelledby="staff-management-heading">
-    <div className="sec-head"><div><h2 id="staff-management-heading">Reviewer accounts</h2><p className="muted">Staff logins are separate from student accounts. Campus reviewers can moderate only their assigned campus.</p></div>
+    <div className="sec-head"><div><h2 id="staff-management-heading">Reviewer accounts</h2><p className="muted">Staff use separate accounts. Reviewers see only their assigned campus.</p></div>
       <button type="button" className="btn" onClick={() => { setShowCreate(previous => !previous); setError(''); setNotice(''); }}>{showCreate ? 'Cancel' : 'Add reviewer'}</button></div>
     {error && <p className="err" role="alert">{error}</p>}
     {campusesError && <p className="err" role="alert">Could not load campus choices: {campusesError}. <button className="btn ghost" type="button" onClick={onRetryCampuses}>Retry campuses</button></p>}

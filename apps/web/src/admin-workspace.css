@@ -26,6 +26,19 @@
 .admin-workspace-main .moderation-reason textarea { width: 100%; min-height: 82px; resize: vertical; }
 .admin-workspace-main #admin-reports ~ .panel { min-width: 0; }
 .admin-workspace-main .review-actions { align-items: center; }
+.admin-inline-actions { display: flex; flex-wrap: wrap; gap: .5rem; align-items: center; }
+.admin-inline-actions .btn { flex: 1 1 auto; }
+.admin-workspace .btn.danger-outline {
+  background: var(--paper); color: var(--danger);
+  border: 1px solid var(--danger);
+}
+@media (hover: hover) and (pointer: fine) {
+  .admin-workspace .btn.danger-outline:not(:disabled):hover {
+    color: var(--danger); background: #fff4f2;
+  }
+}
+.admin-workspace .btn.danger-outline:active:not(:disabled) { background: #fce8e5; }
+.admin-workspace .btn.danger-outline:focus-visible { outline: 3px solid var(--focus-green); outline-offset: 2px; }
 .admin-overview-shortcuts { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .75rem; margin: .85rem 0 1.3rem; }
 .admin-overview-shortcuts button { display: grid; gap: .2rem; padding: .85rem; min-height: 82px; border: 1px solid var(--line); border-radius: 11px; background: var(--paper); color: var(--ink); text-align: left; cursor: pointer; }
 .admin-overview-shortcuts button:hover { border-color: var(--forest); background: var(--surface-soft); }
@@ -55,6 +68,9 @@
   .admin-overview-shortcuts span { font-size: .72rem; line-height: 1.35; }
   .admin-workspace-main .review-listing { padding: .85rem; }
   .admin-workspace-main #admin-reports ~ .panel.row { align-items: stretch; }
+  .admin-inline-actions { width: 100%; }
+  .admin-inline-actions .btn { flex-basis: 0; min-width: 0; }
+  .admin-workspace-main .review-actions .btn { flex: 1 1 100%; }
 }
 @media (prefers-reduced-motion: reduce) {
   .admin-workspace-nav-item, .admin-review-queue-item, .admin-overview-shortcuts button { scroll-behavior: auto; }

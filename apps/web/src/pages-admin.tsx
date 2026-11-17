@@ -27,6 +27,7 @@ export function Admin() {
   const accountAdmin = Boolean(me?.roles.some(role => role.role === 'university_admin' && role.campusId === null));
   const [q, setQ] = useState<any>(null); const [stats, setStats] = useState<any>(null); const [err, setErr] = useState(''); const [reasons, setReasons] = useState<Record<string, string>>({});
   const [pending, setPending] = useState('');
+  const [pendingAction, setPendingAction] = useState('');
   const [activeSection, setActiveSection] = useState(() => accountAdmin ? 'overview' : 'listings');
   useEffect(() => { if (me) setActiveSection(accountAdmin ? 'overview' : 'listings'); }, [me?.id, accountAdmin]);
   const [selectedListingId, setSelectedListingId] = useState<number | null>(null);
@@ -138,31 +139,31 @@ export function Admin() {
   const resolveReport = async (id: number, status: 'resolved' | 'dismissed') => {
     const reason = (reportReasons[id] ?? '').trim();
     if (reason.length < 10) return;
-    setPending(`r${id}`); setReportActionError(''); setNotice('');
+    setPending(`r${id}`); setPendingAction(status); setReportActionError(''); setNotice('');
     try {
       await api(`/admin/reports/${id}/resolve`, { body: { status, reason } });
       setReportReasons(previous => ({ ...previous, [id]: '' }));
       setNotice(`Report #${id} ${status === 'resolved' ? 'resolved' : 'dismissed'}. Your reason was recorded.`);
       load();
     } catch (e) { setReportActionError(explain(e)); }
-    finally { setPending(''); }
+    finally { setPending(''); setPendingAction(''); }
   };
   const decide = async (id: number, decision: string) => {
-    setPending(`l${id}`);
+    setPending(`l${id}`); setPendingAction(decision);
     try { await api(`/admin/listings/${id}/decision`, { body: {
       decision, reason: (reasons[`l${id}`] ?? '').trim(),
       ...(decision === 'approved' ? { photosReviewed: photosReviewed[id] === true } : {}),
     } }); setErr(''); setPhotosReviewed(prev => ({ ...prev, [id]: false }));
       setReasons(prev => ({ ...prev, [`l${id}`]: '' }));
       setNotice(`Listing #${id}: ${decision === 'approved' ? 'approved' : decision === 'rejected' ? 'rejected' : 'changes requested'}.`);
-      load(); } catch (e) { setErr(explain(e)); } finally { setPending(''); }
+      load(); } catch (e) { setErr(explain(e)); } finally { setPending(''); setPendingAction(''); }
   };
   const verify = async (id: number, decision: string) => {
-    setPending(`a${id}`);
+    setPending(`a${id}`); setPendingAction(decision);
     try { await api(`/admin/affiliations/${id}/verify`, { body: { decision, reason: (reasons[`a${id}`] ?? '').trim() } });
       setErr(''); setReasons(prev => ({ ...prev, [`a${id}`]: '' }));
       setNotice(`Student affiliation #${id} ${decision === 'verified' ? 'verified' : 'rejected'}.`);
-      load(); } catch (e) { setErr(explain(e)); } finally { setPending(''); }
+      load(); } catch (e) { setErr(explain(e)); } finally { setPending(''); setPendingAction(''); }
   };
   const field = (k: string, ph: string, min = 5) => <label className="field moderation-reason">
     {k.startsWith('a') ? 'Verification reason' : 'Decision reason'}
@@ -194,7 +195,7 @@ export function Admin() {
   const changeSection = (id: string) => { setActiveSection(id); setNotice(''); };
   return <div className="admin-workspace">
     <div className="page-head"><div><h1>{accountAdmin ? 'University administration' : 'Campus review workspace'}</h1>
-      <p className="muted">{accountAdmin ? 'Manage campus operations, people and moderation activity.' : 'Review pending listings, verify affiliations and investigate reports for your authorized campus. New cases appear automatically.'}</p></div></div>
+      <p className="muted">{accountAdmin ? 'Manage students, reviews and campus activity.' : 'Review listings, affiliations and reports for your campus.'}</p></div></div>
     {notice && <p className="admin-action-notice" role="status">{notice}</p>}
     <label className="admin-workspace-mobile-nav field">Workspace section
       <select value={activeSection} onChange={event => changeSection(event.target.value)}>
@@ -219,7 +220,19 @@ export function Admin() {
     {q === null && !err && <p role="status" className="muted">Loading review queue…</p>}
     <h2 id="admin-affiliations">Affiliations to verify</h2><p className="muted">This queue does not contain proof of enrollment. Confirm affiliation using authorized campus records before deciding.</p>{q?.affiliations.length === 0 && <p className="muted">All caught up.</p>}
     {q?.affiliations.map((a: any) => <div key={a.id} className="panel row"><div style={{ flex: 1 }}><h3>{a.user.displayName}</h3><span className="muted">{a.campus} · {a.user.email} · Affiliation #{a.id}</span></div>
-      {field(`a${a.id}`, 'Reason (5+ characters)')}<button className="btn" disabled={pending === `a${a.id}` || !reasonOk(`a${a.id}`)} onClick={() => verify(a.id, 'verified')}>Verify</button><button className="btn danger" disabled={pending === `a${a.id}` || !reasonOk(`a${a.id}`)} onClick={() => verify(a.id, 'rejected')}>Reject</button></div>)}
+      {field(`a${a.id}`, 'Reason (5+ characters)')}
+      <div className="admin-inline-actions">
+        <button type="button" className="btn" disabled={Boolean(pending) || !reasonOk(`a${a.id}`)}
+          aria-busy={pending === `a${a.id}` && pendingAction === 'verified'}
+          aria-label={`Verify affiliation for ${a.user.displayName}`} onClick={() => verify(a.id, 'verified')}>
+          {pending === `a${a.id}` && pendingAction === 'verified' ? 'Verifying…' : 'Verify'}
+        </button>
+        <button type="button" className="btn danger-outline" disabled={Boolean(pending) || !reasonOk(`a${a.id}`)}
+          aria-busy={pending === `a${a.id}` && pendingAction === 'rejected'}
+          aria-label={`Reject affiliation for ${a.user.displayName}`} onClick={() => verify(a.id, 'rejected')}>
+          {pending === `a${a.id}` && pendingAction === 'rejected' ? 'Rejecting…' : 'Reject'}
+        </button>
+      </div></div>)}
     </div>
     <div hidden={activeSection !== 'listings'}>
     {err && <p className="err" role="alert">{err} <button type="button" className="btn ghost" onClick={load}>Retry</button></p>}
@@ -232,7 +245,7 @@ export function Admin() {
         </select>
       </label>
       <section className="admin-review-queue" aria-label="Pending listing queue">
-        <p className="muted">Choose a listing to inspect its description, photos and policy flags.</p>
+        <p className="muted">Select a listing to review.</p>
         {q.listings.map((listing: any) => <button type="button" key={listing.id}
           className="admin-review-queue-item" aria-pressed={selectedListing?.id === listing.id}
           onClick={() => setSelectedListingId(listing.id)}>
@@ -246,7 +259,7 @@ export function Admin() {
       <div className="review-listing-heading"><div><h3>{l.title}</h3><p className="muted">{l.store} · {l.campus} · {l.category}</p></div><span className="tag">{peso(l.price)}</span></div>
       <p className="review-description">{l.description}</p>
       <div className="row">{l.flags.map((f: string) => <span key={f} className="flag">{FLAG_TEXT[f] ?? f}</span>)}{l.flags.length === 0 && <span className="muted">No text/category flags — photos still need human review</span>}</div>
-      <p className="muted">{l.images.length} listing {l.images.length === 1 ? 'photo' : 'photos'} to inspect. Photos are not automatically checked for explicit content.</p>
+      <p className="muted">Inspect all {l.images.length} {l.images.length === 1 ? 'photo' : 'photos'}; explicit content is not checked automatically.</p>
       <div className="review-photos">{l.images.length === 0 && <span className="muted">No photos attached</span>}
         {l.images.map((s: string, i: number) => <a key={s} href={s} target="_blank" rel="noreferrer" aria-label={`Open listing photo ${i + 1} of ${l.images.length} in a new tab`}><img src={s} alt={`Listing photo ${i + 1} of ${l.images.length}`} loading="lazy" /></a>)}</div>
       <label className="review-confirmation">
@@ -256,12 +269,25 @@ export function Admin() {
         <span>I personally inspected all {l.images.length} photos and confirm they do not contain pornography, explicit sexual imagery, graphic violence, or other prohibited content.</span>
       </label>
       <div className="review-decision">{field(`l${l.id}`, 'Reason (required, 5+ characters, shown to the seller)')}{!reasonOk(`l${l.id}`) && <span className="muted">Enter a reason of at least 5 characters to enable a decision.</span>}{l.flags.includes('academic_integrity_concern') && <span className="muted">Academic-integrity flag: approval requires a documented reason of at least 20 characters.</span>}
-        <div className="review-actions"><button className="btn" disabled={pending === `l${l.id}` || !reasonOk(`l${l.id}`, l.flags.includes('academic_integrity_concern') ? 20 : 5) || !photosReviewed[l.id] || l.images.length === 0} onClick={() => decide(l.id, 'approved')}>{pending === `l${l.id}` ? 'Saving decision…' : 'Approve'}</button><button className="btn ghost" disabled={pending === `l${l.id}` || !reasonOk(`l${l.id}`)} onClick={() => decide(l.id, 'changes_requested')}>Request changes</button><button className="btn danger" disabled={pending === `l${l.id}` || !reasonOk(`l${l.id}`)} onClick={() => decide(l.id, 'rejected')}>Reject</button></div></div></article>)}
+        <div className="review-actions" role="group" aria-label={`Review decision for ${l.title}`}>
+          <button type="button" className="btn" disabled={Boolean(pending) || !reasonOk(`l${l.id}`, l.flags.includes('academic_integrity_concern') ? 20 : 5) || !photosReviewed[l.id] || l.images.length === 0}
+            aria-busy={pending === `l${l.id}` && pendingAction === 'approved'} onClick={() => decide(l.id, 'approved')}>
+            {pending === `l${l.id}` && pendingAction === 'approved' ? 'Approving…' : 'Approve'}
+          </button>
+          <button type="button" className="btn ghost" disabled={Boolean(pending) || !reasonOk(`l${l.id}`)}
+            aria-busy={pending === `l${l.id}` && pendingAction === 'changes_requested'} onClick={() => decide(l.id, 'changes_requested')}>
+            {pending === `l${l.id}` && pendingAction === 'changes_requested' ? 'Requesting…' : 'Request changes'}
+          </button>
+          <button type="button" className="btn danger-outline" disabled={Boolean(pending) || !reasonOk(`l${l.id}`)}
+            aria-busy={pending === `l${l.id}` && pendingAction === 'rejected'} onClick={() => decide(l.id, 'rejected')}>
+            {pending === `l${l.id}` && pendingAction === 'rejected' ? 'Rejecting…' : 'Reject'}
+          </button>
+        </div></div></article>)}
       </div>
     </div>}
     </div>
     <div hidden={activeSection !== 'reports'}>
-    <h2 id="admin-reports">Reports from students</h2><p className="muted">Inspect the reported listing or store, record your findings, then resolve or dismiss. Closing a report does not automatically suspend its subject.</p>{reportsError && <p className="err" role="alert">Reports could not load: {reportsError} <button type="button" className="btn ghost" onClick={load}>Retry</button></p>}{reportActionError && <p className="err" role="alert">Could not save the report decision: {reportActionError}. Your findings are retained; check and retry the decision.</p>}
+    <h2 id="admin-reports">Reports from students</h2><p className="muted">Review the report and record your findings. Closing it does not suspend the subject.</p>{reportsError && <p className="err" role="alert">Reports could not load: {reportsError} <button type="button" className="btn ghost" onClick={load}>Retry</button></p>}{reportActionError && <p className="err" role="alert">Could not save the report decision: {reportActionError}. Your findings are retained; check and retry the decision.</p>}
     {reports === null && !reportsError && <p className="muted" role="status">Loading reports…</p>}
     {reports?.length === 0 && !reportsError && <p className="muted">No open reports.</p>}
     {!reportsError && reports?.map(rep => <div key={rep.id} className="panel row"><div style={{ flex: 1, minWidth: 0 }}>
@@ -274,12 +300,22 @@ export function Admin() {
       <label className="field moderation-reason">Investigation findings for report #{rep.id}
         <textarea rows={2} minLength={10} maxLength={1000} value={reportReasons[rep.id] ?? ''} onChange={e => setReportReasons(previous => ({ ...previous, [rep.id]: e.target.value }))} placeholder="Record what you checked and why this decision is appropriate" />
       </label>
-      <button className="btn" disabled={pending === `r${rep.id}` || (reportReasons[rep.id] ?? '').trim().length < 10} onClick={() => resolveReport(rep.id, 'resolved')}>Resolve</button>
-      <button className="btn ghost" disabled={pending === `r${rep.id}` || (reportReasons[rep.id] ?? '').trim().length < 10} onClick={() => resolveReport(rep.id, 'dismissed')}>Dismiss</button></div>)}
+      <div className="admin-inline-actions">
+        <button type="button" className="btn" disabled={Boolean(pending) || (reportReasons[rep.id] ?? '').trim().length < 10}
+          aria-busy={pending === `r${rep.id}` && pendingAction === 'resolved'}
+          aria-label={`Resolve report ${rep.id}`} onClick={() => resolveReport(rep.id, 'resolved')}>
+          {pending === `r${rep.id}` && pendingAction === 'resolved' ? 'Resolving…' : 'Resolve'}
+        </button>
+        <button type="button" className="btn ghost" disabled={Boolean(pending) || (reportReasons[rep.id] ?? '').trim().length < 10}
+          aria-busy={pending === `r${rep.id}` && pendingAction === 'dismissed'}
+          aria-label={`Dismiss report ${rep.id}`} onClick={() => resolveReport(rep.id, 'dismissed')}>
+          {pending === `r${rep.id}` && pendingAction === 'dismissed' ? 'Dismissing…' : 'Dismiss'}
+        </button>
+      </div></div>)}
     </div>
     <section hidden={activeSection !== 'transactions'} aria-labelledby="admin-transactions-heading">
       <h2 id="admin-transactions-heading">Transaction monitoring</h2>
-      <p className="muted">Read-only transaction statuses in your authorized campuses. Completed means both students confirmed; payments are not verified. Private messages and payment arrangements are not shown.</p>
+      <p className="muted">Read-only campus records. Completed means both students confirmed; payments are unverified. Private messages are hidden.</p>
       {transactionError && <p role="alert" className="err">Transactions could not load: {transactionError} <button type="button" className="btn ghost" onClick={() => void loadTransactions(transactionPage)}>Retry</button></p>}
       {!transactionLoading && !transactionError && monitoredTransactions.length === 0 && <p className="muted">No transactions to monitor.</p>}
       <div className="stack">{monitoredTransactions.map(t => <div className="panel row" key={t.id} style={{ alignItems: 'flex-start' }}>
@@ -293,7 +329,7 @@ export function Admin() {
     </section>
     {accountAdmin && <section hidden={activeSection !== 'students'} aria-labelledby="student-management-heading">
       <h2 id="student-management-heading">Student accounts</h2>
-      <p className="muted">University administrators can suspend and reactivate student accounts. Suspending a student signs out their active sessions and hides their public listings.</p>
+      <p className="muted">Suspending a student signs them out and hides their public listings.</p>
       <form className="panel admin-student-filters" role="search" aria-label="Search student accounts" onSubmit={e => { e.preventDefault(); void searchStudents({ q: studentQuery, status: studentStatus, verification: studentVerification, campusId: studentCampusId }); }}>
         <label className="field">Name or email<input type="search" value={studentQuery} onChange={e => setStudentQuery(e.target.value)} maxLength={80} placeholder="Search students" /></label>
         <label className="field">Campus<select value={studentCampusId} onChange={e => setStudentCampusId(e.target.value)}><option value="">All campuses</option>{campuses.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}</select></label>
@@ -324,7 +360,7 @@ export function Admin() {
     {accountAdmin && activeSection === 'content' && <ManagedContentAdmin />}
     {accountAdmin && <section hidden={activeSection !== 'audit'} aria-labelledby="audit-history-heading">
       <h2 id="audit-history-heading">Administrative audit history</h2>
-      <p className="muted">Restricted to university administration. Events are shown newest first.</p>
+      <p className="muted">Newest first.</p>
       {auditError && <p role="alert" className="err">Audit history could not load: {auditError}
         <button className="btn ghost" type="button" onClick={() => void loadAudit(auditCursor ?? undefined)}>Retry</button>
       </p>}

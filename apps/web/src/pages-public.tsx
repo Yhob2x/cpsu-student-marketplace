@@ -123,9 +123,8 @@ export function Home() {
     {homeError && <div className="panel" role="alert">Some marketplace content could not load. {homeError} <button type="button" className="btn ghost" onClick={loadHome}>Retry</button></div>}
     <section className="hero">
       <div className="hero-copy">
-        <span className="hero-eyebrow">THE CPSU STUDENT MARKETPLACE</span>
         <h1>Great finds.<br />Right on campus.</h1>
-        <p>Find pre-loved essentials, student-made goods and useful services. Message CPSU student sellers directly.</p>
+        <p>Browse student listings and message sellers on campus.</p>
         <div className="hero-actions">
           <Link className="btn" to="/explore">Explore listings <Icon name="arrow" size={17} /></Link>
         </div>
@@ -133,11 +132,6 @@ export function Home() {
           <input aria-label="Search listings" placeholder="Search products, services, skills…" maxLength={80} value={q} onChange={e => setQ(e.target.value)} />
           <button className="btn">Search</button>
         </form>
-        <div className="hero-trust">
-          <span><Icon name="shield" size={16} /> Verified students only</span>
-          <span><Icon name="pin" size={16} /> Campus pickup</span>
-          <span><Icon name="chat" size={16} /> No middleman</span>
-        </div>
       </div>
       <div className="hero-art" aria-hidden="true">
         {shots.map((l, i) => <figure key={l.id} className={`shot shot-${i + 1}`}>
@@ -171,16 +165,16 @@ export function Home() {
     <section className="steps">
       <h2>How it works</h2>
       <ol>
-        <li><span className="num">1</span><b>Find something</b><p>Filter by campus, category and price. Listings are reviewed before they appear.</p></li>
-        <li><span className="num">2</span><b>Message the seller</b><p>Ask if it is still available and agree the details in Messages.</p></li>
-        <li><span className="num">3</span><b>Meet on campus</b><p>Hand over payment and the item directly. The marketplace never holds money.</p></li>
+        <li><span className="num">1</span><b>Find something</b><p>Browse reviewed listings or filter by campus.</p></li>
+        <li><span className="num">2</span><b>Message the seller</b><p>Ask questions and agree on the details.</p></li>
+        <li><span className="num">3</span><b>Meet on campus</b><p>Arrange payment and handoff directly.</p></li>
       </ol>
     </section>
 
     {!staff && <section className="cta-band">
       <span className="cta-icon"><Icon name="store" /></span>
-      <div><span className="cta-eyebrow">YOUR CAMPUS. YOUR COMMUNITY.</span><h2>Turn what you no longer need into something useful</h2>
-        <p>Students with a verified campus affiliation can open a store and publish listings.</p></div>
+      <div><h2>Sell or offer a service</h2>
+        <p>Verified students can open a store and submit listings.</p></div>
       <Link className="btn gold" to="/dashboard">Start selling</Link>
     </section>}
 
@@ -285,7 +279,6 @@ export function Discover() {
       data-filters-open={mobileFiltersOpen && !mobileFiltersClosing}
       data-compact={compactControls && !mobileFiltersOpen} aria-label="Explore controls">
     <h1>Explore listings</h1>
-    <p className="muted explore-intro" style={{ marginTop: '-.25rem' }}>Find pre-loved items and student services, then message the seller directly.</p>
 
     <div className="explore-toolbar" role="search" aria-label="Explore listing search">
       <label className="field explore-search"><span className="explore-search-label">Search listings</span>
@@ -378,7 +371,7 @@ export function Discover() {
     {items === null && skel}
     {items !== null && items.length === 0 && !error && <div className="empty">
       <h2>No listings match</h2>
-      <p className="muted">{dirty ? 'One of your filters is too narrow. Clear them and start again, or try another campus.' : 'Nothing is published yet. Check back soon — new listings appear here as soon as a reviewer approves them.'}</p>
+      <p className="muted">{dirty ? 'Try fewer filters or another campus.' : 'New listings will appear after review.'}</p>
       {dirty && <button className="btn ghost" onClick={reset}>Clear filters</button>}
     </div>}
     {items !== null && !error && <StoresInResults listings={items} query={f.q} />}

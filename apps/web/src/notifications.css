@@ -141,7 +141,7 @@
   outline: 3px solid var(--focus-green); outline-offset: 1px;
 }
 .notifications-recent-note {
-  font-size: .77rem; color: var(--ink-soft);
+  font-size: .875rem; color: var(--ink-soft);
 }
 .notifications-feedback {
   color: var(--leaf); font-size: .83rem; font-weight: 650;
@@ -185,8 +185,7 @@
   overflow: hidden;
 }
 .notification-item.is-unread {
-  background: #f8fbf9; border-color: #b8d2c1;
-  box-shadow: inset 3px 0 var(--leaf);
+  background: #f8fbf9; border-color: #a4c7b0;
 }
 .notification-body-link,
 .notification-body-static {
@@ -199,9 +198,11 @@
   outline: 3px solid var(--focus-green);
   outline-offset: -3px; border-radius: 11px;
 }
+.notification-body-link > svg {
+  flex: none; margin-top: .45rem; color: var(--leaf);
+}
 @media (hover: hover) and (pointer: fine) {
   .notification-body-link:hover { background: #f0f7f2; }
-  .notification-open:hover { text-decoration: underline; }
 }
 .notification-icon {
   display: grid; place-items: center; flex: 0 0 45px;
@@ -251,7 +252,6 @@
   flex: 0 0 auto; gap: .1rem;
   padding: .55rem .85rem .55rem .25rem;
 }
-.notification-open,
 .notification-mark-one {
   display: inline-flex; align-items: center; justify-content: center; gap: .38rem;
   min-height: 44px; padding: .48rem .65rem;
@@ -261,7 +261,6 @@
 }
 .notification-mark-one { cursor: pointer; border-color: #b6d0bd; }
 .notification-mark-one:disabled { opacity: .55; cursor: not-allowed; }
-.notification-open:focus-visible,
 .notification-mark-one:focus-visible {
   outline: 3px solid var(--focus-green); outline-offset: 2px;
 }
@@ -298,7 +297,7 @@
     padding: 0 .7rem .55rem 3.7rem;
     gap: .45rem;
   }
-  .notification-open, .notification-mark-one { min-height: 44px; }
+  .notification-mark-one { min-height: 44px; }
 }
 @media (max-width: 520px) {
   .notifications-page { margin-top: .15rem; }
@@ -321,7 +320,7 @@
     justify-content: center; gap: .25rem; padding: .4rem .25rem;
   }
   .notifications-filters button span { flex: 0 0 auto; }
-  .notifications-recent-note { font-size: .72rem; }
+  .notifications-recent-note { font-size: .875rem; }
   .notifications-feed { gap: 1.1rem; }
   .notification-body-link, .notification-body-static { gap: .7rem; }
   .notification-icon { width: 39px; height: 39px; flex-basis: 39px; border-radius: 10px; }
@@ -337,7 +336,7 @@
   .notification-body-link, .notification-body-static { padding-inline: .77rem; }
 }
 @media (prefers-reduced-motion: no-preference) {
-  .notification-item, .notification-open, .notification-mark-one {
+  .notification-item, .notification-mark-one {
     transition: background-color 150ms ease, border-color 150ms ease;
   }
 }

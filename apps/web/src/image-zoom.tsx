@@ -223,11 +223,11 @@ export function ImageZoomDialog({ photos, title, initialIndex, onClose, instantE
           <span aria-live="polite" aria-label={`Photo ${index + 1} of ${photos.length}`}>{index + 1} / {photos.length}</span>
         </div>
         <div className="image-zoom-actions">
-          <button type="button" aria-label="Zoom out" disabled={scale <= 1} onClick={() => updateZoom(scaleRef.current - .5)}>−</button>
+          <button type="button" aria-label="Zoom out" title="Zoom out" disabled={scale <= 1} onClick={() => updateZoom(scaleRef.current - .5)}><Icon name="minus" size={19} /></button>
           <span className="image-zoom-value" aria-live="off">{Math.round(scale * 100)}%</span>
-          <button type="button" aria-label="Zoom in" disabled={scale >= MAX_ZOOM} onClick={() => updateZoom(scaleRef.current + .5)}>+</button>
+          <button type="button" aria-label="Zoom in" title="Zoom in" disabled={scale >= MAX_ZOOM} onClick={() => updateZoom(scaleRef.current + .5)}><Icon name="plus" size={19} /></button>
           <button type="button" className="image-zoom-reset" onClick={() => updateZoom(1, { x: 0, y: 0 })}>Reset</button>
-          <button type="button" ref={closeRef} className="image-zoom-close" aria-label="Close photo zoom" onClick={event => requestClose(event.detail === 0)}>×</button>
+          <button type="button" ref={closeRef} className="image-zoom-close" aria-label="Close photo zoom" title="Close photo zoom" onClick={event => requestClose(event.detail === 0)}><Icon name="close" size={21} /></button>
         </div>
       </div>
       <div className="image-zoom-view">

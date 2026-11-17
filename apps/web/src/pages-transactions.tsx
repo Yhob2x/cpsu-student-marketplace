@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { api, explain, peso } from './api';
 import { useMe } from './main';
+import { IconAction } from './icon-action';
 import { useForegroundRefresh } from './foreground-refresh';
 
 type Status = 'pending' | 'accepted' | 'negotiating' | 'for_meetup' | 'completed' | 'cancelled';
@@ -52,13 +53,13 @@ export function Transactions() {
 
   return <section className="stack" aria-labelledby="transactions-heading">
     <div className="page-head"><div><h1 id="transactions-heading">My transactions</h1>
-      <p className="muted">Requests, meetup agreements and outcomes. Payments are arranged between students, never through CPSU Market.</p>
+      <p className="muted">Track requests and meetups. Arrange payment directly with the other student.</p>
     </div></div>
     {error && <p role="alert" className="err">Transactions could not load: {error} <button type="button" className="btn ghost" onClick={() => void fetchPage()}>Retry</button></p>}
     {loading && <p role="status" className="muted">Loading transactions…</p>}
     {!loading && !error && !items.length && <div className="empty">
       <h2>No transactions yet</h2>
-      <p className="muted">A transaction appears when you request a product or service, or when someone requests your listing.</p>
+      <p className="muted">Your requests and requests for your listings appear here.</p>
       <Link to="/explore" className="btn">Explore listings</Link>
     </div>}
     {!error && items.map(t => <article className="panel stack" key={t.id}>
@@ -91,6 +92,7 @@ export function TransactionDetail() {
   const [actionError, setActionError] = useState('');
   const [reason, setReason] = useState('');
   const [busy, setBusy] = useState(false);
+  const [refreshingStatus, setRefreshingStatus] = useState(false);
   const [notice, setNotice] = useState('');
 
   const reload = useCallback(async () => {
@@ -105,6 +107,12 @@ export function TransactionDetail() {
   // Foreground-only polling never caches the participant's private transaction data.
   useForegroundRefresh(() => reload(), 5_000,
     Boolean(me && data && data.status !== 'completed' && data.status !== 'cancelled'));
+
+  const refreshStatus = async () => {
+    if (refreshingStatus || busy) return;
+    setRefreshingStatus(true);
+    try { await reload(); } finally { setRefreshingStatus(false); }
+  };
 
   const act = async (suffix: string, body: unknown = {}) => {
     if (busy) return;
@@ -142,11 +150,11 @@ export function TransactionDetail() {
     </div></div>
     <section className="panel stack" aria-label="Transaction status">
       <div className="row"><h2 style={{ margin: 0 }}>Current status</h2><span className="tag">{names[data.status]}</span></div>
-      <p className="muted" style={{ margin: 0 }}>This status is student-reported. CPSU Market does not verify payments, deliveries, or item condition.</p>
+      <p className="muted" style={{ margin: 0 }}>Students report this status. Payment, handoff and item condition are unverified.</p>
     </section>
     {!terminal && <section className="panel stack" aria-label="Update this transaction">
       <h2>Next action</h2>
-      {data.status === 'pending' && buyer && <p className="muted">Waiting for the seller to accept or reject your request. You may withdraw with a reason.</p>}
+      {data.status === 'pending' && buyer && <p className="muted">Waiting for the seller. You can withdraw with a reason.</p>}
       {data.status === 'pending' && seller && <div className="stack">
         <p className="muted">Review the request before accepting. For a physical product, accepting reserves the item for this buyer.</p>
         <button className="btn" disabled={busy} onClick={() => void act('decision', { action: 'accept' })}>Accept request</button>
@@ -155,14 +163,14 @@ export function TransactionDetail() {
       {data.status === 'accepted' && <button className="btn ghost" disabled={busy}
         onClick={() => void act('negotiating')}>Mark as discussing terms</button>}
       {canMeetup && <div className="stack">
-        <p className="muted">Each student must independently confirm the meetup arrangement. One confirmation does not finalize it.</p>
+        <p className="muted">Both students must confirm the meetup.</p>
         <p role="status" className="muted">Your confirmation: {myMeetupConfirmed ? 'Confirmed' : 'Not yet'} · Other student: {otherMeetupConfirmed ? 'Confirmed' : 'Not yet'}</p>
         <button className="btn" disabled={busy || myMeetupConfirmed} onClick={() => void act('confirm-meetup')}>
           {myMeetupConfirmed ? 'Waiting for the other student' : 'Confirm meetup arrangement'}
         </button>
       </div>}
       {canComplete && <div className="stack">
-        <p className="muted">Only confirm completion after you have fulfilled your side of the agreement. Both students must confirm.</p>
+        <p className="muted">Confirm only after fulfilling your part. Both students must confirm.</p>
         <p role="status" className="muted">Your completion: {myCompletionConfirmed ? 'Confirmed' : 'Not yet'} · Other student: {otherCompletionConfirmed ? 'Confirmed' : 'Not yet'}</p>
         <button className="btn" disabled={busy || myCompletionConfirmed} onClick={() => void act('confirm-completion')}>
           {myCompletionConfirmed ? 'Waiting for the other student' : 'Confirm transaction completed'}
@@ -193,7 +201,8 @@ export function TransactionDetail() {
       <p className="muted" style={{ margin: 0 }}>Payment and handoff are arranged directly between students.</p>
       <div className="row">
         <Link to={`/inquiries/${data.inquiryThreadId}`} className="btn ghost">Discuss arrangements</Link>
-        <button type="button" className="btn ghost" disabled={busy} onClick={() => void reload()}>Refresh status</button>
+        <IconAction className="btn ghost" icon="refresh" label="Refresh transaction status"
+          disabled={busy} busy={refreshingStatus} onClick={() => void refreshStatus()} />
         <Link to={`/listings/${data.listingId}`} className="btn ghost">View listing</Link>
       </div>
     </section>

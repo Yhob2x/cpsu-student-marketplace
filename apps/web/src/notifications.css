@@ -288,14 +288,15 @@
 .notifications-empty .btn { display: inline-flex; align-items: center; gap: .45rem; text-decoration: none; }
 
 @media (max-width: 760px) {
-  .notification-item { flex-wrap: wrap; }
+  .notification-item { position: relative; flex-wrap: wrap; }
   .notification-body-link, .notification-body-static {
-    flex-basis: 100%; padding: .95rem 1rem .45rem;
+    flex-basis: 100%; padding: .95rem 3.8rem .95rem 1rem;
   }
+  /* The check action occupies its own 44px hit target beside the card link.
+     Reserve space for it, rather than wasting a full-width second action row. */
   .notification-actions {
-    justify-content: flex-end; width: 100%;
-    padding: 0 .7rem .55rem 3.7rem;
-    gap: .45rem;
+    position: absolute; inset-inline-end: .55rem; top: .65rem;
+    justify-content: center; width: auto; padding: 0; gap: 0;
   }
   .notification-mark-one { min-height: 44px; }
 }
@@ -327,13 +328,13 @@
   .notification-heading strong { font-size: .92rem; }
   .notification-heading time { font-size: .72rem; }
   .notification-description { font-size: .81rem; }
-  .notification-actions { padding-left: 3.5rem; }
+  .notification-actions { padding: 0; }
 }
 @media (max-width: 360px) {
   .notifications-heading { flex-wrap: wrap; }
   .notifications-refresh { min-width: 44px; }
   .notification-heading { display: grid; justify-content: stretch; }
-  .notification-body-link, .notification-body-static { padding-inline: .77rem; }
+  .notification-body-link, .notification-body-static { padding-inline-start: .77rem; padding-inline-end: 3.8rem; }
 }
 @media (prefers-reduced-motion: no-preference) {
   .notification-item, .notification-mark-one {

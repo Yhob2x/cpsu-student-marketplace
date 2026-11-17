@@ -29,6 +29,8 @@ const upload = multer({
   limits: { fileSize: 3 * 1024 * 1024, files: 1 },
   fileFilter: (_q, f, cb) => cb(null, ALLOWED_IMAGE_TYPES.has(f.mimetype)),
 });
+const isUploadParseError = (error: unknown) => error instanceof multer.MulterError ||
+  (error instanceof Error && /^(Unexpected end of (form|file)|Malformed part header|Multipart: Boundary (not found|missing))$/.test(error.message));
 
 // Bound per-account classifier demand so an authenticated account cannot queue
 // unlimited expensive inference tasks. This limit is independent of listing uploads.
@@ -115,7 +117,7 @@ r.post('/store/avatar',
     } catch (error) { next(error); }
   },
   (req, res, next) => upload.single('image')(req, res, error => {
-    if (error instanceof multer.MulterError)
+    if (isUploadParseError(error))
       return next(new HttpError(400, 'invalid_image', 'Select one JPEG, PNG or WebP image up to 3 MB.'));
     next(error);
   }),
@@ -214,7 +216,7 @@ r.post('/listings/:id/media',
     } catch (error) { next(error); }
   },
   (req, res, next) => upload.single('image')(req, res, error => {
-    if (error instanceof multer.MulterError)
+    if (isUploadParseError(error))
       return next(new HttpError(400, 'invalid_image', 'Upload one JPEG, PNG or WebP photo up to 3 MB.'));
     next(error);
   }),

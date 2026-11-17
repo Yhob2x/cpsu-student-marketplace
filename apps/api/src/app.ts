@@ -20,7 +20,8 @@ import { prisma } from './db.js';
 
 export function createApp() {
   const app = express();
-  app.set('trust proxy', 1);
+  // Only the same-host production reverse proxy may supply a client address.
+  app.set('trust proxy', env.NODE_ENV === 'production' ? 'loopback' : false);
   app.use(helmet({ crossOriginResourcePolicy: { policy: 'cross-origin' } }));
   // The responsive web/PWA uses the same-origin /api proxy. Only configured CORS origins are allowed.
   const origins = env.CORS_ORIGINS.split(',');

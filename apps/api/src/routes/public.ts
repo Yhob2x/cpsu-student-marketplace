@@ -192,11 +192,10 @@ r.get('/media/:id', async (req, res) => {
   const allowed = publicMedia || (u && m.listing.seller.ownerUserId === u.id) ||
     c === 'all' || (c as number[]).includes(m.listing.campusId);
   if (!allowed) throw new HttpError(404, 'not_found');
+  res.setHeader('Cache-Control', 'private, no-store');
   res.setHeader('X-Content-Type-Options', 'nosniff');
   if (driveMediaId(m.mediaPath)) {
     const content = await readDriveMedia(m.mediaPath);
-    // Do not leak Drive links or store private/unreviewed images in shared caches.
-    res.setHeader('Cache-Control', 'private, no-store');
     return res.type(m.mimeType).send(content);
   }
   res.type(m.mimeType).sendFile(localMediaFile(m.mediaPath));

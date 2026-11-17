@@ -309,10 +309,8 @@ export function Notifications() {
         <span className="notifications-eyebrow"><Icon name="bell" size={15} /> YOUR ACTIVITY</span>
         <h1>Notifications</h1>
       </div>
-      <button type="button" className="notifications-refresh" onClick={() => void load(true)}
-        disabled={refreshing || busy || markingId !== null} aria-busy={refreshing} aria-label={refreshing ? 'Checking notifications' : 'Check notifications now'}>
-        {refreshing ? 'Checking…' : 'Check now'}
-      </button>
+      <IconAction className="notifications-refresh" icon="refresh" label="Refresh notifications"
+        onClick={() => void load(true)} disabled={busy || markingId !== null} busy={refreshing} />
     </header>
 
     <div className="notifications-summary">
@@ -405,13 +403,11 @@ export function Notifications() {
                     onClick={() => { if (!n.readAt) void markOne(n.id); }}>{content}<Icon name="arrow" size={17} /></Link>
                 : <div className="notification-body-static">{content}</div>}
               {!n.readAt && <div className="notification-actions">
-                <button type="button" className="notification-mark-one"
+                <IconAction className="notification-mark-one" icon="check"
+                  label={'Mark ' + kind.title + ' as read'}
+                  aria-describedby={`notice-description-${n.id}`}
                   onClick={() => void markOne(n.id)}
-                  disabled={busy || markingId !== null}
-                  aria-busy={markingId === n.id}
-                  aria-label={'Mark ' + kind.title + ' as read'}>
-                  {markingId === n.id ? 'Marking…' : 'Mark read'}
-                </button>
+                  disabled={busy || markingId !== null} busy={markingId === n.id} />
               </div>}
             </article>;
           })}

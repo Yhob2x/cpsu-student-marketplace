@@ -2,6 +2,7 @@ import { FormEvent, useEffect, useLayoutEffect, useRef, useState, type CSSProper
 import { Link } from 'react-router-dom';
 import { ApiError, api, explain, timeAgo } from './api';
 import { Icon } from './icons';
+import { ConversationListingCard, type ConversationListing } from './conversation-listing-card';
 import { hasNewIncomingMessage, playMessageReceiveSound, prepareMessageReceiveSound, unlockMessageReceiveSound } from './message-receive-sound';
 
 type InboxItem = {
@@ -17,6 +18,7 @@ type ChatMessage = {
 };
 type Conversation = {
   thread: { id: number; otherStudentName?: string; listingId: number; status: string };
+  listing: ConversationListing;
   messages: ChatMessage[];
   typing?: boolean;
   otherActiveInChat?: boolean;
@@ -244,8 +246,11 @@ export function FloatingChatPanel({ onClose, onUnreadChanged, motionState, motio
     </> : <>
       <div className="floating-chat-thread-context">
         <span>{conversation?.otherActiveInChat ? '● Active in chat' : closed ? 'Conversation closed' : 'Conversation'}</span>
-        {conversation && <Link to={`/listings/${conversation.thread.listingId}`} onClick={() => onClose(true)}>View listing</Link>}
+        <span>Listing conversation</span>
       </div>
+      {conversation?.listing && <div className="floating-chat-product" aria-label="Product or service being discussed">
+        <ConversationListingCard key={conversation.listing.id} listing={conversation.listing} compact onNavigate={() => onClose(true)} />
+      </div>}
       <div className="floating-chat-message-log" role="log" tabIndex={0} aria-label="Conversation messages"
         ref={logRef} onScroll={event => {
           const el = event.currentTarget;

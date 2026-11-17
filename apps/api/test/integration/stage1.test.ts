@@ -374,6 +374,15 @@ if (process.env.CPSU_INTEGRATION_TESTS === '1') {
       expect(r.body.items.some((x: any) => x.id === fx.draft.id)).toBe(false);
     });
 
+    test('development rate limit ignores client supplied forwarding addresses', async () => {
+      expect(app.get('trust proxy')).toBe(false);
+      const first = await request(app).get('/health').set('X-Forwarded-For', '203.0.113.10');
+      const second = await request(app).get('/health').set('X-Forwarded-For', '203.0.113.11');
+      expect(first.status).toBe(200);
+      expect(second.status).toBe(200);
+      expect(Number(second.headers['ratelimit-remaining'])).toBe(Number(first.headers['ratelimit-remaining']) - 1);
+    });
+
     test('registration validates campus and returns an authenticated session', async () => {
       const bad = await request(app).post('/api/v1/auth/register').send({
         email: 'new@stage1.invalid', displayName: 'New Test', password: 'LongTestPassword!22', campusId: 999999,
@@ -400,6 +409,32 @@ if (process.env.CPSU_INTEGRATION_TESTS === '1') {
       expect(suspended.status).toBe(401);
       const mine = await request(app).get('/api/v1/seller/listings');
       expect(mine.status).toBe(401);
+    });
+
+    test('failed login is throttled by account across forwarded addresses', async () => {
+      const email = fx.pending.email;
+      for (let i = 0; i < 10; i++) {
+        const result = await request(app).post('/api/v1/auth/login')
+          .set('X-Forwarded-For', `203.0.113.${i + 1}`)
+          .send({ email, password: 'incorrect-password' });
+        expect(result.status).toBe(401);
+      }
+      const blocked = await request(app).post('/api/v1/auth/login')
+        .set('X-Forwarded-For', '203.0.113.100')
+        .send({ email, password: 'incorrect-password' });
+      expect(blocked.status).toBe(429);
+    });
+
+    test('concurrent refreshes claim one session only', async () => {
+      const login = await request(app).post('/api/v1/auth/login').set('X-Client', 'mobile')
+        .send({ email: fx.seller.email, password: 'TestPassphrase-Stage1-2026!' });
+      expect(login.status).toBe(200);
+      const before = await prisma.session.count({ where: { userId: fx.seller.id } });
+      const responses = await Promise.all(Array.from({ length: 2 }, () =>
+        request(app).post('/api/v1/auth/refresh').set('X-Client', 'mobile')
+          .send({ refreshToken: login.body.refreshToken })));
+      expect(responses.map(r => r.status).sort()).toEqual([200, 401]);
+      expect(await prisma.session.count({ where: { userId: fx.seller.id } })).toBe(before + 1);
     });
 
     test('rotated refresh tokens cannot be reused and revoke the newly issued session', async () => {
@@ -497,6 +532,10 @@ if (process.env.CPSU_INTEGRATION_TESTS === '1') {
         .attach('image', Buffer.from('this is not a real image'), { filename: 'invalid.jpg', contentType: 'image/jpeg' });
       expect(randomBytes.status).toBe(400);
       expect(randomBytes.body.error.code).toBe('invalid_image');
+      const malformed = await request(app).post(target).set(token(fx.seller.id))
+        .set('Content-Type', 'multipart/form-data; boundary=broken')
+        .send('--broken\r\nContent-Disposition: form-data; name="image"; filename="incomplete.jpg"\r\nContent-Type: image/jpeg\r\n\r\npartial');
+      expect(malformed.status).toBe(400);
       expect(await prisma.listingMedia.count({ where: { listingId } })).toBe(0);
       expect((await fs.readdir(env.UPLOAD_DIR)).filter(f => f.endsWith('.upload'))).toHaveLength(0);
 
@@ -527,6 +566,9 @@ if (process.env.CPSU_INTEGRATION_TESTS === '1') {
         .send({ decision: 'approved', reason: 'Photos checked', photosReviewed: true });
       expect(approved.status).toBe(200);
       expect(approved.body.status).toBe('published');
+      const mediaResponse = await request(app).get('/api/v1/media/' + accepted.body.id);
+      expect(mediaResponse.status).toBe(200);
+      expect(mediaResponse.headers['cache-control']).toBe('private, no-store');
 
       // New photos added to approved listings MUST be reviewed again.
       const second = await request(app).post(target).set(token(fx.seller.id))

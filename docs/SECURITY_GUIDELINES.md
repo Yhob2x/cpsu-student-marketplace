@@ -9,7 +9,7 @@ Not legal advice — CPSU's data protection officer must review (`docs/privacy-a
 |---|---|---|
 | Password hashing | Argon2id, random salt per hash | `src/auth.ts` |
 | Password policy | 10–128 characters | `routes/auth.ts` |
-| Credential stuffing limit | 30 `/auth` requests per 15 min in production; 300/min/IP overall | `app.ts` |
+| Credential stuffing limit | 30 `/auth` requests per 15 min/IP in production; 300/min/IP overall; 10 failed logins per normalized email per 15 min | `app.ts`, `routes/auth.ts` |
 | Access tokens | JWT, 15-minute expiry, HS256 with `JWT_SECRET` ≥ 32 chars | `src/auth.ts`, `src/env.ts` |
 | Refresh tokens | 48 random bytes, stored only as SHA-256 hash, 30-day expiry, rotated on every use | `routes/auth.ts`, `Session` |
 | Token-reuse detection | Presenting a spent refresh token revokes **all** of that user's sessions | `routes/auth.ts` |
@@ -40,7 +40,7 @@ Not legal advice — CPSU's data protection officer must review (`docs/privacy-a
 | S2 | No CSRF token | Low today — mutations require an in-memory Bearer token, and the refresh cookie is `SameSite=Lax` | If the refresh cookie is ever used for mutations, add a double-submit CSRF token |
 | S3 | Pornography/graphic-content recognition is **not automatic**; a human reviewer must inspect uploaded photos | A reviewer could miss harmful imagery or intentionally provide a false confirmation; private uploads still exist before review | Evaluate a locally hosted content-classification model and a safe manual appeal/review path; test false positives and negatives with approved synthetic datasets. Do not claim automatic NSFW detection without validated model and rollout. |
 | S3a | Existing pre-hardening photos were not re-encoded | Previously stored files may retain metadata or invalid content | Separately audit and reprocess legacy media with backups, authorization and institutional approval before production. |
-| S4 | No per-account lockout or captcha | Distributed credential stuffing is only throttled per IP | Per-account attempt counter plus an alert |
+| S4 | Per-account login limiter is in-process, without central monitoring | Multi-instance traffic may exceed the account budget | Add a shared store and alerts before horizontal scaling |
 | S5 | Audit rows are mutable by anyone with DB access | Audit trail is not tamper-evident | Append-only DB grants, or a hash chain / write-once store |
 | S6 | No session management UI or per-device revocation | Users cannot drop a stolen device | List and revoke `Session` rows from `/me` |
 | S7 | No retention or deletion job | DPA 2012 retention obligations unmet | Agreed schedule, a scheduled purge for expired affiliations/media/notifications, and account deletion |

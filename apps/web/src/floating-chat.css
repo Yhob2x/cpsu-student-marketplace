@@ -222,7 +222,43 @@
   color: var(--ink-soft);
   font-size: .76rem;
 }
-.floating-chat-thread-context a { color: var(--leaf); font-weight: 700; }
+.floating-chat-thread-context > span:last-child { color: var(--ink-soft); }
+.floating-chat-product {
+  flex: 0 0 auto;
+  max-height: 38%;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  border-bottom: 1px solid var(--line);
+  background: var(--paper);
+}
+.floating-chat-product .conversation-listing-card {
+  width: 100%;
+  margin: 0;
+  padding: .4rem .75rem;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+}
+.floating-chat-product .conversation-listing-head { margin-bottom: .25rem; font-size: .69rem; }
+.floating-chat-product .conversation-listing-kind { font-size: .67rem; padding: .1rem .35rem; }
+.floating-chat-product .conversation-listing-content {
+  grid-template-columns: 58px minmax(0, 1fr);
+  align-items: center;
+  gap: .6rem;
+}
+.floating-chat-product .conversation-listing-photo { width: 58px; }
+.floating-chat-product .conversation-listing-info { gap: .15rem; }
+.floating-chat-product .conversation-listing-info > strong { font-size: .8rem; }
+.floating-chat-product .conversation-listing-price b { font-size: .8rem; }
+.floating-chat-product .conversation-listing-price span,
+.floating-chat-product .conversation-listing-meta { font-size: .69rem; }
+.floating-chat-product .conversation-listing-foot {
+  justify-content: flex-end;
+  margin-top: 0;
+  padding-top: 0;
+  border-top: 0;
+}
+.floating-chat-product .conversation-listing-foot a { min-height: 40px; }
 .floating-chat-message-log { display: flex; flex-direction: column; gap: .48rem; padding: .85rem .75rem; background: #f6f8f6; }
 .floating-chat-message { display: flex; flex-direction: column; align-items: flex-start; gap: .18rem; max-width: 85%; flex: 0 0 auto; }
 .floating-chat-message.mine { align-self: flex-end; align-items: flex-end; }

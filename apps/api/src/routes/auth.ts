@@ -1,4 +1,6 @@
 import { Router } from 'express';
+import { createHmac } from 'node:crypto';
+import rateLimit from 'express-rate-limit';
 import { z } from 'zod';
 import { prisma } from '../db.js';
 import { env } from '../env.js';
@@ -7,6 +9,16 @@ import { hashPassword, verifyPassword, signAccess, newRefreshToken, hashToken, M
 
 const r = Router();
 const REFRESH_DAYS = 30;
+const loginByAccount = rateLimit({
+  windowMs: 15 * 60_000,
+  limit: 10,
+  skipSuccessfulRequests: true,
+  standardHeaders: 'draft-7',
+  legacyHeaders: false,
+  skip: req => typeof req.body?.email !== 'string' || !req.body.email.trim(),
+  keyGenerator: req => createHmac('sha256', env.JWT_SECRET)
+    .update(req.body.email.trim().toLowerCase()).digest('hex'),
+});
 
 async function issue(req: any, res: any, userId: number) {
   const refresh = newRefreshToken();
@@ -37,7 +49,7 @@ r.post('/register', async (req, res) => {
   res.status(201).json(await issue(req, res, user.id));
 });
 
-r.post('/login', async (req, res) => {
+r.post('/login', loginByAccount, async (req, res) => {
   const b = z.object({ email: z.string().email().toLowerCase(), password: z.string() }).parse(req.body);
   const u = await prisma.user.findUnique({ where: { email: b.email } });
   if (!u || u.status !== 'active' || !await verifyPassword(u.passwordHash, b.password)) throw new HttpError(401, 'invalid_credentials');
@@ -59,7 +71,11 @@ r.post('/refresh', async (req, res) => {
     await prisma.session.updateMany({ where: { userId: s.userId, revokedAt: null }, data: { revokedAt: new Date() } });
     throw new HttpError(401, 'session_expired');
   }
-  await prisma.session.update({ where: { id: s.id }, data: { revokedAt: new Date() } });
+  const claimed = await prisma.session.updateMany({
+    where: { id: s.id, revokedAt: null, expiresAt: { gt: new Date() } },
+    data: { revokedAt: new Date() },
+  });
+  if (claimed.count !== 1) throw new HttpError(401, 'session_expired');
   res.json(await issue(req, res, s.userId));
 });
 

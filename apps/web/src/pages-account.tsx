@@ -4,6 +4,7 @@ import { api, explain, peso, setToken, timeAgo } from './api';
 import { useMe } from './main';
 import { useForegroundRefresh } from './foreground-refresh';
 import { ListingCard, Listing } from './pages-public';
+import { ConversationListingCard } from './conversation-listing-card';
 import { Icon } from './icons';
 import { MAX_LISTING_PHOTOS, selectedPhotosError, uploadListingPhotos } from './listing-photo-uploads';
 import { coverFirst } from './photo-cover-order';
@@ -535,54 +536,6 @@ export function Inquiries() {
 
 // First letters of up to two words: "Maria Santos" -> "MS", keeps chat avatars compact.
 const initials = (name: string) => name.trim().split(/\s+/).slice(0, 2).map(w => w[0] ?? '').join('').toUpperCase();
-
-type ConversationListing = {
-  id: number; title: string; type: 'physical_product' | 'service'; price: number;
-  priceBasis: string | null; condition: string | null;
-  availability: 'available' | 'reserved' | 'sold' | 'unavailable'; imageUrl: string | null;
-};
-
-// One listing-context card per thread, before its first message. It is not an order,
-// and it never implies that CPSU handles payments, delivery, or a sale.
-function ConversationListingCard({ listing }: { listing: ConversationListing }) {
-  const [failedImage, setFailedImage] = useState<string | null>(null);
-  const imageUrl = listing.imageUrl;
-  const showPhoto = !!imageUrl && failedImage !== imageUrl;
-  const availability = listing.availability === 'available' ? 'Available'
-    : listing.availability === 'reserved' ? 'Reserved'
-    : listing.availability === 'sold' ? 'Sold' : 'Listing unavailable';
-  const kind = listing.type === 'service' ? 'Service' : 'Product';
-
-  return <article className="conversation-listing-card" aria-label="Listing discussed in this conversation">
-    <div className="conversation-listing-head">
-      <span>Listing details</span>
-      <span className="conversation-listing-kind">{kind}</span>
-    </div>
-    <div className="conversation-listing-content">
-      <div className="conversation-listing-photo">
-        {showPhoto
-          ? <img src={imageUrl} alt="" loading="lazy" decoding="async" onError={() => setFailedImage(imageUrl)} />
-          : <span className="conversation-listing-photo-empty"><Icon name="tag" size={21} />
-              <small>{imageUrl ? 'Photo unavailable' : 'No photo'}</small></span>}
-      </div>
-      <div className="conversation-listing-info">
-        <strong title={listing.title}>{listing.title}</strong>
-        <div className="conversation-listing-price">
-          <b>{peso(listing.price)}</b>
-          {listing.priceBasis && <span>{listing.priceBasis}</span>}
-        </div>
-        <div className="conversation-listing-meta">
-          {listing.condition && <span>{listing.condition.replaceAll('_', ' ')}</span>}
-          <span className={listing.availability === 'available' ? 'is-available' : ''}>{availability}</span>
-        </div>
-      </div>
-    </div>
-    <div className="conversation-listing-foot">
-      <span>Listing ID: <strong>#{listing.id}</strong></span>
-      {listing.availability !== 'unavailable' && <Link to={`/listings/${listing.id}`}>View listing <Icon name="arrow" size={14} /></Link>}
-    </div>
-  </article>;
-}
 
 export function Thread() {
   const { id } = useParams();

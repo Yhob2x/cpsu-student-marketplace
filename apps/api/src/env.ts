@@ -23,4 +23,9 @@ const schema = z.object({
   PUSH_SUBSCRIPTIONS_ENABLED: z.enum(['true', 'false']).default('false'),
   PUSH_DELIVERY_ENABLED: z.enum(['true', 'false']).default('false'),
 });
-export const env = schema.parse(process.env);
+const checked = schema.parse(process.env);
+if (checked.NODE_ENV === 'production' &&
+    (checked.BIND_HOST !== '127.0.0.1' || checked.COOKIE_SECURE !== 'true')) {
+  throw new Error('Unsafe production configuration: bind to loopback and enable secure cookies');
+}
+export const env = checked;

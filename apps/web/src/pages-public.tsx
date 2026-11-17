@@ -1,4 +1,4 @@
-import { FormEvent, useEffect, useRef, useState } from 'react';
+import { type CSSProperties, FormEvent, useEffect, useRef, useState } from 'react';
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { ApiError, api, explain, peso } from './api';
 import { useMe } from './main';
@@ -75,9 +75,8 @@ export function ListingCard({ l }: { l: Listing }) {
   );
 }
 
-// Home mirrors a storefront: announcement strip and masthead live in the shell, then hero, category rail, curated
-// rails, promo tiles, how-it-works, seller CTA and trust strip. Every block links to a real Explore query. There is no
-// cart, discount or delivery promise because v1 has none — gold is spent on prices, not on sale stickers.
+// Home is discovery-first: a concise hero, categories and uninterrupted listing sections come first.
+// Supporting information and optional installation follow the marketplace content.
 export function Home() {
   const nav = useNavigate();
   const { me } = useMe();
@@ -115,8 +114,8 @@ export function Home() {
   const skeletons = <div className="rail">{Array.from({ length: 4 }, (_, i) => <div key={i} className="skel card" aria-hidden="true" />)}</div>;
   // Skeletons while loading; once loaded, an empty section disappears instead of leaving a dead heading.
   const block = (title: string, to: string, rows: Listing[] | null) => rows === null
-    ? <><div className="sec-head"><h2>{title}</h2></div>{skeletons}</>
-    : rows.length > 0 ? <><div className="sec-head"><h2>{title}</h2><Link to={to}>See all <Icon name="arrow" size={14} /></Link></div>{rail(rows, title)}</> : null;
+    ? <section className="home-listing-section" aria-label={title}><div className="sec-head"><h2>{title}</h2></div>{skeletons}</section>
+    : rows.length > 0 ? <section className="home-listing-section" aria-label={title}><div className="sec-head"><h2>{title}</h2><Link to={to}>See all <Icon name="arrow" size={14} /></Link></div>{rail(rows, title)}</section> : null;
   const shots = (feed ?? []).filter(l => l.images[0]).slice(0, 3);
   // Fresh listings always show the newest public listings, even when one is also popular.
   const { popular: top, fresh, services: serviceRows } = selectHomeListings(feed, popular, services);
@@ -126,10 +125,9 @@ export function Home() {
       <div className="hero-copy">
         <span className="hero-eyebrow">THE CPSU STUDENT MARKETPLACE</span>
         <h1>Great finds.<br />Right on campus.</h1>
-        <p>Discover pre-loved essentials, student-made goods and useful skills from the CPSU community. Connect directly with the students behind every listing.</p>
+        <p>Find pre-loved essentials, student-made goods and useful services. Message CPSU student sellers directly.</p>
         <div className="hero-actions">
           <Link className="btn" to="/explore">Explore listings <Icon name="arrow" size={17} /></Link>
-          {!staff && <Link className="btn ghost" to="/dashboard">Start selling</Link>}
         </div>
         <form className="search hero-search" role="search" aria-label="Home listing search" onSubmit={go}>
           <input aria-label="Search listings" placeholder="Search products, services, skills…" maxLength={80} value={q} onChange={e => setQ(e.target.value)} />
@@ -152,7 +150,7 @@ export function Home() {
     <section className="category-section" aria-label="Browse by category">
       <div className="sec-head category-head"><h2>Explore by category</h2><Link to="/explore">View all <Icon name="arrow" size={15} /></Link></div>
       <div className="cat-rail home-category-grid" role="group" aria-label="All categories"
-        style={{ gridTemplateColumns: `repeat(${Math.max(1, cats.length)}, minmax(0, 1fr))` }}>
+        style={{ '--category-count': Math.max(1, cats.length) } as CSSProperties}>
         {cats.map(c => <Link key={c.id} className="cat" to={`/explore?categoryId=${c.id}`}
           aria-label={c.name} title={c.name}>
           <span className="cat-ico" aria-hidden="true"><Icon name="tag" size={20} /></span>
@@ -162,24 +160,13 @@ export function Home() {
       </div>
     </section>
 
-    {block('Fresh listings', '/explore', fresh)}
-
-    <InstallApp />
+    <div className="home-discovery-flow">
+      {block('Fresh listings', '/explore', fresh)}
+      {block('Popular listings', '/explore', top)}
+      {block('Student services', '/explore?type=service', serviceRows)}
+    </div>
 
     <StudentAnnouncements />
-
-    {block('Popular listings', '/explore', top)}
-
-    <section className="promos" aria-label="Quick links">
-      <Link className="promo promo-a" to="/explore?type=service"><h3>Student services</h3>
-        <p>Design, tutoring, printing and IT help from classmates.</p><span className="more">Browse services <Icon name="arrow" size={14} /></span></Link>
-      <Link className="promo promo-b" to="/explore?type=physical_product"><h3>Pre-loved finds</h3>
-        <p>Books, gadgets and dorm essentials passed on by students.</p><span className="more">Browse products <Icon name="arrow" size={14} /></span></Link>
-      {!staff && <Link className="promo promo-c" to="/dashboard"><h3>Have something to sell?</h3>
-        <p>Set up your store and publish your first listing.</p><span className="more">Start selling <Icon name="arrow" size={14} /></span></Link>}
-    </section>
-
-    {block('Student services', '/explore?type=service', serviceRows)}
 
     <section className="steps">
       <h2>How it works</h2>
@@ -196,6 +183,8 @@ export function Home() {
         <p>Students with a verified campus affiliation can open a store and publish listings.</p></div>
       <Link className="btn gold" to="/dashboard">Start selling</Link>
     </section>}
+
+    <InstallApp />
 
     <ul className="trust">
       <li><Icon name="shield" /> Reviewer-approved listings</li>
@@ -225,6 +214,8 @@ export function Discover() {
   const [campuses, setCampuses] = useState<any[]>([]); const [cats, setCats] = useState<any[]>([]);
   const [filterError, setFilterError] = useState(''); const [filtersLoading, setFiltersLoading] = useState(false);
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
+  const [mobileFiltersClosing, setMobileFiltersClosing] = useState(false);
+  const [filterMotionEnabled, setFilterMotionEnabled] = useState(true);
   const [compactControls, setCompactControls] = useState(false);
   const controlHeaderRef = useRef<HTMLElement>(null);
   useEffect(() => {
@@ -291,7 +282,8 @@ export function Discover() {
 
   return <>
     <section className="explore-control-header" ref={controlHeaderRef}
-      data-filters-open={mobileFiltersOpen} data-compact={compactControls && !mobileFiltersOpen} aria-label="Explore controls">
+      data-filters-open={mobileFiltersOpen && !mobileFiltersClosing}
+      data-compact={compactControls && !mobileFiltersOpen} aria-label="Explore controls">
     <h1>Explore listings</h1>
     <p className="muted explore-intro" style={{ marginTop: '-.25rem' }}>Find pre-loved items and student services, then message the seller directly.</p>
 
@@ -310,17 +302,39 @@ export function Discover() {
         {filtersLoading ? 'Retrying…' : 'Retry filters'}
       </button>
     </div>}
-    <button type="button" className="mobile-filter-toggle" aria-label={mobileFiltersOpen ? 'Hide filters' : 'More filters'} aria-controls="explore-filter-fields"
-      aria-expanded={mobileFiltersOpen} onClick={() => {
-        const opening = !mobileFiltersOpen;
-        setMobileFiltersOpen(opening);
-        if (opening) requestAnimationFrame(() => controlHeaderRef.current?.scrollIntoView({ block: 'start', behavior: 'auto' }));
+    <button type="button" className="mobile-filter-toggle"
+      aria-label={mobileFiltersOpen && !mobileFiltersClosing ? 'Hide filters' : 'More filters'}
+      aria-controls="explore-filter-fields"
+      aria-expanded={mobileFiltersOpen && !mobileFiltersClosing} onClick={event => {
+        const opening = !mobileFiltersOpen || mobileFiltersClosing;
+        const animate = event.detail !== 0 && !window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        setFilterMotionEnabled(animate);
+        if (opening) {
+          setMobileFiltersClosing(false);
+          setMobileFiltersOpen(true);
+          requestAnimationFrame(() => controlHeaderRef.current?.scrollIntoView({ block: 'start', behavior: 'auto' }));
+        } else if (animate) {
+          setMobileFiltersClosing(true);
+        } else {
+          setMobileFiltersOpen(false);
+          setMobileFiltersClosing(false);
+        }
       }}>
-      <Icon name="sliders" size={18} /> <span>{mobileFiltersOpen ? 'Hide filters' : 'More filters'}</span>
+      <Icon name="sliders" size={18} /> <span>{mobileFiltersOpen && !mobileFiltersClosing ? 'Hide filters' : 'More filters'}</span>
       {advancedFilterCount > 0 && <span className="filter-count">{advancedFilterCount} active</span>}
-      <Icon name={mobileFiltersOpen ? 'chevronUp' : 'chevronDown'} size={18} />
+      <Icon name={mobileFiltersOpen && !mobileFiltersClosing ? 'chevronUp' : 'chevronDown'} size={18} />
     </button>
-    <div id="explore-filter-fields" className="filters filter-panel" data-mobile-open={mobileFiltersOpen} role="group" aria-label="Filter listings">
+    <div id="explore-filter-fields" className="filters filter-panel" data-mobile-open={mobileFiltersOpen}
+      data-mobile-phase={mobileFiltersClosing ? 'closing' : 'open'}
+      data-motion={filterMotionEnabled ? 'on' : 'off'}
+      aria-hidden={mobileFiltersClosing ? true : undefined}
+      {...(mobileFiltersClosing ? { inert: '' } : {})}
+      onAnimationEnd={event => {
+        if (event.target === event.currentTarget && event.animationName === 'cpsu-filter-dismiss' && mobileFiltersClosing) {
+          setMobileFiltersOpen(false);
+          setMobileFiltersClosing(false);
+        }
+      }} role="group" aria-label="Filter listings">
       <label className="field">Campus
         <select value={f.campusId} onChange={set('campusId')}><option value="">All campuses</option>{campuses.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}</select>
       </label>

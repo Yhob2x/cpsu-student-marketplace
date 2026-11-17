@@ -118,9 +118,10 @@ input:focus, select:focus, textarea:focus { border-color: var(--leaf); }
 .cat-ico svg { width: 21px; height: 21px; }
 .cat > span:last-child { min-height: 2.5em; }
 
-/* Homepage: all categories fit one row, with no horizontal scrolling. */
+/* Full-width category row on desktop; comfortable two-row grid on phones. */
 .cat-rail.home-category-grid {
   display: grid;
+  grid-template-columns: repeat(var(--category-count), minmax(0, 1fr));
   width: 100%;
   min-width: 0;
   gap: clamp(2px, .4vw, 6px);
@@ -151,26 +152,48 @@ input:focus, select:focus, textarea:focus { border-color: var(--leaf); }
 
 @media (max-width: 640px) {
   .home-category-grid .cat {
-    min-height: 54px;
-    gap: .15rem;
-    padding: .28rem 0;
-    border-radius: 6px;
-    font-size: .58rem;
+    min-height: 58px;
+    gap: .2rem;
+    padding: .4rem .1rem;
+    border-radius: 8px;
+    font-size: .74rem;
   }
-  .home-category-grid .cat-ico { width: 23px; height: 23px; }
-  .home-category-grid .cat-ico svg { width: 13px; height: 13px; }
+  .home-category-grid .cat-ico { width: 27px; height: 27px; }
+  .home-category-grid .cat-ico svg { width: 15px; height: 15px; }
   .home-category-grid .category-label-full { display: none; }
   .home-category-grid .cat > .category-label-short {
     display: block;
     min-height: 0;
     width: 100%;
-    line-height: 1.1;
-    letter-spacing: -.025em;
+    line-height: 1.15;
+    letter-spacing: -.01em;
     white-space: normal;
     overflow-wrap: anywhere;
     -webkit-line-clamp: unset;
   }
 }
+@media (max-width: 520px) {
+  .cat-rail.home-category-grid {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: .4rem;
+  }
+}
+@media (max-width: 360px) {
+  .cat-rail.home-category-grid { gap: .25rem; }
+  .home-category-grid .cat { font-size: .7rem; }
+}
+
+/* Consistent discovery rhythm: listings stay together before supporting content. */
+.home-discovery-flow {
+  display: grid;
+  gap: clamp(1.5rem, 2.6vw, 2.5rem);
+  margin: 1.5rem 0 2rem;
+}
+.home-listing-section { min-width: 0; }
+.home-listing-section .sec-head { margin: 0 0 .85rem; }
+.category-section { margin-bottom: 1.25rem; }
+.category-section .category-head { margin: 0 0 .75rem; }
+.student-announcements { margin-block: 1.75rem; }
 
 /* Listing-card interaction remains stretched-link + independent accessible heart. */
 .listing-grid { gap: clamp(.8rem, 1.65vw, 1.15rem); }
@@ -209,7 +232,7 @@ a.notif:focus-visible, .inquiry-row:focus-visible { background: #f9fbf9; }
 .listing-detail-content > .panel { background: #fff; }
 .listing-gallery img, .listing-photo-empty { background: var(--surface-neutral); }
 
-/* Editorial promo tiles + a substantial forest green campus CTA. */
+/* Supporting guidance stays below discovery; the final seller CTA is singular. */
 .promos { gap: 1rem; margin: 2rem 0 2.75rem; }
 .promo {
   min-height: 165px; padding: 1.35rem; border-radius: 13px;

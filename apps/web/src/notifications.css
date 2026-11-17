@@ -13,8 +13,29 @@
 .notifications-preferences > summary::-webkit-details-marker { display: none; }
 .notifications-preferences > summary svg { flex: none; transition: transform 160ms cubic-bezier(.23, 1, .32, 1); }
 .notifications-preferences[open] > summary svg { transform: rotate(180deg); }
+.notifications-preferences[data-instant="true"] > summary svg { transition: none; }
 .notifications-preferences > summary:focus-visible { outline: 3px solid var(--focus-green); outline-offset: 2px; }
-@media (prefers-reduced-motion: reduce) { .notifications-preferences > summary svg { transition-duration: 100ms; } }
+@media (prefers-reduced-motion: no-preference) {
+  .notifications-preferences[data-motion-phase="opening"] .notifications-preferences-content {
+    animation: cpsu-preferences-enter 185ms cubic-bezier(.23, 1, .32, 1) both;
+  }
+  .notifications-preferences[data-motion-phase="closing"] .notifications-preferences-content {
+    animation: cpsu-preferences-exit 145ms cubic-bezier(.23, 1, .32, 1) both;
+    pointer-events: none;
+  }
+}
+@keyframes cpsu-preferences-enter {
+  from { opacity: .25; transform: translateY(-6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes cpsu-preferences-exit {
+  from { opacity: 1; transform: translateY(0); }
+  to { opacity: 0; transform: translateY(-5px); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .notifications-preferences > summary svg { transition: none; }
+  .notifications-preferences-content { animation: none !important; transform: none; opacity: 1; }
+}
 .notifications-heading {
   display: flex;
   align-items: flex-end;

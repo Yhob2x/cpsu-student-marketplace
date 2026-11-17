@@ -29,6 +29,15 @@ try {
   const messages = await db.inquiryMessage.count({
     where: { threadId: { in: threads.map(t => t.id) } },
   });
+  const [listing, transactions, history] = await Promise.all([
+    db.listing.findUnique({ where: { id: 9 }, select: {
+      title: true, availabilityState: true, reservationTransactionId: true,
+    } }),
+    db.transaction.findMany({ where: { listingId: 9 }, select: { id: true, status: true } }),
+    db.transactionStatusLog.count(),
+  ]);
+  if (listing?.title !== 'CPSU iPhone QA — Synthetic Textbook (Not For Sale)')
+    throw new Error('REFUSED: synthetic listing identity differs');
   console.log('QA_MESSAGE_READONLY ' + JSON.stringify({
     database: 'cpsu_marketplace_push_test', buyerExists: true,
     buyerSessions: buyer.sessions.length,
@@ -37,5 +46,9 @@ try {
     sellerSessions: seller.sessions.length,
     sellerActiveSessions: seller.sessions.filter(s => !s.revokedAt && s.expiresAt > new Date()).length,
     storedMessageCount: messages,
+    syntheticListingAvailability: listing.availabilityState,
+    reservationTransactionId: listing.reservationTransactionId,
+    syntheticTransactionStates: transactions.map(t => t.status),
+    transactionHistoryEvents: history,
   }));
 } finally { await db.$disconnect(); }

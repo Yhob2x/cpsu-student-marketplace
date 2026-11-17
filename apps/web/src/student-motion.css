@@ -39,8 +39,12 @@
 
   /* Short, purposeful entrance: the filters appear from their own toggle. */
   @media (max-width: 640px) {
-    .filters.filter-panel[data-mobile-open="true"] {
+    .filters.filter-panel[data-mobile-open="true"][data-motion="on"]:not([data-mobile-phase="closing"]) {
       animation: cpsu-filter-reveal 180ms var(--cpsu-press-ease) both;
+    }
+    .filters.filter-panel[data-mobile-phase="closing"][data-motion="on"] {
+      animation: cpsu-filter-dismiss 145ms var(--cpsu-press-ease) both;
+      pointer-events: none;
     }
   }
 
@@ -73,6 +77,10 @@
 @keyframes cpsu-filter-reveal {
   from { opacity: .35; transform: translateY(-5px); }
   to { opacity: 1; transform: translateY(0); }
+}
+@keyframes cpsu-filter-dismiss {
+  from { opacity: 1; transform: translateY(0); }
+  to { opacity: 0; transform: translateY(-5px); }
 }
 
 /* Motion is optional. Immediate state, focus, and accessibility do not depend on it. */

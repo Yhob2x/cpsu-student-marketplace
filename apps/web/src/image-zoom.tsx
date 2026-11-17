@@ -17,16 +17,18 @@ function distance(a: Point, b: Point): number {
   return Math.hypot(a.x - b.x, a.y - b.y);
 }
 
-export function ImageZoomDialog({ photos, title, initialIndex, onClose }: {
+export function ImageZoomDialog({ photos, title, initialIndex, onClose, instantEntry = false }: {
   photos: readonly string[];
   title: string;
   initialIndex: number;
   onClose: (index: number) => void;
+  instantEntry?: boolean;
 }) {
   const [index, setIndex] = useState(() => clampPhotoIndex(initialIndex, photos.length));
   const [scale, setScale] = useState(1);
   const [offset, setOffset] = useState<Offset>({ x: 0, y: 0 });
   const [failed, setFailed] = useState<number[]>([]);
+  const [motionPhase, setMotionPhase] = useState<'entering' | 'open' | 'exiting'>(() => instantEntry || (typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches) ? 'open' : 'entering');
   const scaleRef = useRef(1);
   const offsetRef = useRef<Offset>({ x: 0, y: 0 });
   const surfaceRef = useRef<HTMLDivElement>(null);
@@ -39,6 +41,23 @@ export function ImageZoomDialog({ photos, title, initialIndex, onClose }: {
   const didPinch = useRef(false);
   const lastTap = useRef<{ at: number; point: Point } | null>(null);
   const headingId = useId();
+
+  useEffect(() => {
+    if (instantEntry || window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      setMotionPhase('open');
+      return;
+    }
+    const frame = window.requestAnimationFrame(() => setMotionPhase('open'));
+    return () => window.cancelAnimationFrame(frame);
+  }, []);
+
+  const requestClose = (keyboard = false) => {
+    if (keyboard || motionPhase === 'entering' || window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      onClose(index);
+      return;
+    }
+    setMotionPhase('exiting');
+  };
 
   useEffect(() => {
     const previousFocus = document.activeElement as HTMLElement | null;
@@ -168,7 +187,7 @@ export function ImageZoomDialog({ photos, title, initialIndex, onClose }: {
   };
 
   const onKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
-    if (event.key === 'Escape') { event.preventDefault(); onClose(index); return; }
+    if (event.key === 'Escape') { event.preventDefault(); requestClose(true); return; }
     if (event.key === 'Tab') {
       const focusable = Array.from(dialogRef.current?.querySelectorAll<HTMLButtonElement>('button:not(:disabled)') ?? []);
       const first = focusable[0];
@@ -193,7 +212,11 @@ export function ImageZoomDialog({ photos, title, initialIndex, onClose }: {
   };
 
   return createPortal(
-    <div className="image-zoom-overlay" ref={dialogRef} role="dialog" aria-modal="true" aria-labelledby={headingId} onKeyDown={onKeyDown}>
+    <div className="image-zoom-overlay" ref={dialogRef} role="dialog" aria-modal="true"
+      aria-labelledby={headingId} onKeyDown={onKeyDown} data-motion-phase={motionPhase}
+      onTransitionEnd={event => {
+        if (event.target === event.currentTarget && event.propertyName === 'opacity' && motionPhase === 'exiting') onClose(index);
+      }}>
       <div className="image-zoom-toolbar">
         <div className="image-zoom-heading">
           <strong id={headingId}>{title}</strong>
@@ -204,7 +227,7 @@ export function ImageZoomDialog({ photos, title, initialIndex, onClose }: {
           <span className="image-zoom-value" aria-live="off">{Math.round(scale * 100)}%</span>
           <button type="button" aria-label="Zoom in" disabled={scale >= MAX_ZOOM} onClick={() => updateZoom(scaleRef.current + .5)}>+</button>
           <button type="button" className="image-zoom-reset" onClick={() => updateZoom(1, { x: 0, y: 0 })}>Reset</button>
-          <button type="button" ref={closeRef} className="image-zoom-close" aria-label="Close photo zoom" onClick={() => onClose(index)}>×</button>
+          <button type="button" ref={closeRef} className="image-zoom-close" aria-label="Close photo zoom" onClick={event => requestClose(event.detail === 0)}>×</button>
         </div>
       </div>
       <div className="image-zoom-view">

@@ -12,11 +12,14 @@
   background: #071711;
   color: white;
   overscroll-behavior: contain;
-  animation: photo-viewer-enter 200ms cubic-bezier(.23, 1, .32, 1) both;
+  opacity: 1;
+  transition: opacity 200ms cubic-bezier(.23, 1, .32, 1);
 }
-@keyframes photo-viewer-enter {
-  from { opacity: 0; }
-  to { opacity: 1; }
+.image-zoom-overlay[data-motion-phase="entering"],
+.image-zoom-overlay[data-motion-phase="exiting"] { opacity: 0; }
+.image-zoom-overlay[data-motion-phase="exiting"] {
+  transition-duration: 140ms;
+  pointer-events: none;
 }
 .image-zoom-toolbar {
   display: flex;
@@ -125,7 +128,7 @@
   .image-zoom-value { min-width: 3rem; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .image-zoom-overlay { animation-duration: 100ms; }
+  .image-zoom-overlay, .image-zoom-overlay[data-motion-phase] { transition: none; opacity: 1; }
   .image-zoom-thumb { transition-duration: 100ms; }
   .image-zoom-surface > img { will-change: auto; }
 }

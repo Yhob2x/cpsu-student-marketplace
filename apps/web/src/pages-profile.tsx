@@ -1,4 +1,4 @@
-import { FormEvent, useEffect, useState } from 'react';
+import { FormEvent, useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { api, explain, timeAgo } from './api';
 import { useMe } from './main';
@@ -216,6 +216,9 @@ function notificationKind(n: Notice): { title: string; label: string; icon: Icon
 }
 
 export function Notifications() {
+  const preferencesRef = useRef<HTMLDetailsElement>(null);
+  const [preferencesPhase, setPreferencesPhase] = useState<'idle' | 'opening' | 'closing'>('idle');
+  const [preferencesInstant, setPreferencesInstant] = useState(false);
   const { syncUnread, me } = useMe();
   const [rows, setRows] = useState<Notice[] | null>(null);
   const [err, setErr] = useState('');
@@ -410,9 +413,38 @@ export function Notifications() {
         </div>
       </section>)}
     </div>}
-    <details className="notifications-preferences">
-      <summary>Notification preferences <Icon name="chevronDown" size={19} /></summary>
-      <PushSettings />
+    <details className="notifications-preferences" ref={preferencesRef} data-motion-phase={preferencesPhase} data-instant={preferencesInstant}>
+      <summary onClick={event => {
+        // Keyboard and reduced-motion users get the instant native disclosure.
+        if (event.detail === 0 || window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+          setPreferencesInstant(true);
+          setPreferencesPhase('idle');
+          return;
+        }
+        setPreferencesInstant(false);
+        event.preventDefault();
+        if (preferencesPhase === 'closing') {
+          setPreferencesPhase('opening'); // Reverse a quick repeated click.
+        } else if (preferencesRef.current?.open) {
+          setPreferencesPhase('closing');
+        } else if (preferencesRef.current) {
+          preferencesRef.current.open = true;
+          setPreferencesPhase('opening');
+        }
+      }}>Notification preferences <Icon name="chevronDown" size={19} /></summary>
+      <div className="notifications-preferences-content"
+        onAnimationEnd={event => {
+          if (event.target !== event.currentTarget) return;
+          if (event.animationName === 'cpsu-preferences-enter' && preferencesPhase === 'opening') {
+            setPreferencesPhase('idle');
+          }
+          if (event.animationName === 'cpsu-preferences-exit' && preferencesPhase === 'closing') {
+            if (preferencesRef.current) preferencesRef.current.open = false;
+            setPreferencesPhase('idle');
+          }
+        }}>
+        <PushSettings />
+      </div>
     </details>
   </section>;
 }

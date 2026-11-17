@@ -19,6 +19,7 @@ export function ListingGallery({ photos, title, saveControl }: ListingGalleryPro
   const [activeIndex, setActiveIndex] = useState(0);
   const [failedPhotos, setFailedPhotos] = useState<number[]>([]);
   const [zoomIndex, setZoomIndex] = useState<number | null>(null);
+  const [instantZoomEntry, setInstantZoomEntry] = useState(false);
   const total = photos.length;
   const multiple = total > 1;
 
@@ -76,7 +77,7 @@ export function ListingGallery({ photos, title, saveControl }: ListingGalleryPro
               {failedPhotos.includes(index)
                 ? <div className="product-gallery-failed"><Icon name="tag" size={28}/><span>Photo unavailable</span></div>
                 : <button type="button" className="product-gallery-photo-button"
-                    aria-label={`Enlarge photo ${index + 1} of ${total}: ${title}`} onClick={() => setZoomIndex(index)}>
+                    aria-label={`Enlarge photo ${index + 1} of ${total}: ${title}`} onClick={event => { setInstantZoomEntry(event.detail === 0); setZoomIndex(index); }}>
                     <img src={photo} alt={`Photo ${index + 1} of ${total}: ${title}`}
                       loading={index === 0 ? 'eager' : 'lazy'} decoding="async" draggable={false}
                       onError={() => setFailedPhotos(previous => previous.includes(index) ? previous : [...previous, index])} />
@@ -84,7 +85,7 @@ export function ListingGallery({ photos, title, saveControl }: ListingGalleryPro
             </div>)}
           </div>
           <button type="button" className="product-gallery-zoom-trigger" aria-label={`Zoom photo ${activeIndex + 1} of ${total}`}
-            onClick={() => setZoomIndex(activeIndex)}><span aria-hidden="true">+</span> Enlarge</button>
+            onClick={event => { setInstantZoomEntry(event.detail === 0); setZoomIndex(activeIndex); }}><span aria-hidden="true">+</span> Enlarge</button>
           {multiple && <>
             <span className="product-gallery-count" aria-hidden="true">{activeIndex + 1} / {total}</span>
             <button type="button" className="product-gallery-arrow product-gallery-prev"
@@ -121,7 +122,7 @@ export function ListingGallery({ photos, title, saveControl }: ListingGalleryPro
       </div>
       <span className="sr-only" role="status">Photo {activeIndex + 1} of {total}</span>
     </>}
-    {zoomIndex !== null && total > 0 && <ImageZoomDialog photos={photos} title={title} initialIndex={zoomIndex}
+    {zoomIndex !== null && total > 0 && <ImageZoomDialog photos={photos} title={title} initialIndex={zoomIndex} instantEntry={instantZoomEntry}
       onClose={(index) => { setZoomIndex(null); goTo(index); }} />}
   </section>;
 }

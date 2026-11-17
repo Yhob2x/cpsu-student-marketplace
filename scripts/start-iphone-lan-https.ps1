@@ -25,7 +25,26 @@ $inUse = @(Get-NetTCPConnection -State Listen -ErrorAction SilentlyContinue |
 if ($inUse.Count -ne 0) {
   $active = @($inUse | Select-Object -ExpandProperty LocalPort -Unique | Sort-Object)
   if ($active.Count -eq 3 -and $active[0] -eq 4173 -and $active[1] -eq 4400 -and $active[2] -eq 8445) {
-    Write-Output "These QA ports already have listeners. Check their identity before reuse: $($active -join ', ')."
+    # A healthy HTTP response does not prove that a long-running Bun process
+    # loaded the recently added server-side NSFW screening. Fail closed when
+    # reusing an existing, outdated QA process.
+    $qaListener = @(Get-NetTCPConnection -State Listen -LocalPort 4400 -ErrorAction SilentlyContinue |
+      Where-Object { $_.LocalAddress -eq '127.0.0.1' })
+    if ($qaListener.Count -ne 1) { throw 'Expected one loopback-only iPhone QA API listener at 127.0.0.1:4400.' }
+    $qaProcess = Get-Process -Id $qaListener[0].OwningProcess -ErrorAction Stop
+    if ($qaProcess.ProcessName -ne 'bun') { throw 'iPhone QA API port is not owned by Bun. Refusing to reuse.' }
+    $safetyFiles = @(
+      (Join-Path $repo 'apps/api/src/routes/seller.ts'),
+      (Join-Path $repo 'apps/api/src/seller-avatar-screening.ts'),
+      (Join-Path $repo 'apps/api/src/upload-security.ts')
+    )
+    foreach ($safetyFile in $safetyFiles) {
+      if (-not (Test-Path -LiteralPath $safetyFile)) { throw "Required avatar safety source missing: $safetyFile" }
+      if ($qaProcess.StartTime -lt (Get-Item -LiteralPath $safetyFile).LastWriteTime) {
+        throw "iPhone QA API on port 4400 predates avatar screening changes. Stop ONLY the existing QA API terminal, verify port 4400 is free, and restart the guarded QA runner. Do not reuse stale HTTPS QA."
+      }
+    }
+    Write-Output "Existing iPhone QA process passed avatar-source freshness check. Ports: $($active -join ', ')."
     Write-Output "Expected phone URL: https://$($ip):8445/"
     return
   }

@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { api, ApiError, explain } from './api';
 import { useMe } from './main';
 import {
-  currentSubscription, disablePush, enablePush, isIosWithoutHomeScreen, previewLocalNotification,
+  currentSubscription, disablePush, enablePush, isIosWithoutHomeScreen, isSubscriptionOwnedByCurrentAccount, previewLocalNotification,
   supportsPush, type PushConfig, type PushPreferences,
 } from './push-client';
 import { Icon } from './icons';
@@ -10,7 +10,7 @@ import { Icon } from './icons';
 const CATEGORIES: { key: keyof PushPreferences; name: string; detail: string }[] = [
   { key: 'messages', name: 'Messages and inquiries', detail: 'Someone contacts you about a listing or replies.' },
   { key: 'listingReviews', name: 'Listing review decisions', detail: 'A listing is approved, rejected, or needs attention.' },
-  { key: 'accountUpdates', name: 'Account and followed stores', detail: 'CPSU affiliation updates and new public listings from stores you follow.' },
+  { key: 'accountUpdates', name: 'Transactions, account and followed stores', detail: 'Important purchase or service-request changes, CPSU affiliation updates and new listings from followed stores.' },
 ];
 const describeError = (error: unknown) =>
   error instanceof ApiError ? explain(error)
@@ -34,11 +34,14 @@ export function PushSettings() {
       api<PushConfig>('/push/config'),
       api<PushPreferences>('/push/preferences'),
       currentSubscription(),
-    ]).then(([cfg, prefs, subscription]) => {
+    ]).then(async ([cfg, prefs, subscription]) => {
+      const registered = Boolean(cfg.enabled && subscription
+        && Notification.permission === 'granted'
+        && await isSubscriptionOwnedByCurrentAccount(subscription.endpoint));
       if (!active) return;
       setConfig(cfg);
       setPreferences(prefs);
-      setEnabled(Boolean(subscription));
+      setEnabled(registered);
       setError('');
     }).catch((e: unknown) => {
       if (active) setError(describeError(e));

@@ -68,8 +68,9 @@ export function StorefrontView({ store, isOwner, canFollow, onFollow, followBusy
           </div>
         </div>
         <div className="storefront-owner-actions">
+          <a className="btn storefront-browse-action" href="#storefront-listings"><Icon name="grid" size={17} /> Browse listings</a>
           {!isOwner && canFollow && <button type="button"
-            className={store.follow?.isFollowing ? 'btn ghost' : 'btn'}
+            className="btn ghost"
             aria-pressed={Boolean(store.follow?.isFollowing)}
             disabled={followBusy || !store.follow?.available}
             onClick={onFollow}>
@@ -86,7 +87,6 @@ export function StorefrontView({ store, isOwner, canFollow, onFollow, followBusy
             }}>
             <Icon name="chat" size={17} /> Chat with seller
           </button>}
-          <a className="btn ghost" href="#storefront-listings">Browse listings</a>
           {isOwner && <Link className="btn ghost" to="/profile#store-profile">Edit my store</Link>}
           {followMessage && <p className="storefront-follow-feedback" role="status">{followMessage}</p>}
           {!isOwner && canFollow && store.follow && !store.follow.available &&
@@ -134,6 +134,10 @@ export function StorefrontView({ store, isOwner, canFollow, onFollow, followBusy
       </div>
     </section>
     <section className="storefront-products" aria-labelledby="storefront-listings">
+      <div className="storefront-products-heading">
+        <div><h2 id="storefront-listings" tabIndex={-1}>Browse this store</h2></div>
+        <span className="storefront-results">{visible.length} {visible.length === 1 ? 'result' : 'results'}</span>
+      </div>
       <nav className="storefront-navigation" aria-label="Store listings and categories">
         <div className="storefront-tabs" role="group" aria-label="Listing type">
           {OPTIONS.map(option => <button key={option.id} type="button"
@@ -148,10 +152,6 @@ export function StorefrontView({ store, isOwner, canFollow, onFollow, followBusy
             onClick={() => { setCategory(name); setFilter('all'); }}>{name}</button>)}
         </div>}
       </nav>
-      <div className="storefront-products-heading">
-        <div><h2 id="storefront-listings" tabIndex={-1}>Browse this store</h2></div>
-        <span className="storefront-results">{visible.length} {visible.length === 1 ? 'result' : 'results'}</span>
-      </div>
       <div className="storefront-browser">
         <label className="storefront-search"><Icon name="search" size={17} /><span className="sr-only">Search this store</span>
           <input type="search" placeholder="Search products and services in this store" value={query} maxLength={80}

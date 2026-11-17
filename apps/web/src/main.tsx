@@ -2,7 +2,7 @@ import React, { createContext, useContext, useEffect, useRef, useState } from 'r
 import { createRoot } from 'react-dom/client';
 import { BrowserRouter, Link, NavLink, Route, Routes, Navigate, useNavigate } from 'react-router-dom';
 import { api, setToken, tryRestoreSession } from './api';
-import { disconnectPushOnLogout, updateAppBadge } from './push-client';
+import { disconnectPushOnLogout, reconcilePushForActiveAccount, updateAppBadge } from './push-client';
 import { Discover, Home, ListingDetail, Guidelines, StorePage } from './pages-public';
 import { Icon } from './icons';
 import { SiteFooter } from './site-footer';
@@ -29,6 +29,7 @@ import './profile-refinements.css';
 import './footer-refinements.css';
 import './floating-chat.css';
 import './icon-action.css';
+import './hierarchy-polish.css';
 
 export type Me = { id: number; email: string; displayName: string; roles: { role: string; campusId: number | null }[];
   affiliations: { id: number; campus: { id: number; name: string }; status: string }[]; storeId: number | null };
@@ -113,14 +114,27 @@ function Shell() {
     syncUnread(); syncSaved(); if (isReviewer) syncQueue();
   }, [me]);
 
+  // On login/account switching, detach old browser subscriptions rather than
+  // showing one student's push alerts while another student is using the device.
+  useEffect(() => {
+    if (!me) return;
+    let active = true;
+    void reconcilePushForActiveAccount(() => active).catch(() => {
+      // Keep in-app notifications available when the enrollment API is offline.
+    });
+    return () => { active = false; };
+  }, [me?.id]);
+
   // Do not claim to have signed out when server-side session revocation fails.
   // Keep the account visible, explain the failure, and allow a retry.
   const logout = async () => {
     if (logoutLock.current) return;
     logoutLock.current = true; setLoggingOut(true); setLogoutError('');
     try {
-      await disconnectPushOnLogout();
-      await api('/auth/logout', { method: 'POST', body: {} });
+      const pushEndpoint = await disconnectPushOnLogout();
+      // Session-authenticated fallback removes this device's subscription even if
+      // the separate push DELETE failed; other signed-in devices stay enrolled.
+      await api('/auth/logout', { method: 'POST', body: { pushEndpoint } });
       setToken(null); setMe(null);
     } catch {
       setLogoutError('Could not sign out. Check your connection and try again. Your session may still be active.');
@@ -161,9 +175,10 @@ function Shell() {
           <span><Icon name="pin" size={14} /> Payment and pickup arranged on campus</span>
         </div></div>
         <div className="wrap masthead">
-          <Link to="/" className="brand">
+          <Link to="/" className="brand" aria-label="CPSU Student Marketplace home">
             <span className="brand-symbol" aria-hidden="true"><Icon name="store" size={19} /></span>
-            <span>CPSU <b>Student Marketplace</b><small>Buy, sell and offer</small></span></Link>
+            <span className="brand-long">CPSU <b>Student Marketplace</b><small>Buy, sell and offer</small></span>
+            <span className="brand-short" aria-hidden="true">CPSU Market</span></Link>
           <HeaderSearch />
           {me && <nav className="actions" aria-label="Your activity">
             {!isStaff && <NavLink to="/saved"><Icon name="heart" size={22} /><span>Saved</span></NavLink>}
@@ -181,7 +196,6 @@ function Shell() {
           </div>
         </div>
         <div className="wrap navrow">
-          <Link className="all-cats" to="/explore"><Icon name="grid" size={16} /> All listings</Link>
           <NavLink to="/" end>Home</NavLink>
           <NavLink to="/explore">Explore</NavLink>
           {!isStaff && <><NavLink to="/dashboard">Sell</NavLink>

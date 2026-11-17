@@ -90,16 +90,16 @@ export function Home() {
   const [cats, setCats] = useState<any[]>([]);
   const [homeError, setHomeError] = useState('');
   const shortCategoryName = (name: string) => ({
-    'Handmade goods': 'Made',
-    'Pre-loved items': 'Used',
+    'Handmade goods': 'Hand-made',
+    'Pre-loved items': 'Pre-loved',
     'Books & notes (pre-loved)': 'Books',
     'Food & drinks': 'Food',
-    'Printing & school supplies': 'Print',
+    'Printing & school supplies': 'Printing',
     'Design & creative': 'Design',
-    'Tutoring': 'Tutor',
-    'Tech & IT help': 'Tech',
-    'Photography & video': 'Photo',
-  } as Record<string, string>)[name] ?? name.split(/\s|&/)[0].slice(0, 6);
+    'Tutoring': 'Tutoring',
+    'Tech & IT help': 'Tech help',
+    'Photography & video': 'Photo & video',
+  } as Record<string, string>)[name] ?? name;
   const loadHome = () => {
     setHomeError('');
     const fail = (e: unknown) => setHomeError(explain(e));
@@ -135,7 +135,10 @@ export function Home() {
         </div>
         <form className="search hero-search" role="search" aria-label="Home listing search" onSubmit={go}>
           <input aria-label="Search listings" placeholder="Search products, services, skills…" maxLength={80} value={q} onChange={e => setQ(e.target.value)} />
-          <button className="btn">Search</button>
+          <button type="submit" className="btn" aria-label="Search listings">
+            <span className="hero-search-text">Search</span>
+            <span className="hero-search-icon" aria-hidden="true"><Icon name="search" size={21} /></span>
+          </button>
         </form>
       </div>
       <div className="hero-art" aria-hidden="true">
@@ -214,6 +217,7 @@ export function Discover() {
   const [campuses, setCampuses] = useState<any[]>([]); const [cats, setCats] = useState<any[]>([]);
   const [filterError, setFilterError] = useState(''); const [filtersLoading, setFiltersLoading] = useState(false);
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
+  const [desktopFiltersOpen, setDesktopFiltersOpen] = useState(false);
   const [mobileFiltersClosing, setMobileFiltersClosing] = useState(false);
   const [filterMotionEnabled, setFilterMotionEnabled] = useState(true);
   const [compactControls, setCompactControls] = useState(false);
@@ -276,6 +280,8 @@ export function Discover() {
   const dirty = (Object.keys(NO_FILTERS) as (keyof Filters)[]).some(k => k !== 'sort' && f[k] !== '');
   const advancedFilterCount = (['campusId', 'categoryId', 'condition', 'minPrice', 'maxPrice'] as (keyof Filters)[])
     .filter(k => f[k] !== '').length;
+  const desktopAdvancedCount = (['condition', 'minPrice', 'maxPrice'] as (keyof Filters)[])
+    .filter(k => f[k] !== '').length;
   const skel = <div className="grid listing-grid explore-results" aria-label="Loading listing results">
     {Array.from({ length: 8 }, (_, i) => <div key={i} className="skel card" aria-hidden="true" />)}
   </div>;
@@ -324,6 +330,7 @@ export function Discover() {
       <Icon name={mobileFiltersOpen && !mobileFiltersClosing ? 'chevronUp' : 'chevronDown'} size={18} />
     </button>
     <div id="explore-filter-fields" className="filters filter-panel" data-mobile-open={mobileFiltersOpen}
+      data-desktop-open={desktopFiltersOpen}
       data-mobile-phase={mobileFiltersClosing ? 'closing' : 'open'}
       data-motion={filterMotionEnabled ? 'on' : 'off'}
       aria-hidden={mobileFiltersClosing ? true : undefined}
@@ -343,16 +350,24 @@ export function Discover() {
       <label className="field explore-type-filter">Type
         <select value={f.type} onChange={set('type')}><option value="">All types</option><option value="physical_product">Products</option><option value="service">Services</option></select>
       </label>
-      <label className="field">Condition
+      <label className="field explore-secondary-filter">Condition
         <select value={f.condition} onChange={set('condition')} disabled={f.type === 'service'}><option value="">Any condition</option><option value="new">New</option><option value="like_new">Like new</option><option value="good">Good</option><option value="fair">Fair</option></select>
       </label>
-      <label className="field">Min price (₱)
+      <label className="field explore-secondary-filter">Min price (₱)
         <input type="number" inputMode="numeric" min={0} step={1} placeholder="Any" value={f.minPrice} onChange={set('minPrice')} />
       </label>
-      <label className="field">Max price (₱)
+      <label className="field explore-secondary-filter">Max price (₱)
         <input type="number" inputMode="numeric" min={0} step={1} placeholder="Any" value={f.maxPrice} onChange={set('maxPrice')} />
       </label>
     </div>
+    <button type="button" className="desktop-filter-toggle"
+      aria-expanded={desktopFiltersOpen} aria-controls="explore-filter-fields"
+      onClick={() => setDesktopFiltersOpen(open => !open)}>
+      <Icon name="sliders" size={16} />
+      {desktopFiltersOpen ? 'Fewer filters' : 'More filters'}
+      {desktopAdvancedCount > 0 && <span>{desktopAdvancedCount} active</span>}
+      <Icon name={desktopFiltersOpen ? 'chevronUp' : 'chevronDown'} size={16} />
+    </button>
 
     <div className="results">
       <p className="muted" role="status" aria-live="polite">

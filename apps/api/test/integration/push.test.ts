@@ -4,8 +4,9 @@ if (process.env.CPSU_PUSH_TESTS === '1') {
   const { PrismaClient } = await import('@prisma/client');
   const request = (await import('supertest')).default;
   const { createApp } = await import('../../src/app.js');
-  const { signAccess } = await import('../../src/auth.js');
+  const { signAccess, hashToken, newRefreshToken } = await import('../../src/auth.js');
   const { notify } = await import('../../src/audit.js');
+  const { endpointHash } = await import('../../src/push.js');
 
   const url = new URL(process.env.DATABASE_URL ?? '');
   if (!['127.0.0.1', 'localhost', '::1'].includes(url.hostname)
@@ -66,6 +67,8 @@ if (process.env.CPSU_PUSH_TESTS === '1') {
       }
       const subRes = await request(app).post('/api/v1/push/subscriptions').send(sub);
       expect(subRes.status).toBe(401);
+      const status = await request(app).post('/api/v1/push/subscriptions/status').send({ endpoint: fakeEndpoint });
+      expect(status.status).toBe(401);
     });
 
     test('config exposes only the public VAPID key and preferences default to enabled categories', async () => {
@@ -104,10 +107,19 @@ if (process.env.CPSU_PUSH_TESTS === '1') {
       const create = await request(app).post('/api/v1/push/subscriptions').set(auth(a)).send(sub);
       expect(create.status).toBe(201);
       expect(await prisma.pushSubscription.count({ where: { userId: a } })).toBe(1);
+      const ownStatus = await request(app).post('/api/v1/push/subscriptions/status')
+        .set(auth(a)).send({ endpoint: fakeEndpoint });
+      const otherStatus = await request(app).post('/api/v1/push/subscriptions/status')
+        .set(auth(b)).send({ endpoint: fakeEndpoint });
+      expect(ownStatus.body).toEqual({ registered: true });
+      expect(otherStatus.body).toEqual({ registered: false });
       const transfer = await request(app).post('/api/v1/push/subscriptions').set(auth(b)).send(sub);
       expect(transfer.status).toBe(201);
       expect(await prisma.pushSubscription.count({ where: { userId: a } })).toBe(0);
       expect(await prisma.pushSubscription.count({ where: { userId: b } })).toBe(1);
+      const statusAfterSwitch = await request(app).post('/api/v1/push/subscriptions/status')
+        .set(auth(a)).send({ endpoint: fakeEndpoint });
+      expect(statusAfterSwitch.body).toEqual({ registered: false });
       const wrongOwner = await request(app).delete('/api/v1/push/subscriptions').set(auth(a))
         .send({ endpoint: fakeEndpoint });
       expect(wrongOwner.status).toBe(204);
@@ -116,6 +128,24 @@ if (process.env.CPSU_PUSH_TESTS === '1') {
         .send({ endpoint: fakeEndpoint });
       expect(own.status).toBe(204);
       expect(await prisma.pushSubscription.count({ where: { userId: b } })).toBe(0);
+    });
+
+    test('logout revokes only its own current-device subscription after valid session revocation', async () => {
+      const token = newRefreshToken();
+      const myEndpoint = fakeEndpoint + '-logout';
+      const otherEndpoint = fakeEndpoint + '-other-device';
+      await prisma.session.create({ data: {
+        userId: a, refreshTokenHash: hashToken(token), expiresAt: new Date(Date.now() + 60_000),
+      } });
+      await request(app).post('/api/v1/push/subscriptions').set(auth(a)).send({ ...sub, endpoint: myEndpoint });
+      await request(app).post('/api/v1/push/subscriptions').set(auth(a)).send({ ...sub, endpoint: otherEndpoint });
+      const response = await request(app).post('/api/v1/auth/logout')
+        .set('Cookie', `refresh=${token}`).send({ pushEndpoint: myEndpoint });
+      expect(response.status).toBe(204);
+      expect(await prisma.pushSubscription.count({ where: { userId: a, endpointHash: endpointHash(myEndpoint) } })).toBe(0);
+      expect(await prisma.pushSubscription.count({ where: { userId: a, endpointHash: endpointHash(otherEndpoint) } })).toBe(1);
+      await prisma.pushSubscription.deleteMany({ where: { userId: a } });
+      await prisma.session.deleteMany({ where: { userId: a, refreshTokenHash: hashToken(token) } });
     });
 
     test('unread totals and message-only counts are scoped to the authenticated student', async () => {

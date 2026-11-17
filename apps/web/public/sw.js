@@ -30,7 +30,7 @@ self.addEventListener('fetch', (event) => {
  * No credentials, message bodies, names, or user data are cached in this worker. */
 const pushRoute = (value) => {
   if (typeof value !== 'string') return '/notifications';
-  return /^\/(inquiries\/[1-9]\d*|listings\/[1-9]\d*|notifications|profile)$/.test(value)
+  return /^\/(inquiries\/[1-9]\d*|listings\/[1-9]\d*|transactions\/[1-9]\d*|notifications|profile)$/.test(value)
     ? value : '/notifications';
 };
 
@@ -44,6 +44,9 @@ self.addEventListener('push', (event) => {
       'You have a new marketplace inquiry.', 'You have a new message.',
       'Your listing was approved.', 'Your listing has a review update.',
       'A listing needs your attention.', 'Your CPSU account verification has an update.',
+      'A store you follow has published a new listing.',
+      'A student sent you a purchase or service request.',
+      'The other student updated your transaction.',
     ]);
     await self.registration.showNotification('CPSU Market', {
       body: allowedBodies.has(detail.body) ? detail.body : 'You have a new marketplace update.',

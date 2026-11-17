@@ -47,6 +47,27 @@ export async function currentSubscription(): Promise<PushSubscription | null> {
   return registration ? registration.pushManager.getSubscription() : null;
 }
 
+/** A browser subscription is not proof that THIS signed-in account has enrolled. */
+export async function isSubscriptionOwnedByCurrentAccount(endpoint: string): Promise<boolean> {
+  const result = await api<{ registered: boolean }>('/push/subscriptions/status', {
+    method: 'POST', body: { endpoint },
+  });
+  return result.registered === true;
+}
+
+/** Stop a previous account's alerts from appearing after an account switch. */
+export async function reconcilePushForActiveAccount(stillCurrent: () => boolean): Promise<void> {
+  const subscription = await currentSubscription();
+  if (!subscription || !stillCurrent()) return;
+  const owned = await isSubscriptionOwnedByCurrentAccount(subscription.endpoint);
+  if (!owned && stillCurrent()) {
+    // Recheck for a concurrent explicit Enable action; never revoke an enrollment
+    // that was just transferred to this authenticated account.
+    const nowOwned = await isSubscriptionOwnedByCurrentAccount(subscription.endpoint);
+    if (!nowOwned && stillCurrent()) await subscription.unsubscribe();
+  }
+}
+
 /** Must be called from an explicit, user-activated enable button. */
 export async function enablePush(publicKey: string): Promise<void> {
   if (!supportsPush()) throw new Error('Push alerts are unavailable on this device or connection.');
@@ -110,7 +131,11 @@ export async function disablePush(): Promise<void> {
 }
 
 /** Logout must not be blocked by a failed Web Push cleanup request. */
-export async function disconnectPushOnLogout(): Promise<void> {
+export async function disconnectPushOnLogout(): Promise<string | null> {
+  // Return the device endpoint for a second, session-authenticated server-side cleanup
+  // when the ordinary push DELETE request fails. Never log this secret capability URL.
+  const endpoint = (await currentSubscription().catch(() => null))?.endpoint ?? null;
   try { await disablePush(); } catch { /* Logout still revokes the session. */ }
   await updateAppBadge(null);
+  return endpoint;
 }

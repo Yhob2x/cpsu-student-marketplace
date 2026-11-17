@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'bun:test';
-import { createFollowerPublicationNotices, FOLLOWED_STORE_NEW_LISTING } from '../src/store-publication-notifications.js';
+import { createFollowerPublicationNotices, sendFollowerPushBatch, FOLLOWED_STORE_NEW_LISTING } from '../src/store-publication-notifications.js';
 
 const item = {
   id: 75, title: 'Synthetic Notebook', type: 'physical_product' as const,
@@ -56,6 +56,27 @@ describe('new public listing notifications for followers', () => {
     expect(createFollowerPublicationNotices(f.db as any, item))
       .rejects.toThrow('synthetic database failure');
   });
+  test('bounded fan-out caps simultaneous deliveries and counts failures without leaking recipients', async () => {
+    const notices = Array.from({ length: 13 }, (_, i) => ({
+      id: i + 1, userId: i + 50, payload: {} as any,
+    }));
+    let inFlight = 0;
+    let peak = 0;
+    let sent = 0;
+    const failed = await sendFollowerPushBatch(notices, async n => {
+      inFlight++;
+      peak = Math.max(peak, inFlight);
+      try {
+        await Promise.resolve();
+        sent++;
+        if (n.id === 5) throw new Error('synthetic provider failure');
+      } finally { inFlight--; }
+    }, 4);
+    expect(sent).toBe(13);
+    expect(peak).toBe(4);
+    expect(failed).toBe(1);
+  });
+
   test('service listing uses its actual listingType', async () => {
     const f = fixture([8]);
     const notices = await createFollowerPublicationNotices(f.db as any, {

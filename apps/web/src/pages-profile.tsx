@@ -166,20 +166,11 @@ export function Profile() {
       </section>}
 
       {!staff && <section className="panel profile-registration" aria-labelledby="profile-registration-heading">
-        <div className="profile-registration-heading">
-          <div>
-            <h2 id="profile-registration-heading">Registration information</h2>
-            <p className="muted">CISS verification is planned. No automated CISS check is active yet.</p>
-          </div>
-          <span className="profile-registration-badge">Future CISS check</span>
-        </div>
+        <h2 id="profile-registration-heading">Registration information</h2>
         <dl className="profile-registration-list">
-          <div><dt>Student ID number</dt><dd><strong>Not displayed here yet</strong><span>Future: check against authorized CISS records.</span></dd></div>
-          <div><dt>Full name</dt><dd><strong>Not displayed here yet</strong><span>Future: match your official student record.</span></dd></div>
-          <div><dt>Campus</dt><dd><strong>{registeredCampuses || 'No campus on record'}</strong><span>Future: confirm your registered campus in CISS.</span></dd></div>
-          <div><dt>Enrollment status</dt><dd><strong>Not checked</strong><span>Future: check whether you are currently enrolled.</span></dd></div>
+          <div><dt>Campus on record</dt><dd><strong>{registeredCampuses || 'No campus on record'}</strong></dd></div>
         </dl>
-        <p className="profile-registration-note">Only your display name can be changed in Account settings. Student identity and enrollment checks require an approved CISS connection.</p>
+        <p className="profile-registration-note">Automated CISS checks of student ID, full name and enrollment are not active. Your current affiliation status appears above.</p>
       </section>}
 
       <section className="panel profile-settings" aria-labelledby="account-settings-heading">

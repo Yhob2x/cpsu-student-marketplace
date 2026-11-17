@@ -7,6 +7,7 @@ import { env } from '../env.js';
 import { HttpError } from '../http.js';
 import { hashPassword, verifyPassword, signAccess, newRefreshToken, hashToken, MEDIA_COOKIE, ACCESS_MS } from '../auth.js';
 import { studentIdentityRegistrationSchema } from '../student-identity-registration.js';
+import { endpointHash, permittedPushEndpoint } from '../push.js';
 
 const r = Router();
 const REFRESH_DAYS = 30;
@@ -108,8 +109,32 @@ r.post('/refresh', async (req, res) => {
 });
 
 r.post('/logout', async (req, res) => {
+  const { pushEndpoint } = z.object({
+    pushEndpoint: z.string().url().max(2048).nullable().optional(),
+    refreshToken: z.string().optional(),
+  }).strict().parse(req.body ?? {});
   const token: string | undefined = req.cookies?.refresh ?? req.body?.refreshToken;
-  if (token) await prisma.session.updateMany({ where: { refreshTokenHash: hashToken(token) }, data: { revokedAt: new Date() } });
+  if (token) {
+    const session = await prisma.session.findUnique({
+      where: { refreshTokenHash: hashToken(token) },
+      select: { id: true, userId: true },
+    });
+    if (session) {
+      await prisma.$transaction(async tx => {
+        const revoked = await tx.session.updateMany({
+          where: { id: session.id, revokedAt: null, expiresAt: { gt: new Date() } },
+          data: { revokedAt: new Date() },
+        });
+        // Revoke this endpoint atomically with session revocation. Other devices
+        // remain active, and a failed database write rolls back both changes.
+        if (revoked.count === 1 && pushEndpoint && permittedPushEndpoint(pushEndpoint)) {
+          await tx.pushSubscription.deleteMany({
+            where: { userId: session.userId, endpointHash: endpointHash(pushEndpoint) },
+          });
+        }
+      });
+    }
+  }
   res.clearCookie('refresh', { path: '/api/v1/auth' });
   res.clearCookie(MEDIA_COOKIE, { path: '/api/v1/media' });
   res.status(204).end();

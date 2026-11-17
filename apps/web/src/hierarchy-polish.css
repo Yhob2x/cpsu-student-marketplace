@@ -1,0 +1,204 @@
+/* CPSU Market: audited hierarchy refinements, 17 November 2026.
+   Keep approved forest/ivory/gold tokens and original data flows. */
+.brand-short { display: none; }
+
+.register-identity-fields {
+  display: grid;
+  gap: .75rem;
+  min-width: 0;
+  margin: .35rem 0;
+  padding: 1rem;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--surface-soft);
+}
+.register-identity-fields legend { padding: 0 .3rem; font-weight: 750; color: var(--forest); }
+.register-identity-fields .field { margin: 0; }
+.register-identity-fields .muted { margin: 0; font-size: .86rem; line-height: 1.55; }
+.register-identity-note {
+  display: flex;
+  gap: .65rem;
+  align-items: flex-start;
+  margin: .25rem 0 0;
+  padding: .75rem .85rem;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--surface-soft);
+  color: var(--ink-soft);
+  font-size: .83rem;
+  line-height: 1.5;
+}
+.register-identity-note strong { display: block; color: var(--forest); }
+.register-identity-note svg { flex: 0 0 auto; margin-top: .1rem; color: var(--forest); }
+
+/* The store's primary task is browsing. The existing Follow and Chat
+   controls remain in place, visually quieter and fully operable. */
+.storefront-owner-actions .storefront-browse-action {
+  background: var(--forest);
+  border-color: var(--forest);
+  color: var(--paper);
+  font-weight: 750;
+}
+.storefront-owner-actions .storefront-browse-action:hover { background: var(--leaf); color: var(--paper); }
+.storefront-owner-actions .storefront-browse-action:focus-visible { outline: 3px solid var(--focus-green); outline-offset: 3px; }
+.storefront-products-heading h2 { scroll-margin-top: 1.25rem; }
+
+/* Desktop Explore: show the filters students use most, reveal the others
+   without sacrificing URL filter state, keyboard access, or the mobile sheet. */
+.desktop-filter-toggle { display: none; }
+@media (min-width: 861px) {
+  .explore-control-header .filters.filter-panel {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: .6rem .9rem;
+    padding: .8rem 1rem;
+    margin: .5rem 0 .35rem;
+  }
+  .explore-control-header .filters.filter-panel:not([data-desktop-open="true"]) .explore-secondary-filter {
+    display: none;
+  }
+  .explore-control-header .filters.filter-panel .field { min-width: 0; }
+  .explore-control-header .filters.filter-panel select,
+  .explore-control-header .filters.filter-panel input { width: 100%; }
+  .explore-control-header .desktop-filter-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: .4rem;
+    min-height: 40px;
+    margin: .15rem 0 0;
+    padding: .35rem .55rem;
+    border: 1px solid transparent;
+    border-radius: 8px;
+    background: transparent;
+    color: var(--forest);
+    font-size: .83rem;
+    font-weight: 700;
+    cursor: pointer;
+  }
+  .desktop-filter-toggle > svg:last-child { margin-left: auto; }
+  .desktop-filter-toggle span { font-size: .78rem; font-weight: 650; color: var(--ink-soft); }
+  .desktop-filter-toggle:hover { background: var(--surface-soft); border-color: var(--line); }
+  .desktop-filter-toggle:focus-visible { outline: 3px solid var(--focus-green); outline-offset: 2px; }
+  .explore-control-header .results { margin-block: .35rem .6rem; }
+}
+
+/* Short but meaningful names can occupy two lines. */
+@media (max-width: 640px) {
+  .home-category-grid .cat { min-height: 70px; }
+  .home-category-grid .category-label-short { font-weight: 650; line-height: 1.18; }
+}
+
+@media (max-width: 700px) {
+  .storefront { gap: .85rem; }
+  .storefront-banner { height: 65px; padding: .75rem 1rem; }
+  .storefront-banner svg { width: 22px; height: 22px; }
+  .storefront-identity-content { gap: .55rem; padding: 0 .9rem .75rem; }
+  .storefront-primary { gap: .6rem; }
+  .storefront-primary > .seller-avatar { width: 64px; height: 64px; margin-top: -19px; border-width: 3px; }
+  .storefront-primary-text { padding-top: .25rem; }
+  .storefront-primary h1 { font-size: 1.4rem; }
+  .storefront-campus { margin-bottom: .22rem; }
+  .storefront-owner-actions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .4rem; }
+  .storefront-owner-actions .btn { width: 100%; min-width: 0; padding-inline: .5rem; font-size: .84rem; }
+  .storefront-owner-actions .storefront-browse-action { grid-column: 1 / -1; }
+  .storefront-owner-actions .storefront-follow-feedback { grid-column: 1 / -1; }
+  .storefront-facts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); padding: .55rem .9rem; gap: .55rem .8rem; }
+  .storefront-facts > div { min-width: 0; gap: .08rem; }
+  .storefront-facts span { font-size: .72rem; }
+  .storefront-facts strong { font-size: .85rem; }
+  .storefront-products-heading { margin-bottom: .4rem; }
+  .storefront-navigation { gap: .25rem; padding: .2rem 0 .4rem; margin-bottom: .5rem; }
+  .storefront-category-tabs { gap: .3rem; }
+  .storefront-category-tabs button { padding-inline: .65rem; }
+  .storefront-browser { padding-bottom: .6rem; }
+}
+
+/* On regular-width phones these four real facts fit on one concise row,
+   making the first listing visible sooner. Narrow 320px phones keep two rows. */
+@media (min-width: 370px) and (max-width: 700px) {
+  .storefront-facts { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: .35rem; }
+  .storefront-facts > div { align-content: start; }
+}
+@media (max-width: 359px) {
+  .home-category-grid .cat { font-size: .65rem; }
+}
+
+/* Restore the mobile floating message launcher above the four-item tab bar.
+   A 54px icon target takes less reading space than the old wide Chat pill.
+   The existing CSS hides the launcher while a form field or keyboard is active. */
+@media (max-width: 860px) {
+  .floating-chat {
+    right: max(14px, env(safe-area-inset-right, 0px));
+    bottom: calc(82px + env(safe-area-inset-bottom, 0px));
+    width: 54px;
+    height: 54px;
+    min-width: 54px;
+    min-height: 54px;
+    padding: 0;
+    display: inline-grid;
+    place-items: center;
+    gap: 0;
+    border: 1px solid var(--mango);
+    border-radius: 16px 16px 5px 16px;
+    box-shadow: 0 5px 18px var(--shadow-card);
+  }
+  .floating-chat > span:not(.floating-chat-badge) { display: none; }
+  .floating-chat svg { width: 23px; height: 23px; }
+  .floating-chat-badge { top: -7px; right: -6px; }
+  .floating-chat-panel {
+    bottom: calc(146px + env(safe-area-inset-bottom, 0px));
+    height: min(520px, calc(100dvh - 164px - env(safe-area-inset-bottom, 0px)));
+  }
+  body:has(.floating-chat-panel[data-keyboard-open="true"]) .floating-chat { display: none; }
+}
+
+/* Keep the desktop Search wording and show an accessible icon-only action on phones. */
+.hero-search-icon { display: none; }
+@media (max-width: 860px) {
+  .hero-search .btn {
+    display: inline-grid;
+    flex: 0 0 50px;
+    place-items: center;
+    width: 50px;
+    min-width: 50px;
+    min-height: 48px;
+    padding: 0;
+    border-radius: 11px;
+  }
+  .hero-search-text { display: none; }
+  .hero-search-icon { display: inline-flex; align-items: center; justify-content: center; }
+}
+
+/* Stay in one row even on compact 320px phones. Preserve the full accessible
+   brand name via the link label; only visible abbreviation changes. */
+@media (max-width: 359px) {
+  .masthead:has(.who-guest) {
+    display: flex;
+    flex-wrap: nowrap;
+    align-items: center;
+    gap: .35rem;
+    padding-inline: .7rem;
+  }
+  .masthead:has(.who-guest) > .brand {
+    display: inline-flex;
+    grid-column: auto;
+    width: auto;
+    min-width: 0;
+    margin-right: auto;
+    font-size: .95rem;
+    white-space: nowrap;
+  }
+  .masthead:has(.who-guest) .brand-long,
+  .masthead:has(.who-guest) .brand-symbol { display: none; }
+  .masthead:has(.who-guest) .brand-short { display: inline; }
+  .masthead:has(.who-guest) > .who-guest {
+    display: flex;
+    grid-column: auto;
+    min-width: 0;
+    flex: 0 0 auto;
+    justify-self: auto;
+    gap: .2rem;
+  }
+  .masthead .who-guest .signin { font-size: .8rem; padding: .5rem .2rem; }
+  .masthead .who-guest .signup-action { padding: .5rem .55rem; font-size: .8rem; }
+}

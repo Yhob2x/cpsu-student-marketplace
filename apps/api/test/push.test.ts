@@ -32,6 +32,8 @@ describe('Web Push security and privacy', () => {
       ['listing.suspended', 'listingReviews', '/listings/19'],
       ['affiliation.decision', 'accountUpdates', '/profile'],
       ['store.new_listing', 'accountUpdates', '/listings/19'],
+      ['transaction.requested', 'accountUpdates', '/notifications'],
+      ['transaction.completion_confirmed', 'accountUpdates', '/notifications'],
     ] as const;
     for (const [event, category, path] of events) {
       expect(categoryForNotice(event)).toBe(category);
@@ -42,6 +44,12 @@ describe('Web Push security and privacy', () => {
       expect(payload.tag).toBe('cpsu-12');
       expect(JSON.stringify(payload)).not.toMatch(/PRIVATE|Highly personal/);
     }
+    expect(pushContent('transaction.requested', { transactionId: 41 }, 20, 2)).toEqual({
+      title: 'CPSU Market', body: 'A student sent you a purchase or service request.',
+      url: '/transactions/41', tag: 'cpsu-20', unread: 2,
+    });
+    expect(pushContent('transaction.accepted', { transactionId: 41 }, 21, 2)?.url).toBe('/transactions/41');
+    expect(pushContent('transaction.negotiating', { transactionId: 41 }, 22, 2)).toBe(null);
     expect(pushContent('unrecognized', data, 1, 0)).toBe(null);
     expect(pushContent('inquiry.reply', { threadId: 'https://evil.invalid' }, 1, 0)?.url).toBe('/notifications');
     expect(pushContent('store.new_listing', { listingId: 'https://evil.invalid',
@@ -83,11 +91,31 @@ describe('service worker notification safeguards', () => {
     expect(notices[0]?.options.data.url).toBe('/notifications');
     expect(badges).toEqual([5]);
 
+    // Exercise the actual deployed worker with both newly supported notification bodies.
+    for (const [body, route] of [
+      ['A store you follow has published a new listing.', '/listings/19'],
+      ['The other student updated your transaction.', '/transactions/41'],
+    ]) {
+      listeners.get('push')!({
+        data: { json: () => ({ body, url: route, tag: 'cpsu-31' }) },
+        waitUntil: (promise: Promise<unknown>) => { running = promise; },
+      });
+      await running;
+      expect(notices.at(-1)?.options.body).toBe(body);
+      expect(notices.at(-1)?.options.data.url).toBe(route);
+    }
     listeners.get('notificationclick')!({
       notification: { data: { url: '/inquiries/27' }, close: () => {} },
       waitUntil: (promise: Promise<unknown>) => { running = promise; },
     });
     await running;
     expect(opened).toEqual(['https://market.example.test/inquiries/27']);
+
+    listeners.get('notificationclick')!({
+      notification: { data: { url: '/transactions/41' }, close: () => {} },
+      waitUntil: (promise: Promise<unknown>) => { running = promise; },
+    });
+    await running;
+    expect(opened.at(-1)).toBe('https://market.example.test/transactions/41');
   });
 });

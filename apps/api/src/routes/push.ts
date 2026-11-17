@@ -9,7 +9,9 @@ import { endpointHash, permittedPushEndpoint, pushDeliveryReady, pushReady } fro
 
 const r = Router();
 r.use(requireAuth);
-r.use(rateLimit({ windowMs: 15 * 60_000, limit: 40, standardHeaders: 'draft-7', legacyHeaders: false }));
+// Per authenticated account: students behind one campus NAT must not share this quota.
+r.use(rateLimit({ windowMs: 15 * 60_000, limit: 40, standardHeaders: 'draft-7',
+  legacyHeaders: false, keyGenerator: req => `account:${req.user!.id}` }));
 
 const DEFAULTS = { messages: true, listingReviews: true, accountUpdates: true };
 const preferenceSchema = z.object({
@@ -25,12 +27,25 @@ const subscriptionSchema = z.object({
     p256dh: z.string().regex(/^[\w-]{60,180}$/),
     auth: z.string().regex(/^[\w-]{12,90}$/),
   }).strict(),
-  expirationTime: z.number().int().positive().nullable().optional(),
+  expirationTime: z.number().int().positive().max(8_640_000_000_000_000).nullable().optional(),
 }).strict();
 
 r.get('/config', (_req, res) => {
   res.setHeader('Cache-Control', 'no-store');
   res.json({ enabled: pushReady, deliveryEnabled: pushDeliveryReady, publicKey: pushReady ? env.VAPID_PUBLIC_KEY : null });
+});
+
+// POST avoids exposing capability URLs in browser history, proxies, and access logs.
+// Identical browser subscriptions must not be treated as enrolled for other users.
+r.post('/subscriptions/status', async (req, res) => {
+  const { endpoint: value } = z.object({ endpoint }).strict().parse(req.body);
+  res.setHeader('Cache-Control', 'no-store');
+  if (!pushReady || !permittedPushEndpoint(value)) return res.json({ registered: false });
+  const row = await prisma.pushSubscription.findUnique({
+    where: { endpointHash: endpointHash(value) }, select: { userId: true, expiresAt: true },
+  });
+  res.json({ registered: row?.userId === req.user!.id
+    && (!row.expiresAt || row.expiresAt > new Date()) });
 });
 
 r.get('/preferences', async (req, res) => {
@@ -58,6 +73,9 @@ r.post('/subscriptions', async (req, res) => {
   const sub = subscriptionSchema.parse(req.body);
   if (!permittedPushEndpoint(sub.endpoint)) throw new HttpError(400, 'invalid_push_endpoint');
   const hash = endpointHash(sub.endpoint);
+  // Reclaim dead records before enforcing the eight-device cap.
+  await prisma.pushSubscription.deleteMany({ where: { userId: req.user!.id,
+    expiresAt: { lte: new Date() } } });
   const existing = await prisma.pushSubscription.findUnique({ where: { endpointHash: hash } });
   if (!existing || existing.userId !== req.user!.id) {
     const count = await prisma.pushSubscription.count({ where: { userId: req.user!.id } });

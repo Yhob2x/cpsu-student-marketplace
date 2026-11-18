@@ -8,7 +8,8 @@ describe('icon-only button accessibility', () => {
     const page = readFileSync(new URL('../src/pages-profile.tsx', import.meta.url), 'utf8');
     const shell = readFileSync(new URL('../src/main.tsx', import.meta.url), 'utf8');
     const styles = readFileSync(new URL('../src/notifications.css', import.meta.url), 'utf8');
-    expect(page).toContain('aria-label={busy ? \'Marking all notifications as read\' : \'Mark all notifications as read\'}');
+    // Screen-reader name must start with the visible 'Mark all read' label for voice control.
+    expect(page).toContain('aria-label={busy ? \'Marking all notifications as read\' : \'Mark all read — mark all notifications as read\'}');
     expect(page).toContain('className="notifications-mark-all-copy"');
     expect(page).toContain('role="group" aria-label="Filter notifications"');
     expect(shell).toContain('className="alerts-word">Alerts</span>');

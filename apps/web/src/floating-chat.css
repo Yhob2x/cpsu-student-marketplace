@@ -16,7 +16,7 @@
   border: 1px solid var(--mango);
   border-radius: 12px 12px 4px 12px;
   background: var(--mango);
-  color: var(--forest);
+  color: var(--on-mango);
   box-shadow: 0 6px 20px var(--shadow-card);
   text-decoration: none;
   font: 750 .94rem/1 var(--font-body);
@@ -48,7 +48,7 @@
   outline-offset: 4px;
 }
 @media (hover: hover) and (pointer: fine) {
-  .floating-chat:hover { background: var(--mango); color: var(--forest); filter: brightness(.97); }
+  .floating-chat:hover { background: var(--mango); color: var(--on-mango); filter: brightness(.97); }
 }
 @media (max-width: 860px) {
   /* Above the tabbar, never on top of its four primary targets. */

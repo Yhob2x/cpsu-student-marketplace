@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { api, explain, peso } from './api';
 import { useMe } from './main';
+import { showActionFeedback } from './action-feedback';
 import { IconAction } from './icon-action';
 import { TransactionStoreReview } from './store-review-widgets';
 import { useForegroundRefresh } from './foreground-refresh';
@@ -124,7 +125,8 @@ export function TransactionDetail() {
       await reload();
       void syncUnread();
       setNotice('Transaction updated. The other student has been notified.');
-    } catch (e) { setActionError(explain(e)); await reload(); }
+      showActionFeedback({ kind: 'success', title: 'Transaction updated', message: 'The new status has been recorded and the other student notified.' });
+    } catch (e) { setActionError(explain(e)); showActionFeedback({ kind: 'error', title: 'Transaction not updated', message: explain(e) }); await reload(); }
     finally { setBusy(false); }
   };
   if (loading && !data) return <p role="status" className="muted">Loading transaction…</p>;

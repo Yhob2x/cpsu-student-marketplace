@@ -5,6 +5,7 @@ import { api, setToken, tryRestoreSession } from './api';
 import { disconnectPushOnLogout, reconcilePushForActiveAccount, updateAppBadge } from './push-client';
 import { Discover, Home, ListingDetail, Guidelines, StorePage } from './pages-public';
 import { Icon } from './icons';
+import { ActionFeedbackHost, showActionFeedback } from './action-feedback';
 import { SiteFooter } from './site-footer';
 import { FloatingChat } from './floating-chat';
 import { useForegroundRefresh } from './foreground-refresh';
@@ -46,6 +47,8 @@ import './p1p2-ux-fixes.css';
 import './listing-composer-polish.css';
 import './storefront-page-polish.css';
 import './explore-page-polish.css';
+import './explore-simple-filters.css';
+import './action-feedback.css';
 
 export type Me = { id: number; email: string; displayName: string; roles: { role: string; campusId: number | null }[];
   affiliations: { id: number; campus: { id: number; name: string }; status: string }[]; storeId: number | null };
@@ -118,8 +121,9 @@ function Shell() {
     try {
       await api(`/saved/${id}`, { method: saved ? 'PUT' : 'DELETE' });
       setSavedIds(prev => saved ? [...prev, id] : prev.filter(x => x !== id));
+      showActionFeedback({ kind: 'success', title: saved ? 'Listing saved' : 'Listing removed', message: saved ? 'You can find it in Saved items.' : 'Removed from your saved items.' });
       return true;
-    } catch { return false; }
+    } catch { showActionFeedback({ kind: 'error', title: 'Could not update saved items', message: 'Check your connection and try again.' }); return false; }
   };
   const isReviewer = me?.roles.some(r => ['campus_reviewer', 'university_admin'].includes(r.role));
   // Pending affiliations plus listings, so reviewers see the queue depth before opening it.
@@ -157,8 +161,10 @@ function Shell() {
       // the separate push DELETE failed; other signed-in devices stay enrolled.
       await api('/auth/logout', { method: 'POST', body: { pushEndpoint } });
       setToken(null); setMe(null);
+      showActionFeedback({ kind: 'success', title: 'Signed out', message: 'You have safely signed out of CPSU Market.' });
     } catch {
       setLogoutError('Could not sign out. Check your connection and try again. Your session may still be active.');
+      showActionFeedback({ kind: 'error', title: 'Sign-out failed', message: 'Your session may still be active. Please try again.' });
     } finally {
       logoutLock.current = false; setLoggingOut(false);
     }
@@ -196,7 +202,7 @@ function Shell() {
           <span><Icon name="pin" size={14} /> Payment and pickup arranged on campus</span>
         </div></div>
         <div className="wrap masthead">
-          <Link to="/" className="brand" aria-label="CPSU Student Marketplace home">
+          <Link to="/" className="brand" aria-label="CPSU Market — CPSU Student Marketplace home">
             <span className="brand-symbol" aria-hidden="true"><Icon name="store" size={19} /></span>
             <span className="brand-long">CPSU <b>Student Marketplace</b><small>Buy, sell and offer</small></span>
             <span className="brand-short" aria-hidden="true">CPSU Market</span></Link>
@@ -219,7 +225,7 @@ function Shell() {
           <NavLink to="/transactions">Transactions</NavLink></>}
           <NavLink to="/profile">Profile</NavLink>
           <NavLink to="/guidelines">Guidelines</NavLink>
-          {isReviewer && <NavLink to="/admin" aria-label={queue > 0 ? `Review, ${queue} waiting` : undefined}>Review{queue > 0 && <span className="nav-badge">{queue}</span>}</NavLink>}
+          {isReviewer && <NavLink to="/admin" aria-label={queue > 0 ? `Review ${queue} waiting` : undefined}>Review{queue > 0 && <> <span className="nav-badge">{queue}</span></>}</NavLink>}
         </div>
       </header>
       {logoutError && <div className="wrap"><p className="err" role="alert">{logoutError}</p></div>}
@@ -239,6 +245,7 @@ function Shell() {
           <Route path="*" element={<NotFound />} />
         </Routes>
       </div></main>
+      <ActionFeedbackHost />
       <SiteFooter audience={!ready ? 'checking' : !me ? 'guest' : isStaff ? 'staff' : 'student'} canReview={Boolean(isReviewer)} />
       <FloatingChat ready={ready} isStaff={Boolean(isStaff)} signedIn={Boolean(me)} unreadMessages={unreadMessages} onUnreadChanged={syncUnread} />
       <nav className="tabbar" aria-label="Primary">

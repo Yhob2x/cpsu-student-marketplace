@@ -7,7 +7,7 @@ test('guest browses Explore, filters by category and opens a listing', async ({ 
   await expect(page.getByRole('heading', { name: 'Explore listings' })).toBeVisible();
   const filtersToggle = page.getByRole('button', { name: 'Filters', exact: true });
   if (await filtersToggle.isVisible()) await filtersToggle.click();
-  await page.getByRole('group', { name: 'Category' }).getByRole('button', { name: 'Books' }).click();
+  await page.getByRole('button', { name: 'Books', exact: true }).click();
   await expect(page).toHaveURL(/categoryId=1/);
   await expect(page.getByRole('link', { name: /View Synthetic calculus textbook/i })).toBeVisible();
   await page.getByRole('link', { name: /View Synthetic calculus textbook/i }).click();

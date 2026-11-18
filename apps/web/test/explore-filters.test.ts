@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'bun:test';
-import { categoriesForExplore, cleanExploreQuery, DEFAULT_EXPLORE_FILTERS, exploreAdvancedSummary, explorePriceError, updateExploreQuery } from '../src/explore-filters';
+import { categoriesForExplore, cleanExploreQuery, DEFAULT_EXPLORE_FILTERS, exploreAdvancedSummary, explorePriceError, previewExploreOptions, updateExploreQuery } from '../src/explore-filters';
 
 const cats = [
   {id: 1, name: 'Handmade goods', listingType: 'physical_product' as const},
@@ -12,6 +12,14 @@ describe('Explore filtering rules', () => {
     expect(categoriesForExplore(cats, 'service').map(c => c.name)).toEqual(['Tutoring', 'Photography & video']);
     expect(categoriesForExplore(cats, 'physical_product').length).toBe(2);
     expect(categoriesForExplore(cats, '').length).toBe(4);
+  });
+  test('compact choices show first options and preserve a selected option from a shared link', () => {
+    const campuses = Array.from({ length: 8 }, (_, i) => ({ id: i + 1, name: `Campus ${i + 1}` }));
+    expect(previewExploreOptions(campuses, '', 3).map(c => c.id)).toEqual([1, 2, 3]);
+    expect(previewExploreOptions(campuses, '7', 3).map(c => c.id)).toEqual([1, 2, 3, 7]);
+    expect(previewExploreOptions(campuses, '2', 3).map(c => c.id)).toEqual([1, 2, 3]);
+    expect(previewExploreOptions(campuses, '99', 3).map(c => c.id)).toEqual([1, 2, 3]);
+    expect(previewExploreOptions([], '', 3)).toEqual([]);
   });
   test('switching to Services clears a product category and condition and resets page', () => {
     const next = updateExploreQuery(new URLSearchParams('type=physical_product&categoryId=2&condition=good&page=3&q=notes'),

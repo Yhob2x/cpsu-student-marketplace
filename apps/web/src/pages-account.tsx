@@ -2,6 +2,7 @@ import { FormEvent, useEffect, useRef, useState } from 'react';
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { api, explain, peso, setToken, timeAgo } from './api';
 import { useMe } from './main';
+import { showActionFeedback } from './action-feedback';
 import { assessListingReadability } from './listing-quality';
 import { categoriesForKind, categoryMatchesKind, type ListingKind } from './listing-categories';
 import { useForegroundRefresh } from './foreground-refresh';
@@ -304,7 +305,7 @@ export function Dashboard() {
     setCreateDirty(false);
     requestAnimationFrame(() => createTitle.current?.focus());
   };
-  const createStore = async (e: FormEvent<HTMLFormElement>) => { e.preventDefault(); try { await api('/seller/store', { body: Object.fromEntries(new FormData(e.currentTarget)) }); await reload(); } catch (x) { setErr(explain(x)); } };
+  const createStore = async (e: FormEvent<HTMLFormElement>) => { e.preventDefault(); try { await api('/seller/store', { body: Object.fromEntries(new FormData(e.currentTarget)) }); await reload(); showActionFeedback({ kind: 'success', title: 'Store created', message: 'Your store details were saved.' }); } catch (x) { setErr(explain(x)); } };
   const uploadOnePhoto = async (id: number, file: File) => {
     const fd = new FormData();
     fd.append('image', file);
@@ -339,8 +340,10 @@ export function Dashboard() {
       setNewCategoryId(''); setNewListingKind(''); setRepeatListing(null); setCreateDirty(false);
       await load();
       if (uploadFailure) {
+        showActionFeedback({ kind: 'warning', title: 'Draft saved with missing photos', message: 'Your draft was saved, but some photos need to be uploaded again.' });
         setErr(`Draft "${d.title}" was saved. ${uploadFailure} Use Edit on that draft to select only the photos that did not upload. Do not create another draft.`);
       } else {
+        showActionFeedback({ kind: 'success', title: 'Draft saved', message: 'Submit your listing for review when it is ready.' });
         setOk(files.length ? `Draft saved with ${files.length} ${files.length === 1 ? 'photo' : 'photos'}. Submit it for review when ready.` : 'Draft saved. Add at least one photo before submitting it for review.');
       }
     } catch (x) { setErr(explain(x)); }
@@ -353,6 +356,7 @@ export function Dashboard() {
     try {
       await api(`/seller/listings/${id}/availability`, { method: 'PATCH', body: { availability } });
       setErr(''); setOk(availability === 'sold' ? 'Marked as sold. A sold listing cannot be relisted.' : `Availability updated to ${availability}.`);
+      showActionFeedback({ kind: 'success', title: availability === 'sold' ? 'Listing marked sold' : 'Availability updated', message: availability === 'sold' ? 'This listing is no longer available to buyers.' : `Listing is now ${availability}.` });
       await load();
     } catch (x) { setErr(explain(x)); return false; } finally { setPending(null); }
     return true;
@@ -362,10 +366,10 @@ export function Dashboard() {
     setPending(id);
     try {
       await api(`/seller/listings/${id}`, { method: 'DELETE' });
-      setErr(''); setOk('Listing removed from marketplace browsing.'); await load();
+      setErr(''); setOk('Listing removed from marketplace browsing.'); showActionFeedback({ kind: 'success', title: 'Listing removed', message: 'This listing is no longer shown in the marketplace.' }); await load();
     } catch (x) { setErr(explain(x)); } finally { setPending(null); }
   };
-  const submit = async (id: number) => { setPending(id); try { await api(`/seller/listings/${id}/submit`, { method: 'POST', body: {} }); setOk('Submitted. A reviewer will decide soon.'); setErr(''); await load(); } catch (x) { setErr(explain(x)); } finally { setPending(null); } };
+  const submit = async (id: number) => { setPending(id); try { await api(`/seller/listings/${id}/submit`, { method: 'POST', body: {} }); setOk('Submitted. A reviewer will decide soon.'); setErr(''); showActionFeedback({ kind: 'success', title: 'Submitted for review', message: 'Your listing has been sent to a campus reviewer.' }); await load(); } catch (x) { setErr(explain(x)); } finally { setPending(null); } };
   const saveEdit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (editInFlight.current || !editing) return;
@@ -401,9 +405,9 @@ export function Dashboard() {
       setPhotoProgress('');
       setEditing(null); setEditFiles([]); setEditCover(null); setEditSelectionError(''); setEditDirty(false);
       await load();
-      if (uploadFailure || coverFailure) setErr(`Listing details were saved. ${uploadFailure ? `${uploadFailure} Select Edit to retry only the remaining photos. ` : ''}${coverFailure}`.trim());
-      else setOk(files.length ? `${files.length} ${files.length === 1 ? 'photo' : 'photos'} saved. Submit the listing for review again before it appears publicly.` : 'Listing updated.');
-    } catch (x) { setErr(explain(x)); }
+      if (uploadFailure || coverFailure) { showActionFeedback({ kind: 'warning', title: 'Listing partially updated', message: 'Details were saved, but some photo changes need attention.' }); setErr(`Listing details were saved. ${uploadFailure ? `${uploadFailure} Select Edit to retry only the remaining photos. ` : ''}${coverFailure}`.trim()); }
+      else { showActionFeedback({ kind: 'success', title: 'Listing updated', message: 'Your changes were saved successfully.' }); setOk(files.length ? `${files.length} ${files.length === 1 ? 'photo' : 'photos'} saved. Submit the listing for review again before it appears publicly.` : 'Listing updated.'); }
+    } catch (x) { setErr(explain(x)); showActionFeedback({ kind: 'error', title: 'Could not save listing', message: explain(x) }); }
     finally { editInFlight.current = false; setSavingEdit(false); setPhotoProgress(''); }
   };
   const closeEditor = (restoreFocus = true) => {
@@ -639,7 +643,7 @@ export function Inquiries() {
       <div><h1>Messages</h1></div>
       <div className="messages-audio-actions">
         <button type="button" className="btn ghost conversation-sound-toggle"
-          aria-label={receiveSoundOn ? 'Mute incoming message sound' : 'Enable incoming message sound'}
+          aria-label={receiveSoundOn ? 'Sound on — mute incoming message sound' : 'Sound off — enable incoming message sound'}
           aria-pressed={receiveSoundOn}
           onClick={() => {
             const enabled = !receiveSoundOn;
@@ -650,7 +654,7 @@ export function Inquiries() {
           <Icon name="bell" size={17} /> {receiveSoundOn ? 'Sound on' : 'Sound off'}
         </button>
         {receiveSoundOn && <button type="button" className="btn ghost"
-          aria-label="Play test incoming message sound"
+          aria-label="Test sound — play test incoming message sound"
           onClick={() => { unlockMessageReceiveSound(); playMessageReceiveSound(); }}>Test sound</button>}
         <Link className="btn ghost" to="/explore">Browse listings</Link>
       </div>
@@ -947,13 +951,13 @@ export function Thread() {
       </div>
       <div className="conversation-actions">
         {!closed && <button type="button" className="btn ghost conversation-sound-toggle"
-          aria-pressed={receiveSoundOn} aria-label={receiveSoundOn ? 'Mute incoming message sound' : 'Enable incoming message sound'}
+          aria-pressed={receiveSoundOn} aria-label={receiveSoundOn ? 'Sound on — mute incoming message sound' : 'Sound off — enable incoming message sound'}
           onClick={() => { const enabled = !receiveSoundOn; setReceiveSoundOn(enabled); setMessageReceiveSoundEnabled(enabled); if (enabled) unlockMessageReceiveSound(); }}>
           <Icon name="bell" size={17} /> {receiveSoundOn ? 'Sound on' : 'Sound off'}
         </button>}
         {!closed && receiveSoundOn && <button type="button" className="btn ghost conversation-sound-preview"
           onClick={() => { unlockMessageReceiveSound(); playMessageReceiveSound(); }}
-          aria-label="Play test incoming message sound">Test sound</button>}
+          aria-label="Test sound — play test incoming message sound">Test sound</button>}
         {closed && <span className="status closed">Closed</span>}
         {!closed && <button type="button" className="btn ghost" disabled={closing || busy}
           aria-label="End conversation" aria-expanded={closeConfirm} onClick={() => { setCloseConfirm(open => !open); setSafetyError(''); }}>

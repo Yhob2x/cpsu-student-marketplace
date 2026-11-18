@@ -2,6 +2,7 @@ import { FormEvent, useEffect, useRef, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { api, explain, timeAgo } from './api';
 import { useMe } from './main';
+import { showActionFeedback } from './action-feedback';
 import { useForegroundRefresh } from './foreground-refresh';
 import { Icon, type IconName } from './icons';
 import { IconAction } from './icon-action';
@@ -108,10 +109,11 @@ export function Profile() {
     try {
       await api('/me', { method: 'PATCH', body: { displayName: nameChange.trimmed } });
       const updated = await reload();
-      if (updated) setOk('Display name updated.');
-      else setErr('Your name was saved, but your account could not refresh. Reload the page to check your profile.');
+      if (updated) { setOk('Display name updated.'); showActionFeedback({ kind: 'success', title: 'Profile updated', message: 'Your display name was saved successfully.' }); }
+      else { setErr('Your name was saved, but your account could not refresh. Reload the page to check your profile.'); showActionFeedback({ kind: 'warning', title: 'Saved, but refresh failed', message: 'Reload your profile to see the latest account details.' }); }
     } catch (x) {
       setErr(explain(x));
+      showActionFeedback({ kind: 'error', title: 'Profile not updated', message: explain(x) });
     } finally {
       setBusy(false);
     }
@@ -368,7 +370,7 @@ export function Notifications() {
       </div>
       <button type="button" className="btn notifications-mark-all" onClick={() => void markAll()}
         disabled={rows === null || busy || markingId !== null || unread === 0} aria-busy={busy}
-        aria-label={busy ? 'Marking all notifications as read' : 'Mark all notifications as read'}
+        aria-label={busy ? 'Marking all notifications as read' : 'Mark all read — mark all notifications as read'}
         title={busy ? 'Marking all notifications as read' : 'Mark all notifications as read'}>
         <Icon name="checks" size={19} />
         <span className="notifications-mark-all-copy">{busy ? 'Marking…' : 'Mark all read'}</span>

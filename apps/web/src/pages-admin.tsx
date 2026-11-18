@@ -4,6 +4,7 @@ import { api, explain, peso } from './api';
 import { Icon } from './icons';
 import { assessListingReadability } from './listing-quality';
 import { useMe } from './main';
+import { showActionFeedback } from './action-feedback';
 import { useForegroundRefresh } from './foreground-refresh';
 import { ManagedContentAdmin } from './pages-managed-content';
 import { ReviewerAdmin } from './pages-reviewers';
@@ -137,6 +138,7 @@ export function Admin() {
       } });
       setReviewerCampusId(''); setReviewerReason(''); setSelectedStudentId(null);
       setErr(''); setNotice('Reviewer assigned. Existing sessions revoked; they must sign in again.');
+      showActionFeedback({ kind: 'success', title: 'Reviewer assigned', message: 'The student must sign in again to use reviewer access.' });
       await searchStudents(studentApplied, studentPage);
     } catch (e) { setErr(explain(e)); }
     finally { setPending(''); }
@@ -150,6 +152,7 @@ export function Admin() {
       setReasons(previous => ({ ...previous, [`u${id}`]: '' }));
       setErr('');
       setNotice(`Student #${id} ${status === 'suspended' ? 'suspended' : 'reactivated'}.`);
+      showActionFeedback({ kind: 'success', title: status === 'suspended' ? 'Account suspended' : 'Account reactivated', message: 'The student account status was updated.' });
       await searchStudents(studentApplied, studentPage, true);
     } catch (e) { setErr(explain(e)); }
     finally { setPending(''); }
@@ -162,6 +165,7 @@ export function Admin() {
       await api(`/admin/reports/${id}/resolve`, { body: { status, reason } });
       setReportReasons(previous => ({ ...previous, [id]: '' }));
       setNotice(`Report #${id} ${status === 'resolved' ? 'resolved' : 'dismissed'}. Your reason was recorded.`);
+      showActionFeedback({ kind: 'success', title: status === 'resolved' ? 'Report resolved' : 'Report dismissed', message: 'The reason was recorded for the audit trail.' });
       load();
     } catch (e) { setReportActionError(explain(e)); }
     finally { setPending(''); setPendingAction(''); }
@@ -174,6 +178,7 @@ export function Admin() {
     } }); setErr(''); setPhotosReviewed(prev => ({ ...prev, [id]: false }));
       setReasons(prev => ({ ...prev, [`l${id}`]: '' }));
       setNotice(`Listing #${id}: ${decision === 'approved' ? 'approved' : decision === 'rejected' ? 'rejected' : 'changes requested'}.`);
+      showActionFeedback({ kind: 'success', title: 'Listing decision recorded', message: 'The moderation decision has been saved.' });
       load(); } catch (e) { setErr(explain(e)); } finally { setPending(''); setPendingAction(''); }
   };
   const verify = async (id: number, decision: string) => {
@@ -181,6 +186,7 @@ export function Admin() {
     try { await api(`/admin/affiliations/${id}/verify`, { body: { decision, reason: (reasons[`a${id}`] ?? '').trim() } });
       setErr(''); setReasons(prev => ({ ...prev, [`a${id}`]: '' }));
       setNotice(`Student affiliation #${id} ${decision === 'verified' ? 'verified' : 'rejected'}.`);
+      showActionFeedback({ kind: 'success', title: 'Affiliation decision recorded', message: 'The verification decision has been saved.' });
       load(); } catch (e) { setErr(explain(e)); } finally { setPending(''); setPendingAction(''); }
   };
   const field = (k: string, ph: string, min = 5) => <label className="field moderation-reason">

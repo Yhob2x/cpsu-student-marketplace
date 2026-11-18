@@ -3,6 +3,7 @@ import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { ApiError, api, explain, peso } from './api';
 import { useMe } from './main';
 import { Icon } from './icons';
+import { showActionFeedback } from './action-feedback';
 import { InstallApp } from './install-app';
 import { selectHomeListings } from './home-listings';
 import { MobileBrowseControls, SwipeableListingRail } from './mobile-browse-controls';
@@ -244,7 +245,7 @@ export function Discover() {
   const [campuses, setCampuses] = useState<{ id: number; name: string }[]>([]);
   const [cats, setCats] = useState<ExploreCategory[]>([]);
   const [filterError, setFilterError] = useState(''); const [filtersLoading, setFiltersLoading] = useState(false);
-  const [filtersOpen, setFiltersOpen] = useState(false);
+  const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
   const [allCampusesOpen, setAllCampusesOpen] = useState(false);
   const [allCategoriesOpen, setAllCategoriesOpen] = useState(false);
   const [items, setItems] = useState<Listing[] | null>(null); const [total, setTotal] = useState<number | null>(null);
@@ -253,13 +254,12 @@ export function Discover() {
   const currentPage = Math.max(1, Number(sp.get('page')) || 1);
   const pageCount = Math.ceil((total ?? 0) / 20);
   const availableCats = categoriesForExplore(cats, f.type);
-  const campusPreview = previewExploreOptions(campuses, f.campusId);
-  const categoryPreview = previewExploreOptions(availableCats, f.categoryId);
+  const campusPreview = previewExploreOptions(campuses, f.campusId, 4);
+  const categoryPreview = previewExploreOptions(availableCats, f.categoryId, 5);
   const priceError = explorePriceError(f.minPrice, f.maxPrice);
   const activeFilters = exploreAdvancedSummary(f, campuses, cats);
-  const secondaryFilterLabels = activeFilters.labels.filter(label => label.startsWith('Condition:') || label.startsWith('Price:'));
-  // Invalid shared links must expose the inputs and the recovery message immediately.
-  useEffect(() => { if (priceError) setFiltersOpen(true); }, [priceError]);
+  // Invalid price links reveal the correction controls on small screens.
+  useEffect(() => { if (priceError) setMobileFiltersOpen(true); }, [priceError]);
   const navigatePage = (page: number) => { const next = new URLSearchParams(sp); next.set('page', String(page)); setSp(next); };
 
   const loadFilterOptions = async () => {
@@ -311,94 +311,113 @@ export function Discover() {
   };
   const reset = () => setSp(new URLSearchParams(), { replace: true });
   const dirty = (Object.keys(NO_FILTERS) as (keyof Filters)[]).some(k => k !== 'sort' && f[k] !== '');
-  const skel = <div className="grid listing-grid explore-results" aria-label="Loading listing results">
+  const skel = <div className="grid listing-grid explore-results" role="status" aria-label="Loading listing results">
     {Array.from({ length: 8 }, (_, i) => <div key={i} className="skel card" aria-hidden="true" />)}
   </div>;
 
   return <>
-    <section className="explore-control-header" aria-label="Explore controls">
-    <h1>Explore listings</h1>
-
-    <div className="explore-toolbar" role="search" aria-label="Explore listing search">
-      <label className="field explore-search"><span className="explore-search-label">Search listings</span>
-        <span className="input-icon"><Icon name="search" size={18} /><input placeholder="Search items or services" maxLength={80} value={f.q} onChange={set('q')} /></span>
-      </label>
-    </div>
-    <div className="explore-primary-controls">
-      <div className="explore-type-chips" role="group" aria-label="Listing type">
-        {([['', 'All'], ['physical_product', 'Products'], ['service', 'Services']] as const).map(([value, label]) =>
-          <button key={value} type="button" aria-pressed={f.type === value}
-            onClick={() => set('type')({ target: { value } })}>{label}</button>)}
-      </div>
-    </div>
-    {filterError && <div className="panel row" role="alert"><span>{filterError}</span>
-      <button type="button" className="btn ghost" disabled={filtersLoading} onClick={() => void loadFilterOptions()}>
-        {filtersLoading ? 'Retrying…' : 'Retry filters'}
+    <div className="explore-page-heading">
+      <h1>Explore listings</h1>
+      <button type="button" className="explore-mobile-filter-toggle"
+        aria-controls="explore-filter-sidebar" aria-expanded={mobileFiltersOpen}
+        onClick={() => setMobileFiltersOpen(open => !open)}>
+        <Icon name="sliders-horizontal" size={18} />
+        Filters{activeFilters.count + (f.type ? 1 : 0) > 0 ? ` (${activeFilters.count + (f.type ? 1 : 0)})` : ''}
       </button>
-    </div>}
-    <div className="explore-inline-filters explore-quick-filters"
-      role="group" aria-label="Quick filters">
-      <div className="explore-inline-filter-group" role="group" aria-label="Campus">
-        <span className="explore-inline-filter-label" aria-hidden="true">Campus</span>
-        <ExploreScrollOptions label="Campus" count={campuses.length}>
-          <button type="button" aria-pressed={f.campusId === ''} onClick={() => set('campusId')({ target: { value: '' } })}>All campuses</button>
-          {campuses.map(c => <button key={c.id} type="button" aria-pressed={f.campusId === String(c.id)}
-            onClick={() => set('campusId')({ target: { value: String(c.id) } })}>{c.name}</button>)}
-        </ExploreScrollOptions>
-      </div>
-      <div className="explore-inline-filter-group" role="group" aria-label="Category">
-        <span className="explore-inline-filter-label" aria-hidden="true">Category</span>
-        <ExploreScrollOptions label="Category" count={availableCats.length}>
-          <button type="button" aria-pressed={f.categoryId === ''} onClick={() => set('categoryId')({ target: { value: '' } })}>All categories</button>
-          {availableCats.map(c => <button key={c.id} type="button" aria-pressed={f.categoryId === String(c.id)}
-            onClick={() => set('categoryId')({ target: { value: String(c.id) } })}>{c.name}</button>)}
-        </ExploreScrollOptions>
-      </div>
     </div>
-    <div className="explore-refinements-bar">
-      <button type="button" className="explore-advanced-toggle"
-        aria-expanded={filtersOpen} aria-controls="explore-advanced-filters"
-        onClick={() => setFiltersOpen(open => !open)}>
-        <Icon name="sliders-horizontal" size={16} />
-        <span>{filtersOpen ? 'Hide price & condition' : 'Price & condition'}</span>
-        {secondaryFilterLabels.length > 0 && <span className="explore-active-filter-count">{secondaryFilterLabels.length}</span>}
-      </button>
-      {!filtersOpen && secondaryFilterLabels.length > 0 && <span className="explore-active-summary">
-        {secondaryFilterLabels.join(' · ')}
-      </span>}
-    </div>
-    <div id="explore-advanced-filters" className="explore-inline-filters explore-secondary-filters"
-      role="group" aria-label="Price and condition filters" hidden={!filtersOpen}>
-      {f.type !== 'service' && <div className="explore-inline-filter-group" role="group" aria-label="Product condition">
-        <span className="explore-inline-filter-label" aria-hidden="true">Condition</span>
-        <div className="explore-inline-filter-options">
-          {([
-            ['', 'Any'], ['new', 'New'], ['like_new', 'Like new'],
-            ['good', 'Good'], ['fair', 'Fair'],
-          ] as const).map(([value, label]) =>
-            <button key={value} type="button" aria-pressed={f.condition === value}
-              onClick={() => set('condition')({ target: { value } })}>{label}</button>)}
+    <div className="explore-sidebar-layout">
+      <aside id="explore-filter-sidebar" className="explore-filter-sidebar"
+        data-mobile-open={mobileFiltersOpen} aria-label="Filter listings">
+        <div className="explore-sidebar-title">
+          <h2>Filters</h2>
+          {dirty && <button type="button" className="explore-sidebar-reset" onClick={reset}>Clear all</button>}
         </div>
-      </div>}
-      <div className="explore-inline-filter-group explore-inline-price-group" role="group" aria-label="Price range">
-        <span className="explore-inline-filter-label" aria-hidden="true">Price (₱)</span>
-        <div className="explore-inline-price-inputs">
-          <label className="field"><span>Min</span>
-            <input type="number" inputMode="numeric" min={0} step={1} placeholder="Min" value={f.minPrice}
-              aria-invalid={Boolean(priceError)} aria-describedby={priceError ? 'explore-price-error' : undefined}
-              onChange={set('minPrice')} />
-          </label>
-          <span className="explore-inline-price-separator" aria-hidden="true">–</span>
-          <label className="field"><span>Max</span>
-            <input type="number" inputMode="numeric" min={0} step={1} placeholder="Max" value={f.maxPrice}
-              aria-invalid={Boolean(priceError)} aria-describedby={priceError ? 'explore-price-error' : undefined}
-              onChange={set('maxPrice')} />
-          </label>
-        </div>
-        {priceError && <p className="explore-price-error" id="explore-price-error" role="alert">{priceError}</p>}
-      </div>
-    </div>
-
+        {filterError && <div className="explore-sidebar-error" role="alert">
+          <p>{filterError}</p>
+          <button type="button" className="btn ghost" disabled={filtersLoading}
+            onClick={() => void loadFilterOptions()}>{filtersLoading ? 'Retrying…' : 'Retry'}</button>
+        </div>}
+        <section className="explore-sidebar-section" aria-labelledby="explore-filter-type-title">
+          <h3 id="explore-filter-type-title">Listing type</h3>
+          <div className="explore-checkbox-options" role="radiogroup" aria-labelledby="explore-filter-type-title">
+            {([['', 'All listings'], ['physical_product', 'Products'], ['service', 'Services']] as const).map(([value, label]) =>
+              <label key={value} className="explore-checkbox-choice">
+                <input type="radio" name="explore-listing-type" checked={f.type === value}
+                  onChange={() => set('type')({ target: { value } })} />
+                <span>{label}</span>
+              </label>)}
+          </div>
+        </section>
+        <section className="explore-sidebar-section" aria-labelledby="explore-filter-campus-title">
+          <h3 id="explore-filter-campus-title">Campus</h3>
+          <div className="explore-checkbox-options" role="radiogroup" aria-labelledby="explore-filter-campus-title">
+            <label className="explore-checkbox-choice">
+              <input type="radio" name="explore-campus" checked={f.campusId === ''}
+                onChange={() => set('campusId')({ target: { value: '' } })} />
+              <span>All campuses</span>
+            </label>
+            {(allCampusesOpen ? campuses : campusPreview).map(c =>
+              <label key={c.id} className="explore-checkbox-choice">
+                <input type="radio" name="explore-campus" checked={f.campusId === String(c.id)}
+                  onChange={() => set('campusId')({ target: { value: String(c.id) } })} />
+                <span>{c.name}</span>
+              </label>)}
+          </div>
+          {campuses.length > campusPreview.length &&
+            <button type="button" className="explore-sidebar-show-more"
+              aria-expanded={allCampusesOpen} onClick={() => setAllCampusesOpen(open => !open)}>
+              {allCampusesOpen ? 'Show fewer' : `Show all ${campuses.length} campuses`}
+            </button>}
+        </section>
+        <section className="explore-sidebar-section" aria-labelledby="explore-filter-category-title">
+          <h3 id="explore-filter-category-title">Category</h3>
+          <div className="explore-checkbox-options" role="radiogroup" aria-labelledby="explore-filter-category-title">
+            <label className="explore-checkbox-choice">
+              <input type="radio" name="explore-category" checked={f.categoryId === ''}
+                onChange={() => set('categoryId')({ target: { value: '' } })} />
+              <span>All categories</span>
+            </label>
+            {(allCategoriesOpen ? availableCats : categoryPreview).map(c =>
+              <label key={c.id} className="explore-checkbox-choice">
+                <input type="radio" name="explore-category" checked={f.categoryId === String(c.id)}
+                  onChange={() => set('categoryId')({ target: { value: String(c.id) } })} />
+                <span>{c.name}</span>
+              </label>)}
+          </div>
+          {availableCats.length > categoryPreview.length &&
+            <button type="button" className="explore-sidebar-show-more"
+              aria-expanded={allCategoriesOpen} onClick={() => setAllCategoriesOpen(open => !open)}>
+              {allCategoriesOpen ? 'Show fewer' : `Show all ${availableCats.length} categories`}
+            </button>}
+        </section>
+        {f.type !== 'service' && <section className="explore-sidebar-section" aria-labelledby="explore-filter-condition-title">
+          <h3 id="explore-filter-condition-title">Condition</h3>
+          <div className="explore-checkbox-options" role="radiogroup" aria-labelledby="explore-filter-condition-title">
+            {([['', 'Any condition'], ['new', 'New'], ['like_new', 'Like new'], ['good', 'Good'], ['fair', 'Fair']] as const).map(([value, label]) =>
+              <label key={value} className="explore-checkbox-choice">
+                <input type="radio" name="explore-condition" checked={f.condition === value}
+                  onChange={() => set('condition')({ target: { value } })} />
+                <span>{label}</span>
+              </label>)}
+          </div>
+        </section>}
+        <section className="explore-sidebar-section" aria-labelledby="explore-filter-price-title">
+          <h3 id="explore-filter-price-title">Price range (₱)</h3>
+          <div className="explore-sidebar-price">
+            <label><span>Minimum</span><input type="number" inputMode="numeric" min={0} step={1}
+              placeholder="₱ Min" value={f.minPrice} aria-invalid={Boolean(priceError)}
+              aria-describedby={priceError ? 'explore-price-error' : undefined} onChange={set('minPrice')} /></label>
+            <label><span>Maximum</span><input type="number" inputMode="numeric" min={0} step={1}
+              placeholder="₱ Max" value={f.maxPrice} aria-invalid={Boolean(priceError)}
+              aria-describedby={priceError ? 'explore-price-error' : undefined} onChange={set('maxPrice')} /></label>
+          </div>
+          {priceError && <p className="explore-price-error" id="explore-price-error" role="alert">{priceError}</p>}
+        </section>
+        <button type="button" className="explore-mobile-filter-done"
+          onClick={() => setMobileFiltersOpen(false)}>Show listings</button>
+      </aside>
+      <div className="explore-content">
+        <section className="explore-control-header" aria-label="Explore results controls">
     <div className="results explore-results-toolbar">
       <p className="muted explore-results-count" role="status" aria-live="polite">
         {priceError ? 'Check the price range' : error ? 'Could not load listings' : total === null ? 'Searching…' : total === 0 ? 'No listings match' : `${total} listing${total === 1 ? '' : 's'}`}
@@ -440,6 +459,8 @@ export function Discover() {
       <span className="muted" role="status">Page {currentPage} of {pageCount}</span>
       <button type="button" className="btn ghost" disabled={currentPage >= pageCount} onClick={() => navigatePage(currentPage + 1)}>Next</button>
     </nav>}
+      </div>
+    </div>
   </>;
 }
 
@@ -472,11 +493,12 @@ export function ListingDetail() {
   const staff = me?.roles.some(role => ['campus_reviewer', 'university_admin', 'system_admin', 'establishment'].includes(role.role));
   const isAvailable = l.availability === 'available';
   const canRequest = Boolean(me && me.roles.length === 0 && me.affiliations.some(a => a.status === 'verified'));
-  const send = async () => { setBusy(true); try { const r = await api<{ id: number }>('/inquiries', { body: { listingId: l.id, body } }); setBody(''); setInquiryThreadId(r.id); setNote('Message sent.'); setErr(''); } catch (e) { setErr(explain(e)); } finally { setBusy(false); } };
+  const send = async () => { setBusy(true); try { const r = await api<{ id: number }>('/inquiries', { body: { listingId: l.id, body } }); setBody(''); setInquiryThreadId(r.id); setNote('Message sent.'); setErr(''); showActionFeedback({ kind: 'success', title: 'Message sent', message: 'Your inquiry was sent to the seller.' }); } catch (e) { setErr(explain(e)); showActionFeedback({ kind: 'error', title: 'Message not sent', message: explain(e) }); } finally { setBusy(false); } };
   const requestTransaction = async () => {
     setBusy(true); setErr('');
     try {
       const created = await api<{ id: number }>('/transactions', { body: { listingId: l.id } });
+      showActionFeedback({ kind: 'success', title: 'Request created', message: 'Your request is ready for the seller to review.' });
       navigate(`/transactions/${created.id}`);
     } catch (e) { setErr(explain(e)); }
     finally { setBusy(false); }
@@ -489,7 +511,7 @@ export function ListingDetail() {
       else setErr('Could not update your saved list. Check you are still signed in.');
     } finally { setBusy(false); }
   };
-  const report = async () => { setBusy(true); try { await api('/reports', { body: { listingId: l.id, reason } }); setReason(''); setReporting(false); setInquiryThreadId(null); setNote('Report sent to a campus reviewer.'); setErr(''); } catch (e) { setErr(explain(e)); } finally { setBusy(false); } };
+  const report = async () => { setBusy(true); try { await api('/reports', { body: { listingId: l.id, reason } }); setReason(''); setReporting(false); setInquiryThreadId(null); setNote('Report sent to a campus reviewer.'); setErr(''); showActionFeedback({ kind: 'success', title: 'Report submitted', message: 'A campus reviewer will review your report.' }); } catch (e) { setErr(explain(e)); showActionFeedback({ kind: 'error', title: 'Report not submitted', message: explain(e) }); } finally { setBusy(false); } };
   // One button, two homes: over the first photo when there is one, in the action row when there is not.
   const heartLabel = !me ? 'Sign in to save this listing' : saved ? 'Remove from saved' : 'Save for later';
   const heart = <button className="heart-btn" aria-pressed={saved} aria-label={heartLabel}
@@ -588,9 +610,11 @@ export function StorePage() {
         ...current, follow: { count: result.count, isFollowing: result.isFollowing, available: true },
       } : current);
       setFollowMessage(result.isFollowing ? 'You are following this store.' : 'You unfollowed this store.');
+      showActionFeedback({ kind: 'success', title: result.isFollowing ? 'Store followed' : 'Store unfollowed', message: result.isFollowing ? 'You will see updates from this store.' : 'You will no longer receive this store’s updates.' });
       window.dispatchEvent(new Event('store-follow-changed'));
     } catch (error) {
       setFollowMessage(explain(error));
+      showActionFeedback({ kind: 'error', title: 'Follow action failed', message: explain(error) });
     } finally {
       followLock.current = false;
       setFollowBusy(false);
@@ -623,7 +647,8 @@ export function StorePage() {
     try {
       await api('/reports', { body: { sellerProfileId: s.id, reason: reason.trim() } });
       setReason(''); setReporting(false); setReportNotice('Seller report sent to a campus reviewer.');
-    } catch (e) { setReportError(explain(e)); }
+      showActionFeedback({ kind: 'success', title: 'Store reported', message: 'A campus reviewer will review your report.' });
+    } catch (e) { setReportError(explain(e)); showActionFeedback({ kind: 'error', title: 'Report not sent', message: explain(e) }); }
     finally { reportLock.current = false; setReportBusy(false); }
   };
   return <><StorefrontView key={s.id} store={s} isOwner={isOwner}

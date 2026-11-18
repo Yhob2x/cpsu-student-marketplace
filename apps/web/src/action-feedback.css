@@ -1,0 +1,65 @@
+/* Consistent, accessible action confirmation; does not cover the mobile bottom navigation. */
+.action-feedback-viewport {
+  position: fixed;
+  z-index: 1300;
+  inset-block-start: calc(16px + env(safe-area-inset-top, 0px));
+  inset-inline-end: max(16px, env(safe-area-inset-right, 0px));
+  width: min(390px, calc(100vw - 32px));
+  pointer-events: none;
+}
+.action-feedback {
+  display: flex;
+  gap: 14px;
+  align-items: center;
+  padding: 17px 14px 17px 16px;
+  border: 1px solid #dce5f5;
+  border-radius: 16px;
+  background: #ffffff;
+  color: #192337;
+  box-shadow: 0 14px 38px rgb(28 41 67 / 16%), 0 3px 10px rgb(28 41 67 / 6%);
+  pointer-events: auto;
+  animation: action-feedback-enter 180ms ease-out both;
+}
+.action-feedback-symbol {
+  display: grid;
+  place-items: center;
+  flex: 0 0 48px;
+  height: 48px;
+  border: 1px solid #bad5ff;
+  border-radius: 50%;
+  background: #eaf2ff;
+  color: #246bd2;
+}
+.action-feedback--error { border-color: #efc1c1; }
+.action-feedback--error .action-feedback-symbol { color: #b42318; background: #fff0ee; border-color: #ffc9c3; }
+.action-feedback--warning .action-feedback-symbol { color: #9a5a08; background: #fff4dd; border-color: #f7d99f; }
+.action-feedback--info .action-feedback-symbol { color: #27559c; background: #edf4ff; }
+.action-feedback-content { flex: 1; min-width: 0; }
+.action-feedback-content strong { display: block; font-size: 15px; line-height: 1.35; font-weight: 700; }
+.action-feedback-content p { margin: 4px 0 0; color: #536174; font-size: 13px; line-height: 1.45; overflow-wrap: anywhere; }
+.action-feedback-dismiss {
+  align-self: flex-start;
+  display: grid;
+  place-items: center;
+  min-width: 30px;
+  min-height: 30px;
+  padding: 0;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: #59677d;
+  cursor: pointer;
+}
+.action-feedback-dismiss:hover { background: #eef2f7; }
+.action-feedback-dismiss:focus-visible { outline: 2px solid #246bd2; outline-offset: 2px; }
+@keyframes action-feedback-enter { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: translateY(0); } }
+@media (max-width: 640px) {
+  .action-feedback-viewport {
+    inset-inline-start: max(12px, env(safe-area-inset-left, 0px));
+    inset-inline-end: max(12px, env(safe-area-inset-right, 0px));
+    width: auto;
+  }
+  .action-feedback { padding: 14px 12px; border-radius: 14px; }
+  .action-feedback-symbol { flex-basis: 42px; height: 42px; }
+}
+@media (prefers-reduced-motion: reduce) { .action-feedback { animation: none; } }

@@ -10,7 +10,7 @@
     "test:win": "bun test 2>&1",
     "test:components": "bun test test/behavior",
     "test:e2e": "playwright test",
-    "test:a11y": "playwright test e2e/accessibility.pw.ts"
+    "test:a11y": "playwright test e2e/accessibility.pw.ts e2e/accessibility-states.pw.ts"
   },
   "dependencies": {
     "@tailwindcss/vite": "^4.3.5",

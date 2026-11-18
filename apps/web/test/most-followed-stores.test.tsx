@@ -1,11 +1,11 @@
 import { describe, expect, test } from 'bun:test';
 import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
-import { MemoryRouter } from 'react-router-dom';
+import { StaticRouter } from 'react-router-dom/server';
 import { MostFollowedStores } from '../src/most-followed-stores';
 
 const render = (stores: Parameters<typeof MostFollowedStores>[0]['stores']) =>
-  renderToStaticMarkup(createElement(MemoryRouter, null, createElement(MostFollowedStores, { stores })));
+  renderToStaticMarkup(createElement(StaticRouter, { location: '/' }, createElement(MostFollowedStores, { stores })));
 
 describe('Most followed store discovery', () => {
   test('displays real totals and navigates to the correct existing storefront', () => {

@@ -7,7 +7,7 @@ const listings = [
   { id: 3, type: 'physical_product', title: 'Camera tripod', description: 'Camera accessory', category: { name: 'Accessories' } },
 ];
 describe('seller storefront catalog filters', () => {
-  test('all tab preserves only this seller’s supplied listings', () =>
+  test('all tab preserves only this seller\'s supplied listings', () =>
     expect(filterStoreListings(listings, 'all', 'all', '').map(x => x.id)).toEqual([1, 2, 3]));
   test('product and service tabs filter independently', () => {
     expect(filterStoreListings(listings, 'physical_product', 'all', '').map(x => x.id)).toEqual([1, 3]);

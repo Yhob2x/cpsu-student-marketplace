@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'bun:test';
 import { renderToStaticMarkup } from 'react-dom/server';
-import { MemoryRouter } from 'react-router-dom';
+import { StaticRouter } from 'react-router-dom/server';
 import { ConversationListingCard, type ConversationListing } from '../src/conversation-listing-card';
 
 const product: ConversationListing = {
@@ -10,9 +10,9 @@ const product: ConversationListing = {
 };
 
 function markup(listing: ConversationListing, compact = true) {
-  return renderToStaticMarkup(<MemoryRouter>
+  return renderToStaticMarkup(<StaticRouter location="/">
     <ConversationListingCard listing={listing} compact={compact} />
-  </MemoryRouter>);
+  </StaticRouter>);
 }
 
 describe('conversation listing context shared by full and floating chat', () => {

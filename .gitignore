@@ -5,3 +5,5 @@ uploads
 .expo
 # Playwright CLI output (may contain credentials)
 .playwright-cli/
+/graphify-out/
+/.tmp/

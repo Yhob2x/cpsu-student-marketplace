@@ -1,0 +1,13 @@
+{
+  "notice": "EXAMPLE ONLY. Create synthetic accounts in a separate isolated test database. Never use real student credentials.",
+  "accounts": [],
+  "searchTerms": [
+    "notebook",
+    "calculator",
+    "printing"
+  ],
+  "includeMedia": false,
+  "features": {
+    "storeReviews": false
+  }
+}

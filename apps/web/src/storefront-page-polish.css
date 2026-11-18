@@ -115,9 +115,10 @@
   line-height: 1.45;
 }
 .storefront .storefront-facts .storefront-follow-count {
-  min-height: 29px;
+  min-height: 44px;
+  min-width: 44px;
   margin: -4px 0 -5px -8px;
-  padding: 3px 8px;
+  padding: 10px 8px;
 }
 .storefront .storefront-products { min-width: 0; }
 .storefront .storefront-products-heading {
@@ -164,7 +165,7 @@
   flex-wrap: wrap;
 }
 .storefront .storefront-tabs button {
-  min-height: 42px;
+  min-height: 44px;
   padding: 9px 14px;
   border: 1px solid transparent;
   border-radius: 9px;
@@ -221,7 +222,7 @@
 }
 .storefront .storefront-category-tabs button {
   flex: 0 0 auto;
-  min-height: 39px;
+  min-height: 44px;
   max-width: none;
   padding: 7px 13px;
   border: 1px solid var(--surface-stroke);
@@ -317,7 +318,7 @@ body:has(.floating-chat) .storefront .storefront-listings { padding-right: 0; }
   .storefront .storefront-search, .storefront .storefront-search input { width: 100%; }
   .storefront .storefront-category-strip { display: grid; grid-template-columns: 1fr; gap: 6px; }
   .storefront .storefront-category-tabs { width: 100%; padding-block: 2px 7px; }
-  .storefront .storefront-category-tabs button { min-height: 38px; font-size: .76rem; }
+  .storefront .storefront-category-tabs button { min-height: 44px; font-size: .76rem; }
   .storefront .storefront-listings { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px 12px; }
   body:has(.floating-chat) .storefront .storefront-listings { padding-right: 0; }
   .storefront .storefront-about { padding: 17px 15px; }

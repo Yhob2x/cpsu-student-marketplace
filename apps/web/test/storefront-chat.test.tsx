@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'bun:test';
 import { renderToStaticMarkup } from 'react-dom/server';
-import { MemoryRouter } from 'react-router-dom';
+import { StaticRouter } from 'react-router-dom/server';
 import { StorefrontView, type PublicStorefront } from '../src/pages-storefront';
 import type { Listing } from '../src/pages-public';
 
@@ -14,13 +14,13 @@ const sample = {
 function draw(overrides:Partial<PublicStorefront>={}, opts:{canChat?:boolean;signedIn?:boolean;isOwner?:boolean;followBusy?:boolean;followMessage?:string}={}) {
   const store={...sample,...overrides};
   return renderToStaticMarkup(
-    <MemoryRouter>
+    <StaticRouter location="/">
       <StorefrontView store={store} isOwner={opts.isOwner ?? false}
         canFollow={!opts.isOwner} onFollow={()=>{}} followBusy={opts.followBusy ?? false} followMessage={opts.followMessage ?? ""}
         canChat={opts.canChat ?? true} signedIn={opts.signedIn ?? false}
         onChatSignIn={()=>{}} onChat={()=>{}} chatBusy={false} chatError=""
         renderListing={item=><article data-item={item.id}>{item.title}</article>}/>
-    </MemoryRouter>
+    </StaticRouter>
   );
 }
 describe('public store messaging CTA and real categories',()=>{

@@ -31,7 +31,6 @@ export function SiteFooter({ audience, canReview = false }: FooterProps) {
         <h2>{audience === 'staff' ? 'Workspace' : 'Account'}</h2>
         {audience === 'guest' && <>
           <Link to="/login">Sign in</Link>
-          <Link to="/register">Create account</Link>
         </>}
         {audience === 'student' && <>
           <Link to="/dashboard">My listings</Link>
@@ -58,7 +57,6 @@ export function SiteFooter({ audience, canReview = false }: FooterProps) {
       <Link to="/guidelines">Guidelines</Link>
       {audience === 'guest' && <>
         <Link to="/login">Sign in</Link>
-        <Link to="/register">Create account</Link>
       </>}
       {audience === 'student' && <>
         <Link to="/saved">Saved items</Link>

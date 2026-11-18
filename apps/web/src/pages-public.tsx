@@ -14,6 +14,7 @@ import { StoresInResults } from './stores-in-results';
 import { MostFollowedStores, type MostFollowedStore } from './most-followed-stores';
 import { resolveHomePageContent, type HomePageView } from './home-page-content';
 import { ExploreScrollOptions } from './explore-scroll-options';
+import { categoriesForExplore, cleanExploreQuery, DEFAULT_EXPLORE_FILTERS, explorePriceError, updateExploreQuery, type ExploreCategory, type ExploreFilters } from './explore-filters';
 
 export type Listing = { id: number; type: string; title: string; description: string; price: number; priceBasis: string; availability: string; condition?: 'new' | 'like_new' | 'good' | 'fair' | null;
   handoffNote?: string; category: { name: string }; campus: { code: string; name: string }; seller: { id: number; storeName: string; avatarUrl?: string | null }; images: string[]; status?: string };
@@ -225,8 +226,8 @@ export function Home() {
   </>;
 }
 
-type Filters = { q: string; campusId: string; categoryId: string; type: string; condition: string; minPrice: string; maxPrice: string; sort: string };
-const NO_FILTERS: Filters = { q: '', campusId: '', categoryId: '', type: '', condition: '', minPrice: '', maxPrice: '', sort: 'newest' };
+type Filters = ExploreFilters;
+const NO_FILTERS = DEFAULT_EXPLORE_FILTERS;
 
 export function Discover() {
   const [sp, setSp] = useSearchParams();
@@ -241,13 +242,16 @@ export function Discover() {
       minPrice: p.get('minPrice') ?? '', maxPrice: p.get('maxPrice') ?? '', sort: p.get('sort') ?? 'newest' };
   };
   const f = seed(sp);
-  const [campuses, setCampuses] = useState<any[]>([]); const [cats, setCats] = useState<any[]>([]);
+  const [campuses, setCampuses] = useState<{ id: number; name: string }[]>([]);
+  const [cats, setCats] = useState<ExploreCategory[]>([]);
   const [filterError, setFilterError] = useState(''); const [filtersLoading, setFiltersLoading] = useState(false);
   const [items, setItems] = useState<Listing[] | null>(null); const [total, setTotal] = useState<number | null>(null);
   const [error, setError] = useState('');
   const [retryRequest, setRetryRequest] = useState(0);
   const currentPage = Math.max(1, Number(sp.get('page')) || 1);
   const pageCount = Math.ceil((total ?? 0) / 20);
+  const availableCats = categoriesForExplore(cats, f.type);
+  const priceError = explorePriceError(f.minPrice, f.maxPrice);
   const navigatePage = (page: number) => { const next = new URLSearchParams(sp); next.set('page', String(page)); setSp(next); };
 
   const loadFilterOptions = async () => {
@@ -265,15 +269,24 @@ export function Discover() {
     setFiltersLoading(false);
   };
   useEffect(() => { void loadFilterOptions(); }, []);
-  // URL parameters are the source of truth, including when the browser navigates back or forward.
-  // Product condition is never applied to a service search, including stale shared URLs.
-  const queryParams = new URLSearchParams(sp);
-  if (f.condition) queryParams.set('type', 'physical_product');
-  else queryParams.delete('condition');
-  const query = queryParams.toString();
+  // Repair incompatible deep links once the category definitions are available.
+  useEffect(() => {
+    if (filtersLoading || cats.length === 0) return;
+    const next = cleanExploreQuery(sp, cats);
+    if (next.toString() !== sp.toString()) setSp(next, { replace: true });
+  }, [cats, filtersLoading, sp, setSp]);
+  // URL parameters remain the single source of truth for filters and browser history.
+  const query = cleanExploreQuery(sp, cats).toString();
+  useEffect(() => {
+    if (total === null || total === 0 || currentPage <= pageCount) return;
+    const next = new URLSearchParams(sp);
+    next.set('page', String(pageCount));
+    setSp(next, { replace: true });
+  }, [currentPage, pageCount, total, sp, setSp]);
   useEffect(() => {
     let active = true;
     setItems(null); setTotal(null); setError('');
+    if (priceError) { setItems([]); return () => { active = false; }; }
     const t = setTimeout(() => api(`/listings?${query}`)
       .then(r => { if (active) { setItems(r.items); setTotal(r.total); setError(''); } })
       .catch(e => { if (active) {
@@ -283,13 +296,10 @@ export function Discover() {
         setItems([]); setTotal(null);
       } }), 250);
     return () => { active = false; clearTimeout(t); };
-  }, [query, retryRequest]);
+  }, [query, retryRequest, priceError]);
 
   const set = (k: keyof Filters) => (e: { target: { value: string } }) => {
-    const next = { ...f, [k]: e.target.value };
-    if (k === 'type' && next.type !== 'physical_product') next.condition = '';
-    if (k === 'condition' && next.condition) next.type = 'physical_product';
-    setSp(new URLSearchParams(Object.entries(next).filter(([, v]) => v && v !== 'newest') as [string, string][]), { replace: true });
+    setSp(updateExploreQuery(sp, k, e.target.value, cats), { replace: true });
   };
   const reset = () => setSp(new URLSearchParams(), { replace: true });
   const dirty = (Object.keys(NO_FILTERS) as (keyof Filters)[]).some(k => k !== 'sort' && f[k] !== '');
@@ -327,13 +337,13 @@ export function Discover() {
       </div>
       <div className="explore-inline-filter-group" role="group" aria-label="Category">
         <span className="explore-inline-filter-label" aria-hidden="true">Category</span>
-        <ExploreScrollOptions label="Category" count={cats.length}>
+        <ExploreScrollOptions label="Category" count={availableCats.length}>
           <button type="button" aria-pressed={f.categoryId === ''} onClick={() => set('categoryId')({ target: { value: '' } })}>All categories</button>
-          {cats.map(c => <button key={c.id} type="button" aria-pressed={f.categoryId === String(c.id)}
+          {availableCats.map(c => <button key={c.id} type="button" aria-pressed={f.categoryId === String(c.id)}
             onClick={() => set('categoryId')({ target: { value: String(c.id) } })}>{c.name}</button>)}
         </ExploreScrollOptions>
       </div>
-      <div className="explore-inline-filter-group" role="group" aria-label="Product condition">
+      {f.type !== 'service' && <div className="explore-inline-filter-group" role="group" aria-label="Product condition">
         <span className="explore-inline-filter-label" aria-hidden="true">Condition</span>
         <div className="explore-inline-filter-options">
           {([
@@ -341,29 +351,31 @@ export function Discover() {
             ['good', 'Good'], ['fair', 'Fair'],
           ] as const).map(([value, label]) =>
             <button key={value} type="button" aria-pressed={f.condition === value}
-              disabled={f.type === 'service'}
               onClick={() => set('condition')({ target: { value } })}>{label}</button>)}
         </div>
-      </div>
+      </div>}
       <div className="explore-inline-filter-group explore-inline-price-group" role="group" aria-label="Price range">
         <span className="explore-inline-filter-label" aria-hidden="true">Price (₱)</span>
         <div className="explore-inline-price-inputs">
           <label className="field"><span>Min</span>
-            <input type="number" inputMode="numeric" min={0} step={1} placeholder="Any" value={f.minPrice}
+            <input type="number" inputMode="numeric" min={0} step={1} placeholder="Min" value={f.minPrice}
+              aria-invalid={Boolean(priceError)} aria-describedby={priceError ? 'explore-price-error' : undefined}
               onChange={set('minPrice')} />
           </label>
           <span className="explore-inline-price-separator" aria-hidden="true">–</span>
           <label className="field"><span>Max</span>
-            <input type="number" inputMode="numeric" min={0} step={1} placeholder="Any" value={f.maxPrice}
+            <input type="number" inputMode="numeric" min={0} step={1} placeholder="Max" value={f.maxPrice}
+              aria-invalid={Boolean(priceError)} aria-describedby={priceError ? 'explore-price-error' : undefined}
               onChange={set('maxPrice')} />
           </label>
         </div>
+        {priceError && <p className="explore-price-error" id="explore-price-error" role="alert">{priceError}</p>}
       </div>
     </div>
 
     <div className="results explore-results-toolbar">
       <p className="muted explore-results-count" role="status" aria-live="polite">
-        {error ? 'Could not load listings' : total === null ? 'Searching…' : total === 0 ? 'No listings match' : `${total} listing${total === 1 ? '' : 's'}`}
+        {priceError ? 'Check the price range' : error ? 'Could not load listings' : total === null ? 'Searching…' : total === 0 ? 'No listings match' : `${total} listing${total === 1 ? '' : 's'}`}
       </p>
       {dirty && <button type="button" className="clear-inline" onClick={reset}>Reset search and filters</button>}
       <div className="explore-sort-control" role="group" aria-label="Sort listings by">
@@ -386,15 +398,15 @@ export function Discover() {
       <p className="muted">{error}</p>
       <div className="row"><button type="button" className="btn" onClick={() => setRetryRequest(n => n + 1)}>Retry listings</button></div>
     </section>}
-    {items === null && skel}
-    {items !== null && items.length === 0 && !error && <div className="empty">
+    {items === null && !priceError && skel}
+    {items !== null && items.length === 0 && !error && !priceError && total !== null && <div className="empty">
       <h2>No listings match</h2>
       <p className="muted">{dirty ? 'Try fewer filters or another campus.' : 'New listings will appear after review.'}</p>
       {dirty && <button className="btn ghost" onClick={reset}>Clear filters</button>}
     </div>}
-    {items !== null && !error && <StoresInResults listings={items} query={f.q} />}
-    {items !== null && items.length > 0 && <h2 className="sr-only">Listing results</h2>}
-    {items !== null && items.length > 0 && <div className="grid listing-grid explore-results" role="region" aria-label="Explore listing results">
+    {items !== null && !error && !priceError && <StoresInResults listings={items} query={f.q} />}
+    {items !== null && !priceError && items.length > 0 && <h2 className="sr-only">Listing results</h2>}
+    {items !== null && !priceError && items.length > 0 && currentPage <= pageCount && <div className="grid listing-grid explore-results" role="region" aria-label="Explore listing results">
       {items.map((l, index) => <ListingCard key={l.id} l={l} priority={index < 2} />)}
     </div>}
     {pageCount > 1 && <nav className="row" aria-label="Listing pages" style={{ justifyContent: 'center', marginTop: '1rem' }}>

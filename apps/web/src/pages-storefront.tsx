@@ -1,7 +1,8 @@
-import { useMemo, useState, type ReactNode } from 'react';
+import { Fragment, useMemo, useState, type ReactNode } from 'react';
 import { Link } from 'react-router-dom';
 import { Icon } from './icons';
 import { SellerAvatar } from './seller-avatar';
+import { StoreRatingsAndReviews } from './store-review-widgets';
 import { StoreFollowers } from './store-followers';
 import { filterStoreListings, type StoreFilter } from './storefront-filter';
 import type { Listing } from './pages-public';
@@ -169,7 +170,7 @@ export function StorefrontView({ store, isOwner, canFollow, onFollow, followBusy
         </div>}
       </nav>
       {visible.length > 0
-        ? <div className="grid listing-grid storefront-listings">{visible.map(renderListing)}</div>
+        ? <div className="grid listing-grid storefront-listings">{visible.map(listing => <Fragment key={listing.id}>{renderListing(listing)}</Fragment>)}</div>
         : <div className="storefront-empty">
           <Icon name="search" size={24} />
           <h3>{store.listings.length ? 'No listings match these filters' : 'No available listings yet'}</h3>
@@ -178,6 +179,7 @@ export function StorefrontView({ store, isOwner, canFollow, onFollow, followBusy
             onClick={() => { setFilter('all'); setQuery(''); setCategory('all'); }}>Clear filters</button>}
         </div>}
     </section>
+    <StoreRatingsAndReviews storeId={store.id} />
     <section className="storefront-about" aria-label="About this store">
       <h2>About the store</h2>
       <p>{store.description}</p>

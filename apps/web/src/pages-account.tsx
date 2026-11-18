@@ -483,7 +483,7 @@ export function Dashboard() {
           </div>
         </fieldset>
         <label className="field">Title<input ref={createTitle} name="title" placeholder={newListingKind === 'service' ? 'e.g. Portrait photography for graduation' : 'e.g. Used Calculus textbook, 2nd edition'} defaultValue={repeatListing?.title ?? ''} required minLength={3} maxLength={120} /></label>
-        <p className="muted listing-editor-guidance">Write the actual item or service name, not just “Product” or “Service”. A clear title and useful description help students decide.</p>
+        <p className="muted listing-editor-guidance">Write the actual item or service name, not just “Product” or “Service”. Avoid placeholder text or repeated letters; include useful details to help students decide.</p>
         <label className="field">Category
           <select name="categoryId" required disabled={!newListingKind || categoriesLoading || Boolean(categoriesError) || creatingListing} value={newCategoryId} onChange={e => setNewCategoryId(e.target.value)}>
             <option value="" disabled>{!newListingKind ? 'Choose Product or Service first' : `Select a ${newListingKind === 'service' ? 'service' : 'product'} category`}</option>
@@ -503,7 +503,7 @@ export function Dashboard() {
         {creatingListing && photoProgress && <p role="status">{photoProgress}</p>}
         <div className="listing-photo-policy" id="new-photo-policy">
           <p><strong>Drafts do not need photos.</strong> Add 1–{MAX_LISTING_PHOTOS} photos before submitting for review. Select your cover before saving; it uploads first.</p>
-          <p><Icon name="shield" size={17} /> No pornography, sexual imagery, graphic violence or other prohibited content. Campus reviewers check photos before publication.</p>
+          <p><Icon name="shield" size={17} /> Show the actual item or your own service work. Do not use unrelated photos or misleading promotional images. Pornography, sexual imagery, graphic violence and other prohibited content are not allowed; campus reviewers check photos before publication.</p>
         </div>
         <div className="listing-composer-footer"><p>Saving creates a private draft, not a public listing.</p><button className="btn" disabled={creatingListing || categoriesLoading || Boolean(categoriesError) || (newListingKind !== '' && categoriesForKind(cats, newListingKind).length === 0)}>{creatingListing ? 'Saving draft…' : 'Save draft'}</button></div></form></details>
       <div className="store-listings-head"><div><h2 ref={listingsHeading} tabIndex={-1}>Your listings</h2></div>{!listingsLoading && !listingLoadError && <span className="store-listing-count">{visibleListings.length} {visibleListings.length === 1 ? 'listing' : 'listings'}</span>}</div>

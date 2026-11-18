@@ -7,6 +7,7 @@ import { useMe } from './main';
 import { useForegroundRefresh } from './foreground-refresh';
 import { ManagedContentAdmin } from './pages-managed-content';
 import { ReviewerAdmin } from './pages-reviewers';
+import { StoreReviewModeration } from './store-review-widgets';
 import './admin-workspace.css';
 
 const FLAG_TEXT: Record<string, string> = {
@@ -51,6 +52,8 @@ export function Admin() {
   const [studentCampusId, setStudentCampusId] = useState('');
   const [studentApplied, setStudentApplied] = useState({ q: '', status: '', verification: '', campusId: '' });
   const [studentPage, setStudentPage] = useState(1);
+  const [reviewerCampusId, setReviewerCampusId] = useState('');
+  const [reviewerReason, setReviewerReason] = useState('');
   const [studentTotal, setStudentTotal] = useState(0);
   const [selectedStudentId, setSelectedStudentId] = useState<number | null>(null);
   const [campuses, setCampuses] = useState<{ id: number; name: string }[]>([]);
@@ -125,6 +128,19 @@ export function Admin() {
     catch (e) { setCampusesError(explain(e)); }
   };
   useEffect(() => { if (accountAdmin) { void searchStudents(); void loadAudit(); void loadCampuses(); } }, [accountAdmin]);
+  const assignStudentReviewer = async (id: number) => {
+    if (!reviewerCampusId || reviewerReason.trim().length < 10) return;
+    setPending(`reviewer-${id}`);
+    try {
+      await api(`/admin/users/${id}/assign-reviewer`, { method: 'POST', body: {
+        campusId: Number(reviewerCampusId), reason: reviewerReason.trim(),
+      } });
+      setReviewerCampusId(''); setReviewerReason(''); setSelectedStudentId(null);
+      setErr(''); setNotice('Reviewer assigned. Existing sessions revoked; they must sign in again.');
+      await searchStudents(studentApplied, studentPage);
+    } catch (e) { setErr(explain(e)); }
+    finally { setPending(''); }
+  };
   const changeAccountStatus = async (id: number, status: 'active' | 'suspended') => {
     const reason = (reasons[`u${id}`] ?? '').trim();
     if (reason.length < 10) return;
@@ -183,6 +199,7 @@ export function Admin() {
         { id: 'listings', label: 'Listing reviews', count: q?.listings.length },
         { id: 'affiliations', label: 'Verifications', count: q?.affiliations.length },
         { id: 'reports', label: 'Reports', count: reports?.length },
+        { id: 'store-reviews', label: 'Store ratings' },
       ] },
       { title: 'Monitoring', items: [{ id: 'transactions', label: 'Transactions' }, { id: 'audit', label: 'Audit history' }] },
     ]
@@ -191,6 +208,7 @@ export function Admin() {
         { id: 'listings', label: 'Listing reviews', count: q?.listings.length },
         { id: 'affiliations', label: 'Verifications', count: q?.affiliations.length },
         { id: 'reports', label: 'Reports', count: reports?.length },
+        { id: 'store-reviews', label: 'Store ratings' },
       ] },
       { title: 'Monitoring', items: [{ id: 'transactions', label: 'Transactions' }, { id: 'overview', label: 'Campus overview' }] },
     ];
@@ -267,7 +285,7 @@ export function Admin() {
         <p>Editorial suggestions only. Check the actual listing and request changes where needed; no automatic rejection or title changes.</p>
       </aside>}
       <div className="row">{l.flags.map((f: string) => <span key={f} className="flag">{FLAG_TEXT[f] ?? f}</span>)}{l.flags.length === 0 && <span className="muted">No text/category flags — photos still need human review</span>}</div>
-      <p className="muted">Inspect all {l.images.length} {l.images.length === 1 ? 'photo' : 'photos'}; explicit content is not checked automatically.</p>
+      <p className="muted">Inspect all {l.images.length} {l.images.length === 1 ? 'photo' : 'photos'}; check that photos show the advertised item or service, not unrelated content. Explicit content is not checked automatically.</p>
       <div className="review-photos">{l.images.length === 0 && <span className="muted">No photos attached</span>}
         {l.images.map((s: string, i: number) => <a key={s} href={s} target="_blank" rel="noreferrer" aria-label={`Open listing photo ${i + 1} of ${l.images.length} in a new tab`}><img src={s} alt={`Listing photo ${i + 1} of ${l.images.length}`} loading="lazy" /></a>)}</div>
       <label className="review-confirmation">
@@ -321,6 +339,7 @@ export function Admin() {
         </button>
       </div></div>)}
     </div>
+    {activeSection === 'store-reviews' && <StoreReviewModeration />}
     <section hidden={activeSection !== 'transactions'} aria-labelledby="admin-transactions-heading">
       <h2 id="admin-transactions-heading">Transaction monitoring</h2>
       <p className="muted">Read-only campus records. Completed means both students confirmed; payments are unverified. Private messages are hidden.</p>
@@ -349,7 +368,7 @@ export function Admin() {
       {studentsLoading && <p role="status" className="muted">Loading student accounts…</p>}
       {!studentsLoading && students && !studentsError && <p className="muted" role="status">{studentTotal === 0 ? 'No matching students.' : `Showing ${(studentPage - 1) * 25 + 1}–${(studentPage - 1) * 25 + students.length} of ${studentTotal} students`}</p>}
       {!studentsError && students && students.length > 0 && <div className="admin-student-layout">
-        <div className="admin-student-list" aria-label="Student results">{students.map(student => <button key={student.id} type="button" className="admin-student-row" aria-pressed={selectedStudentId === student.id} onClick={() => setSelectedStudentId(student.id)}>
+        <div className="admin-student-list" aria-label="Student results">{students.map(student => <button key={student.id} type="button" className="admin-student-row" aria-pressed={selectedStudentId === student.id} onClick={() => { setSelectedStudentId(student.id); setReviewerCampusId(''); setReviewerReason(''); }}>
           <span className="admin-student-name">{student.displayName}<small>{student.email}</small></span>
           <span>{student.affiliations.map((a: any) => a.campus.code).join(', ') || 'No campus'}</span>
           <span>{student.affiliations.some((a: any) => a.verificationStatus === 'verified') ? 'Verified' : 'Unverified'}</span>
@@ -359,6 +378,16 @@ export function Admin() {
           {!selectedStudent && <p className="muted">Select a student to view account actions.</p>}
           {selectedStudent && <><h3>{selectedStudent.displayName}</h3><p className="muted">{selectedStudent.email}</p><p>Account: {selectedStudent.status}</p><p>Campus: {selectedStudent.affiliations.map((a: any) => `${a.campus.code} (${a.verificationStatus})`).join(', ') || 'None'}</p>
             {selectedStudent.roles.some((role: any) => ['campus_reviewer', 'university_admin', 'system_admin'].includes(role.role)) ? <p className="muted">Protected staff account — changes require a separate administrative review.</p> : selectedStudent.id !== me?.id && <div className="stack"><label className="field">Reason for account decision<input value={reasons[`u${selectedStudent.id}`] ?? ''} onChange={e => setReasons(previous => ({ ...previous, [`u${selectedStudent.id}`]: e.target.value }))} placeholder="Required reason (10+ characters)" maxLength={500} minLength={10} /></label><button className={selectedStudent.status === 'active' ? 'btn danger' : 'btn'} type="button" disabled={pending === `u${selectedStudent.id}` || (reasons[`u${selectedStudent.id}`] ?? '').trim().length < 10} onClick={() => void changeAccountStatus(selectedStudent.id, selectedStudent.status === 'active' ? 'suspended' : 'active')}>{selectedStudent.status === 'active' ? 'Suspend student' : 'Reactivate student'}</button></div>}
+            {selectedStudent.status === 'active' && selectedStudent.roles.length === 0 && selectedStudent.id !== me?.id && <div className="stack">
+              <h4>Assign campus reviewer</h4>
+              <p className="muted">Only students with an active, verified campus affiliation are eligible. Assigning changes their access to staff and signs them out.</p>
+              <label className="field">Review campus<select value={reviewerCampusId} onChange={e => setReviewerCampusId(e.target.value)}>
+                <option value="">Choose a verified campus</option>
+                {campuses.filter(c => selectedStudent.affiliations.some((a: any) => a.campus.id === c.id && a.verificationStatus === 'verified' && (!a.expirationAt || new Date(a.expirationAt) > new Date()))).map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+              </select></label>
+              <label className="field">Reason for assignment<input value={reviewerReason} onChange={e => setReviewerReason(e.target.value)} minLength={10} maxLength={500} placeholder="Required reason (10+ characters)" /></label>
+              <button className="btn" type="button" disabled={pending === `reviewer-${selectedStudent.id}` || !reviewerCampusId || reviewerReason.trim().length < 10} onClick={() => void assignStudentReviewer(selectedStudent.id)}>Assign as reviewer</button>
+            </div>}
           </>}
         </aside>
       </div>}

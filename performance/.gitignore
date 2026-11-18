@@ -1,0 +1,5 @@
+results/
+fixtures.local.json
+fixtures.*.local.json
+*.secret.json
+.build-check/

@@ -1,12 +1,12 @@
 import { describe, expect, test } from 'bun:test';
 import { renderToStaticMarkup } from 'react-dom/server';
-import { MemoryRouter } from 'react-router-dom';
+import { StaticRouter } from 'react-router-dom/server';
 import { FloatingChat, showFloatingChat } from '../src/floating-chat';
 
 function html(path: string, ready: boolean, isStaff: boolean, signedIn: boolean, unread: number) {
-  return renderToStaticMarkup(<MemoryRouter initialEntries={[path]}>
+  return renderToStaticMarkup(<StaticRouter location={path}>
     <FloatingChat ready={ready} isStaff={isStaff} signedIn={signedIn} unreadMessages={unread} />
-  </MemoryRouter>);
+  </StaticRouter>);
 }
 describe('floating Chat shortcut', () => {
   test('hides in a conversation, inbox and sign-in pages, and for staff', () => {

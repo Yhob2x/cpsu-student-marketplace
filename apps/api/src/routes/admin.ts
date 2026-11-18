@@ -315,12 +315,47 @@ r.get('/users', async (req, res) => {
     select: {
       id: true, displayName: true, email: true, status: true,
       roles: { select: { role: true } },
-      affiliations: { select: { campus: { select: { code: true } }, verificationStatus: true } },
+      affiliations: { select: { campus: { select: { id: true, code: true } }, verificationStatus: true, expirationAt: true } },
     },
     orderBy: { id: 'desc' }, skip: (page - 1) * pageSize, take: pageSize,
   });
   res.setHeader('Cache-Control', 'no-store');
   res.json({ items, total, page, pageSize });
+});
+
+r.post('/users/:id/assign-reviewer', async (req, res) => {
+  if (!accountAdmin(req)) throw new HttpError(403, 'forbidden');
+  const id = z.coerce.number().int().positive().parse(req.params.id);
+  const { campusId, reason } = z.object({
+    campusId: z.number().int().positive(), reason: z.string().trim().min(10).max(500),
+  }).strict().parse(req.body);
+  if (id === req.user!.id) throw new HttpError(409, 'self_role_change_forbidden');
+  try {
+    await prisma.$transaction(async tx => {
+      const target = await tx.user.findUnique({ where: { id }, include: { roles: true } });
+      if (!target) throw new HttpError(404, 'not_found');
+      if (target.status !== 'active') throw new HttpError(409, 'inactive_student');
+      if (target.roles.length) throw new HttpError(409, 'staff_account_protected');
+      if (!await tx.campus.findFirst({ where: { id: campusId, active: true }, select: { id: true } }))
+        throw new HttpError(400, 'invalid_campus');
+      if (!await tx.affiliation.findFirst({ where: {
+        userId: id, campusId, verificationStatus: 'verified',
+        OR: [{ expirationAt: null }, { expirationAt: { gt: new Date() } }],
+      }, select: { id: true } })) throw new HttpError(409, 'reviewer_affiliation_required');
+      await tx.userRole.create({ data: { userId: id, role: 'campus_reviewer', campusId } });
+      await tx.session.updateMany({ where: { userId: id, revokedAt: null }, data: { revokedAt: new Date() } });
+      await tx.auditLog.create({ data: {
+        actorUserId: req.user!.id, action: 'reviewer.assigned', targetType: 'user', targetId: id,
+        metadata: { campusId, reason },
+      } });
+    }, { isolationLevel: Prisma.TransactionIsolationLevel.Serializable });
+  } catch (e) {
+    if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === 'P2034')
+      throw new HttpError(409, 'reviewer_assignment_conflict');
+    throw e;
+  }
+  res.setHeader('Cache-Control', 'no-store');
+  res.json({ id, campusId, role: 'campus_reviewer', sessionsRevoked: true });
 });
 
 r.patch('/users/:id/status', async (req, res) => {

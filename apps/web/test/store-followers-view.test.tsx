@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'bun:test';
 import { renderToStaticMarkup } from 'react-dom/server';
-import { MemoryRouter } from 'react-router-dom';
+import { StaticRouter } from 'react-router-dom/server';
 import { StoreFollowersView, type StoreFollowPage } from '../src/store-followers';
 
 const followers: StoreFollowPage = {
@@ -19,9 +19,9 @@ const following: StoreFollowPage = {
 };
 const render = (activeTab: 'followers' | 'following', data: StoreFollowPage | null,
   counts: { followers: number; following: number } | null = { followers: 8, following: 3 }, error = '', publicView = false) =>
-  renderToStaticMarkup(<MemoryRouter><StoreFollowersView activeTab={activeTab} data={data} counts={counts}
+  renderToStaticMarkup(<StaticRouter location="/"><StoreFollowersView activeTab={activeTab} data={data} counts={counts}
     loading={false} error={error} onTab={() => {}} onPage={() => {}} onRetry={() => {}}
-    publicView={publicView} /></MemoryRouter>);
+    publicView={publicView} /></StaticRouter>);
 
 describe('owner-only follow list presentation', () => {
   test('both counts open the same dialog with accessible Followers and Following tabs', () => {

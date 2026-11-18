@@ -8,7 +8,7 @@ import { Icon } from './icons';
 import { SiteFooter } from './site-footer';
 import { FloatingChat } from './floating-chat';
 import { useForegroundRefresh } from './foreground-refresh';
-import { Login, Register, Dashboard, Inquiries, Thread, Saved } from './pages-account';
+import { Login, Dashboard, Inquiries, Thread, Saved } from './pages-account';
 import { Profile, Notifications } from './pages-profile';
 import { Admin } from './pages-admin';
 import { Transactions, TransactionDetail } from './pages-transactions';
@@ -45,6 +45,7 @@ import './dashboard-storefront.css';
 import './p1p2-ux-fixes.css';
 import './listing-composer-polish.css';
 import './storefront-page-polish.css';
+import './explore-page-polish.css';
 
 export type Me = { id: number; email: string; displayName: string; roles: { role: string; campusId: number | null }[];
   affiliations: { id: number; campus: { id: number; name: string }; status: string }[]; storeId: number | null };
@@ -208,11 +209,7 @@ function Shell() {
           </nav>}
           <div className={me ? 'who' : 'who who-guest'}>
             {me ? <button className="btn ghost" onClick={() => void logout()} disabled={loggingOut}>{loggingOut ? 'Signing out…' : 'Sign out'}</button>
-              : <><NavLink className="signin" to="/login">Sign in</NavLink>
-                  <Link className="btn signup-action" to="/register" aria-label="Create account">
-                    <span className="signup-label-desktop">Create account</span>
-                    <span className="signup-label-mobile" aria-hidden="true">Sign up</span>
-                  </Link></>}
+              : <NavLink className="signin" to="/login">Sign in</NavLink>}
           </div>
         </div>
         <div className="wrap navrow">
@@ -230,7 +227,7 @@ function Shell() {
         <Routes>
           <Route path="/" element={<Home />} /><Route path="/explore" element={<Discover />} /><Route path="/listings/:id" element={<ListingDetail />} />
           <Route path="/store/:slug" element={<StorePage />} /><Route path="/stores/:id" element={<StorePage />} /><Route path="/stores" element={<Navigate to="/explore" replace />} /><Route path="/guidelines" element={<Guidelines />} />
-          <Route path="/login" element={<Login />} /><Route path="/register" element={<Register />} />
+          <Route path="/login" element={<Login />} /><Route path="/register" element={<Navigate to="/login" replace />} />
           <Route path="/dashboard" element={!ready ? <p role="status">Checking session…</p> : signedOut ? <Navigate to="/login?next=%2Fdashboard" replace /> : isStaff ? <Navigate to="/profile" replace /> : <Dashboard />} />
           <Route path="/inquiries" element={!ready ? <p role="status">Checking session…</p> : signedOut ? <Navigate to="/login?next=%2Finquiries" replace /> : isStaff ? <Navigate to="/profile" replace /> : <Inquiries />} />
           <Route path="/inquiries/:id" element={!ready ? <p role="status">Checking session…</p> : signedOut ? <Navigate to={`/login?next=${encodeURIComponent(window.location.pathname)}`} replace /> : isStaff ? <Navigate to="/profile" replace /> : <Thread />} /><Route path="/saved" element={!ready ? <p role="status">Checking session…</p> : signedOut ? <Navigate to="/login?next=%2Fsaved" replace /> : isStaff ? <Navigate to="/profile" replace /> : <Saved />} />

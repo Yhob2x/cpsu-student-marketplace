@@ -3,6 +3,7 @@ import { Link, useParams } from 'react-router-dom';
 import { api, explain, peso } from './api';
 import { useMe } from './main';
 import { IconAction } from './icon-action';
+import { TransactionStoreReview } from './store-review-widgets';
 import { useForegroundRefresh } from './foreground-refresh';
 
 type Status = 'pending' | 'accepted' | 'negotiating' | 'for_meetup' | 'completed' | 'cancelled';
@@ -196,6 +197,7 @@ export function TransactionDetail() {
     {terminal && <p role="status">{data.status === 'completed'
       ? 'Both students confirmed completion. This is a mutual self-report, not an independently verified sale.'
       : 'This transaction is closed. The history below remains available to both students.'}</p>}
+    {buyer && data.status === 'completed' && <TransactionStoreReview transactionId={data.id} />}
     <section className="panel stack" aria-label="Transaction options">
       <h2 style={{ margin: 0 }}>More options</h2>
       <p className="muted" style={{ margin: 0 }}>Payment and handoff are arranged directly between students.</p>

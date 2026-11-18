@@ -1,17 +1,17 @@
 import { describe, expect, test } from 'bun:test';
 import { renderToStaticMarkup } from 'react-dom/server';
-import { MemoryRouter } from 'react-router-dom';
+import { StaticRouter } from 'react-router-dom/server';
 import { SiteFooter, type FooterAudience } from '../src/site-footer';
 
 function render(audience: FooterAudience, canReview = false) {
-  return renderToStaticMarkup(<MemoryRouter><SiteFooter audience={audience} canReview={canReview} /></MemoryRouter>);
+  return renderToStaticMarkup(<StaticRouter location="/"><SiteFooter audience={audience} canReview={canReview} /></StaticRouter>);
 }
 
 describe('Footer: useful links for the current student session', () => {
-  test('signed-out visitors get authentic sign-in and registration links', () => {
+  test('signed-out visitors see sign-in but no removed registration link', () => {
     const html = render('guest');
     expect(html).toContain('href="/login"');
-    expect(html).toContain('href="/register"');
+    expect(html).not.toContain('href="/register"');
     expect(html).toContain('href="/guidelines"');
     expect(html).toContain('href="/explore?type=service"');
     expect(html).not.toContain('href="/admin"');

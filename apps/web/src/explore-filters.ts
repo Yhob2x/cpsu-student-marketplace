@@ -13,6 +13,16 @@ export function categoriesForExplore(categories: readonly ExploreCategory[], typ
   return categories.filter(category => !type || category.listingType === type);
 }
 
+/** Keep common choices immediately usable and never hide a URL-selected choice. */
+export function previewExploreOptions<T extends { id: number }>(
+  options: readonly T[], selectedId: string, limit = 3,
+): T[] {
+  const preview = options.slice(0, Math.max(0, limit));
+  const selected = options.find(option => String(option.id) === selectedId);
+  if (selected && !preview.some(option => option.id === selected.id)) return [...preview, selected];
+  return preview;
+}
+
 /** Validate without silently applying a different search than the entered prices. */
 export function explorePriceError(minimum: string, maximum: string): string {
   const parse = (value: string) => value.trim() === '' ? null : Number(value);
@@ -67,4 +77,30 @@ export function cleanExploreQuery(
   if (chosen && next.get('type') && chosen.listingType !== next.get('type')) next.delete('categoryId');
   if (chosen?.listingType === 'service' && next.get('condition')) next.delete('condition');
   return next;
+}
+
+/** Compact active-filter summary, derived from URL state (no duplicate filter state). */
+export function exploreAdvancedSummary(
+  filters: ExploreFilters,
+  campuses: readonly { id: number; name: string }[],
+  categories: readonly ExploreCategory[],
+): { count: number; labels: string[] } {
+  const labels: string[] = [];
+  if (filters.campusId) {
+    const name = campuses.find(c => String(c.id) === filters.campusId)?.name;
+    labels.push(name ? `Campus: ${name}` : 'Campus selected');
+  }
+  if (filters.categoryId) {
+    const name = categories.find(c => String(c.id) === filters.categoryId)?.name;
+    labels.push(name ? `Category: ${name}` : 'Category selected');
+  }
+  if (filters.condition && filters.type !== 'service') {
+    labels.push('Condition: ' + ({ new: 'New', like_new: 'Like new', good: 'Good', fair: 'Fair' }[filters.condition] ?? filters.condition));
+  }
+  if (filters.minPrice !== '' || filters.maxPrice !== '') {
+    const low = filters.minPrice === '' ? 'Any' : `₱${filters.minPrice}`;
+    const high = filters.maxPrice === '' ? 'Any' : `₱${filters.maxPrice}`;
+    labels.push(`Price: ${low}–${high}`);
+  }
+  return { count: labels.length, labels };
 }

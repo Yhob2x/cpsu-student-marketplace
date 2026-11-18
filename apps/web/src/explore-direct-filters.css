@@ -98,7 +98,7 @@
 }
 .explore-inline-price-separator { padding-bottom: 10px; color: var(--ink-soft); }
 @media (min-width: 641px) {
-  .explore-control-header > .explore-type-chips {
+  .explore-control-header .explore-primary-controls > .explore-type-chips {
     display: inline-grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 4px;
@@ -108,7 +108,7 @@
     border-radius: 12px;
     background: var(--surface-soft);
   }
-  .explore-control-header > .explore-type-chips button {
+  .explore-control-header .explore-primary-controls > .explore-type-chips button {
     min-width: 94px;
     min-height: 40px;
     padding: 8px 12px;
@@ -119,11 +119,11 @@
     font: 650 13px/1.3 var(--font-body);
     cursor: pointer;
   }
-  .explore-control-header > .explore-type-chips button[aria-pressed="true"] {
+  .explore-control-header .explore-primary-controls > .explore-type-chips button[aria-pressed="true"] {
     color: var(--paper);
     background: var(--forest);
   }
-  .explore-control-header > .explore-type-chips button:focus-visible {
+  .explore-control-header .explore-primary-controls > .explore-type-chips button:focus-visible {
     outline: 3px solid var(--mango);
     outline-offset: 2px;
   }

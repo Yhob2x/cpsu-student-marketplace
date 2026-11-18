@@ -14,7 +14,7 @@ import { StoresInResults } from './stores-in-results';
 import { MostFollowedStores, type MostFollowedStore } from './most-followed-stores';
 import { resolveHomePageContent, type HomePageView } from './home-page-content';
 import { ExploreScrollOptions } from './explore-scroll-options';
-import { categoriesForExplore, cleanExploreQuery, DEFAULT_EXPLORE_FILTERS, explorePriceError, updateExploreQuery, type ExploreCategory, type ExploreFilters } from './explore-filters';
+import { categoriesForExplore, cleanExploreQuery, DEFAULT_EXPLORE_FILTERS, exploreAdvancedSummary, explorePriceError, updateExploreQuery, type ExploreCategory, type ExploreFilters } from './explore-filters';
 
 export type Listing = { id: number; type: string; title: string; description: string; price: number; priceBasis: string; availability: string; condition?: 'new' | 'like_new' | 'good' | 'fair' | null;
   handoffNote?: string; category: { name: string }; campus: { code: string; name: string }; seller: { id: number; storeName: string; avatarUrl?: string | null }; images: string[]; status?: string };
@@ -245,6 +245,7 @@ export function Discover() {
   const [campuses, setCampuses] = useState<{ id: number; name: string }[]>([]);
   const [cats, setCats] = useState<ExploreCategory[]>([]);
   const [filterError, setFilterError] = useState(''); const [filtersLoading, setFiltersLoading] = useState(false);
+  const [filtersOpen, setFiltersOpen] = useState(false);
   const [items, setItems] = useState<Listing[] | null>(null); const [total, setTotal] = useState<number | null>(null);
   const [error, setError] = useState('');
   const [retryRequest, setRetryRequest] = useState(0);
@@ -252,6 +253,10 @@ export function Discover() {
   const pageCount = Math.ceil((total ?? 0) / 20);
   const availableCats = categoriesForExplore(cats, f.type);
   const priceError = explorePriceError(f.minPrice, f.maxPrice);
+  const activeFilters = exploreAdvancedSummary(f, campuses, cats);
+  const secondaryFilterLabels = activeFilters.labels.filter(label => label.startsWith('Condition:') || label.startsWith('Price:'));
+  // Invalid shared links must expose the inputs and the recovery message immediately.
+  useEffect(() => { if (priceError) setFiltersOpen(true); }, [priceError]);
   const navigatePage = (page: number) => { const next = new URLSearchParams(sp); next.set('page', String(page)); setSp(next); };
 
   const loadFilterOptions = async () => {
@@ -316,17 +321,20 @@ export function Discover() {
         <span className="input-icon"><Icon name="search" size={18} /><input placeholder="Search items or services" maxLength={80} value={f.q} onChange={set('q')} /></span>
       </label>
     </div>
-    <div className="explore-type-chips" role="group" aria-label="Listing type">
-      {([['', 'All'], ['physical_product', 'Products'], ['service', 'Services']] as const).map(([value, label]) =>
-        <button key={value} type="button" aria-pressed={f.type === value}
-          onClick={() => set('type')({ target: { value } })}>{label}</button>)}
+    <div className="explore-primary-controls">
+      <div className="explore-type-chips" role="group" aria-label="Listing type">
+        {([['', 'All'], ['physical_product', 'Products'], ['service', 'Services']] as const).map(([value, label]) =>
+          <button key={value} type="button" aria-pressed={f.type === value}
+            onClick={() => set('type')({ target: { value } })}>{label}</button>)}
+      </div>
     </div>
     {filterError && <div className="panel row" role="alert"><span>{filterError}</span>
       <button type="button" className="btn ghost" disabled={filtersLoading} onClick={() => void loadFilterOptions()}>
         {filtersLoading ? 'Retrying…' : 'Retry filters'}
       </button>
     </div>}
-    <div className="explore-inline-filters" role="group" aria-label="Filter listings">
+    <div className="explore-inline-filters explore-quick-filters"
+      role="group" aria-label="Quick filters">
       <div className="explore-inline-filter-group" role="group" aria-label="Campus">
         <span className="explore-inline-filter-label" aria-hidden="true">Campus</span>
         <ExploreScrollOptions label="Campus" count={campuses.length}>
@@ -343,6 +351,21 @@ export function Discover() {
             onClick={() => set('categoryId')({ target: { value: String(c.id) } })}>{c.name}</button>)}
         </ExploreScrollOptions>
       </div>
+    </div>
+    <div className="explore-refinements-bar">
+      <button type="button" className="explore-advanced-toggle"
+        aria-expanded={filtersOpen} aria-controls="explore-advanced-filters"
+        onClick={() => setFiltersOpen(open => !open)}>
+        <Icon name="sliders-horizontal" size={16} />
+        <span>{filtersOpen ? 'Hide price & condition' : 'Price & condition'}</span>
+        {secondaryFilterLabels.length > 0 && <span className="explore-active-filter-count">{secondaryFilterLabels.length}</span>}
+      </button>
+      {!filtersOpen && secondaryFilterLabels.length > 0 && <span className="explore-active-summary">
+        {secondaryFilterLabels.join(' · ')}
+      </span>}
+    </div>
+    <div id="explore-advanced-filters" className="explore-inline-filters explore-secondary-filters"
+      role="group" aria-label="Price and condition filters" hidden={!filtersOpen}>
       {f.type !== 'service' && <div className="explore-inline-filter-group" role="group" aria-label="Product condition">
         <span className="explore-inline-filter-label" aria-hidden="true">Condition</span>
         <div className="explore-inline-filter-options">
@@ -377,7 +400,7 @@ export function Discover() {
       <p className="muted explore-results-count" role="status" aria-live="polite">
         {priceError ? 'Check the price range' : error ? 'Could not load listings' : total === null ? 'Searching…' : total === 0 ? 'No listings match' : `${total} listing${total === 1 ? '' : 's'}`}
       </p>
-      {dirty && <button type="button" className="clear-inline" onClick={reset}>Reset search and filters</button>}
+      {dirty && <button type="button" className="clear-inline" onClick={reset}>Clear filters</button>}
       <div className="explore-sort-control" role="group" aria-label="Sort listings by">
         <span className="explore-sort-label" aria-hidden="true">Sort by</span>
         <div className="explore-sort-options">

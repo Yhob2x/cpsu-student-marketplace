@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'bun:test';
-import { categoriesForExplore, cleanExploreQuery, explorePriceError, updateExploreQuery } from '../src/explore-filters';
+import { categoriesForExplore, cleanExploreQuery, DEFAULT_EXPLORE_FILTERS, exploreAdvancedSummary, explorePriceError, updateExploreQuery } from '../src/explore-filters';
 
 const cats = [
   {id: 1, name: 'Handmade goods', listingType: 'physical_product' as const},
@@ -36,6 +36,19 @@ describe('Explore filtering rules', () => {
   test('canonicalizes incompatible shared links', () => {
     expect(cleanExploreQuery(new URLSearchParams('type=service&categoryId=2&condition=good'), cats).toString())
       .toBe('type=service');
+  });
+  test('summarizes active refinements without counting type, search, or sort', () => {
+    const campus = [{ id: 7, name: 'Main Campus' }];
+    expect(exploreAdvancedSummary(DEFAULT_EXPLORE_FILTERS, campus, cats)).toEqual({ count: 0, labels: [] });
+    const summary = exploreAdvancedSummary({ ...DEFAULT_EXPLORE_FILTERS,
+      type: 'physical_product', q: 'notebook', sort: 'price_asc', campusId: '7',
+      categoryId: '1', condition: 'good', minPrice: '100', maxPrice: '500',
+    }, campus, cats);
+    expect(summary.count).toBe(4);
+    expect(summary.labels).toEqual(['Campus: Main Campus', 'Category: Handmade goods',
+      'Condition: Good', 'Price: ₱100–₱500']);
+    expect(exploreAdvancedSummary({ ...DEFAULT_EXPLORE_FILTERS, campusId: '99', maxPrice: '600' }, [], [])
+      .labels).toEqual(['Campus selected', 'Price: Any–₱600']);
   });
   test('rejects reversed, fractional, negative and non-finite prices while allowing empty and zero', () => {
     expect(explorePriceError('1000','1')).toMatch(/Minimum price/);

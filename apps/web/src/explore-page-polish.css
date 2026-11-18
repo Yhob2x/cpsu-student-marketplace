@@ -29,19 +29,6 @@
   min-height: 47px;
   padding-block: 1px 3px;
 }
-.explore-control-header .explore-options-shell[data-can-scroll="true"] > .explore-inline-filter-options {
-  padding-inline-end: 36px;
-  scroll-padding-inline-end: 36px;
-}
-.explore-control-header .explore-filter-scroll-fade {
-  width: 42px;
-}
-.explore-control-header .explore-filter-scroll-button {
-  width: 44px;
-  height: 44px;
-  border-radius: 9px;
-  box-shadow: 0 1px 4px var(--shadow-card);
-}
 .explore-control-header .explore-inline-price-inputs input[aria-invalid="true"] {
   border-color: var(--danger);
   outline-color: var(--danger);
@@ -151,10 +138,6 @@
     padding: 8px 11px;
     font-size: .76rem;
   }
-  .explore-control-header .explore-options-shell[data-can-scroll="true"] > .explore-inline-filter-options {
-    padding-inline-end: 43px;
-    scroll-padding-inline-end: 43px;
-  }
   .explore-control-header .explore-inline-price-inputs {
     gap: 6px;
     align-items: center;
@@ -224,35 +207,6 @@
   .explore-results .product-card { animation: none; transition: none; }
   .explore-control-header .explore-inline-filter-options { scroll-behavior: auto; }
 }
-/* Give scroll arrows their own space instead of covering category names. */
-.explore-control-header .explore-options-shell[data-can-scroll="true"] {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-.explore-control-header .explore-options-shell[data-can-scroll="true"] > .explore-inline-filter-options {
-  flex: 1 1 auto;
-  width: 0;
-  padding-inline-end: 2px;
-  scroll-padding-inline-end: 4px;
-}
-.explore-control-header .explore-options-shell[data-can-scroll="true"]:has(.explore-filter-scroll-prev) > .explore-inline-filter-options {
-  margin-left: 44px;
-}
-.explore-control-header .explore-options-shell[data-can-scroll="true"] .explore-filter-scroll-next {
-  position: static;
-  flex: 0 0 44px;
-  transform: none;
-}
-.explore-control-header .explore-filter-scroll-fade { display: none; }
-.explore-control-header .explore-filter-scroll-prev { left: 0; }
-@media (max-width: 700px) {
-  .explore-control-header .explore-options-shell[data-can-scroll="true"] > .explore-inline-filter-options {
-    padding-inline-end: 2px;
-    scroll-padding-inline-end: 4px;
-  }
-}
-
 
 /* Shared listing-card refinement: consistent shadcn-inspired surfaces and rhythm. */
 .product-card {
@@ -436,4 +390,407 @@
 @media (prefers-reduced-motion: reduce) {
   .product-card .product-photo img { transition: none; }
   .product-card:hover .product-photo img { transform: none; }
+}
+
+/* Explore filter hierarchy: more breathing room without hiding controls.
+   Keep campus/category choices scrollable and fully usable without arrows. */
+.explore-control-header { padding-top: clamp(12px, 1.6vw, 22px); }
+.explore-control-header > h1 {
+  margin-bottom: 16px;
+  line-height: 1.18;
+}
+.explore-control-header > .explore-type-chips {
+  margin-top: 10px;
+  margin-bottom: 18px;
+}
+.explore-control-header .explore-inline-filters {
+  gap: 24px 30px;
+  margin: 10px 0 18px;
+  padding: 23px 25px;
+  border-radius: 14px;
+  background: var(--paper);
+  box-shadow: none;
+}
+.explore-control-header .explore-inline-filter-group {
+  grid-template-columns: minmax(0, 1fr);
+  align-items: start;
+  gap: 9px;
+}
+.explore-control-header .explore-inline-filter-label {
+  font-size: .83rem;
+  font-weight: 680;
+  line-height: 1.4;
+  letter-spacing: .005em;
+}
+.explore-control-header .explore-options-shell { width: 100%; }
+.explore-control-header .explore-inline-filter-options {
+  gap: 8px;
+  min-height: 53px;
+  padding: 2px 2px 7px;
+  scroll-behavior: smooth;
+}
+.explore-control-header .explore-inline-filter-options button {
+  min-width: 44px;
+  min-height: 42px;
+  padding: 9px 14px;
+  border-radius: 8px;
+  font-size: .82rem;
+  font-weight: 600;
+}
+.explore-control-header .explore-inline-price-inputs {
+  gap: 12px;
+  align-items: end;
+}
+.explore-control-header .explore-inline-price-inputs .field { gap: 7px; }
+.explore-control-header .explore-inline-price-inputs input {
+  min-height: 44px;
+  padding-inline: 12px;
+}
+.explore-control-header .results.explore-results-toolbar {
+  min-height: 60px;
+  margin: 12px 0 20px;
+  padding: 12px 0 17px;
+  gap: 12px 18px;
+}
+.explore-results-toolbar .explore-results-count {
+  font-size: .9rem;
+  font-weight: 600;
+}
+@media (max-width: 860px) {
+  .explore-control-header .explore-inline-filters {
+    gap: 20px;
+    padding: 20px;
+    margin: 14px 0 16px;
+  }
+  .explore-control-header .explore-inline-filter-group {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 8px;
+  }
+  .explore-control-header .explore-inline-filter-options {
+    min-height: 51px;
+    padding: 2px 2px 6px;
+  }
+}
+@media (max-width: 700px) {
+  .explore-control-header { padding-top: 12px; }
+  .explore-control-header > h1 { margin-bottom: 12px; }
+  .explore-control-header > .explore-type-chips {
+    margin-top: 8px;
+    margin-bottom: 12px;
+  }
+  .explore-control-header .explore-inline-filters {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 16px;
+    padding: 17px 14px;
+    margin: 10px 0 14px;
+  }
+  .explore-control-header .explore-inline-filter-options { gap: 7px; }
+  .explore-control-header .explore-inline-filter-options button {
+    min-height: 44px;
+    padding: 9px 12px;
+    font-size: .8rem;
+  }
+  .explore-control-header .explore-inline-price-inputs { gap: 8px; }
+  .explore-control-header .explore-inline-price-inputs .field > span {
+    position: static;
+    width: auto;
+    height: auto;
+    clip-path: none;
+    overflow: visible;
+    white-space: normal;
+    font-size: .75rem;
+  }
+  .explore-control-header .results.explore-results-toolbar {
+    min-height: 0;
+    margin: 10px 0 16px;
+    padding: 12px 0 14px;
+    gap: 10px;
+  }
+}
+@media (max-width: 370px) {
+  .explore-control-header .explore-inline-filters { padding: 15px 12px; }
+  .explore-control-header .explore-inline-filter-options button { padding-inline: 10px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .explore-control-header .explore-inline-filter-options { scroll-behavior: auto; }
+}
+
+/* Simplified Explore: progressive disclosure, never a dropdown menu.
+   Keep the three primary type choices visible and let students opt into refinements. */
+.explore-control-header .explore-inline-filters[hidden] { display: none !important; }
+.explore-primary-controls {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  min-width: 0;
+  gap: 10px 16px;
+  margin: 12px 0 9px;
+}
+.explore-control-header .explore-primary-controls > .explore-type-chips {
+  margin: 0;
+  min-width: 0;
+}
+.explore-advanced-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  flex: 0 0 auto;
+  min-height: 44px;
+  padding: 9px 13px;
+  border: 1px solid var(--surface-stroke);
+  border-radius: 9px;
+  background: var(--paper);
+  color: var(--forest);
+  font: 650 .84rem/1.3 var(--font-body);
+  cursor: pointer;
+  touch-action: manipulation;
+}
+.explore-advanced-toggle[aria-expanded="true"] {
+  background: var(--surface-soft);
+  border-color: var(--forest);
+}
+.explore-active-filter-count {
+  display: inline-grid;
+  place-items: center;
+  min-width: 20px;
+  height: 20px;
+  padding-inline: 5px;
+  border-radius: 999px;
+  background: var(--forest);
+  color: var(--paper);
+  font-size: .7rem;
+  font-weight: 700;
+  line-height: 1;
+}
+.explore-active-summary {
+  margin: 5px 0 13px;
+  color: var(--ink-soft);
+  font-size: .81rem;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+.explore-advanced-toggle:focus-visible {
+  outline: 3px solid var(--mango);
+  outline-offset: 3px;
+}
+@media (hover: hover) and (pointer: fine) {
+  .explore-advanced-toggle:hover { border-color: var(--forest); background: var(--surface-soft); }
+}
+/* Sorting stays one tap per selection but reads as a quiet text control,
+   rather than a second large row of filled buttons. */
+.explore-control-header .explore-results-toolbar .explore-sort-options {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: stretch;
+  border: none;
+  border-radius: 0;
+  padding: 0;
+  gap: 8px;
+  background: transparent;
+}
+.explore-control-header .explore-results-toolbar .explore-sort-options button {
+  min-height: 44px;
+  padding: 8px 7px;
+  border: none;
+  border-bottom: 2px solid transparent;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  color: var(--ink-soft);
+  font-weight: 600;
+  white-space: nowrap;
+}
+.explore-control-header .explore-results-toolbar .explore-sort-options button[aria-pressed="true"] {
+  color: var(--forest);
+  background: transparent;
+  border-bottom-color: var(--forest);
+  font-weight: 750;
+}
+.explore-control-header .results.explore-results-toolbar {
+  margin-top: 8px;
+  padding-top: 10px;
+}
+@media (max-width: 640px) {
+  .explore-primary-controls {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 9px;
+    margin: 9px 0 12px;
+  }
+  .explore-control-header .explore-primary-controls > .explore-type-chips {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    width: 100%;
+    margin: 0;
+  }
+  .explore-advanced-toggle { padding-inline: 11px; }
+  .explore-control-header .explore-results-toolbar .explore-sort-control {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 6px 10px;
+    margin-left: 0;
+  }
+  .explore-control-header .explore-results-toolbar .explore-sort-options {
+    flex: 1 1 auto;
+    justify-content: space-between;
+    gap: 2px;
+    width: auto;
+  }
+  .explore-control-header .explore-results-toolbar .explore-sort-options button {
+    font-size: .77rem;
+    padding-inline: 5px;
+  }
+}
+@media (max-width: 359px) {
+  .explore-primary-controls { grid-template-columns: minmax(0, 1fr); gap: 7px; }
+  .explore-advanced-toggle { justify-self: start; }
+}
+
+/* UI/UX Pro Max correction — quick choices without an extra disclosure click.
+   Campus and category remain directly selectable; only secondary refinements collapse. */
+.explore-control-header .explore-primary-controls {
+  justify-content: flex-start;
+  margin-bottom: 14px;
+}
+.explore-control-header .explore-inline-filters.explore-quick-filters {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px 28px;
+  padding: 8px 0 10px;
+  margin: 8px 0 5px;
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+}
+.explore-control-header .explore-quick-filters .explore-inline-filter-group {
+  grid-template-columns: 72px minmax(0, 1fr);
+  gap: 12px;
+  align-items: center;
+}
+.explore-control-header .explore-quick-filters .explore-inline-filter-label {
+  font-weight: 650;
+  color: var(--ink-soft);
+  font-size: .82rem;
+}
+.explore-control-header .explore-quick-filters .explore-inline-filter-options {
+  min-height: 50px;
+  padding-block: 2px 4px;
+  gap: 3px;
+}
+.explore-control-header .explore-quick-filters .explore-inline-filter-options button {
+  min-height: 44px;
+  padding: 9px 12px;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--ink-soft);
+  font-weight: 600;
+}
+.explore-control-header .explore-quick-filters .explore-inline-filter-options button[aria-pressed="true"] {
+  color: var(--paper);
+  background: var(--forest);
+  border-color: var(--forest);
+}
+@media (hover: hover) and (pointer: fine) {
+  .explore-control-header .explore-quick-filters .explore-inline-filter-options button:not([aria-pressed="true"]):hover {
+    color: var(--forest);
+    background: var(--surface-soft);
+    border-color: var(--surface-stroke);
+  }
+}
+.explore-refinements-bar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px 14px;
+  margin: 2px 0 15px;
+  min-width: 0;
+}
+.explore-refinements-bar .explore-advanced-toggle {
+  border: 0;
+  border-radius: 7px;
+  padding: 7px 9px;
+  background: transparent;
+  color: var(--forest);
+}
+.explore-refinements-bar .explore-advanced-toggle[aria-expanded="true"] {
+  background: var(--surface-soft);
+}
+.explore-refinements-bar .explore-active-summary {
+  margin: 0;
+  flex: 1 1 200px;
+  font-size: .8rem;
+}
+.explore-control-header .explore-inline-filters.explore-secondary-filters {
+  margin: 4px 0 16px;
+  padding: 18px 20px;
+  gap: 18px 24px;
+  box-shadow: none;
+  background: var(--paper);
+}
+.explore-control-header .explore-inline-filters.explore-secondary-filters[hidden] {
+  display: none !important;
+}
+.explore-control-header .results.explore-results-toolbar {
+  margin: 0 0 20px;
+  padding: 10px 0 12px;
+  border-top: 1px solid var(--surface-stroke);
+}
+@media (max-width: 860px) {
+  .explore-control-header .explore-inline-filters.explore-quick-filters {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 9px;
+    padding: 0;
+    margin: 4px 0;
+  }
+  .explore-control-header .explore-quick-filters .explore-inline-filter-group {
+    grid-template-columns: 68px minmax(0, 1fr);
+    gap: 8px;
+  }
+}
+@media (max-width: 640px) {
+  .explore-control-header .explore-primary-controls {
+    display: block;
+    margin: 9px 0 10px;
+  }
+  .explore-control-header .explore-quick-filters .explore-inline-filter-group {
+    grid-template-columns: 1fr;
+    align-items: start;
+    gap: 2px;
+  }
+  .explore-control-header .explore-quick-filters .explore-inline-filter-options {
+    min-height: 47px;
+    gap: 4px;
+  }
+  .explore-control-header .explore-quick-filters .explore-inline-filter-options button {
+    padding: 9px 10px;
+    font-size: .81rem;
+  }
+  .explore-refinements-bar { margin-bottom: 12px; }
+  .explore-control-header .explore-inline-filters.explore-secondary-filters {
+    grid-template-columns: minmax(0, 1fr);
+    padding: 14px;
+    gap: 16px;
+  }
+  .explore-control-header .results.explore-results-toolbar {
+    margin: 0 0 15px;
+    padding-block: 10px;
+  }
+}
+
+/* Same selection language on desktop, PWA, and phones; 44px pointer targets. */
+.explore-control-header .explore-primary-controls .explore-type-chips button {
+  min-height: 44px;
+}
+.explore-control-header .explore-primary-controls .explore-type-chips button[aria-pressed="true"] {
+  color: var(--paper);
+  background: var(--forest);
+  border-color: var(--forest);
+  box-shadow: none;
 }

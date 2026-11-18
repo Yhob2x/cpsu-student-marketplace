@@ -1,5 +1,4 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
-import { Icon } from './icons';
 
 export type FilterScrollState = { overflowing: boolean; previous: boolean; next: boolean };
 export function filterScrollState(scrollWidth: number, clientWidth: number, scrollLeft: number): FilterScrollState {
@@ -31,23 +30,9 @@ export function ExploreScrollOptions({ label, count, children }: {
       element.removeEventListener('scroll', update);
     };
   }, [count]);
-  const move = (direction: -1 | 1) => {
-    const element = rail.current;
-    if (!element) return;
-    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    element.scrollBy({ left: direction * Math.max(120, element.clientWidth * .68), behavior: reduced ? 'auto' : 'smooth' });
-  };
-  return <div className="explore-options-shell" data-can-scroll={state.overflowing}>
+  return <div className="explore-options-shell" data-can-scroll={state.overflowing}
+    data-has-next={state.next}>
     <div className="explore-inline-filter-options" ref={rail} role="group"
       aria-label={label + ' filter choices'} tabIndex={state.overflowing ? 0 : -1}>{children}</div>
-    {state.overflowing && <>
-      {state.previous && <button type="button" className="explore-filter-scroll-button explore-filter-scroll-prev"
-        aria-label={'Previous ' + label.toLowerCase() + ' options'} onClick={() => move(-1)}><Icon name="arrow" size={17} /></button>}
-      {state.next && <>
-        <span className="explore-filter-scroll-fade" aria-hidden="true" />
-        <button type="button" className="explore-filter-scroll-button explore-filter-scroll-next"
-          aria-label={'More ' + label.toLowerCase() + ' options'} onClick={() => move(1)}><Icon name="arrow" size={17} /></button>
-      </>}
-    </>}
   </div>;
 }

@@ -17,6 +17,7 @@ import { makeListingCoverHandler } from '../listing-cover-handler.js';
 import { publishSellerAvatar } from '../seller-avatar-update.js';
 import { sellerAvatarUrl } from '../seller-avatar-url.js';
 import { screenSellerAvatar } from '../seller-avatar-screening.js';
+import { rowAccess } from '../row-access.js';
 
 const r = Router();
 r.use(requireStudent);
@@ -50,7 +51,7 @@ async function verifiedCampus(userId: number) {
   return prisma.affiliation.findFirst({ where: { userId, verificationStatus: 'verified', OR: [{ expirationAt: null }, { expirationAt: { gt: new Date() } }] } });
 }
 async function ownListing(userId: number, id: number) {
-  const l = await prisma.listing.findFirst({ where: { id, seller: { ownerUserId: userId } }, include: { media: true } });
+  const l = await prisma.listing.findFirst({ where: { id, ...rowAccess.listingOwner(userId) }, include: { media: true } });
   if (!l) throw new HttpError(404, 'not_found'); // not distinguishable from another seller's listing
   return l;
 }
@@ -168,7 +169,7 @@ r.delete('/store/avatar', async (req, res) => {
 
 r.get('/listings', async (req, res) => {
   res.setHeader('Cache-Control', 'no-store');
-  res.json(await prisma.listing.findMany({ where: { seller: { ownerUserId: req.user!.id } }, include: { media: true, category: true }, orderBy: { updatedAt: 'desc' } }));
+  res.json(await prisma.listing.findMany({ where: rowAccess.listingOwner(req.user!.id), include: { media: true, category: true }, orderBy: { updatedAt: 'desc' } }));
 });
 
 r.post('/listings', async (req, res) => {

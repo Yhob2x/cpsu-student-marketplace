@@ -7,16 +7,18 @@ import { InstallApp } from './install-app';
 import { selectHomeListings } from './home-listings';
 import { MobileBrowseControls, SwipeableListingRail } from './mobile-browse-controls';
 import { ListingGallery } from './listing-gallery';
-import { isPublicNotFound } from './public-resource-error';
+import { isPublicNotFound, publicResourceLoadMessage } from './public-resource-error';
 import { SellerAvatar } from './seller-avatar';
 import { StorefrontView, type PublicStorefront } from './pages-storefront';
 import { StoresInResults } from './stores-in-results';
 import { MostFollowedStores, type MostFollowedStore } from './most-followed-stores';
+import { resolveHomePageContent, type HomePageView } from './home-page-content';
+import { ExploreScrollOptions } from './explore-scroll-options';
 
 export type Listing = { id: number; type: string; title: string; description: string; price: number; priceBasis: string; availability: string; condition?: 'new' | 'like_new' | 'good' | 'fair' | null;
   handoffNote?: string; category: { name: string }; campus: { code: string; name: string }; seller: { id: number; storeName: string; avatarUrl?: string | null }; images: string[]; status?: string };
 
-export function ListingCard({ l }: { l: Listing }) {
+export function ListingCard({ l, priority = false }: { l: Listing; priority?: boolean }) {
   const nav = useNavigate();
   const { me, savedIds, toggleSaved } = useMe();
   const [busy, setBusy] = useState(false);
@@ -49,7 +51,7 @@ export function ListingCard({ l }: { l: Listing }) {
       <Link to={`/listings/${l.id}`} className="card-link" aria-label={`View ${l.title}`} />
       <div className="img product-photo">
         {showImage
-          ? <img src={imageSrc} alt="" loading="lazy" decoding="async" onError={() => setFailedImageSrc(imageSrc)} />
+          ? <img src={imageSrc} alt="" loading={priority ? 'eager' : 'lazy'} decoding="async" onError={() => setFailedImageSrc(imageSrc)} />
           : <span className="photo-placeholder"><Icon name="tag" size={30} /><span>{imageSrc ? 'Photo unavailable' : 'No photo yet'}</span></span>}
         <span className="listing-kind">{l.type === 'service' ? 'Service' : 'Product'}</span>
         {l.images.length > 1 && <span className="product-photo-multiple">{l.images.length} photos</span>}
@@ -71,6 +73,7 @@ export function ListingCard({ l }: { l: Listing }) {
         <p className="meta card-campus" title={l.campus.name}><Icon name="pin" size={13} /><span>{l.campus.name}</span></p>
         {l.availability !== 'available' && <p className="listing-availability">{l.availability.replaceAll('_', ' ')}</p>}
         {saveError && <p className="card-save-feedback" role="alert">{saveError}</p>}
+        <span className="product-card-arrow" aria-hidden="true"><Icon name="arrow" size={15} /></span>
       </div>
     </article>
   );
@@ -79,14 +82,13 @@ export function ListingCard({ l }: { l: Listing }) {
 // Home is discovery-first: a concise hero, categories and uninterrupted listing sections come first.
 // Supporting information and optional installation follow the marketplace content.
 export function Home() {
-  const nav = useNavigate();
   const { me } = useMe();
   const staff = me?.roles.some(role => ['campus_reviewer', 'university_admin', 'system_admin', 'establishment'].includes(role.role));
-  const [q, setQ] = useState('');
   const [feed, setFeed] = useState<Listing[] | null>(null);
   const [services, setServices] = useState<Listing[] | null>(null);
   const [popular, setPopular] = useState<Listing[] | null>(null);
   const [mostFollowed, setMostFollowed] = useState<MostFollowedStore[]>([]);
+  const [managedContent, setManagedContent] = useState<HomePageView | null>(null);
   const [cats, setCats] = useState<any[]>([]);
   const [homeError, setHomeError] = useState('');
   const shortCategoryName = (name: string) => ({
@@ -100,6 +102,21 @@ export function Home() {
     'Tech & IT help': 'Tech help',
     'Photography & video': 'Photo & video',
   } as Record<string, string>)[name] ?? name;
+  // Keep category discovery scannable without changing the existing category IDs or links.
+  const categoryIcon = (name: string) => {
+    const label = name.toLowerCase();
+    if (/print/.test(label)) return 'printer';
+    if (/book|notes|school supplies/.test(label)) return 'book';
+    if (/food|drink|snack|coffee/.test(label)) return 'utensils';
+    if (/design|creativ|\barts?\b/.test(label)) return 'palette';
+    if (/tutor|lesson|educat/.test(label)) return 'graduation';
+    if (/tech|digital|gadget|computer|it help/.test(label)) return 'laptop';
+    if (/photo|video/.test(label)) return 'camera';
+    if (/cloth|fashion|accessor/.test(label)) return 'shirt';
+    if (/handmade|craft|pre-loved|second.hand/.test(label)) return 'package';
+    if (/service|repair/.test(label)) return 'wrench';
+    return 'tag';
+  };
   const loadHome = () => {
     setHomeError('');
     const fail = (e: unknown) => setHomeError(explain(e));
@@ -110,52 +127,55 @@ export function Home() {
       .then(r => setMostFollowed(r.available ? r.items : []))
       .catch(e => { setMostFollowed([]); fail(e); });
     api('/categories').then(setCats).catch(fail);
+    api<HomePageView>('/home-page').then(setManagedContent).catch(() => setManagedContent(null));
   };
   useEffect(loadHome, []);
-  const go = (e: FormEvent<HTMLFormElement>) => { e.preventDefault(); nav(q.trim() ? `/explore?q=${encodeURIComponent(q.trim())}` : '/explore'); };
   const rail = (rows: Listing[], label: string) => <SwipeableListingRail itemCount={rows.length} label={label}>
-    {rows.map(l => <ListingCard key={l.id} l={l} />)}
+    {rows.map((l, index) => <ListingCard key={l.id} l={l} priority={label === 'Fresh listings' && index < 2} />)}
   </SwipeableListingRail>;
   const skeletons = <div className="rail">{Array.from({ length: 4 }, (_, i) => <div key={i} className="skel card" aria-hidden="true" />)}</div>;
   // Skeletons while loading; once loaded, an empty section disappears instead of leaving a dead heading.
   const block = (title: string, to: string, rows: Listing[] | null) => rows === null
     ? <section className="home-listing-section" aria-label={title}><div className="sec-head"><h2>{title}</h2></div>{skeletons}</section>
     : rows.length > 0 ? <section className="home-listing-section" aria-label={title}><div className="sec-head"><h2>{title}</h2><Link to={to}>See all <Icon name="arrow" size={14} /></Link></div>{rail(rows, title)}</section> : null;
-  const shots = (feed ?? []).filter(l => l.images[0]).slice(0, 3);
+  const homeContent = resolveHomePageContent(managedContent);
+  const copy = homeContent.copy;
   // Fresh listings always show the newest public listings, even when one is also popular.
   const { popular: top, fresh, services: serviceRows } = selectHomeListings(feed, popular, services);
   return <>
     {homeError && <div className="panel" role="alert">Some marketplace content could not load. {homeError} <button type="button" className="btn ghost" onClick={loadHome}>Retry</button></div>}
-    <section className="hero">
+    <section className="hero home-hero">
       <div className="hero-copy">
-        <h1>Great finds.<br />Right on campus.</h1>
-        <p>Browse student listings and message sellers on campus.</p>
-        <div className="hero-actions">
-          <Link className="btn" to="/explore">Explore listings <Icon name="arrow" size={17} /></Link>
-        </div>
-        <form className="search hero-search" role="search" aria-label="Home listing search" onSubmit={go}>
-          <input aria-label="Search listings" placeholder="Search products, services, skills…" maxLength={80} value={q} onChange={e => setQ(e.target.value)} />
-          <button type="submit" className="btn" aria-label="Search listings">
-            <span className="hero-search-text">Search</span>
-            <span className="hero-search-icon" aria-hidden="true"><Icon name="search" size={21} /></span>
-          </button>
-        </form>
+        <span className="hero-eyebrow">{copy.heroEyebrow}</span>
+        <h1><span className="hero-line">{copy.heroLine1}</span>
+          <span className="hero-line hero-line-connect"><span className="hero-amp">{copy.heroAccent}</span> {copy.heroLine2}</span>
+          <em>{copy.heroLine3}</em></h1>
+        <p>{copy.heroBody}</p>
+        {/* Search is available in the site header on every page; this hero keeps the editorial message and approved image. */}
       </div>
       <div className="hero-art" aria-hidden="true">
-        {shots.map((l, i) => <figure key={l.id} className={`shot shot-${i + 1}`}>
-          <img src={l.images[0]} alt="" loading={i ? 'lazy' : 'eager'} decoding="async" /></figure>)}
-        {shots.length === 0 && <div className="shot shot-1 empty-art"><Icon name="tag" size={56} /></div>}
-        <span className="hero-sticker"><b>From students</b><small>for the CPSU community</small></span>
+        {/* Scale-independent asymmetric crop; the admin-managed image remains unchanged. */}
+        <svg className="hero-photo-mask-definition" width="0" height="0" focusable="false" aria-hidden="true">
+          <defs>
+            <clipPath id="cpsu-hero-organic-clip" clipPathUnits="objectBoundingBox">
+              <path d="M .50 .035 C .67 .005 .82 .045 .91 .085 C .985 .125 .975 .23 .965 .355 C .955 .525 .99 .735 .93 .855 C .865 .985 .765 .99 .625 .95 C .49 .905 .405 .905 .29 .965 C .16 1 .065 .895 .045 .78 C .005 .625 .02 .395 .11 .255 C .205 .12 .34 .055 .50 .035 Z" />
+            </clipPath>
+          </defs>
+        </svg>
+        <figure className="shot shot-1 home-custom-hero">
+          <img src={homeContent.images.hero ?? '/illustrations/campus-abstract.svg'} alt="" decoding="async"
+            onError={e => { e.currentTarget.onerror = null; e.currentTarget.src = '/illustrations/campus-abstract.svg'; }} />
+        </figure>
       </div>
     </section>
 
     <section className="category-section" aria-label="Browse by category">
-      <div className="sec-head category-head"><h2>Explore by category</h2><Link to="/explore">View all <Icon name="arrow" size={15} /></Link></div>
+      <div className="sec-head category-head"><h2>{copy.categoryHeading}</h2><Link to="/explore">View all <Icon name="arrow" size={15} /></Link></div>
       <div className="cat-rail home-category-grid" role="group" aria-label="All categories"
         style={{ '--category-count': Math.max(1, cats.length) } as CSSProperties}>
         {cats.map(c => <Link key={c.id} className="cat" to={`/explore?categoryId=${c.id}`}
           aria-label={c.name} title={c.name}>
-          <span className="cat-ico" aria-hidden="true"><Icon name="tag" size={20} /></span>
+          <span className="cat-ico" aria-hidden="true"><Icon name={categoryIcon(c.name)} size={20} /></span>
           <span className="category-label-full" aria-hidden="true">{c.name}</span>
           <span className="category-label-short" aria-hidden="true">{shortCategoryName(c.name)}</span>
         </Link>)}
@@ -171,30 +191,37 @@ export function Home() {
     <MostFollowedStores stores={mostFollowed} />
     <StudentAnnouncements />
 
-    <section className="steps">
-      <h2>How it works</h2>
-      <ol>
-        <li><span className="num">1</span><b>Find something</b><p>Browse reviewed listings or filter by campus.</p></li>
-        <li><span className="num">2</span><b>Message the seller</b><p>Ask questions and agree on the details.</p></li>
-        <li><span className="num">3</span><b>Meet on campus</b><p>Arrange payment and handoff directly.</p></li>
-      </ol>
+    <section className="home-trust" aria-labelledby="home-trust-heading">
+      <h2 id="home-trust-heading">{copy.trustHeading} <em>{copy.trustAccent}</em></h2>
+      <ul className="trust">
+        {copy.trustItems.map((item, index) => <li key={index}><Icon name={(['shield', 'chat', 'pin', 'flag'] as const)[index]} /> {item}</li>)}
+      </ul>
     </section>
 
-    {!staff && <section className="cta-band">
+    <section className="steps">
+      <div className="steps-art" aria-hidden="true">
+        <img src={homeContent.images.steps ?? '/illustrations/campus-market.svg'} alt="" loading="lazy"
+          onError={e => { e.currentTarget.onerror = null; e.currentTarget.src = '/illustrations/campus-market.svg'; }} />
+      </div>
+      <div className="steps-content">
+        <span className="steps-eyebrow">{copy.stepsEyebrow}</span>
+        <h2>{copy.stepsHeading} <em>{copy.stepsAccent}</em></h2>
+        <ol>
+          {copy.steps.map((step, index) => <li key={index}><span className="num">{index + 1}</span><b>{step.title}</b><p>{step.body}</p></li>)}
+        </ol>
+        <Link className="btn ghost steps-link" to="/guidelines">Read marketplace guidelines <Icon name="arrow" size={17} /></Link>
+      </div>
+    </section>
+
+    {!staff && <section className="cta-band" style={homeContent.images.cta
+      ? { '--home-cta-image': `url("${homeContent.images.cta}")` } as CSSProperties : undefined}>
       <span className="cta-icon"><Icon name="store" /></span>
-      <div><h2>Sell or offer a service</h2>
-        <p>Verified students can open a store and submit listings.</p></div>
+      <div><h2>{copy.ctaHeading}</h2>
+        <p>{copy.ctaBody}</p></div>
       <Link className="btn gold" to="/dashboard">Start selling</Link>
     </section>}
 
     <InstallApp />
-
-    <ul className="trust">
-      <li><Icon name="shield" /> Reviewer-approved listings</li>
-      <li><Icon name="chat" /> No middleman, no fees</li>
-      <li><Icon name="pin" /> Meet at a campus pickup spot</li>
-      <li><Icon name="flag" /> Report anything that looks wrong</li>
-    </ul>
   </>;
 }
 
@@ -216,18 +243,6 @@ export function Discover() {
   const f = seed(sp);
   const [campuses, setCampuses] = useState<any[]>([]); const [cats, setCats] = useState<any[]>([]);
   const [filterError, setFilterError] = useState(''); const [filtersLoading, setFiltersLoading] = useState(false);
-  const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
-  const [desktopFiltersOpen, setDesktopFiltersOpen] = useState(false);
-  const [mobileFiltersClosing, setMobileFiltersClosing] = useState(false);
-  const [filterMotionEnabled, setFilterMotionEnabled] = useState(true);
-  const [compactControls, setCompactControls] = useState(false);
-  const controlHeaderRef = useRef<HTMLElement>(null);
-  useEffect(() => {
-    const update = () => setCompactControls(window.scrollY > 160);
-    window.addEventListener('scroll', update, { passive: true });
-    update();
-    return () => window.removeEventListener('scroll', update);
-  }, []);
   const [items, setItems] = useState<Listing[] | null>(null); const [total, setTotal] = useState<number | null>(null);
   const [error, setError] = useState('');
   const [retryRequest, setRetryRequest] = useState(0);
@@ -278,18 +293,12 @@ export function Discover() {
   };
   const reset = () => setSp(new URLSearchParams(), { replace: true });
   const dirty = (Object.keys(NO_FILTERS) as (keyof Filters)[]).some(k => k !== 'sort' && f[k] !== '');
-  const advancedFilterCount = (['campusId', 'categoryId', 'condition', 'minPrice', 'maxPrice'] as (keyof Filters)[])
-    .filter(k => f[k] !== '').length;
-  const desktopAdvancedCount = (['condition', 'minPrice', 'maxPrice'] as (keyof Filters)[])
-    .filter(k => f[k] !== '').length;
   const skel = <div className="grid listing-grid explore-results" aria-label="Loading listing results">
     {Array.from({ length: 8 }, (_, i) => <div key={i} className="skel card" aria-hidden="true" />)}
   </div>;
 
   return <>
-    <section className="explore-control-header" ref={controlHeaderRef}
-      data-filters-open={mobileFiltersOpen && !mobileFiltersClosing}
-      data-compact={compactControls && !mobileFiltersOpen} aria-label="Explore controls">
+    <section className="explore-control-header" aria-label="Explore controls">
     <h1>Explore listings</h1>
 
     <div className="explore-toolbar" role="search" aria-label="Explore listing search">
@@ -307,80 +316,68 @@ export function Discover() {
         {filtersLoading ? 'Retrying…' : 'Retry filters'}
       </button>
     </div>}
-    <button type="button" className="mobile-filter-toggle"
-      aria-label={mobileFiltersOpen && !mobileFiltersClosing ? 'Hide filters' : 'More filters'}
-      aria-controls="explore-filter-fields"
-      aria-expanded={mobileFiltersOpen && !mobileFiltersClosing} onClick={event => {
-        const opening = !mobileFiltersOpen || mobileFiltersClosing;
-        const animate = event.detail !== 0 && !window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-        setFilterMotionEnabled(animate);
-        if (opening) {
-          setMobileFiltersClosing(false);
-          setMobileFiltersOpen(true);
-          requestAnimationFrame(() => controlHeaderRef.current?.scrollIntoView({ block: 'start', behavior: 'auto' }));
-        } else if (animate) {
-          setMobileFiltersClosing(true);
-        } else {
-          setMobileFiltersOpen(false);
-          setMobileFiltersClosing(false);
-        }
-      }}>
-      <Icon name="sliders" size={18} /> <span>{mobileFiltersOpen && !mobileFiltersClosing ? 'Hide filters' : 'More filters'}</span>
-      {advancedFilterCount > 0 && <span className="filter-count">{advancedFilterCount} active</span>}
-      <Icon name={mobileFiltersOpen && !mobileFiltersClosing ? 'chevronUp' : 'chevronDown'} size={18} />
-    </button>
-    <div id="explore-filter-fields" className="filters filter-panel" data-mobile-open={mobileFiltersOpen}
-      data-desktop-open={desktopFiltersOpen}
-      data-mobile-phase={mobileFiltersClosing ? 'closing' : 'open'}
-      data-motion={filterMotionEnabled ? 'on' : 'off'}
-      aria-hidden={mobileFiltersClosing ? true : undefined}
-      {...(mobileFiltersClosing ? { inert: '' } : {})}
-      onAnimationEnd={event => {
-        if (event.target === event.currentTarget && event.animationName === 'cpsu-filter-dismiss' && mobileFiltersClosing) {
-          setMobileFiltersOpen(false);
-          setMobileFiltersClosing(false);
-        }
-      }} role="group" aria-label="Filter listings">
-      <label className="field">Campus
-        <select value={f.campusId} onChange={set('campusId')}><option value="">All campuses</option>{campuses.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}</select>
-      </label>
-      <label className="field">Category
-        <select value={f.categoryId} onChange={set('categoryId')}><option value="">All categories</option>{cats.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}</select>
-      </label>
-      <label className="field explore-type-filter">Type
-        <select value={f.type} onChange={set('type')}><option value="">All types</option><option value="physical_product">Products</option><option value="service">Services</option></select>
-      </label>
-      <label className="field explore-secondary-filter">Condition
-        <select value={f.condition} onChange={set('condition')} disabled={f.type === 'service'}><option value="">Any condition</option><option value="new">New</option><option value="like_new">Like new</option><option value="good">Good</option><option value="fair">Fair</option></select>
-      </label>
-      <label className="field explore-secondary-filter">Min price (₱)
-        <input type="number" inputMode="numeric" min={0} step={1} placeholder="Any" value={f.minPrice} onChange={set('minPrice')} />
-      </label>
-      <label className="field explore-secondary-filter">Max price (₱)
-        <input type="number" inputMode="numeric" min={0} step={1} placeholder="Any" value={f.maxPrice} onChange={set('maxPrice')} />
-      </label>
+    <div className="explore-inline-filters" role="group" aria-label="Filter listings">
+      <div className="explore-inline-filter-group" role="group" aria-label="Campus">
+        <span className="explore-inline-filter-label" aria-hidden="true">Campus</span>
+        <ExploreScrollOptions label="Campus" count={campuses.length}>
+          <button type="button" aria-pressed={f.campusId === ''} onClick={() => set('campusId')({ target: { value: '' } })}>All campuses</button>
+          {campuses.map(c => <button key={c.id} type="button" aria-pressed={f.campusId === String(c.id)}
+            onClick={() => set('campusId')({ target: { value: String(c.id) } })}>{c.name}</button>)}
+        </ExploreScrollOptions>
+      </div>
+      <div className="explore-inline-filter-group" role="group" aria-label="Category">
+        <span className="explore-inline-filter-label" aria-hidden="true">Category</span>
+        <ExploreScrollOptions label="Category" count={cats.length}>
+          <button type="button" aria-pressed={f.categoryId === ''} onClick={() => set('categoryId')({ target: { value: '' } })}>All categories</button>
+          {cats.map(c => <button key={c.id} type="button" aria-pressed={f.categoryId === String(c.id)}
+            onClick={() => set('categoryId')({ target: { value: String(c.id) } })}>{c.name}</button>)}
+        </ExploreScrollOptions>
+      </div>
+      <div className="explore-inline-filter-group" role="group" aria-label="Product condition">
+        <span className="explore-inline-filter-label" aria-hidden="true">Condition</span>
+        <div className="explore-inline-filter-options">
+          {([
+            ['', 'Any'], ['new', 'New'], ['like_new', 'Like new'],
+            ['good', 'Good'], ['fair', 'Fair'],
+          ] as const).map(([value, label]) =>
+            <button key={value} type="button" aria-pressed={f.condition === value}
+              disabled={f.type === 'service'}
+              onClick={() => set('condition')({ target: { value } })}>{label}</button>)}
+        </div>
+      </div>
+      <div className="explore-inline-filter-group explore-inline-price-group" role="group" aria-label="Price range">
+        <span className="explore-inline-filter-label" aria-hidden="true">Price (₱)</span>
+        <div className="explore-inline-price-inputs">
+          <label className="field"><span>Min</span>
+            <input type="number" inputMode="numeric" min={0} step={1} placeholder="Any" value={f.minPrice}
+              onChange={set('minPrice')} />
+          </label>
+          <span className="explore-inline-price-separator" aria-hidden="true">–</span>
+          <label className="field"><span>Max</span>
+            <input type="number" inputMode="numeric" min={0} step={1} placeholder="Any" value={f.maxPrice}
+              onChange={set('maxPrice')} />
+          </label>
+        </div>
+      </div>
     </div>
-    <button type="button" className="desktop-filter-toggle"
-      aria-expanded={desktopFiltersOpen} aria-controls="explore-filter-fields"
-      onClick={() => setDesktopFiltersOpen(open => !open)}>
-      <Icon name="sliders" size={16} />
-      {desktopFiltersOpen ? 'Fewer filters' : 'More filters'}
-      {desktopAdvancedCount > 0 && <span>{desktopAdvancedCount} active</span>}
-      <Icon name={desktopFiltersOpen ? 'chevronUp' : 'chevronDown'} size={16} />
-    </button>
 
-    <div className="results">
-      <p className="muted" role="status" aria-live="polite">
+    <div className="results explore-results-toolbar">
+      <p className="muted explore-results-count" role="status" aria-live="polite">
         {error ? 'Could not load listings' : total === null ? 'Searching…' : total === 0 ? 'No listings match' : `${total} listing${total === 1 ? '' : 's'}`}
       </p>
       {dirty && <button type="button" className="clear-inline" onClick={reset}>Reset search and filters</button>}
-      <label className="field">Sort
-        <select value={f.sort} onChange={set('sort')}>
-          <option value="newest">Newest first</option>
-          <option value="price_asc">Price: low to high</option>
-          <option value="price_desc">Price: high to low</option>
-        </select>
-      </label>
+      <div className="explore-sort-control" role="group" aria-label="Sort listings by">
+        <span className="explore-sort-label" aria-hidden="true">Sort by</span>
+        <div className="explore-sort-options">
+          {([
+            ['newest', 'Newest'],
+            ['price_asc', 'Lowest price'],
+            ['price_desc', 'Highest price'],
+          ] as const).map(([value, label]) =>
+            <button key={value} type="button" aria-pressed={f.sort === value}
+              onClick={() => set('sort')({ target: { value } })}>{label}</button>)}
+        </div>
+      </div>
     </div>
     </section>
 
@@ -398,7 +395,7 @@ export function Discover() {
     {items !== null && !error && <StoresInResults listings={items} query={f.q} />}
     {items !== null && items.length > 0 && <h2 className="sr-only">Listing results</h2>}
     {items !== null && items.length > 0 && <div className="grid listing-grid explore-results" role="region" aria-label="Explore listing results">
-      {items.map(l => <ListingCard key={l.id} l={l} />)}
+      {items.map((l, index) => <ListingCard key={l.id} l={l} priority={index < 2} />)}
     </div>}
     {pageCount > 1 && <nav className="row" aria-label="Listing pages" style={{ justifyContent: 'center', marginTop: '1rem' }}>
       <button type="button" className="btn ghost" disabled={currentPage <= 1} onClick={() => navigatePage(currentPage - 1)}>Previous</button>
@@ -425,7 +422,7 @@ export function ListingDetail() {
   useEffect(() => { loadListing(); return () => { loadRequest.current++; }; }, [id]);
   if (loadError && !l) return <section className="panel stack" role="alert">
     <h1>{isPublicNotFound(loadError) ? 'Listing unavailable' : 'Could not load this listing'}</h1>
-    <p>{isPublicNotFound(loadError) ? 'This listing may have been removed or is no longer public.' : 'The server or connection may be unavailable. Try again.'}</p>
+    <p>{isPublicNotFound(loadError) ? 'This listing may have been removed or is no longer public.' : publicResourceLoadMessage(loadError)}</p>
     <div className="row">{!isPublicNotFound(loadError) && <button type="button" className="btn" onClick={loadListing}>Retry listing</button>}
       <Link className="btn ghost" to="/explore">Browse listings</Link></div>
   </section>;
@@ -505,7 +502,7 @@ export function ListingDetail() {
 }
 
 export function StorePage() {
-  const { id } = useParams(); const { me } = useMe(); const navigate = useNavigate();
+  const { id, slug } = useParams(); const { me } = useMe(); const navigate = useNavigate();
   const [s, setS] = useState<PublicStorefront | null>(null);
   const [loadError, setLoadError] = useState<unknown>(null);
   const loadRequest = useRef(0);
@@ -521,21 +518,27 @@ export function StorePage() {
   const loadStore = () => {
     const request = ++loadRequest.current;
     setS(null); setLoadError(null);
-    api<PublicStorefront>(`/seller-profiles/${id}`).then(row => { if (request === loadRequest.current) setS(row); })
+    const resource = slug ? `/seller-profiles/by-slug/${encodeURIComponent(slug)}` : `/seller-profiles/${id}`;
+    api<PublicStorefront>(resource).then(row => {
+      if (request !== loadRequest.current) return;
+      setS(row);
+      if (id || (slug && slug !== row.slug)) navigate(`/store/${encodeURIComponent(row.slug)}`, { replace: true });
+    })
       .catch(e => { if (request === loadRequest.current) setLoadError(e); });
   };
-  useEffect(() => { loadStore(); return () => { loadRequest.current++; }; }, [id]);
+  useEffect(() => { loadStore(); return () => { loadRequest.current++; }; }, [id, slug]);
   if (loadError && !s) return <section className="panel stack" role="alert">
     <h1>{isPublicNotFound(loadError) ? 'Store not found' : 'Could not load this store'}</h1>
-    <p>{isPublicNotFound(loadError) ? 'This store is not available.' : 'The server or connection may be unavailable. Try again.'}</p>
+    <p>{isPublicNotFound(loadError) ? 'This store is not available.' : publicResourceLoadMessage(loadError)}</p>
     <div className="row">{!isPublicNotFound(loadError) && <button type="button" className="btn" onClick={loadStore}>Retry store</button>}
       <Link className="btn ghost" to="/explore">Browse listings</Link></div>
   </section>;
   if (!s) return <p className="muted" role="status">Loading store…</p>;
   const staff = me?.roles.some(role => ['campus_reviewer', 'university_admin', 'system_admin', 'establishment'].includes(role.role));
   const isOwner = me?.storeId === s.id;
+  const publicStorePath = `/store/${encodeURIComponent(s.slug)}`;
   const toggleFollow = async () => {
-    if (!me) { navigate(`/login?next=${encodeURIComponent(`/stores/${s.id}`)}`); return; }
+    if (!me) { navigate(`/login?next=${encodeURIComponent(publicStorePath)}`); return; }
     if (staff || isOwner || followLock.current || !s.follow?.available) return;
     followLock.current = true;
     setFollowBusy(true); setFollowMessage('');
@@ -547,6 +550,7 @@ export function StorePage() {
         ...current, follow: { count: result.count, isFollowing: result.isFollowing, available: true },
       } : current);
       setFollowMessage(result.isFollowing ? 'You are following this store.' : 'You unfollowed this store.');
+      window.dispatchEvent(new Event('store-follow-changed'));
     } catch (error) {
       setFollowMessage(explain(error));
     } finally {
@@ -556,7 +560,7 @@ export function StorePage() {
   };
   const startStoreChat = async (listingId: number, body: string) => {
     if (!me) {
-      navigate(`/login?next=${encodeURIComponent(`/stores/${s.id}`)}`);
+      navigate(`/login?next=${encodeURIComponent(publicStorePath)}`);
       return;
     }
     if (staff || isOwner || chatLock.current || !s.listings.some(item => item.id === listingId) ||
@@ -587,7 +591,7 @@ export function StorePage() {
   return <><StorefrontView key={s.id} store={s} isOwner={isOwner}
     canFollow={!staff} onFollow={() => void toggleFollow()} followBusy={followBusy} followMessage={followMessage}
     canChat={!staff && !isOwner} signedIn={Boolean(me)}
-    onChatSignIn={() => navigate(`/login?next=${encodeURIComponent(`/stores/${s.id}`)}`)}
+    onChatSignIn={() => navigate(`/login?next=${encodeURIComponent(publicStorePath)}`)}
     onChat={(listingId, body) => void startStoreChat(listingId, body)}
     chatBusy={chatBusy} chatError={chatError}
     renderListing={l => <ListingCard key={l.id} l={l} />} />

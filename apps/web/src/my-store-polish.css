@@ -1,0 +1,424 @@
+/* My Store — a calm, task-first workspace using CPSU Market's existing tokens. */
+.my-store {
+  max-width: 1080px;
+  margin-inline: auto;
+  padding-bottom: 28px;
+}
+.my-store .store-workspace-head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 14px 24px;
+  margin-bottom: 16px;
+  padding: 4px 0 14px;
+  border-bottom: 1px solid var(--line);
+}
+.my-store .store-workspace-title { min-width: 0; }
+.my-store .store-workspace-title h1 {
+  margin: 0;
+  color: var(--forest);
+  font-size: 2.35rem;
+  line-height: 1.1;
+}
+.my-store .store-workspace-title p {
+  margin: 5px 0 0;
+  max-width: 54ch;
+  font: 400 .88rem/1.5 var(--font-body);
+}
+.my-store .store-header-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.my-store .store-header-actions .btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 9px 14px;
+  border-radius: 9px;
+  font: 650 .85rem/1.25 var(--font-body);
+  white-space: nowrap;
+  text-decoration: none;
+}
+.my-store .store-header-actions .store-new-listing-action {
+  background: var(--forest);
+  border-color: var(--forest);
+  color: var(--pure-white);
+}
+.my-store .store-header-actions .store-new-listing-action:hover {
+  background: var(--leaf);
+  border-color: var(--leaf);
+}
+.my-store .store-profile-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  min-height: 44px;
+  padding: 8px 5px;
+  color: var(--forest);
+  font: 600 .83rem/1.4 var(--font-body);
+  text-decoration: underline;
+  text-decoration-color: transparent;
+  text-underline-offset: 3px;
+}
+.my-store .store-profile-link:hover { text-decoration-color: currentColor; }
+.my-store .store-header-actions :is(button, a):focus-visible {
+  outline: 3px solid var(--focus-green);
+  outline-offset: 3px;
+}
+.my-store .store-affiliation {
+  display: flex;
+  align-items: center;
+  gap: 6px 18px;
+  padding: 11px 16px;
+  margin-bottom: 0;
+  border: 1px solid var(--line);
+  border-radius: 11px;
+  background: var(--paper);
+}
+.my-store .store-affiliation h2 {
+  color: var(--ink-soft);
+  font: 650 .8rem/1.45 var(--font-body);
+}
+.my-store .store-affiliation p {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 7px;
+  font-size: .84rem;
+}
+.my-store .store-create {
+  margin-top: 14px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--paper);
+  scroll-margin-top: 16px;
+}
+.my-store .store-create summary {
+  min-height: 56px;
+  padding: 12px 17px;
+  font: 650 .97rem/1.3 var(--font-body);
+}
+.my-store .store-create[open] > summary {
+  border-bottom: 1px solid var(--line);
+}
+.my-store .store-create .seller-composer { padding: 17px; }
+.my-store .store-create .seller-composer .field { min-width: 0; }
+.my-store .store-create .seller-composer :is(input, select, textarea) {
+  border-radius: 9px;
+}
+.my-store .store-listings-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  margin: 22px 0 14px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--line);
+}
+.my-store .store-listings-head h2 {
+  color: var(--forest);
+  font-size: 1.35rem;
+  line-height: 1.25;
+}
+.my-store .store-listing-count { font-weight: 600; }
+.my-store .store-listing-filters { gap: 12px; }
+.my-store .store-listing-filters .field { font-size: .86rem; }
+.my-store .store-listing-filters :is(input, select) {
+  min-height: 46px;
+  border-radius: 9px;
+}
+.my-store .store-empty {
+  padding: 22px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--paper);
+}
+.my-store .store-empty h3 { margin: 0 0 6px; color: var(--forest); }
+.my-store .store-empty p { margin: 0; line-height: 1.55; }
+.my-store .store-followers {
+  margin: 14px 0 0;
+  padding: 18px 20px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--paper);
+}
+.my-store .store-followers-head { align-items: center; }
+.my-store .store-followers-heading h2 { font-size: 1.07rem; }
+.my-store .store-followers-heading p { line-height: 1.45; }
+.my-store .store-followers-summary strong { font-size: 1.4rem; }
+.my-store .store-followers-summary .btn {
+  min-height: 44px;
+  border-radius: 9px;
+}
+.my-store .store-followers-list {
+  gap: 0 18px;
+  margin-top: 14px;
+  border-top: 1px solid var(--line);
+}
+.my-store .store-follower {
+  min-height: 66px;
+  padding: 12px 2px;
+  border: 0;
+  border-bottom: 1px solid var(--line);
+  border-radius: 0;
+  background: transparent;
+}
+.my-store .store-follower-avatar {
+  flex: 0 0 38px;
+  border: 1px solid var(--line);
+  border-radius: 50%;
+  background: var(--surface-soft);
+}
+.my-store .store-follower-detail strong { color: var(--ink); }
+.my-store .store-followers-more {
+  min-height: 44px;
+  padding-inline: 2px;
+  font-size: .84rem;
+  text-decoration: underline;
+  text-decoration-color: transparent;
+  text-underline-offset: 3px;
+}
+.my-store .store-followers-more:hover { text-decoration-color: currentColor; }
+.my-store .store-followers-more:focus-visible {
+  outline: 3px solid var(--focus-green);
+  outline-offset: 2px;
+}
+.my-store .store-followers-pages { margin-top: 12px; }
+.my-store .store-followers-pages button { min-height: 44px; }
+@media (max-width: 800px) {
+  .my-store .store-workspace-head { align-items: flex-start; }
+  .my-store .store-workspace-title h1 { font-size: 2.1rem; }
+}
+@media (max-width: 620px) {
+  .my-store .store-workspace-head { gap: 14px; }
+  .my-store .store-header-actions {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    width: 100%;
+    gap: 8px;
+  }
+  .my-store .store-header-actions .store-new-listing-action {
+    grid-column: 1 / -1;
+    width: 100%;
+  }
+  .my-store .store-header-actions > a.btn { min-width: 0; padding-inline: 8px; font-size: .81rem; }
+  .my-store .store-profile-link { min-width: 0; font-size: .81rem; }
+  .my-store .store-affiliation { gap: 6px 10px; padding: 11px 13px; }
+  .my-store .store-affiliation h2 { flex: 0 0 auto; }
+  .my-store .store-followers { padding: 15px; }
+  .my-store .store-followers-list { grid-template-columns: minmax(0, 1fr); }
+  .my-store .store-follower { min-height: 62px; }
+  .my-store .store-listings-head { margin-top: 20px; }
+  .my-store .store-listing-filters { gap: 10px; }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .my-store .store-header-actions .btn,
+  .my-store .store-profile-link,
+  .my-store .store-followers-more {
+    transition: background-color 160ms ease-out, border-color 160ms ease-out, color 160ms ease-out;
+  }
+}
+
+/* Follower management: reference-inspired full list, using only authorized
+   display names and follow dates supplied by the existing private endpoint. */
+.my-store .store-followers {
+  padding: 20px 22px;
+}
+.my-store .store-followers-heading h2 { font-size: 1.16rem; letter-spacing: -.018em; }
+.my-store .store-followers-heading p { max-width: 45ch; }
+.my-store .store-followers-summary { gap: 10px; }
+.my-store .store-followers-count {
+  min-width: 48px;
+  min-height: 44px;
+  padding: 5px 9px;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  background: var(--surface-soft);
+  color: var(--forest);
+  font: 750 1.25rem/1.3 var(--font-body);
+  font-variant-numeric: tabular-nums;
+  cursor: pointer;
+}
+.my-store .store-followers-count:hover { border-color: var(--forest); }
+.my-store .store-followers-count:focus-visible,
+.my-store .store-followers-dialog :is(button):focus-visible {
+  outline: 3px solid var(--mango);
+  outline-offset: 2px;
+}
+.my-store .store-followers-list {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0;
+  margin-top: 17px;
+  border-top: 1px solid var(--line);
+}
+.my-store .store-follower {
+  min-height: 74px;
+  gap: 13px;
+  padding: 13px 2px;
+}
+.my-store .store-follower-avatar {
+  flex: 0 0 44px;
+  width: 44px;
+  height: 44px;
+  font-size: .83rem;
+  background: #f3eadf;
+}
+.my-store .store-follower-detail strong {
+  font-size: .9rem;
+  line-height: 1.35;
+}
+.my-store .store-follower-detail span { font-size: .79rem; }
+.my-store .store-followers-more {
+  justify-self: start;
+  gap: 9px;
+  min-height: 44px;
+  margin-top: 12px;
+  padding: 8px 3px;
+  color: var(--forest);
+  font-size: .85rem;
+  text-decoration: none;
+}
+.my-store .store-followers-more svg {
+  transition: transform 160ms ease-out;
+}
+@media (hover: hover) and (pointer: fine) {
+  .my-store .store-followers-more:hover svg { transform: translateX(3px); }
+}
+
+/* A native modal preserves Escape, focus containment, and accessible dialog
+   semantics without adding a second pseudo-page or another API endpoint. */
+.my-store .store-followers-dialog {
+  position: fixed;
+  inset: 0;
+  box-sizing: border-box;
+  width: min(780px, calc(100vw - 32px));
+  max-width: none;
+  max-height: min(820px, calc(100dvh - 40px));
+  min-height: 340px;
+  margin: auto;
+  padding: 0;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: var(--paper);
+  color: var(--ink);
+  box-shadow: 0 22px 70px rgb(8 37 25 / 20%);
+  overflow: hidden;
+}
+.my-store .store-followers-dialog::backdrop { background: rgb(14 32 23 / 54%); }
+.my-store .store-followers-dialog[open] {
+  display: flex;
+  flex-direction: column;
+}
+.my-store .store-followers-dialog-shell {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: hidden;
+}
+.my-store .store-followers-dialog-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 22px 26px 18px;
+  border-bottom: 1px solid var(--line);
+}
+.my-store .store-followers-dialog-head h2 {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 11px;
+  margin: 0;
+  color: var(--forest);
+  font: 700 1.4rem/1.3 var(--font-body);
+}
+.my-store .store-followers-dialog-count {
+  padding: 4px 10px;
+  border-radius: 99px;
+  color: var(--forest);
+  background: var(--surface-soft);
+  font: 650 .82rem/1.3 var(--font-body);
+  font-variant-numeric: tabular-nums;
+}
+.my-store .store-followers-dialog-head p {
+  margin: 5px 0 0;
+  font-size: .84rem;
+  line-height: 1.5;
+}
+.my-store .store-followers-dialog-close {
+  display: grid;
+  place-items: center;
+  flex: 0 0 44px;
+  width: 44px;
+  height: 44px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  color: var(--ink);
+  background: var(--paper);
+  cursor: pointer;
+}
+.my-store .store-followers-dialog-close:hover { background: var(--surface-soft); }
+.my-store .store-followers-dialog-scroll {
+  flex: 1 1 auto;
+  min-height: 0;
+  padding: 0 26px 14px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+.my-store .store-followers-dialog .store-followers-list {
+  margin-top: 0;
+  border-top: 0;
+}
+.my-store .store-followers-dialog .store-follower {
+  min-height: 86px;
+  padding-block: 15px;
+}
+.my-store .store-followers-dialog .store-follower-avatar {
+  flex-basis: 52px;
+  width: 52px;
+  height: 52px;
+  font-size: .94rem;
+}
+.my-store .store-followers-dialog .store-follower-detail strong { font-size: 1rem; }
+.my-store .store-followers-dialog .store-followers-feedback { margin: 18px 0; }
+.my-store .store-followers-dialog .store-followers-pages {
+  flex: 0 0 auto;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 0;
+  padding: 13px 26px calc(13px + env(safe-area-inset-bottom, 0px));
+  border-top: 1px solid var(--line);
+  background: var(--paper);
+}
+.my-store .store-followers-dialog .store-followers-pages > span {
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+@media (max-width: 620px) {
+  .my-store .store-followers { padding: 16px; }
+  .my-store .store-followers-heading h2 { font-size: 1rem; }
+  .my-store .store-followers-heading p { font-size: .75rem; }
+  .my-store .store-follower { min-height: 68px; padding-block: 11px; }
+  .my-store .store-followers-dialog {
+    width: calc(100vw - 16px);
+    max-height: calc(100dvh - 28px);
+    border-radius: 13px;
+  }
+  .my-store .store-followers-dialog-head { padding: 17px 16px 15px; }
+  .my-store .store-followers-dialog-head h2 { font-size: 1.15rem; }
+  .my-store .store-followers-dialog-head p { font-size: .79rem; }
+  .my-store .store-followers-dialog-scroll { padding-inline: 16px; }
+  .my-store .store-followers-dialog .store-follower { min-height: 78px; }
+  .my-store .store-followers-dialog .store-followers-pages { padding-inline: 16px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .my-store .store-followers-more svg { transition: none; }
+}

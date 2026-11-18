@@ -64,11 +64,22 @@ describe('public marketplace report target validation', () => {
     const {db,calls} = lookup({ id: 7, seller: { ownerUserId: 24 } }, null);
     const target = await resolvePublicReportTarget(db, 3, { listingId: 7, reason });
     expect(target).toEqual({ listingId: 7 });
-    expect(calls).toEqual([{ type: 'listing', query: {
-      where: { id: 7, status: 'published', deletedAt: null,
-        seller: { approvalStatus: 'approved', owner: { status: 'active' } } },
-      select: { id: true, seller: { select: { ownerUserId: true } } },
-    } }]);
+    expect(calls).toHaveLength(1);
+    expect(calls[0].type).toBe('listing');
+    const query = calls[0].query as any;
+    expect(query.where).toEqual(expect.objectContaining({
+      id: 7, status: 'published', deletedAt: null,
+      seller: expect.objectContaining({
+        approvalStatus: 'approved', sellerType: 'student',
+        owner: expect.objectContaining({
+          status: 'active', roles: { none: {} },
+          affiliations: { some: expect.objectContaining({
+            verificationStatus: 'verified', campus: { active: true },
+          }) },
+        }),
+      }),
+    }));
+    expect(query.select).toEqual({ id: true, seller: { select: { ownerUserId: true } } });
     await expect(resolvePublicReportTarget(db, 24, { listingId: 7, reason }))
       .rejects.toMatchObject({ status: 400, code: 'own_listing' });
   });
@@ -84,10 +95,18 @@ describe('public marketplace report target validation', () => {
     await expect(resolvePublicReportTarget(db, 24, {sellerProfileId: 4, reason}))
       .rejects.toMatchObject({ status: 400, code: 'own_store' });
     expect(await resolvePublicReportTarget(db, 3, {sellerProfileId: 4, reason})).toEqual({sellerProfileId: 4});
-    expect(calls[0]).toEqual({ type: 'seller', query: {
-      where: { id: 4, approvalStatus: 'approved', owner: { status: 'active' } },
-      select: { id: true, ownerUserId: true },
-    } });
+    expect(calls[0].type).toBe('seller');
+    const query = calls[0].query as any;
+    expect(query.where).toEqual(expect.objectContaining({
+      id: 4, approvalStatus: 'approved', sellerType: 'student',
+      owner: expect.objectContaining({
+        status: 'active', roles: { none: {} },
+        affiliations: { some: expect.objectContaining({
+          verificationStatus: 'verified', campus: { active: true },
+        }) },
+      }),
+    }));
+    expect(query.select).toEqual({ id: true, ownerUserId: true });
     const missing = lookup(null, null).db;
     await expect(resolvePublicReportTarget(missing, 3, {sellerProfileId: 4, reason}))
       .rejects.toMatchObject({ status: 404, code: 'not_found' });

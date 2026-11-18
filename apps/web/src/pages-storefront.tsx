@@ -2,12 +2,14 @@ import { useMemo, useState, type ReactNode } from 'react';
 import { Link } from 'react-router-dom';
 import { Icon } from './icons';
 import { SellerAvatar } from './seller-avatar';
+import { StoreFollowers } from './store-followers';
 import { filterStoreListings, type StoreFilter } from './storefront-filter';
 import type { Listing } from './pages-public';
 import './storefront.css';
 
 export type PublicStorefront = {
   id: number;
+  slug: string;
   storeName: string;
   description: string;
   badge: string;
@@ -47,8 +49,9 @@ export function StorefrontView({ store, isOwner, canFollow, onFollow, followBusy
   const [chatOpen, setChatOpen] = useState(false);
   const [chatListingId, setChatListingId] = useState(store.listings[0]?.id ?? 0);
   const [chatBody, setChatBody] = useState('');
-  const categories = useMemo(() => Array.from(new Set(store.listings.map(l => l.category.name)))
-    .sort((a, b) => a.localeCompare(b)), [store.listings]);
+  const categories = useMemo(() => Array.from(new Set(store.listings
+    .filter(listing => filter === 'all' || listing.type === filter)
+    .map(listing => listing.category.name))).sort((a, b) => a.localeCompare(b)), [store.listings, filter]);
   const visible = useMemo(() => filterStoreListings(store.listings, filter, category, query),
     [store.listings, query, category, filter]);
   const joined = store.createdAt
@@ -70,7 +73,7 @@ export function StorefrontView({ store, isOwner, canFollow, onFollow, followBusy
         <div className="storefront-owner-actions">
           <a className="btn storefront-browse-action" href="#storefront-listings"><Icon name="grid" size={17} /> Browse listings</a>
           {!isOwner && canFollow && <button type="button"
-            className="btn ghost"
+            className="btn ghost storefront-follow-action"
             aria-pressed={Boolean(store.follow?.isFollowing)}
             disabled={followBusy || !store.follow?.available}
             onClick={onFollow}>
@@ -88,11 +91,6 @@ export function StorefrontView({ store, isOwner, canFollow, onFollow, followBusy
             <Icon name="chat" size={17} /> Chat with seller
           </button>}
           {isOwner && <Link className="btn ghost" to="/profile#store-profile">Edit my store</Link>}
-          {followMessage && <p className="storefront-follow-feedback" role="status">{followMessage}</p>}
-          {!isOwner && canFollow && store.follow && !store.follow.available &&
-            <p className="storefront-follow-feedback muted">Following is being prepared for this marketplace.</p>}
-          {!isOwner && store.follow?.isFollowing &&
-            <p className="storefront-follow-feedback muted">New approved listings appear in Notifications. Turn on push for phone alerts.</p>}
         </div>
         {canChat && store.listings.length === 0 &&
           <p className="storefront-chat-note muted">Messaging becomes available once this store has a published, available listing.</p>}
@@ -126,37 +124,50 @@ export function StorefrontView({ store, isOwner, canFollow, onFollow, followBusy
           {chatError && <p className="err" role="alert">{chatError}</p>}
         </form>}
       </div>
+      {(followMessage || (!isOwner && canFollow && store.follow && !store.follow.available) ||
+        (!isOwner && store.follow?.isFollowing)) && <div className="storefront-follow-notices">
+        {followMessage && <p className="storefront-follow-feedback" role="status">{followMessage}</p>}
+        {!isOwner && canFollow && store.follow && !store.follow.available &&
+          <p className="storefront-follow-feedback muted">Following is being prepared for this marketplace.</p>}
+        {!isOwner && store.follow?.isFollowing &&
+          <p className="storefront-follow-feedback muted">New approved listings appear in Notifications. Turn on push for phone alerts.</p>}
+      </div>}
       <div className="storefront-facts">
         <div><span>Available listings</span><strong>{store.listingCount ?? store.listings.length}</strong></div>
-        {store.follow?.available && <div><span>Followers</span><strong>{store.follow.count}</strong></div>}
+        {store.follow?.available && <StoreFollowers key={`${store.id}-${store.follow.count}`} storeId={store.id} publicView />}
         <div><span>Campus</span><strong>{store.campus?.code ?? 'CPSU'}</strong></div>
         {joined && <div><span>Store opened</span><strong>{joined}</strong></div>}
       </div>
     </section>
     <section className="storefront-products" aria-labelledby="storefront-listings">
       <div className="storefront-products-heading">
-        <div><h2 id="storefront-listings" tabIndex={-1}>Browse this store</h2></div>
-        <span className="storefront-results">{visible.length} {visible.length === 1 ? 'result' : 'results'}</span>
+        <div><h2 id="storefront-listings" tabIndex={-1}>Browse this store</h2><p>Find products and services from {store.storeName}.</p></div>
+        <span className="storefront-results" role="status" aria-live="polite">{visible.length} {visible.length === 1 ? 'result' : 'results'}</span>
       </div>
       <nav className="storefront-navigation" aria-label="Store listings and categories">
-        <div className="storefront-tabs" role="group" aria-label="Listing type">
-          {OPTIONS.map(option => <button key={option.id} type="button"
-            aria-pressed={filter === option.id && category === 'all'}
-            onClick={() => { setFilter(option.id); setCategory('all'); }}>
-            {option.name}
-          </button>)}
+        <div className="storefront-toolbar">
+          <div className="storefront-tabs" role="group" aria-label="Listing type">
+            {OPTIONS.map(option => <button key={option.id} type="button"
+              aria-pressed={filter === option.id}
+              onClick={() => { setFilter(option.id); setCategory('all'); }}>
+              {option.name}
+            </button>)}
+          </div>
+          <div className="storefront-browser">
+            <label className="storefront-search"><Icon name="search" size={17} /><span className="sr-only">Search this store</span>
+              <input type="search" placeholder="Search this store" value={query} maxLength={80}
+                onChange={event => setQuery(event.target.value)} /></label>
+          </div>
         </div>
-        {categories.length > 0 && <div className="storefront-category-tabs" role="group" aria-label="Store categories">
-          {categories.map(name => <button type="button" key={name}
-            aria-pressed={category === name}
-            onClick={() => { setCategory(name); setFilter('all'); }}>{name}</button>)}
+        {categories.length > 0 && <div className="storefront-category-strip">
+          <span className="storefront-category-label">Categories</span>
+          <div className="storefront-category-tabs" role="group" aria-label="Store categories">
+            {categories.map(name => <button type="button" key={name}
+              aria-pressed={category === name}
+              onClick={() => setCategory(current => current === name ? 'all' : name)}>{name}</button>)}
+          </div>
         </div>}
       </nav>
-      <div className="storefront-browser">
-        <label className="storefront-search"><Icon name="search" size={17} /><span className="sr-only">Search this store</span>
-          <input type="search" placeholder="Search products and services in this store" value={query} maxLength={80}
-            onChange={event => setQuery(event.target.value)} /></label>
-      </div>
       {visible.length > 0
         ? <div className="grid listing-grid storefront-listings">{visible.map(renderListing)}</div>
         : <div className="storefront-empty">

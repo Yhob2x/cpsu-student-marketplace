@@ -1,5 +1,6 @@
 import type { PrismaClient } from '@prisma/client';
 import { sellerAvatarUrl } from './seller-avatar-url.js';
+import { visibleStudentStoreWhere } from './store-visibility.js';
 
 // Ranking only uses genuine follow rows. No follower identities are returned.
 const availableListing = {
@@ -14,8 +15,7 @@ export async function readMostFollowedStores(db: PrismaClient, avatarColumnExist
   try {
     const stores = await db.sellerProfile.findMany({
       where: {
-        approvalStatus: 'approved',
-        owner: { status: 'active' },
+        ...visibleStudentStoreWhere(),
         listings: { some: availableListing },
         storeFollows: { some: {} },
       },

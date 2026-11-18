@@ -23,9 +23,11 @@ export async function resetFixtures(prisma: PrismaClient) {
   await prisma.listingReview.deleteMany();
   await prisma.listingMedia.deleteMany();
   await prisma.savedListing.deleteMany();
+  await prisma.storeFollow.deleteMany(); // Follower rows reference seller profiles and synthetic students.
   await prisma.report.deleteMany();
   await prisma.notification.deleteMany();
   await prisma.auditLog.deleteMany();
+  await prisma.homePageContent.deleteMany();
   await prisma.announcement.deleteMany();
   await prisma.guidelineContent.deleteMany();
   await prisma.listing.deleteMany();

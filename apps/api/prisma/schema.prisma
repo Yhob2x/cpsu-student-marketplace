@@ -111,6 +111,13 @@ enum TransactionStatus {
   cancelled
 }
 
+enum StoreReviewStatus {
+  pending
+  published
+  rejected
+  hidden
+}
+
 enum ReportStatus {
   open
   reviewing
@@ -130,6 +137,16 @@ model GuidelineContent {
   publishedBody String?   @db.Text
   updatedAt     DateTime  @updatedAt
   publishedAt   DateTime?
+}
+
+model HomePageContent {
+  id                Int       @id
+  draft             Json
+  published         Json?
+  revision          Int       @default(1)
+  publishedRevision Int       @default(0)
+  updatedAt         DateTime  @updatedAt
+  publishedAt       DateTime?
 }
 
 model Announcement {
@@ -202,6 +219,7 @@ model User {
   buyingTransactions    Transaction[] @relation("TransactionBuyer")
   sellingTransactions   Transaction[] @relation("TransactionSeller")
   transactionEvents     TransactionStatusLog[] @relation("TransactionEventActor")
+  authoredStoreReviews    StoreReview[] @relation("StoreReviewBuyer")
 
 }
 
@@ -300,12 +318,14 @@ model SellerProfile {
   listings       Listing[]
   inquiryThreads InquiryThread[]
   storeFollows   StoreFollow[]
+  storeReviews   StoreReview[]
   campus  Campus   @relation(fields: [campusId], references: [id], onDelete: Restrict, onUpdate: Cascade)
   reports Report[] @relation("ReportSeller")
 
 }
 
-// A student can follow a given store at most once. No personal follower list is public.
+// A student can follow a given store at most once. Public store connections
+// expose active followers' display names only, never private account fields.
 model StoreFollow {
   userId          Int
   sellerProfileId Int
@@ -362,6 +382,27 @@ model ListingMedia {
   position  Int    @default(0)
 
   listing Listing @relation(fields: [listingId], references: [id])
+}
+
+// Student buyer ratings are attached to actual completed marketplace transactions.
+// Moderation is mandatory before public publication.
+model StoreReview {
+  id               Int @id @default(autoincrement())
+  transactionId    Int @unique
+  sellerProfileId  Int
+  buyerUserId      Int
+  rating           Int
+  body             String? @db.VarChar(800)
+  status           StoreReviewStatus @default(pending)
+  moderationReason String? @db.VarChar(500)
+  moderatedAt      DateTime?
+  createdAt        DateTime @default(now())
+
+  transaction Transaction @relation(fields: [transactionId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  store       SellerProfile @relation(fields: [sellerProfileId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  buyer       User @relation("StoreReviewBuyer", fields: [buyerUserId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  @@index([sellerProfileId, status, createdAt])
+  @@index([buyerUserId, createdAt])
 }
 
 model ListingReview {
@@ -446,6 +487,7 @@ model Transaction {
   seller     User @relation("TransactionSeller", fields: [sellerUserId], references: [id], onDelete: Restrict, onUpdate: Cascade)
   reservation Listing? @relation("TransactionReservation")
   history    TransactionStatusLog[]
+  storeReview StoreReview?
 
   @@index([buyerUserId, status, createdAt])
   @@index([sellerUserId, status, createdAt])

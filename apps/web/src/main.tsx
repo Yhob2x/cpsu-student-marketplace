@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useEffect, useRef, useState } from 'react';
 import { createRoot } from 'react-dom/client';
-import { BrowserRouter, Link, NavLink, Route, Routes, Navigate, useNavigate } from 'react-router-dom';
+import { BrowserRouter, Link, NavLink, Route, Routes, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { api, setToken, tryRestoreSession } from './api';
 import { disconnectPushOnLogout, reconcilePushForActiveAccount, updateAppBadge } from './push-client';
 import { Discover, Home, ListingDetail, Guidelines, StorePage } from './pages-public';
@@ -30,6 +30,21 @@ import './footer-refinements.css';
 import './floating-chat.css';
 import './icon-action.css';
 import './hierarchy-polish.css';
+import './editorial-redesign.css';
+import './hero-artistic.css';
+import './home-simplification.css';
+import './header-search-polish.css';
+import './student-ux-polish.css';
+import './explore-direct-filters.css';
+import './explore-scroll-cues.css';
+import './my-store-polish.css';
+import './mobile-chat-dock.css';
+import './home-admin-publish.css';
+import './typography.css';
+import './dashboard-storefront.css';
+import './p1p2-ux-fixes.css';
+import './listing-composer-polish.css';
+import './storefront-page-polish.css';
 
 export type Me = { id: number; email: string; displayName: string; roles: { role: string; campusId: number | null }[];
   affiliations: { id: number; campus: { id: number; name: string }; status: string }[]; storeId: number | null };
@@ -42,11 +57,16 @@ type Session = { me: Me | null; reload: () => Promise<Me | null>; logout: () => 
 const Ctx = createContext<Session>(null!);
 export const useMe = () => useContext(Ctx);
 
-// The masthead search submits to Explore; it stays out of the way on phones, where the hero search and the
-// Explore filters are the primary way in.
+// Search stays in the global header on every route, including Home and Explore.
+// The hero is editorial-only and Explore retains its detailed filter controls.
 function HeaderSearch() {
   const nav = useNavigate();
+  const location = useLocation();
   const [q, setQ] = useState('');
+  // Keep the always-visible header search aligned with Explore's URL-driven filters.
+  useEffect(() => {
+    setQ(location.pathname === '/explore' ? (new URLSearchParams(location.search).get('q') ?? '') : '');
+  }, [location.pathname, location.search]);
   const submit = (e: React.FormEvent) => {
     e.preventDefault();
     nav(q.trim() ? `/explore?q=${encodeURIComponent(q.trim())}` : '/explore');
@@ -209,7 +229,7 @@ function Shell() {
       <main id="main-content" tabIndex={-1}><div className="wrap">
         <Routes>
           <Route path="/" element={<Home />} /><Route path="/explore" element={<Discover />} /><Route path="/listings/:id" element={<ListingDetail />} />
-          <Route path="/stores/:id" element={<StorePage />} /><Route path="/guidelines" element={<Guidelines />} />
+          <Route path="/store/:slug" element={<StorePage />} /><Route path="/stores/:id" element={<StorePage />} /><Route path="/stores" element={<Navigate to="/explore" replace />} /><Route path="/guidelines" element={<Guidelines />} />
           <Route path="/login" element={<Login />} /><Route path="/register" element={<Register />} />
           <Route path="/dashboard" element={!ready ? <p role="status">Checking session…</p> : signedOut ? <Navigate to="/login?next=%2Fdashboard" replace /> : isStaff ? <Navigate to="/profile" replace /> : <Dashboard />} />
           <Route path="/inquiries" element={!ready ? <p role="status">Checking session…</p> : signedOut ? <Navigate to="/login?next=%2Finquiries" replace /> : isStaff ? <Navigate to="/profile" replace /> : <Inquiries />} />

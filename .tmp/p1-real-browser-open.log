@@ -1,0 +1,13 @@
+### Browser `cpsu-real-acceptance` opened with pid 44808.
+### Ran Playwright code
+```js
+await page.goto('http://127.0.0.1:5187/');
+```
+### Page
+- Page URL: http://127.0.0.1:5187/
+- Page Title: CPSU Student Marketplace & Services
+### Snapshot
+- [Snapshot](.playwright-cli\page-2026-11-18T06-43-53-570Z.yml)
+### Events
+- New console entries: .playwright-cli\console-2026-11-18T06-43-53-172Z.log#L1
+

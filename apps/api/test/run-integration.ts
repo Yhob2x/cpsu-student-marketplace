@@ -58,6 +58,7 @@ async function run(label: string, args: string[]) {
 
 await run('deploy existing migrations to isolated test database', ['bunx', 'prisma', 'migrate', 'deploy']);
 await run('run Stage 1 integration tests', ['bun', 'test', 'test/integration/stage1.test.ts']);
+await run('run P1 real-login cross-role acceptance against isolated test data', ['bun', 'test', 'test/integration/authenticated-journey.test.ts']);
 // Sequential suites: each resets its own synthetic fixtures in the SAME guarded test database.
 // Never run these files together in one Bun test process; parallel fixture cleanup would conflict.
 await run('run real MySQL public-report security acceptance', ['bun', 'test', 'test/integration/report.test.ts']);

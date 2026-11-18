@@ -1,5 +1,9 @@
 # Development log
 
+**2026-11-18 — Managed guidelines and announcements activated locally:** User-requested fix for the disabled Admin > Content editors. Guarded activation applied only `20261116220000_managed_student_content` and `20261116221000_pending_announcement_edits` after a private retained SQL/media backup and isolated restore rehearsal. Postchecks preserved all old application rows and homepage content; StudentIdentity remains unapplied. Both admin GET routes and three public endpoints returned HTTP 200; API focused tests 11/11 and web tests 77/77 passed, with API typecheck and web build green. No production deployment or published content changes. See `docs/MANAGED_CONTENT_DEV_ACTIVATION_2026-11-18.md`.
+
+**2026-11-18 — Admin Content error recovery (no migration):** Reproduced Prisma P2021 in SELECT-only local checks for both managed guidelines and announcements admin endpoints. The targeted admin routes now return actionable HTTP 503 `managed_content_unavailable` rather than internal_error; the admin UI loads/retries each editor independently and disables unavailable write controls. Synthetic in-process HTTP probes confirmed 503 for both, 11 focused API tests and 77 web tests passed, API typecheck and web build passed. Existing pending migrations and unpublished homepage image were not changed. See `docs/ADMIN_CONTENT_ERROR_RECOVERY_2026-11-18.md`.
+
 **2026-11-17 — PWA console cleanup:** Added the generic mobile web app meta tag alongside the Apple tag. Browser refresh probes now return `204` for absent or expired cookie sessions and clear stale cookies; the web client treats `204` as signed out without JSON parsing. Legacy mobile refresh errors remain `401`. The existing custom Install app button still calls the saved browser prompt on click; Chrome's deferred-banner notice is expected until that interaction. No schema change. See API documentation and regression tests.
 
 **2026-11-17 — Security assessment remediation batch:** Upgraded Multer, fixed trusted-proxy and production binding policy, added per-account failed-login throttling, made refresh claims atomic, added local-media no-store headers, and encrypted/restricted future Linux backups. Guarded isolated MySQL suite, focused security tests, API typecheck and backup shell syntax passed. Staff MFA, email ownership, backup restore, retention and production network verification remain open. See `docs/SECURITY_ASSESSMENT_BATCH_2026-11-17.md`.
@@ -235,3 +239,34 @@ Owner-approved development activation PASS: applied only StoreFollow; verified f
 ## 2026-11-17 — Followed-store new-product notifications
 
 Fixed missing fanout from first reviewer approval to active followers. Added transactional `store.new_listing` in-app notifications, safe direct listing link, seller/product/service feed text, bell-count refresh integration, and privacy-safe optional push through pre-existing account-and-store preferences. No alerts for drafts, rejected, edited/reapproved items, non-followers, suspended accounts, or unfollows. New synthetic HTTP acceptance passed with all QA rows deleted; Web 63/63, focused API/web 11/11, typechecks and build passed. Local push delivery remains gated off. See `docs/FOLLOWED_STORE_NEW_LISTING_NOTIFICATIONS_2026-11-17.md`. No new migration, deployment, commit or push.
+
+## 2026-11-18 — Admin-editable editorial homepage
+
+Owner requested admin editing for homepage text and images. Added shared shipped copy, additive `HomePageContent` singleton migration, global university-admin draft/save/publish API with audit and revision checks, three sanitized photo slots, public published-only delivery, and Admin > Content editor. The public homepage keeps shipped design defaults when no managed version is published or the table is not yet present. Isolated MySQL integration suite passed, including draft privacy, role restrictions, image upload and stale revision handling; web build and API typecheck passed. Migration applied only to `cpsu_marketplace_test`; development and production activation remain pending. See `docs/EDITORIAL_UI_REDESIGN_2026-11-18.md`.
+
+## 2026-11-18 — Artistic hero layout restored
+
+Reinstated the owner's reference composition in the homepage hero: three-line editorial headline, cream/green/mustard/rust abstract shapes, curved image frame, Explore and Start selling actions, reassurance cues, and overlapping search panel. Added a nonfigurative local SVG placeholder while retaining the admin-published hero image override and managed copy. Web build and 75 web tests passed; layout detector returned no findings. Browser screenshot capture was unavailable in this environment, so final visual/device inspection remains open. No database, API, deployment, commit or push change.
+
+## 2026-11-18 — Local homepage content activation
+
+Owner continued the build after the pending homepage migration blocked image uploads. Added a guarded, single-migration local activation script. Its first rehearsal safely refused a Windows MariaDB table-name case mismatch before development DDL; a read-only isolated-table check confirmed lowercase `homepagecontent`, and the validator was corrected. The successful second run retained a private checksum-verified SQL/upload backup, restored it to a disposable schema, rehearsed only `HomePageContent`, then applied only `20261118120000_managed_home_page_content` to local `cpsu_marketplace`. Existing application rows and the three unrelated pending migrations were verified unchanged; disposable restore removed. Local public homepage API returned HTTP 200 and anonymous admin endpoint HTTP 401. Production database, deployment, commit and push unchanged. See `docs/EDITORIAL_UI_REDESIGN_2026-11-18.md`.
+
+## 2026-11-18 — Homepage hero polish
+
+Replaced the automatic three-listing photo collage with the existing marketplace illustration as the default hero visual. Published administrator-selected hero images still render. Simplified hero decoration, moved search into the hero layout, and kept the existing search and Explore routes. Web tests passed 75/75 and Vite build passed. Desktop Chrome preview inspected; physical phone and true device-emulated viewport remain unverified. No database change or deployment. See `docs/EDITORIAL_UI_REDESIGN_2026-11-18.md`.
+
+## 2026-11-18 — Name-based public store URLs
+
+Added canonical `/store/<name-slug>` routes and API slug resolution for approved, active storefronts. Legacy `/stores/<id>` visits replace the browser address with the canonical route. Duplicate names receive an ID suffix; sign-in returns accept safe slug routes. No database change. Focused tests, API typecheck, web build, complete API unit suite and local slug endpoint passed. Complete web suite remains at 83 pass / 1 unrelated missing-module failure (`src/listing-quality.ts`). See `docs/STORE_NAME_URLS_2026-11-18.md`.
+
+## 2026-11-18 — Duplicate store URL and follower count follow-up
+
+Found two approved stores named Yobyob. Adjusted canonical slug assignment so store 1 uses `/store/yobyob` and store 2 uses `/store/yobyob--2`; the existing `/store/yobyob--1` link remains valid and redirects to the canonical address. Confirmed local API and Chrome show store 1's real public follower count of one. Follower identities remain owner-only under the approved privacy rule. No database change. See `docs/STORE_NAME_URLS_2026-11-18.md`.
+
+## 2026-11-18 — Public followers and following on store pages
+
+At the owner's request, public store pages now show both clickable counts and the existing two-tab connections dialog. Added a paged anonymous API read with approved/active store checks, active follower display names only, and followed approved/active stores only. The earlier owner-only visibility rule for connection lists is superseded by this explicit owner request; private account fields remain excluded. Existing follow writes and owner dashboard remain intact. Local Yobyob HTTP and Chrome checks confirmed one follower and one followed store. No database migration or data change. See `docs/STORE_CONNECTION_DIALOG_2026-11-18.md`.
+## 2026-11-18 — Dashboard and storefront audit remediation
+
+Added category retry, editor discard confirmation, listing refresh sequencing, foreground/event follower count refresh via count-only reads, current-affiliation public store visibility, `/stores` redirect to Explore, and storefront search/chat spacing. Owner kept the approved name URL behavior and chose immediate public hiding for expired/revoked seller affiliations. No migration or live data change. Focused API 18/18 and storefront component 8/8 passed; both TypeScript checks passed. Vite production build passed after a sandbox-approved local run; authenticated browser acceptance remains outstanding. The repository graph was updated. Persistent indexed slug performance remains open. See `docs/DASHBOARD_STORES_AUDIT_2026-11-18.md`.

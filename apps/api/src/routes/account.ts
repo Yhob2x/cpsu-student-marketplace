@@ -5,6 +5,7 @@ import { HttpError } from '../http.js';
 import { requireAuth, requireStudent } from '../auth.js';
 import { makePublicReportHandler } from '../report-handler.js';
 import { publicListing } from './public.js';
+import { rowAccess } from '../row-access.js';
 
 const r = Router();
 r.use(['/me', '/notifications', '/saved', '/reports'], requireAuth);
@@ -26,7 +27,7 @@ r.patch('/me', async (req, res) => {
 
 r.get('/notifications/unread-count', async (req, res) => {
   res.setHeader('Cache-Control', 'no-store');
-  const where = { userId: req.user!.id, readAt: null };
+  const where = { ...rowAccess.notificationOwner(req.user!.id), readAt: null };
   const [total, messages] = await Promise.all([
     prisma.notification.count({ where }),
     prisma.notification.count({ where: { ...where, type: { in: ['inquiry.new', 'inquiry.reply'] } } }),
@@ -35,7 +36,7 @@ r.get('/notifications/unread-count', async (req, res) => {
 });
 r.get('/notifications', async (req, res) => {
   res.setHeader('Cache-Control', 'no-store');
-  res.json(await prisma.notification.findMany({ where: { userId: req.user!.id }, orderBy: { createdAt: 'desc' }, take: 50 }));
+  res.json(await prisma.notification.findMany({ where: rowAccess.notificationOwner(req.user!.id), orderBy: { createdAt: 'desc' }, take: 50 }));
 });
 r.post('/notifications/read', async (req, res) => {
   await prisma.notification.updateMany({ where: { userId: req.user!.id, readAt: null }, data: { readAt: new Date() } });
@@ -51,8 +52,7 @@ r.post('/notifications/:id/read', async (req, res) => {
 
 r.get('/saved', async (req, res) => {
   const rows = await prisma.savedListing.findMany({
-    where: { userId: req.user!.id, listing: { status: 'published', deletedAt: null,
-      seller: { approvalStatus: 'approved', owner: { status: 'active' } } } },
+    where: { ...rowAccess.savedListingOwner(req.user!.id), listing: rowAccess.publicListing() },
     include: { listing: { include: { category: true, campus: true, seller: true, media: true } } }, orderBy: { createdAt: 'desc' },
   });
   res.json(rows.map(s => publicListing(s.listing)));
@@ -60,7 +60,7 @@ r.get('/saved', async (req, res) => {
 r.put('/saved/:listingId', async (req, res) => {
   const listingId = Number(req.params.listingId);
   const listing = await prisma.listing.findFirst({ where: {
-    id: listingId, status: 'published', deletedAt: null, seller: { approvalStatus: 'approved', owner: { status: 'active' } },
+    id: listingId, ...rowAccess.publicListing(),
   }, include: { seller: true } });
   if (!listing) throw new HttpError(404, 'not_found');
   if (listing.seller.ownerUserId === req.user!.id) throw new HttpError(400, 'own_listing');

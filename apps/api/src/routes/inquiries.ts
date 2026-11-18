@@ -6,6 +6,7 @@ import { HttpError } from '../http.js';
 import { requireStudent } from '../auth.js';
 import { notify } from '../audit.js';
 import { inquiryAllowsMessage, appendMessageToOpenThread } from '../inquiry-safety.js';
+import { rowAccess } from '../row-access.js';
 
 const r = Router();
 r.use(requireStudent);
@@ -23,7 +24,7 @@ const receipt = (m: { deliveredAt: Date | null; seenAt: Date | null }) =>
 
 // Participants only: the buyer, or the owner of the listing's store.
 async function participantThread(userId: number, id: number) {
-  const t = await prisma.inquiryThread.findUnique({ where: { id }, include: {
+  const t = await prisma.inquiryThread.findFirst({ where: { id, ...rowAccess.inquiryParticipant(userId) }, include: {
     seller: { include: { owner: { select: { displayName: true, status: true } } } },
     buyer: { select: { displayName: true } },
     listing: { select: {
@@ -32,14 +33,14 @@ async function participantThread(userId: number, id: number) {
       media: { select: { id: true, position: true } },
     } },
   } });
-  if (!t || (t.buyerUserId !== userId && t.seller.ownerUserId !== userId)) throw new HttpError(404, 'not_found');
+  if (!t) throw new HttpError(404, 'not_found');
   return t;
 }
 
 r.get('/', async (req, res) => {
   const uid = req.user!.id;
   const rows = await prisma.inquiryThread.findMany({
-    where: { OR: [{ buyerUserId: uid }, { seller: { ownerUserId: uid } }] },
+    where: rowAccess.inquiryParticipant(uid),
     include: {
       listing: { select: { id: true, title: true } },
       buyer: { select: { displayName: true } },
@@ -62,7 +63,7 @@ r.get('/', async (req, res) => {
 r.post('/', async (req, res) => {
   const b = z.object({ listingId: z.number().int(), body: z.string().trim().min(1).max(1000) }).parse(req.body);
   const l = await prisma.listing.findFirst({ where: {
-    id: b.listingId, status: 'published', deletedAt: null, seller: { approvalStatus: 'approved', owner: { status: 'active' } },
+    id: b.listingId, ...rowAccess.publicListing(),
   }, select: {
     id: true, title: true, sellerProfileId: true, availabilityState: true,
     seller: { select: { ownerUserId: true } },

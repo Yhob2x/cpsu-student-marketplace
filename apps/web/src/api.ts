@@ -29,6 +29,15 @@ export async function api<T = any>(path: string, opts: { method?: string; body?:
   if (!res.ok) throw new ApiError(res.status, data?.error?.code ?? 'error', data?.error?.message);
   return data as T;
 }
+export async function apiBlob(path: string): Promise<Blob> {
+  let res = await raw(path, { method: 'GET' });
+  if (res.status === 401 && await tryRestoreSession()) res = await raw(path, { method: 'GET' });
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}));
+    throw new ApiError(res.status, data?.error?.code ?? 'error', data?.error?.message);
+  }
+  return res.blob();
+}
 export const setToken = (t: string | null) => { token = t; };
 export const tryRestoreSession = (): Promise<boolean> => {
   if (!restoring) restoring = refreshNow().finally(() => { restoring = null; });
@@ -48,6 +57,10 @@ export const timeAgo = (iso: string) => {
 // Plain-language messages for API error codes.
 const MESSAGES: Record<string, string> = {
   invalid_credentials: 'Email or password is incorrect.', email_taken: 'That email already has an account.',
+  home_page_editor_unavailable: 'Homepage editing needs its database migration before it can be used here.',
+  managed_content_unavailable: 'This content editor is not enabled in this environment. An approved database migration is required. No content has been changed.',
+  draft_changed: 'Another administrator changed this draft. Reload the editor before saving or publishing.',
+  already_published: 'This draft is already published.',
   invalid_campus: 'Choose an active CPSU campus.',
   student_identity_registration_unavailable: 'Private student ID collection is not enabled yet. Refresh this form or contact campus support.',
   student_account_required: 'Staff accounts cannot use student marketplace actions.',

@@ -1053,6 +1053,49 @@ if (process.env.CPSU_INTEGRATION_TESTS === '1') {
       expect((await request(app).get('/api/v1/announcements')).body.items).toHaveLength(0);
     });
 
+    test('homepage edits and images stay private until global admin publishes the current draft', async () => {
+      const admin = token(fx.globalAdmin.id);
+      const reviewer = token(fx.reviewerA.id);
+      const base = '/api/v1/admin/content/home-page';
+      const publicBase = '/api/v1/home-page';
+      const { DEFAULT_HOME_PAGE } = await import('../../src/home-page-content.js');
+      const { deleteStoredMedia } = await import('../../src/media-storage.js');
+      const sharp = (await import('sharp')).default;
+      let uploadedPath: string | null = null;
+      try {
+        const initial = await request(app).get(base).set(admin);
+        expect(initial.status).toBe(200);
+        expect(initial.body.revision).toBe(0);
+        expect((await request(app).get(base).set(reviewer)).status).toBe(403);
+        const edited = { ...DEFAULT_HOME_PAGE.copy, trustHeading: 'Trade with your campus community' };
+        expect((await request(app).put(base).set(reviewer).send({ copy: edited, expectedRevision: 0 })).status).toBe(403);
+        expect((await request(app).put(base).set(admin).send({ copy: { ...edited, trustHeading: '<script>' }, expectedRevision: 0 })).status).toBe(400);
+        const saved = await request(app).put(base).set(admin).send({ copy: edited, expectedRevision: 0 });
+        expect(saved.status).toBe(200);
+        expect((await request(app).get(publicBase)).body.copy.trustHeading).toBe(DEFAULT_HOME_PAGE.copy.trustHeading);
+        expect((await request(app).put(base).set(admin).send({ copy: edited, expectedRevision: 0 })).status).toBe(409);
+
+        const png = await sharp({ create: { width: 24, height: 24, channels: 3, background: '#197045' } }).png().toBuffer();
+        const uploaded = await request(app).post(base + '/images/steps').set(admin)
+          .field('expectedRevision', String(saved.body.revision))
+          .attach('image', png, { filename: 'campus.png', contentType: 'image/png' });
+        expect(uploaded.status).toBe(200);
+        const stored = await prisma.homePageContent.findUniqueOrThrow({ where: { id: 1 } });
+        uploadedPath = (stored.draft as any).images.steps;
+        expect((await request(app).get(publicBase + '/images/steps')).status).toBe(404);
+        expect((await request(app).get(base + '/images/steps').set(reviewer)).status).toBe(403);
+        expect((await request(app).get(base + '/images/steps').set(admin)).status).toBe(200);
+        expect((await request(app).post(base + '/publish').set(admin).send({ expectedRevision: saved.body.revision })).status).toBe(409);
+        const published = await request(app).post(base + '/publish').set(admin).send({ expectedRevision: uploaded.body.revision });
+        expect(published.status).toBe(200);
+        expect((await request(app).get(publicBase)).body.copy.trustHeading).toBe(edited.trustHeading);
+        expect((await request(app).get(publicBase + '/images/steps')).status).toBe(200);
+      } finally {
+        await prisma.homePageContent.deleteMany({ where: { id: 1 } });
+        if (uploadedPath) await deleteStoredMedia(uploadedPath);
+      }
+    });
+
     test('database uniqueness constraints reject duplicate affiliations and duplicate favorites', async () => {
       const affiliation = await prisma.affiliation.findFirstOrThrow({ where: { userId: fx.buyer.id } });
       const rejectedAffiliation = await prisma.affiliation.create({ data: {

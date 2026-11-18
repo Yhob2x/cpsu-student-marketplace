@@ -1,0 +1,135 @@
+$ bun test/run-integration.ts
+
+Stage 1: deploy existing migrations to isolated test database
+Environment variables loaded from .env
+Prisma schema loaded from prisma\schema.prisma
+Datasource "db": MySQL database "cpsu_marketplace_test" at "127.0.0.1:3306"
+
+12 migrations found in prisma/migrations
+
+
+No pending migrations to apply.
+
+Stage 1: run Stage 1 integration tests
+bun test v1.4.4 (38afee6c8)
+
+test\integration\stage1.test.ts:
+(pass) Stage 1 HTTP + database integration (isolated MySQL) > WP3: an authenticated verified student requests a listing and only participants see the pending request [92.39ms]
+(pass) Stage 1 HTTP + database integration (isolated MySQL) > WP3: seller cannot accept a request after buyer loses active verified student status [35.98ms]
+(pass) Stage 1 HTTP + database integration (isolated MySQL) > WP3: one physical item cannot be accepted by two buyers and only the owning seller decides [104.36ms]
+(pass) Stage 1 HTTP + database integration (isolated MySQL) > WP3: meetup and completion require both participants, preserve handoff and make sold final [128.61ms]
+(pass) Stage 1 HTTP + database integration (isolated MySQL) > WP3: seller rejection records reason, and only a verified student may participate [68.76ms]
+(pass) Stage 1 HTTP + database integration (isolated MySQL) > WP3: accepted meetup may be cancelled with a reason and reservation is released for only its owner [73.43ms]
+(pass) Stage 1 HTTP + database integration (isolated MySQL) > WP3: service requests do not reserve or sell the service and can repeat after cancellation [98.26ms]
+(pass) Stage 1 HTTP + database integration (isolated MySQL) > WP3: concurrent attempts to accept the same physical listing have one winner [32.29ms]
+(pass) Stage 1 HTTP + database integration (isolated MySQL) > WP3: admin transaction monitoring is read-only and limited to authorized campuses [50.07ms]
+(pass) Stage 1 HTTP + database integration (isolated MySQL) > WP3: a suspended listing cannot advance but the buyer can cancel the reservation [48.86ms]
+(pass) Stage 1 HTTP + database integration (isolated MySQL) > WP3: a request cannot target a staff-operated or no-longer-verified seller [71.07ms]
+(pass) Stage 1 HTTP + database integration (isolated MySQL) > health and discover return live database rows with no draft leakage [27.04ms]
+(pass) Stage 1 HTTP + database integration (isolated MySQL) > development rate limit ignores client supplied forwarding addresses [8.17ms]
+(pass) Stage 1 HTTP + database integration (isolated MySQL) > registration validates campus and returns an authenticated session [69.60ms]
+(pass) Stage 1 HTTP + database integration (isolated MySQL) > invalid login, suspended account, and unauthenticated endpoint access are rejected [57.21ms]
+(pass) Stage 1 HTTP + database integration (isolated MySQL) > guest browser refresh has no session while mobile tokenless refresh is unauthorized [64.63ms]
+(pass) Stage 1 HTTP + database integration (isolated MySQL) > failed login is throttled by account across forwarded addresses [501.10ms]
+(pass) Stage 1 HTTP + database integration (isolated MySQL) > concurrent refreshes claim one session only [62.25ms]
+(pass) Stage 1 HTTP + database integration (isolated MySQL) > rotated refresh tokens cannot be reused and revoke the newly issued session [74.69ms]
+(pass) Stage 1 HTTP + database integration (isolated MySQL) > unverified student cannot create a seller profile; verified seller cannot create duplicates [11.62ms]
+(pass) Stage 1 HTTP + database integration (isolated MySQL) > seller can create draft; other seller cannot edit it; bad price fails validation [21.02ms]
+(pass) Stage 1 HTTP + database integration (isolated MySQL) > published material edit returns to draft; unpublished details are private [26.33ms]
+(pass) Stage 1 HTTP + database integration (isolated MySQL) > submission without image is rejected; prohibited category rejects submission [22.92ms]
+(pass) Stage 1 HTTP + database integration (isolated MySQL) > upload sanitization and human photo-review gate prevent unreviewed media publication [129.25ms]
+(pass) Stage 1 HTTP + database integration (isolated MySQL) > search sort validation and pagination contract are enforced [36.89ms]
+(pass) Stage 1 HTTP + database integration (isolated MySQL) > duplicate favorites are idempotent and private to the student [24.81ms]
+(pass) Stage 1 HTTP + database integration (isolated MySQL) > own-listing inquiry and message to other student thread are rejected [40.15ms]
+(pass) Stage 1 HTTP + database integration (isolated MySQL) > message receipts require real recipient retrieval and visible read acknowledgment [193.98ms]
+(pass) Stage 1 HTTP + database integration (isolated MySQL) > student cannot access admin; reviewer campus isolation; global admin can review [18.61ms]
+(pass) Stage 1 HTTP + database integration (isolated MySQL) > campus reviewers can only read and resolve reports about their permitted campus [37.57ms]
+(pass) Stage 1 HTTP + database integration (isolated MySQL) > a suspended seller cannot appear in public discovery, profile, details, or media [125.20ms]
+(pass) Stage 1 HTTP + database integration (isolated MySQL) > only university administration can page through audited security decisions [18.54ms]
+(pass) Stage 1 HTTP + database integration (isolated MySQL) > refresh denies an account suspended outside the normal admin workflow [67.21ms]
+(pass) Stage 1 HTTP + database integration (isolated MySQL) > only a university admin can suspend and reactivate a student with audit and session revocation [242.97ms]
+(pass) Stage 1 HTTP + database integration (isolated MySQL) > administrative suspension records actor and target in audit log [11.48ms]
+(pass) Stage 1 HTTP + database integration (isolated MySQL) > WP2: condition validation and product submission requirements [38.55ms]
+(pass) Stage 1 HTTP + database integration (isolated MySQL) > WP2: reserved and sold are excluded from public search and cannot be relisted [99.61ms]
+(pass) Stage 1 HTTP + database integration (isolated MySQL) > WP2: soft deletion hides the listing but retains existing inquiry history [46.55ms]
+(pass) Stage 1 HTTP + database integration (isolated MySQL) > global admin drafts and publishes student content while public reads exclude drafts and archives [154.72ms]
+(pass) Stage 1 HTTP + database integration (isolated MySQL) > homepage edits and images stay private until global admin publishes the current draft [122.39ms]
+(pass) Stage 1 HTTP + database integration (isolated MySQL) > database uniqueness constraints reject duplicate affiliations and duplicate favorites [5.22ms]
+
+ 41 pass
+ 0 fail
+ 395 expect() calls
+Ran 41 tests across 1 file. [3.52s]
+
+Stage 1: run P1 real-login cross-role acceptance against isolated test data
+bun test v1.4.4 (38afee6c8)
+
+test\integration\authenticated-journey.test.ts:
+(pass) P1 authenticated multi-role journey (isolated synthetic MySQL only) > real login -> follow -> listing draft -> photo -> campus review -> chat -> mutual transaction completion [585.47ms]
+(pass) P1 authenticated multi-role journey (isolated synthetic MySQL only) > global admin logs in and keeps homepage edits private until publication, reviewer cannot publish [161.48ms]
+
+ 2 pass
+ 0 fail
+ 80 expect() calls
+Ran 2 tests across 1 file. [1087.00ms]
+
+Stage 1: run real MySQL public-report security acceptance
+bun test v1.4.4 (38afee6c8)
+
+test\integration\report.test.ts:
+(pass) B2a.3 public reports — guarded real MySQL acceptance > student can report a real public listing and approved seller; audit rows persist atomically [38.48ms]
+(pass) B2a.3 public reports — guarded real MySQL acceptance > real authentication, validation and nonpublic/own-target denials never create report or audit [62.21ms]
+(pass) B2a.3 public reports — guarded real MySQL acceptance > campus reviewers only see/resolve same-campus reports; global admin can view both [51.61ms]
+(pass) B2a.3 public reports — guarded real MySQL acceptance > a real MySQL transaction rolls back a created report if an audit write fails [2.26ms]
+
+ 4 pass
+ 0 fail
+ 38 expect() calls
+Ran 4 tests across 1 file. [521.00ms]
+
+Stage 1: run real MySQL conversation-closure safety acceptance
+bun test v1.4.4 (38afee6c8)
+
+test\integration\inquiry-close.test.ts:
+(pass) B1.2 — real MySQL conversation closure and send safety > only buyer and seller can close; close is idempotent and audited exactly once [92.64ms]
+(pass) B1.2 — real MySQL conversation closure and send safety > both participants and the inquiry-create shortcut cannot send or notify after close [36.79ms]
+(pass) B1.2 — real MySQL conversation closure and send safety > a closed conversation rejects fresh typing and in-chat presence signals [57.11ms]
+(pass) B1.2 — real MySQL conversation closure and send safety > concurrent send and close never allow a new message after close commits [140.47ms]
+
+ 4 pass
+ 0 fail
+ 88 expect() calls
+Ran 4 tests across 1 file. [659.00ms]
+
+Stage 1: run bounded synthetic close/send MySQL stress
+bun test v1.4.4 (38afee6c8)
+
+test\integration\inquiry-close-stress.test.ts:
+(pass) B1.3 bounded conversation contention stress — synthetic local MySQL only > 40 send-vs-close rounds, three concurrent sends per thread, never admit late messages [1496.50ms]
+(pass) B1.3 bounded conversation contention stress — synthetic local MySQL only > 20 simultaneous buyer/seller close rounds remain idempotent and singly audited [500.52ms]
+B1.3 bounded stress summary (synthetic only): {"raceRounds":40,"doubleCloseRounds":20,"postCloseWaves":10,"contestedSendResponses":120,"successfulContestedSends":120,"concurrencyConflicts":23,"raceElapsedMsP95":16,"raceElapsedMsMax":17}
+(pass) B1.3 bounded conversation contention stress — synthetic local MySQL only > 10 waves of post-close replay produce zero writes or notifications [363.98ms]
+(pass) B1.3 bounded conversation contention stress — synthetic local MySQL only > bounded public reads do not starve writes while liveness remains available [668.05ms]
+
+ 4 pass
+ 0 fail
+ 978 expect() calls
+Ran 4 tests across 1 file. [3.38s]
+
+Stage 1: audit foreign keys, orphan rows and discovery indexes without mutation
+Stage 1 read-only integrity audit: cpsu_marketplace_test
+FK present: Session.userId -> User.id | orphan rows: 0
+FK present: UserRole.campusId -> Campus.id | orphan rows: 0
+FK present: ListingReview.listingId -> Listing.id | orphan rows: 0
+FK present: ListingReview.reviewerId -> User.id | orphan rows: 0
+FK present: Handoff.inquiryThreadId -> InquiryThread.id | orphan rows: 0
+FK present: SavedListing.userId -> User.id | orphan rows: 0
+FK present: Report.reporterUserId -> User.id | orphan rows: 0
+FK present: Notification.userId -> User.id | orphan rows: 0
+FK present: InquiryThread.buyerUserId -> User.id | orphan rows: 0
+FK present: Category.parentId -> Category.id | orphan rows: 0
+Listing indexes: [{"INDEX_NAME":"Listing_campusId_fkey","COLUMN_NAME":"campusId","SEQ_IN_INDEX":1},{"INDEX_NAME":"Listing_categoryId_fkey","COLUMN_NAME":"categoryId","SEQ_IN_INDEX":1},{"INDEX_NAME":"Listing_discovery_idx","COLUMN_NAME":"status","SEQ_IN_INDEX":1},{"INDEX_NAME":"Listing_discovery_idx","COLUMN_NAME":"categoryId","SEQ_IN_INDEX":2},{"INDEX_NAME":"Listing_discovery_idx","COLUMN_NAME":"campusId","SEQ_IN_INDEX":3},{"INDEX_NAME":"Listing_discovery_idx","COLUMN_NAME":"createdAt","SEQ_IN_INDEX":4},{"INDEX_NAME":"Listing_reservationTransactionId_key","COLUMN_NAME":"reservationTransactionId","SEQ_IN_INDEX":1},{"INDEX_NAME":"Listing_sellerProfileId_fkey","COLUMN_NAME":"sellerProfileId","SEQ_IN_INDEX":1},{"INDEX_NAME":"PRIMARY","COLUMN_NAME":"id","SEQ_IN_INDEX":1}]
+Known missing FK targets in this audit: 0/10
+No constraints were created, changed, or removed.
+
+Stage 1 integration suite completed; application database was not used for test fixtures.

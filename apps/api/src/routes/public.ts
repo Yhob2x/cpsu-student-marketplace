@@ -12,6 +12,9 @@ import { sellerAvatarUrl } from '../seller-avatar-url.js';
 import { readStoreFollowSummary } from '../store-follows.js';
 import { readMostFollowedStores } from '../most-followed-stores.js';
 import { popularListingOrderBy } from '../popular-listing-ranking.js';
+import { visibleListingRows } from '../row-access.js';
+import { canonicalStoreSlug, findStoreBySlug } from '../store-slug.js';
+import { visibleStudentStoreWhere } from '../store-visibility.js';
 
 const r = Router();
 export const publicListing = (l: any) => ({
@@ -74,7 +77,7 @@ r.get('/listings', async (req, res) => {
     page: z.coerce.number().int().min(1).default(1), pageSize: z.coerce.number().int().min(1).max(50).default(20),
   }).parse(req.query);
   const where: any = { status: 'published', availabilityState: 'available', deletedAt: null,
-    seller: { approvalStatus: 'approved', owner: { status: 'active' }, ...(q.sellerType && { sellerType: q.sellerType }) } };
+    seller: { ...visibleStudentStoreWhere(), ...(q.sellerType && { sellerType: q.sellerType }) } };
   if (q.q) where.OR = [{ title: { contains: q.q } }, { description: { contains: q.q } }];
   if (q.categoryId) where.categoryId = q.categoryId;
   if (q.campusId) where.campusId = q.campusId;
@@ -98,7 +101,7 @@ r.get('/listings/popular', async (_q, res) => {
   const select = publicListingSelect(await sellerAvatarColumnExists());
   const rows = await prisma.listing.findMany({ where: {
     status: 'published', availabilityState: 'available', deletedAt: null,
-    seller: { approvalStatus: 'approved', owner: { status: 'active' } }, savedListings: { some: {} },
+    seller: visibleStudentStoreWhere(), savedListings: { some: {} },
   },
     // Stable tie-break: equal save counts must not shuffle between refreshes.
     select, orderBy: popularListingOrderBy, take: 8 });
@@ -113,7 +116,7 @@ r.get('/listings/fresh', async (_req, res) => {
   const select = publicListingSelect(await sellerAvatarColumnExists());
   const rows = ids.length ? await prisma.listing.findMany({
     where: { id: { in: ids }, status: 'published', availabilityState: 'available', deletedAt: null,
-      seller: { approvalStatus: 'approved', owner: { status: 'active' } } },
+      seller: visibleStudentStoreWhere() },
     select,
   }) : [];
   const byId = new Map(rows.map(row => [row.id, row]));
@@ -122,7 +125,7 @@ r.get('/listings/fresh', async (_req, res) => {
 
 r.get('/listings/:id', async (req, res) => {
   const select = publicListingSelect(await sellerAvatarColumnExists());
-  const l = await prisma.listing.findUnique({ where: { id: Number(req.params.id) }, select });
+  const l = await prisma.listing.findFirst({ where: { id: Number(req.params.id), ...visibleListingRows(req.user) }, select });
   if (!l) throw new HttpError(404, 'not_found');
   const u = req.user;
   const owner = u && (await prisma.sellerProfile.findFirst({ where: { id: l.sellerProfileId, ownerUserId: u.id }, select: { id: true } }));
@@ -139,10 +142,14 @@ r.get('/stores/most-followed', async (_req, res) => {
   res.json(result);
 });
 
-r.get('/seller-profiles/:id', async (req, res) => {
+async function visibleStoreNames() {
+  return prisma.sellerProfile.findMany({ where: visibleStudentStoreWhere(), select: { id: true, storeName: true } });
+}
+
+async function sendPublicStore(req: Request, res: Response, id: number, stores?: Awaited<ReturnType<typeof visibleStoreNames>>) {
   const avatarColumnExists = await sellerAvatarColumnExists();
   const s = await prisma.sellerProfile.findFirst({
-    where: { id: Number(req.params.id), approvalStatus: 'approved', owner: { status: 'active' } },
+    where: { id, ...visibleStudentStoreWhere() },
     // Explicit select keeps the store page compatible with unmigrated optional avatar storage.
     select: { id: true, storeName: true, description: true, sellerType: true, campusId: true, createdAt: true,
       ...(avatarColumnExists ? { avatarPath: true as const } : {}),
@@ -151,14 +158,30 @@ r.get('/seller-profiles/:id', async (req, res) => {
         select: publicListingSelect(avatarColumnExists), orderBy: { createdAt: 'desc' } } },
   });
   if (!s) throw new HttpError(404, 'not_found');
+  const slug = canonicalStoreSlug(stores ?? await visibleStoreNames(), s);
   const follow = await readStoreFollowSummary(prisma, s.id, req.user?.id);
   res.setHeader('Cache-Control', 'private, no-store');
-  res.json({ id: s.id, storeName: s.storeName, description: s.description,
+  res.json({ id: s.id, slug, storeName: s.storeName, description: s.description,
     sellerType: s.sellerType, campusId: s.campusId, campus: s.campus, createdAt: s.createdAt,
     listingCount: s.listings.length,
     follow,
     avatarUrl: sellerAvatarUrl(s.id, s.avatarPath),
     badge: s.sellerType === 'student' ? 'Verified CPSU community member' : 'Campus establishment', listings: s.listings.map(publicListing) });
+}
+
+r.get('/seller-profiles/by-slug/:slug', async (req, res) => {
+  const slug = req.params.slug;
+  if (!slug || slug.length > 200) throw new HttpError(404, 'not_found');
+  const stores = await visibleStoreNames();
+  const store = findStoreBySlug(stores, slug);
+  if (!store) throw new HttpError(404, 'not_found');
+  await sendPublicStore(req, res, store.id, stores);
+});
+
+r.get('/seller-profiles/:id', async (req, res) => {
+  const id = Number(req.params.id);
+  if (!Number.isSafeInteger(id) || id < 1) throw new HttpError(404, 'not_found');
+  await sendPublicStore(req, res, id);
 });
 
 // The seller's chosen, sanitized avatar is public only while the store and
@@ -167,12 +190,18 @@ async function sendSellerAvatar(req: Request, res: Response) {
   const id = z.coerce.number().int().positive().parse(req.params.id);
   if (!await sellerAvatarColumnExists()) throw new HttpError(404, 'not_found');
   const seller = await prisma.sellerProfile.findUnique({ where: { id }, select: {
-    ownerUserId: true, approvalStatus: true, avatarPath: true,
-    owner: { select: { status: true } },
+    ownerUserId: true, approvalStatus: true, sellerType: true, avatarPath: true,
+    owner: { select: { status: true, roles: { select: { id: true } }, affiliations: {
+      select: { verificationStatus: true, expirationAt: true, campus: { select: { active: true } } },
+    } } },
   } });
   if (!seller) throw new HttpError(404, 'not_found');
   const owner = req.user?.id === seller.ownerUserId;
-  const publiclyVisible = seller.approvalStatus === 'approved' && seller.owner.status === 'active';
+  const publiclyVisible = seller.approvalStatus === 'approved' && seller.sellerType === 'student' &&
+    seller.owner.status === 'active' && seller.owner.roles.length === 0 &&
+    seller.owner.affiliations.some(affiliation =>
+      affiliation.verificationStatus === 'verified' && affiliation.campus.active &&
+      (!affiliation.expirationAt || affiliation.expirationAt > new Date()));
   if ((!publiclyVisible && !owner) || !seller.avatarPath) throw new HttpError(404, 'not_found');
   res.setHeader('Cache-Control', 'private, no-store');
   res.setHeader('X-Content-Type-Options', 'nosniff');
@@ -182,8 +211,8 @@ async function sendSellerAvatar(req: Request, res: Response) {
 r.get('/media/seller-avatar/:id', sendSellerAvatar);
 
 r.get('/media/:id', async (req, res) => {
-  const m = await prisma.listingMedia.findUnique({
-    where: { id: Number(req.params.id) },
+  const m = await prisma.listingMedia.findFirst({
+    where: { id: Number(req.params.id), listing: { is: visibleListingRows(req.user) } },
     include: {
       listing: {
         include: {

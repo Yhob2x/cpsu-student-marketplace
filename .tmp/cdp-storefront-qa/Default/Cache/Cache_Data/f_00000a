@@ -1,0 +1,517 @@
+import { createHotContext as __vite__createHotContext } from "/@vite/client";import.meta.hot = __vite__createHotContext("/src/store-followers.tsx");import __vite__cjsImport0_react_jsxDevRuntime from "/node_modules/.vite/deps/react_jsx-dev-runtime.js?v=ec20f2fa"; const Fragment = __vite__cjsImport0_react_jsxDevRuntime["Fragment"]; const jsxDEV = __vite__cjsImport0_react_jsxDevRuntime["jsxDEV"];
+import * as RefreshRuntime from "/@react-refresh";
+const inWebWorker = typeof WorkerGlobalScope !== "undefined" && self instanceof WorkerGlobalScope;
+let prevRefreshReg;
+let prevRefreshSig;
+if (import.meta.hot && !inWebWorker) {
+  if (!window.$RefreshReg$) {
+    throw new Error(
+      "@vitejs/plugin-react can't detect preamble. Something is wrong."
+    );
+  }
+  prevRefreshReg = window.$RefreshReg$;
+  prevRefreshSig = window.$RefreshSig$;
+  window.$RefreshReg$ = RefreshRuntime.getRefreshReg("C:/Users/acer/Downloads/cpsu-student-marketplace/apps/web/src/store-followers.tsx");
+  window.$RefreshSig$ = RefreshRuntime.createSignatureFunctionForTransform;
+}
+var _s = $RefreshSig$(), _s2 = $RefreshSig$();
+import __vite__cjsImport3_react from "/node_modules/.vite/deps/react.js?v=ec20f2fa"; const useEffect = __vite__cjsImport3_react["useEffect"]; const useRef = __vite__cjsImport3_react["useRef"]; const useState = __vite__cjsImport3_react["useState"];
+import { Link } from "/node_modules/.vite/deps/react-router-dom.js?v=24f73ea8";
+import { api, explain } from "/src/api.ts";
+import { Icon } from "/src/icons.tsx";
+import { useForegroundRefresh } from "/src/foreground-refresh.ts";
+import "/src/store-followers.css";
+function followDate(iso) {
+  const date = new Date(iso);
+  return Number.isNaN(date.getTime()) ? "Date unavailable" : date.toLocaleDateString("en-PH", { month: "short", day: "numeric", year: "numeric" });
+}
+function initials(name) {
+  return name.trim().split(/\s+/).slice(0, 2).map((part) => part.charAt(0).toUpperCase()).join("") || "?";
+}
+export function StoreFollowersView({
+  activeTab,
+  data,
+  counts,
+  loading,
+  error,
+  onTab,
+  onPage,
+  onRetry,
+  onOpenChange,
+  publicView = false
+}) {
+  _s();
+  const dialogRef = useRef(null);
+  const openerRef = useRef(null);
+  const tabRefs = useRef({ followers: null, following: null });
+  const [listOpen, setListOpen] = useState(false);
+  const pages = data ? Math.max(1, Math.ceil(data.total / data.pageSize)) : 1;
+  const openList = (tab, opener) => {
+    openerRef.current = opener;
+    onTab(tab);
+    dialogRef.current?.showModal();
+    setListOpen(true);
+    onOpenChange?.(true);
+    requestAnimationFrame(() => tabRefs.current[tab]?.focus());
+  };
+  const closeList = () => dialogRef.current?.close();
+  const switchTab = (tab) => {
+    if (tab !== activeTab) onTab(tab);
+  };
+  const onTabKey = (event) => {
+    const next = event.key === "ArrowRight" || event.key === "End" ? "following" : event.key === "ArrowLeft" || event.key === "Home" ? "followers" : null;
+    if (!next) return;
+    event.preventDefault();
+    switchTab(next);
+    tabRefs.current[next]?.focus();
+  };
+  return /* @__PURE__ */ jsxDEV(Fragment, { children: [
+    /* @__PURE__ */ jsxDEV("div", { className: "storefront-follow-fact", children: [
+      /* @__PURE__ */ jsxDEV("span", { children: "Followers" }, void 0, false, {
+        fileName: "C:/Users/acer/Downloads/cpsu-student-marketplace/apps/web/src/store-followers.tsx",
+        lineNumber: 85,
+        columnNumber: 7
+      }, this),
+      /* @__PURE__ */ jsxDEV(
+        "button",
+        {
+          type: "button",
+          className: "storefront-follow-count",
+          "aria-haspopup": "dialog",
+          "aria-label": counts ? `View ${counts.followers} followers` : "View followers",
+          onClick: (event) => openList("followers", event.currentTarget),
+          children: counts ? counts.followers.toLocaleString("en-PH") : "—"
+        },
+        void 0,
+        false,
+        {
+          fileName: "C:/Users/acer/Downloads/cpsu-student-marketplace/apps/web/src/store-followers.tsx",
+          lineNumber: 86,
+          columnNumber: 7
+        },
+        this
+      )
+    ] }, void 0, true, {
+      fileName: "C:/Users/acer/Downloads/cpsu-student-marketplace/apps/web/src/store-followers.tsx",
+      lineNumber: 84,
+      columnNumber: 5
+    }, this),
+    /* @__PURE__ */ jsxDEV("div", { className: "storefront-follow-fact", children: [
+      /* @__PURE__ */ jsxDEV("span", { children: "Following" }, void 0, false, {
+        fileName: "C:/Users/acer/Downloads/cpsu-student-marketplace/apps/web/src/store-followers.tsx",
+        lineNumber: 93,
+        columnNumber: 7
+      }, this),
+      /* @__PURE__ */ jsxDEV(
+        "button",
+        {
+          type: "button",
+          className: "storefront-follow-count",
+          "aria-haspopup": "dialog",
+          "aria-label": counts ? `View ${counts.following} followed stores` : "View followed stores",
+          onClick: (event) => openList("following", event.currentTarget),
+          children: counts ? counts.following.toLocaleString("en-PH") : "—"
+        },
+        void 0,
+        false,
+        {
+          fileName: "C:/Users/acer/Downloads/cpsu-student-marketplace/apps/web/src/store-followers.tsx",
+          lineNumber: 94,
+          columnNumber: 7
+        },
+        this
+      )
+    ] }, void 0, true, {
+      fileName: "C:/Users/acer/Downloads/cpsu-student-marketplace/apps/web/src/store-followers.tsx",
+      lineNumber: 92,
+      columnNumber: 5
+    }, this),
+    /* @__PURE__ */ jsxDEV(
+      "dialog",
+      {
+        ref: dialogRef,
+        className: "store-follow-dialog",
+        "aria-labelledby": "store-follow-dialog-title",
+        onClose: () => {
+          setListOpen(false);
+          onOpenChange?.(false);
+          onPage(1);
+          openerRef.current?.focus();
+        },
+        children: /* @__PURE__ */ jsxDEV("div", { className: "store-follow-dialog-shell", children: [
+          /* @__PURE__ */ jsxDEV("header", { className: "store-follow-dialog-header", children: [
+            /* @__PURE__ */ jsxDEV("div", { children: [
+              /* @__PURE__ */ jsxDEV("h2", { id: "store-follow-dialog-title", children: "Store connections" }, void 0, false, {
+                fileName: "C:/Users/acer/Downloads/cpsu-student-marketplace/apps/web/src/store-followers.tsx",
+                lineNumber: 104,
+                columnNumber: 16
+              }, this),
+              /* @__PURE__ */ jsxDEV("p", { children: publicView ? "People following this store and stores its owner follows." : "Followers of your store and stores you follow." }, void 0, false, {
+                fileName: "C:/Users/acer/Downloads/cpsu-student-marketplace/apps/web/src/store-followers.tsx",
+                lineNumber: 105,
+                columnNumber: 13
+              }, this)
+            ] }, void 0, true, {
+              fileName: "C:/Users/acer/Downloads/cpsu-student-marketplace/apps/web/src/store-followers.tsx",
+              lineNumber: 104,
+              columnNumber: 11
+            }, this),
+            /* @__PURE__ */ jsxDEV("button", { type: "button", className: "store-follow-dialog-close", onClick: closeList, "aria-label": "Close connections", children: /* @__PURE__ */ jsxDEV(Icon, { name: "close", size: 20 }, void 0, false, {
+              fileName: "C:/Users/acer/Downloads/cpsu-student-marketplace/apps/web/src/store-followers.tsx",
+              lineNumber: 108,
+              columnNumber: 13
+            }, this) }, void 0, false, {
+              fileName: "C:/Users/acer/Downloads/cpsu-student-marketplace/apps/web/src/store-followers.tsx",
+              lineNumber: 107,
+              columnNumber: 11
+            }, this)
+          ] }, void 0, true, {
+            fileName: "C:/Users/acer/Downloads/cpsu-student-marketplace/apps/web/src/store-followers.tsx",
+            lineNumber: 103,
+            columnNumber: 9
+          }, this),
+          /* @__PURE__ */ jsxDEV("div", { className: "store-follow-tabs", role: "tablist", "aria-label": "Store connections", children: ["followers", "following"].map((tab) => /* @__PURE__ */ jsxDEV(
+            "button",
+            {
+              type: "button",
+              role: "tab",
+              id: `store-follow-tab-${tab}`,
+              "aria-controls": "store-follow-panel",
+              "aria-selected": activeTab === tab,
+              tabIndex: activeTab === tab ? 0 : -1,
+              ref: (node) => {
+                tabRefs.current[tab] = node;
+              },
+              onClick: () => switchTab(tab),
+              onKeyDown: onTabKey,
+              children: [
+                tab === "followers" ? "Followers" : "Following",
+                counts && /* @__PURE__ */ jsxDEV("span", { children: (tab === "followers" ? counts.followers : counts.following).toLocaleString("en-PH") }, void 0, false, {
+                  fileName: "C:/Users/acer/Downloads/cpsu-student-marketplace/apps/web/src/store-followers.tsx",
+                  lineNumber: 117,
+                  columnNumber: 24
+                }, this)
+              ]
+            },
+            tab,
+            true,
+            {
+              fileName: "C:/Users/acer/Downloads/cpsu-student-marketplace/apps/web/src/store-followers.tsx",
+              lineNumber: 112,
+              columnNumber: 63
+            },
+            this
+          )) }, void 0, false, {
+            fileName: "C:/Users/acer/Downloads/cpsu-student-marketplace/apps/web/src/store-followers.tsx",
+            lineNumber: 111,
+            columnNumber: 9
+          }, this),
+          /* @__PURE__ */ jsxDEV(
+            "div",
+            {
+              id: "store-follow-panel",
+              className: "store-follow-dialog-content",
+              role: "tabpanel",
+              "aria-labelledby": `store-follow-tab-${activeTab}`,
+              "aria-busy": loading,
+              children: [
+                loading && /* @__PURE__ */ jsxDEV("p", { className: "store-follow-feedback", role: "status", children: [
+                  "Loading ",
+                  activeTab,
+                  "…"
+                ] }, void 0, true, {
+                  fileName: "C:/Users/acer/Downloads/cpsu-student-marketplace/apps/web/src/store-followers.tsx",
+                  lineNumber: 122,
+                  columnNumber: 23
+                }, this),
+                error && /* @__PURE__ */ jsxDEV("div", { className: "store-follow-feedback", role: "alert", children: [
+                  /* @__PURE__ */ jsxDEV("p", { children: [
+                    "Could not load ",
+                    activeTab,
+                    ": ",
+                    error
+                  ] }, void 0, true, {
+                    fileName: "C:/Users/acer/Downloads/cpsu-student-marketplace/apps/web/src/store-followers.tsx",
+                    lineNumber: 123,
+                    columnNumber: 73
+                  }, this),
+                  /* @__PURE__ */ jsxDEV("button", { type: "button", className: "btn ghost", onClick: onRetry, children: "Try again" }, void 0, false, {
+                    fileName: "C:/Users/acer/Downloads/cpsu-student-marketplace/apps/web/src/store-followers.tsx",
+                    lineNumber: 124,
+                    columnNumber: 13
+                  }, this)
+                ] }, void 0, true, {
+                  fileName: "C:/Users/acer/Downloads/cpsu-student-marketplace/apps/web/src/store-followers.tsx",
+                  lineNumber: 123,
+                  columnNumber: 21
+                }, this),
+                !loading && !error && data && data.total === 0 && /* @__PURE__ */ jsxDEV("p", { className: "store-follow-feedback", children: activeTab === "followers" ? "No followers yet. Students can follow this public store." : publicView ? "This store is not following any stores yet." : "You are not following any stores yet." }, void 0, false, {
+                  fileName: "C:/Users/acer/Downloads/cpsu-student-marketplace/apps/web/src/store-followers.tsx",
+                  lineNumber: 125,
+                  columnNumber: 62
+                }, this),
+                !loading && !error && data && data.items.length > 0 && /* @__PURE__ */ jsxDEV("ul", { className: "store-follow-list", children: data.items.map((item, index) => activeTab === "followers" && "displayName" in item ? /* @__PURE__ */ jsxDEV("li", { className: "store-follow-row", children: [
+                  /* @__PURE__ */ jsxDEV("span", { className: "store-follow-avatar", "aria-hidden": "true", children: initials(item.displayName) }, void 0, false, {
+                    fileName: "C:/Users/acer/Downloads/cpsu-student-marketplace/apps/web/src/store-followers.tsx",
+                    lineNumber: 132,
+                    columnNumber: 19
+                  }, this),
+                  /* @__PURE__ */ jsxDEV("div", { className: "store-follow-detail", children: [
+                    /* @__PURE__ */ jsxDEV("strong", { children: item.displayName }, void 0, false, {
+                      fileName: "C:/Users/acer/Downloads/cpsu-student-marketplace/apps/web/src/store-followers.tsx",
+                      lineNumber: 133,
+                      columnNumber: 56
+                    }, this),
+                    /* @__PURE__ */ jsxDEV("span", { children: [
+                      "Following since ",
+                      followDate(item.followedAt)
+                    ] }, void 0, true, {
+                      fileName: "C:/Users/acer/Downloads/cpsu-student-marketplace/apps/web/src/store-followers.tsx",
+                      lineNumber: 134,
+                      columnNumber: 21
+                    }, this)
+                  ] }, void 0, true, {
+                    fileName: "C:/Users/acer/Downloads/cpsu-student-marketplace/apps/web/src/store-followers.tsx",
+                    lineNumber: 133,
+                    columnNumber: 19
+                  }, this)
+                ] }, `${item.followedAt}-${index}`, true, {
+                  fileName: "C:/Users/acer/Downloads/cpsu-student-marketplace/apps/web/src/store-followers.tsx",
+                  lineNumber: 131,
+                  columnNumber: 13
+                }, this) : activeTab === "following" && "storeId" in item ? /* @__PURE__ */ jsxDEV("li", { className: "store-follow-row", children: [
+                  /* @__PURE__ */ jsxDEV("span", { className: "store-follow-avatar", "aria-hidden": "true", children: /* @__PURE__ */ jsxDEV(Icon, { name: "store", size: 20 }, void 0, false, {
+                    fileName: "C:/Users/acer/Downloads/cpsu-student-marketplace/apps/web/src/store-followers.tsx",
+                    lineNumber: 138,
+                    columnNumber: 78
+                  }, this) }, void 0, false, {
+                    fileName: "C:/Users/acer/Downloads/cpsu-student-marketplace/apps/web/src/store-followers.tsx",
+                    lineNumber: 138,
+                    columnNumber: 21
+                  }, this),
+                  /* @__PURE__ */ jsxDEV("div", { className: "store-follow-detail", children: [
+                    /* @__PURE__ */ jsxDEV(
+                      Link,
+                      {
+                        to: `/stores/${item.storeId}`,
+                        onClick: closeList,
+                        children: item.storeName
+                      },
+                      void 0,
+                      false,
+                      {
+                        fileName: "C:/Users/acer/Downloads/cpsu-student-marketplace/apps/web/src/store-followers.tsx",
+                        lineNumber: 139,
+                        columnNumber: 58
+                      },
+                      this
+                    ),
+                    /* @__PURE__ */ jsxDEV("span", { children: [
+                      item.campusName,
+                      " · Following since ",
+                      followDate(item.followedAt)
+                    ] }, void 0, true, {
+                      fileName: "C:/Users/acer/Downloads/cpsu-student-marketplace/apps/web/src/store-followers.tsx",
+                      lineNumber: 141,
+                      columnNumber: 23
+                    }, this)
+                  ] }, void 0, true, {
+                    fileName: "C:/Users/acer/Downloads/cpsu-student-marketplace/apps/web/src/store-followers.tsx",
+                    lineNumber: 139,
+                    columnNumber: 21
+                  }, this)
+                ] }, item.storeId, true, {
+                  fileName: "C:/Users/acer/Downloads/cpsu-student-marketplace/apps/web/src/store-followers.tsx",
+                  lineNumber: 137,
+                  columnNumber: 13
+                }, this) : null) }, void 0, false, {
+                  fileName: "C:/Users/acer/Downloads/cpsu-student-marketplace/apps/web/src/store-followers.tsx",
+                  lineNumber: 129,
+                  columnNumber: 67
+                }, this)
+              ]
+            },
+            void 0,
+            true,
+            {
+              fileName: "C:/Users/acer/Downloads/cpsu-student-marketplace/apps/web/src/store-followers.tsx",
+              lineNumber: 120,
+              columnNumber: 9
+            },
+            this
+          ),
+          listOpen && !error && data && pages > 1 && /* @__PURE__ */ jsxDEV("nav", { className: "store-follow-pages", "aria-label": `${activeTab} pages`, children: [
+            /* @__PURE__ */ jsxDEV(
+              "button",
+              {
+                type: "button",
+                className: "btn ghost",
+                disabled: loading || data.page <= 1,
+                onClick: () => onPage(data.page - 1),
+                children: "Previous"
+              },
+              void 0,
+              false,
+              {
+                fileName: "C:/Users/acer/Downloads/cpsu-student-marketplace/apps/web/src/store-followers.tsx",
+                lineNumber: 147,
+                columnNumber: 11
+              },
+              this
+            ),
+            /* @__PURE__ */ jsxDEV("span", { children: [
+              "Page ",
+              data.page,
+              " of ",
+              pages
+            ] }, void 0, true, {
+              fileName: "C:/Users/acer/Downloads/cpsu-student-marketplace/apps/web/src/store-followers.tsx",
+              lineNumber: 149,
+              columnNumber: 11
+            }, this),
+            /* @__PURE__ */ jsxDEV(
+              "button",
+              {
+                type: "button",
+                className: "btn ghost",
+                disabled: loading || data.page >= pages,
+                onClick: () => onPage(data.page + 1),
+                children: "Next"
+              },
+              void 0,
+              false,
+              {
+                fileName: "C:/Users/acer/Downloads/cpsu-student-marketplace/apps/web/src/store-followers.tsx",
+                lineNumber: 150,
+                columnNumber: 11
+              },
+              this
+            )
+          ] }, void 0, true, {
+            fileName: "C:/Users/acer/Downloads/cpsu-student-marketplace/apps/web/src/store-followers.tsx",
+            lineNumber: 146,
+            columnNumber: 53
+          }, this)
+        ] }, void 0, true, {
+          fileName: "C:/Users/acer/Downloads/cpsu-student-marketplace/apps/web/src/store-followers.tsx",
+          lineNumber: 102,
+          columnNumber: 7
+        }, this)
+      },
+      void 0,
+      false,
+      {
+        fileName: "C:/Users/acer/Downloads/cpsu-student-marketplace/apps/web/src/store-followers.tsx",
+        lineNumber: 100,
+        columnNumber: 5
+      },
+      this
+    )
+  ] }, void 0, true, {
+    fileName: "C:/Users/acer/Downloads/cpsu-student-marketplace/apps/web/src/store-followers.tsx",
+    lineNumber: 83,
+    columnNumber: 10
+  }, this);
+}
+_s(StoreFollowersView, "XS0R/xLA+wC/hIJzywriEargXnc=");
+_c = StoreFollowersView;
+export function StoreFollowers({ storeId, publicView = false }) {
+  _s2();
+  const [activeTab, setActiveTab] = useState("followers");
+  const [page, setPage] = useState(1);
+  const [retryKey, setRetryKey] = useState(0);
+  const [data, setData] = useState(null);
+  const [counts, setCounts] = useState(null);
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [dialogOpen, setDialogOpen] = useState(false);
+  useForegroundRefresh(() => {
+    if (!dialogOpen) setRetryKey((value) => value + 1);
+  }, 6e4);
+  useEffect(() => {
+    const refresh = () => setRetryKey((value) => value + 1);
+    window.addEventListener("store-follow-changed", refresh);
+    return () => window.removeEventListener("store-follow-changed", refresh);
+  }, []);
+  useEffect(() => {
+    let current = true;
+    setLoading(true);
+    setError("");
+    setData(null);
+    const resource = publicView ? `/seller-profiles/${storeId}/connections` : "/store-follows/mine";
+    const query = dialogOpen ? `?view=${activeTab}&page=${page}` : "?countsOnly=true";
+    api(resource + query).then((result) => {
+      if (!current) return;
+      if (!dialogOpen) {
+        if (typeof result.followerCount !== "number" || typeof result.followingCount !== "number")
+          throw new Error("Store connections are not available yet.");
+        setCounts({ followers: result.followerCount, following: result.followingCount });
+        return;
+      }
+      if (!("items" in result)) throw new Error("Store connections are not available yet.");
+      if (typeof result.followingCount !== "number")
+        throw new Error("Store connections are not available yet. Please try again later.");
+      if (activeTab === "following" && (typeof result.followerCount !== "number" || result.items.some((item) => !("storeId" in item))))
+        throw new Error("Following is not available yet. Please try again later.");
+      setData(result);
+      setCounts(activeTab === "followers" ? { followers: result.total, following: result.followingCount } : { followers: result.followerCount, following: result.total });
+    }).catch((cause) => {
+      if (current) setError(explain(cause));
+    }).finally(() => {
+      if (current) setLoading(false);
+    });
+    return () => {
+      current = false;
+    };
+  }, [storeId, publicView, activeTab, page, retryKey, dialogOpen]);
+  const changeTab = (tab) => {
+    setActiveTab(tab);
+    setPage(1);
+  };
+  return /* @__PURE__ */ jsxDEV(
+    StoreFollowersView,
+    {
+      activeTab,
+      data,
+      counts,
+      loading,
+      error,
+      onTab: changeTab,
+      onPage: setPage,
+      onRetry: () => setRetryKey((value) => value + 1),
+      onOpenChange: setDialogOpen,
+      publicView
+    },
+    void 0,
+    false,
+    {
+      fileName: "C:/Users/acer/Downloads/cpsu-student-marketplace/apps/web/src/store-followers.tsx",
+      lineNumber: 205,
+      columnNumber: 10
+    },
+    this
+  );
+}
+_s2(StoreFollowers, "amLugPsOgNSiyC5Ls6lNBcZH3Ss=", false, function() {
+  return [useForegroundRefresh];
+});
+_c2 = StoreFollowers;
+var _c, _c2;
+$RefreshReg$(_c, "StoreFollowersView");
+$RefreshReg$(_c2, "StoreFollowers");
+if (import.meta.hot && !inWebWorker) {
+  window.$RefreshReg$ = prevRefreshReg;
+  window.$RefreshSig$ = prevRefreshSig;
+}
+if (import.meta.hot && !inWebWorker) {
+  RefreshRuntime.__hmr_import(import.meta.url).then((currentExports) => {
+    RefreshRuntime.registerExportsForReactRefresh("C:/Users/acer/Downloads/cpsu-student-marketplace/apps/web/src/store-followers.tsx", currentExports);
+    import.meta.hot.accept((nextExports) => {
+      if (!nextExports) return;
+      const invalidateMessage = RefreshRuntime.validateRefreshBoundaryAndEnqueueUpdate("C:/Users/acer/Downloads/cpsu-student-marketplace/apps/web/src/store-followers.tsx", currentExports, nextExports);
+      if (invalidateMessage) import.meta.hot.invalidate(invalidateMessage);
+    });
+  });
+}
+
+//# sourceMappingURL=data:application/json;base64,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QjtBQUFFNkIsaUJBQWE3QixHQUFHO0FBQUc4QixZQUFRLENBQUM7QUFBQSxFQUFHO0FBQ3ZFLFNBQU87QUFBQSxJQUFDO0FBQUE7QUFBQSxNQUFtQjtBQUFBLE1BQXNCO0FBQUEsTUFBWTtBQUFBLE1BQWdCO0FBQUEsTUFBa0I7QUFBQSxNQUM3RixPQUFPeUI7QUFBQUEsTUFBVyxRQUFRekI7QUFBQUEsTUFBUyxTQUFTLE1BQU1FLFlBQVksQ0FBQU8sVUFBU0EsUUFBUSxDQUFDO0FBQUEsTUFBRyxjQUFjRDtBQUFBQSxNQUFlO0FBQUE7QUFBQSxJQUQzRztBQUFBO0FBQUE7QUFBQTtBQUFBO0FBQUE7QUFBQTtBQUFBO0FBQUEsRUFDa0k7QUFDM0k7QUFBQ1YsSUFqRGVELGdCQUFjO0FBQUEsVUFTNUIzRSxvQkFBb0I7QUFBQTtBQUFBLE1BVE4yRTtBQUFjLElBQUE2QixJQUFBQztBQUFBLGFBQUFELElBQUE7QUFBQSxhQUFBQyxLQUFBIiwibmFtZXMiOlsidXNlRWZmZWN0IiwidXNlUmVmIiwidXNlU3RhdGUiLCJMaW5rIiwiYXBpIiwiZXhwbGFpbiIsIkljb24iLCJ1c2VGb3JlZ3JvdW5kUmVmcmVzaCIsImZvbGxvd0RhdGUiLCJpc28iLCJkYXRlIiwiRGF0ZSIsIk51bWJlciIsImlzTmFOIiwiZ2V0VGltZSIsInRvTG9jYWxlRGF0ZVN0cmluZyIsIm1vbnRoIiwiZGF5IiwieWVhciIsImluaXRpYWxzIiwibmFtZSIsInRyaW0iLCJzcGxpdCIsInNsaWNlIiwibWFwIiwicGFydCIsImNoYXJBdCIsInRvVXBwZXJDYXNlIiwiam9pbiIsIlN0b3JlRm9sbG93ZXJzVmlldyIsImFjdGl2ZVRhYiIsImRhdGEiLCJjb3VudHMiLCJsb2FkaW5nIiwiZXJyb3IiLCJvblRhYiIsIm9uUGFnZSIsIm9uUmV0cnkiLCJvbk9wZW5DaGFuZ2UiLCJwdWJsaWNWaWV3IiwiX3MiLCJkaWFsb2dSZWYiLCJvcGVuZXJSZWYiLCJ0YWJSZWZzIiwiZm9sbG93ZXJzIiwiZm9sbG93aW5nIiwibGlzdE9wZW4iLCJzZXRMaXN0T3BlbiIsInBhZ2VzIiwiTWF0aCIsIm1heCIsImNlaWwiLCJ0b3RhbCIsInBhZ2VTaXplIiwib3Blbkxpc3QiLCJ0YWIiLCJvcGVuZXIiLCJjdXJyZW50Iiwic2hvd01vZGFsIiwicmVxdWVzdEFuaW1hdGlvbkZyYW1lIiwiZm9jdXMiLCJjbG9zZUxpc3QiLCJjbG9zZSIsInN3aXRjaFRhYiIsIm9uVGFiS2V5IiwiZXZlbnQiLCJuZXh0Iiwia2V5IiwicHJldmVudERlZmF1bHQiLCJjdXJyZW50VGFyZ2V0IiwidG9Mb2NhbGVTdHJpbmciLCJub2RlIiwiaXRlbXMiLCJsZW5ndGgiLCJpdGVtIiwiaW5kZXgiLCJkaXNwbGF5TmFtZSIsImZvbGxvd2VkQXQiLCJzdG9yZUlkIiwic3RvcmVOYW1lIiwiY2FtcHVzTmFtZSIsInBhZ2UiLCJTdG9yZUZvbGxvd2VycyIsIl9zMiIsInNldEFjdGl2ZVRhYiIsInNldFBhZ2UiLCJyZXRyeUtleSIsInNldFJldHJ5S2V5Iiwic2V0RGF0YSIsInNldENvdW50cyIsInNldEVycm9yIiwic2V0TG9hZGluZyIsImRpYWxvZ09wZW4iLCJzZXREaWFsb2dPcGVuIiwidmFsdWUiLCJyZWZyZXNoIiwid2luZG93IiwiYWRkRXZlbnRMaXN0ZW5lciIsInJlbW92ZUV2ZW50TGlzdGVuZXIiLCJyZXNvdXJjZSIsInF1ZXJ5IiwidGhlbiIsInJlc3VsdCIsImZvbGxvd2VyQ291bnQiLCJmb2xsb3dpbmdDb3VudCIsIkVycm9yIiwic29tZSIsImNhdGNoIiwiY2F1c2UiLCJmaW5hbGx5IiwiY2hhbmdlVGFiIiwiX2MiLCJfYzIiXSwiaWdub3JlTGlzdCI6W10sInNvdXJjZXMiOlsic3RvcmUtZm9sbG93ZXJzLnRzeCJdLCJzb3VyY2VzQ29udGVudCI6WyJpbXBvcnQgeyB1c2VFZmZlY3QsIHVzZVJlZiwgdXNlU3RhdGUsIHR5cGUgS2V5Ym9hcmRFdmVudCB9IGZyb20gJ3JlYWN0JztcbmltcG9ydCB7IExpbmsgfSBmcm9tICdyZWFjdC1yb3V0ZXItZG9tJztcbmltcG9ydCB7IGFwaSwgZXhwbGFpbiB9IGZyb20gJy4vYXBpJztcbmltcG9ydCB7IEljb24gfSBmcm9tICcuL2ljb25zJztcbmltcG9ydCB7IHVzZUZvcmVncm91bmRSZWZyZXNoIH0gZnJvbSAnLi9mb3JlZ3JvdW5kLXJlZnJlc2gnO1xuaW1wb3J0ICcuL3N0b3JlLWZvbGxvd2Vycy5jc3MnO1xuXG5leHBvcnQgdHlwZSBGb2xsb3dUYWIgPSAnZm9sbG93ZXJzJyB8ICdmb2xsb3dpbmcnO1xuZXhwb3J0IHR5cGUgU3RvcmVGb2xsb3dlciA9IHsgZGlzcGxheU5hbWU6IHN0cmluZzsgZm9sbG93ZWRBdDogc3RyaW5nIH07XG5leHBvcnQgdHlwZSBGb2xsb3dlZFN0b3JlID0geyBzdG9yZUlkOiBudW1iZXI7IHN0b3JlTmFtZTogc3RyaW5nOyBjYW1wdXNOYW1lOiBzdHJpbmc7IGZvbGxvd2VkQXQ6IHN0cmluZyB9O1xuZXhwb3J0IHR5cGUgU3RvcmVGb2xsb3dQYWdlID0ge1xuICB0b3RhbDogbnVtYmVyO1xuICBmb2xsb3dlckNvdW50PzogbnVtYmVyO1xuICBmb2xsb3dpbmdDb3VudDogbnVtYmVyO1xuICBwYWdlOiBudW1iZXI7XG4gIHBhZ2VTaXplOiBudW1iZXI7XG4gIGl0ZW1zOiAoU3RvcmVGb2xsb3dlciB8IEZvbGxvd2VkU3RvcmUpW107XG59O1xuXG5mdW5jdGlvbiBmb2xsb3dEYXRlKGlzbzogc3RyaW5nKSB7XG4gIGNvbnN0IGRhdGUgPSBuZXcgRGF0ZShpc28pO1xuICByZXR1cm4gTnVtYmVyLmlzTmFOKGRhdGUuZ2V0VGltZSgpKSA/ICdEYXRlIHVuYXZhaWxhYmxlJ1xuICAgIDogZGF0ZS50b0xvY2FsZURhdGVTdHJpbmcoJ2VuLVBIJywgeyBtb250aDogJ3Nob3J0JywgZGF5OiAnbnVtZXJpYycsIHllYXI6ICdudW1lcmljJyB9KTtcbn1cbmZ1bmN0aW9uIGluaXRpYWxzKG5hbWU6IHN0cmluZykge1xuICByZXR1cm4gbmFtZS50cmltKCkuc3BsaXQoL1xccysvKS5zbGljZSgwLCAyKS5tYXAocGFydCA9PiBwYXJ0LmNoYXJBdCgwKS50b1VwcGVyQ2FzZSgpKS5qb2luKCcnKSB8fCAnPyc7XG59XG5cbmV4cG9ydCBmdW5jdGlvbiBTdG9yZUZvbGxvd2Vyc1ZpZXcoeyBhY3RpdmVUYWIsIGRhdGEsIGNvdW50cywgbG9hZGluZywgZXJyb3IsIG9uVGFiLCBvblBhZ2UsIG9uUmV0cnksIG9uT3BlbkNoYW5nZSwgcHVibGljVmlldyA9IGZhbHNlIH06IHtcbiAgYWN0aXZlVGFiOiBGb2xsb3dUYWI7XG4gIGRhdGE6IFN0b3JlRm9sbG93UGFnZSB8IG51bGw7XG4gIGNvdW50czogeyBmb2xsb3dlcnM6IG51bWJlcjsgZm9sbG93aW5nOiBudW1iZXIgfSB8IG51bGw7XG4gIGxvYWRpbmc6IGJvb2xlYW47XG4gIGVycm9yOiBzdHJpbmc7XG4gIG9uVGFiOiAodGFiOiBGb2xsb3dUYWIpID0+IHZvaWQ7XG4gIG9uUGFnZTogKHBhZ2U6IG51bWJlcikgPT4gdm9pZDtcbiAgb25SZXRyeTogKCkgPT4gdm9pZDtcbiAgb25PcGVuQ2hhbmdlPzogKG9wZW46IGJvb2xlYW4pID0+IHZvaWQ7XG4gIHB1YmxpY1ZpZXc/OiBib29sZWFuO1xufSkge1xuICBjb25zdCBkaWFsb2dSZWYgPSB1c2VSZWY8SFRNTERpYWxvZ0VsZW1lbnQ+KG51bGwpO1xuICBjb25zdCBvcGVuZXJSZWYgPSB1c2VSZWY8SFRNTEJ1dHRvbkVsZW1lbnQgfCBudWxsPihudWxsKTtcbiAgY29uc3QgdGFiUmVmcyA9IHVzZVJlZjxSZWNvcmQ8Rm9sbG93VGFiLCBIVE1MQnV0dG9uRWxlbWVudCB8IG51bGw+Pih7IGZvbGxvd2VyczogbnVsbCwgZm9sbG93aW5nOiBudWxsIH0pO1xuICBjb25zdCBbbGlzdE9wZW4sIHNldExpc3RPcGVuXSA9IHVzZVN0YXRlKGZhbHNlKTtcbiAgY29uc3QgcGFnZXMgPSBkYXRhID8gTWF0aC5tYXgoMSwgTWF0aC5jZWlsKGRhdGEudG90YWwgLyBkYXRhLnBhZ2VTaXplKSkgOiAxO1xuICBjb25zdCBvcGVuTGlzdCA9ICh0YWI6IEZvbGxvd1RhYiwgb3BlbmVyOiBIVE1MQnV0dG9uRWxlbWVudCkgPT4ge1xuICAgIG9wZW5lclJlZi5jdXJyZW50ID0gb3BlbmVyO1xuICAgIG9uVGFiKHRhYik7XG4gICAgZGlhbG9nUmVmLmN1cnJlbnQ/LnNob3dNb2RhbCgpO1xuICAgIHNldExpc3RPcGVuKHRydWUpO1xuICAgIG9uT3BlbkNoYW5nZT8uKHRydWUpO1xuICAgIHJlcXVlc3RBbmltYXRpb25GcmFtZSgoKSA9PiB0YWJSZWZzLmN1cnJlbnRbdGFiXT8uZm9jdXMoKSk7XG4gIH07XG4gIGNvbnN0IGNsb3NlTGlzdCA9ICgpID0+IGRpYWxvZ1JlZi5jdXJyZW50Py5jbG9zZSgpO1xuICBjb25zdCBzd2l0Y2hUYWIgPSAodGFiOiBGb2xsb3dUYWIpID0+IHsgaWYgKHRhYiAhPT0gYWN0aXZlVGFiKSBvblRhYih0YWIpOyB9O1xuICBjb25zdCBvblRhYktleSA9IChldmVudDogS2V5Ym9hcmRFdmVudDxIVE1MQnV0dG9uRWxlbWVudD4pID0+IHtcbiAgICBjb25zdCBuZXh0ID0gZXZlbnQua2V5ID09PSAnQXJyb3dSaWdodCcgfHwgZXZlbnQua2V5ID09PSAnRW5kJyA/ICdmb2xsb3dpbmcnXG4gICAgICA6IGV2ZW50LmtleSA9PT0gJ0Fycm93TGVmdCcgfHwgZXZlbnQua2V5ID09PSAnSG9tZScgPyAnZm9sbG93ZXJzJyA6IG51bGw7XG4gICAgaWYgKCFuZXh0KSByZXR1cm47XG4gICAgZXZlbnQucHJldmVudERlZmF1bHQoKTtcbiAgICBzd2l0Y2hUYWIobmV4dCk7XG4gICAgdGFiUmVmcy5jdXJyZW50W25leHRdPy5mb2N1cygpO1xuICB9O1xuICByZXR1cm4gPD5cbiAgICA8ZGl2IGNsYXNzTmFtZT1cInN0b3JlZnJvbnQtZm9sbG93LWZhY3RcIj5cbiAgICAgIDxzcGFuPkZvbGxvd2Vyczwvc3Bhbj5cbiAgICAgIDxidXR0b24gdHlwZT1cImJ1dHRvblwiIGNsYXNzTmFtZT1cInN0b3JlZnJvbnQtZm9sbG93LWNvdW50XCIgYXJpYS1oYXNwb3B1cD1cImRpYWxvZ1wiXG4gICAgICAgIGFyaWEtbGFiZWw9e2NvdW50cyA/IGBWaWV3ICR7Y291bnRzLmZvbGxvd2Vyc30gZm9sbG93ZXJzYCA6ICdWaWV3IGZvbGxvd2Vycyd9XG4gICAgICAgIG9uQ2xpY2s9e2V2ZW50ID0+IG9wZW5MaXN0KCdmb2xsb3dlcnMnLCBldmVudC5jdXJyZW50VGFyZ2V0KX0+XG4gICAgICAgIHtjb3VudHMgPyBjb3VudHMuZm9sbG93ZXJzLnRvTG9jYWxlU3RyaW5nKCdlbi1QSCcpIDogJ+KAlCd9XG4gICAgICA8L2J1dHRvbj5cbiAgICA8L2Rpdj5cbiAgICA8ZGl2IGNsYXNzTmFtZT1cInN0b3JlZnJvbnQtZm9sbG93LWZhY3RcIj5cbiAgICAgIDxzcGFuPkZvbGxvd2luZzwvc3Bhbj5cbiAgICAgIDxidXR0b24gdHlwZT1cImJ1dHRvblwiIGNsYXNzTmFtZT1cInN0b3JlZnJvbnQtZm9sbG93LWNvdW50XCIgYXJpYS1oYXNwb3B1cD1cImRpYWxvZ1wiXG4gICAgICAgIGFyaWEtbGFiZWw9e2NvdW50cyA/IGBWaWV3ICR7Y291bnRzLmZvbGxvd2luZ30gZm9sbG93ZWQgc3RvcmVzYCA6ICdWaWV3IGZvbGxvd2VkIHN0b3Jlcyd9XG4gICAgICAgIG9uQ2xpY2s9e2V2ZW50ID0+IG9wZW5MaXN0KCdmb2xsb3dpbmcnLCBldmVudC5jdXJyZW50VGFyZ2V0KX0+XG4gICAgICAgIHtjb3VudHMgPyBjb3VudHMuZm9sbG93aW5nLnRvTG9jYWxlU3RyaW5nKCdlbi1QSCcpIDogJ+KAlCd9XG4gICAgICA8L2J1dHRvbj5cbiAgICA8L2Rpdj5cbiAgICA8ZGlhbG9nIHJlZj17ZGlhbG9nUmVmfSBjbGFzc05hbWU9XCJzdG9yZS1mb2xsb3ctZGlhbG9nXCIgYXJpYS1sYWJlbGxlZGJ5PVwic3RvcmUtZm9sbG93LWRpYWxvZy10aXRsZVwiXG4gICAgICBvbkNsb3NlPXsoKSA9PiB7IHNldExpc3RPcGVuKGZhbHNlKTsgb25PcGVuQ2hhbmdlPy4oZmFsc2UpOyBvblBhZ2UoMSk7IG9wZW5lclJlZi5jdXJyZW50Py5mb2N1cygpOyB9fT5cbiAgICAgIDxkaXYgY2xhc3NOYW1lPVwic3RvcmUtZm9sbG93LWRpYWxvZy1zaGVsbFwiPlxuICAgICAgICA8aGVhZGVyIGNsYXNzTmFtZT1cInN0b3JlLWZvbGxvdy1kaWFsb2ctaGVhZGVyXCI+XG4gICAgICAgICAgPGRpdj48aDIgaWQ9XCJzdG9yZS1mb2xsb3ctZGlhbG9nLXRpdGxlXCI+U3RvcmUgY29ubmVjdGlvbnM8L2gyPlxuICAgICAgICAgICAgPHA+e3B1YmxpY1ZpZXcgPyAnUGVvcGxlIGZvbGxvd2luZyB0aGlzIHN0b3JlIGFuZCBzdG9yZXMgaXRzIG93bmVyIGZvbGxvd3MuJ1xuICAgICAgICAgICAgICA6ICdGb2xsb3dlcnMgb2YgeW91ciBzdG9yZSBhbmQgc3RvcmVzIHlvdSBmb2xsb3cuJ308L3A+PC9kaXY+XG4gICAgICAgICAgPGJ1dHRvbiB0eXBlPVwiYnV0dG9uXCIgY2xhc3NOYW1lPVwic3RvcmUtZm9sbG93LWRpYWxvZy1jbG9zZVwiIG9uQ2xpY2s9e2Nsb3NlTGlzdH0gYXJpYS1sYWJlbD1cIkNsb3NlIGNvbm5lY3Rpb25zXCI+XG4gICAgICAgICAgICA8SWNvbiBuYW1lPVwiY2xvc2VcIiBzaXplPXsyMH0gLz5cbiAgICAgICAgICA8L2J1dHRvbj5cbiAgICAgICAgPC9oZWFkZXI+XG4gICAgICAgIDxkaXYgY2xhc3NOYW1lPVwic3RvcmUtZm9sbG93LXRhYnNcIiByb2xlPVwidGFibGlzdFwiIGFyaWEtbGFiZWw9XCJTdG9yZSBjb25uZWN0aW9uc1wiPlxuICAgICAgICAgIHsoWydmb2xsb3dlcnMnLCAnZm9sbG93aW5nJ10gYXMgY29uc3QpLm1hcCh0YWIgPT4gPGJ1dHRvbiBrZXk9e3RhYn0gdHlwZT1cImJ1dHRvblwiIHJvbGU9XCJ0YWJcIlxuICAgICAgICAgICAgaWQ9e2BzdG9yZS1mb2xsb3ctdGFiLSR7dGFifWB9IGFyaWEtY29udHJvbHM9XCJzdG9yZS1mb2xsb3ctcGFuZWxcIiBhcmlhLXNlbGVjdGVkPXthY3RpdmVUYWIgPT09IHRhYn1cbiAgICAgICAgICAgIHRhYkluZGV4PXthY3RpdmVUYWIgPT09IHRhYiA/IDAgOiAtMX0gcmVmPXtub2RlID0+IHsgdGFiUmVmcy5jdXJyZW50W3RhYl0gPSBub2RlOyB9fVxuICAgICAgICAgICAgb25DbGljaz17KCkgPT4gc3dpdGNoVGFiKHRhYil9IG9uS2V5RG93bj17b25UYWJLZXl9PlxuICAgICAgICAgICAge3RhYiA9PT0gJ2ZvbGxvd2VycycgPyAnRm9sbG93ZXJzJyA6ICdGb2xsb3dpbmcnfVxuICAgICAgICAgICAge2NvdW50cyAmJiA8c3Bhbj57KHRhYiA9PT0gJ2ZvbGxvd2VycycgPyBjb3VudHMuZm9sbG93ZXJzIDogY291bnRzLmZvbGxvd2luZykudG9Mb2NhbGVTdHJpbmcoJ2VuLVBIJyl9PC9zcGFuPn1cbiAgICAgICAgICA8L2J1dHRvbj4pfVxuICAgICAgICA8L2Rpdj5cbiAgICAgICAgPGRpdiBpZD1cInN0b3JlLWZvbGxvdy1wYW5lbFwiIGNsYXNzTmFtZT1cInN0b3JlLWZvbGxvdy1kaWFsb2ctY29udGVudFwiIHJvbGU9XCJ0YWJwYW5lbFwiXG4gICAgICAgICAgYXJpYS1sYWJlbGxlZGJ5PXtgc3RvcmUtZm9sbG93LXRhYi0ke2FjdGl2ZVRhYn1gfSBhcmlhLWJ1c3k9e2xvYWRpbmd9PlxuICAgICAgICAgIHtsb2FkaW5nICYmIDxwIGNsYXNzTmFtZT1cInN0b3JlLWZvbGxvdy1mZWVkYmFja1wiIHJvbGU9XCJzdGF0dXNcIj5Mb2FkaW5nIHthY3RpdmVUYWJ94oCmPC9wPn1cbiAgICAgICAgICB7ZXJyb3IgJiYgPGRpdiBjbGFzc05hbWU9XCJzdG9yZS1mb2xsb3ctZmVlZGJhY2tcIiByb2xlPVwiYWxlcnRcIj48cD5Db3VsZCBub3QgbG9hZCB7YWN0aXZlVGFifToge2Vycm9yfTwvcD5cbiAgICAgICAgICAgIDxidXR0b24gdHlwZT1cImJ1dHRvblwiIGNsYXNzTmFtZT1cImJ0biBnaG9zdFwiIG9uQ2xpY2s9e29uUmV0cnl9PlRyeSBhZ2FpbjwvYnV0dG9uPjwvZGl2Pn1cbiAgICAgICAgICB7IWxvYWRpbmcgJiYgIWVycm9yICYmIGRhdGEgJiYgZGF0YS50b3RhbCA9PT0gMCAmJiA8cCBjbGFzc05hbWU9XCJzdG9yZS1mb2xsb3ctZmVlZGJhY2tcIj5cbiAgICAgICAgICAgIHthY3RpdmVUYWIgPT09ICdmb2xsb3dlcnMnID8gJ05vIGZvbGxvd2VycyB5ZXQuIFN0dWRlbnRzIGNhbiBmb2xsb3cgdGhpcyBwdWJsaWMgc3RvcmUuJ1xuICAgICAgICAgICAgICA6IHB1YmxpY1ZpZXcgPyAnVGhpcyBzdG9yZSBpcyBub3QgZm9sbG93aW5nIGFueSBzdG9yZXMgeWV0LicgOiAnWW91IGFyZSBub3QgZm9sbG93aW5nIGFueSBzdG9yZXMgeWV0Lid9XG4gICAgICAgICAgPC9wPn1cbiAgICAgICAgICB7IWxvYWRpbmcgJiYgIWVycm9yICYmIGRhdGEgJiYgZGF0YS5pdGVtcy5sZW5ndGggPiAwICYmIDx1bCBjbGFzc05hbWU9XCJzdG9yZS1mb2xsb3ctbGlzdFwiPlxuICAgICAgICAgICAge2RhdGEuaXRlbXMubWFwKChpdGVtLCBpbmRleCkgPT4gYWN0aXZlVGFiID09PSAnZm9sbG93ZXJzJyAmJiAnZGlzcGxheU5hbWUnIGluIGl0ZW1cbiAgICAgICAgICAgICAgPyA8bGkgY2xhc3NOYW1lPVwic3RvcmUtZm9sbG93LXJvd1wiIGtleT17YCR7aXRlbS5mb2xsb3dlZEF0fS0ke2luZGV4fWB9PlxuICAgICAgICAgICAgICAgICAgPHNwYW4gY2xhc3NOYW1lPVwic3RvcmUtZm9sbG93LWF2YXRhclwiIGFyaWEtaGlkZGVuPVwidHJ1ZVwiPntpbml0aWFscyhpdGVtLmRpc3BsYXlOYW1lKX08L3NwYW4+XG4gICAgICAgICAgICAgICAgICA8ZGl2IGNsYXNzTmFtZT1cInN0b3JlLWZvbGxvdy1kZXRhaWxcIj48c3Ryb25nPntpdGVtLmRpc3BsYXlOYW1lfTwvc3Ryb25nPlxuICAgICAgICAgICAgICAgICAgICA8c3Bhbj5Gb2xsb3dpbmcgc2luY2Uge2ZvbGxvd0RhdGUoaXRlbS5mb2xsb3dlZEF0KX08L3NwYW4+PC9kaXY+XG4gICAgICAgICAgICAgICAgPC9saT5cbiAgICAgICAgICAgICAgOiBhY3RpdmVUYWIgPT09ICdmb2xsb3dpbmcnICYmICdzdG9yZUlkJyBpbiBpdGVtXG4gICAgICAgICAgICAgICAgPyA8bGkgY2xhc3NOYW1lPVwic3RvcmUtZm9sbG93LXJvd1wiIGtleT17aXRlbS5zdG9yZUlkfT5cbiAgICAgICAgICAgICAgICAgICAgPHNwYW4gY2xhc3NOYW1lPVwic3RvcmUtZm9sbG93LWF2YXRhclwiIGFyaWEtaGlkZGVuPVwidHJ1ZVwiPjxJY29uIG5hbWU9XCJzdG9yZVwiIHNpemU9ezIwfSAvPjwvc3Bhbj5cbiAgICAgICAgICAgICAgICAgICAgPGRpdiBjbGFzc05hbWU9XCJzdG9yZS1mb2xsb3ctZGV0YWlsXCI+PExpbmsgdG89e2Avc3RvcmVzLyR7aXRlbS5zdG9yZUlkfWB9XG4gICAgICAgICAgICAgICAgICAgICAgb25DbGljaz17Y2xvc2VMaXN0fT57aXRlbS5zdG9yZU5hbWV9PC9MaW5rPlxuICAgICAgICAgICAgICAgICAgICAgIDxzcGFuPntpdGVtLmNhbXB1c05hbWV9IMK3IEZvbGxvd2luZyBzaW5jZSB7Zm9sbG93RGF0ZShpdGVtLmZvbGxvd2VkQXQpfTwvc3Bhbj48L2Rpdj5cbiAgICAgICAgICAgICAgICAgIDwvbGk+XG4gICAgICAgICAgICAgICAgOiBudWxsKX1cbiAgICAgICAgICA8L3VsPn1cbiAgICAgICAgPC9kaXY+XG4gICAgICAgIHtsaXN0T3BlbiAmJiAhZXJyb3IgJiYgZGF0YSAmJiBwYWdlcyA+IDEgJiYgPG5hdiBjbGFzc05hbWU9XCJzdG9yZS1mb2xsb3ctcGFnZXNcIiBhcmlhLWxhYmVsPXtgJHthY3RpdmVUYWJ9IHBhZ2VzYH0+XG4gICAgICAgICAgPGJ1dHRvbiB0eXBlPVwiYnV0dG9uXCIgY2xhc3NOYW1lPVwiYnRuIGdob3N0XCIgZGlzYWJsZWQ9e2xvYWRpbmcgfHwgZGF0YS5wYWdlIDw9IDF9XG4gICAgICAgICAgICBvbkNsaWNrPXsoKSA9PiBvblBhZ2UoZGF0YS5wYWdlIC0gMSl9PlByZXZpb3VzPC9idXR0b24+XG4gICAgICAgICAgPHNwYW4+UGFnZSB7ZGF0YS5wYWdlfSBvZiB7cGFnZXN9PC9zcGFuPlxuICAgICAgICAgIDxidXR0b24gdHlwZT1cImJ1dHRvblwiIGNsYXNzTmFtZT1cImJ0biBnaG9zdFwiIGRpc2FibGVkPXtsb2FkaW5nIHx8IGRhdGEucGFnZSA+PSBwYWdlc31cbiAgICAgICAgICAgIG9uQ2xpY2s9eygpID0+IG9uUGFnZShkYXRhLnBhZ2UgKyAxKX0+TmV4dDwvYnV0dG9uPlxuICAgICAgICA8L25hdj59XG4gICAgICA8L2Rpdj5cbiAgICA8L2RpYWxvZz5cbiAgPC8+O1xufVxuXG5leHBvcnQgZnVuY3Rpb24gU3RvcmVGb2xsb3dlcnMoeyBzdG9yZUlkLCBwdWJsaWNWaWV3ID0gZmFsc2UgfTogeyBzdG9yZUlkOiBudW1iZXI7IHB1YmxpY1ZpZXc/OiBib29sZWFuIH0pIHtcbiAgY29uc3QgW2FjdGl2ZVRhYiwgc2V0QWN0aXZlVGFiXSA9IHVzZVN0YXRlPEZvbGxvd1RhYj4oJ2ZvbGxvd2VycycpO1xuICBjb25zdCBbcGFnZSwgc2V0UGFnZV0gPSB1c2VTdGF0ZSgxKTtcbiAgY29uc3QgW3JldHJ5S2V5LCBzZXRSZXRyeUtleV0gPSB1c2VTdGF0ZSgwKTtcbiAgY29uc3QgW2RhdGEsIHNldERhdGFdID0gdXNlU3RhdGU8U3RvcmVGb2xsb3dQYWdlIHwgbnVsbD4obnVsbCk7XG4gIGNvbnN0IFtjb3VudHMsIHNldENvdW50c10gPSB1c2VTdGF0ZTx7IGZvbGxvd2VyczogbnVtYmVyOyBmb2xsb3dpbmc6IG51bWJlciB9IHwgbnVsbD4obnVsbCk7XG4gIGNvbnN0IFtlcnJvciwgc2V0RXJyb3JdID0gdXNlU3RhdGUoJycpO1xuICBjb25zdCBbbG9hZGluZywgc2V0TG9hZGluZ10gPSB1c2VTdGF0ZSh0cnVlKTtcbiAgY29uc3QgW2RpYWxvZ09wZW4sIHNldERpYWxvZ09wZW5dID0gdXNlU3RhdGUoZmFsc2UpO1xuICB1c2VGb3JlZ3JvdW5kUmVmcmVzaCgoKSA9PiB7XG4gICAgaWYgKCFkaWFsb2dPcGVuKSBzZXRSZXRyeUtleSh2YWx1ZSA9PiB2YWx1ZSArIDEpO1xuICB9LCA2MF8wMDApO1xuICB1c2VFZmZlY3QoKCkgPT4ge1xuICAgIGNvbnN0IHJlZnJlc2ggPSAoKSA9PiBzZXRSZXRyeUtleSh2YWx1ZSA9PiB2YWx1ZSArIDEpO1xuICAgIHdpbmRvdy5hZGRFdmVudExpc3RlbmVyKCdzdG9yZS1mb2xsb3ctY2hhbmdlZCcsIHJlZnJlc2gpO1xuICAgIHJldHVybiAoKSA9PiB3aW5kb3cucmVtb3ZlRXZlbnRMaXN0ZW5lcignc3RvcmUtZm9sbG93LWNoYW5nZWQnLCByZWZyZXNoKTtcbiAgfSwgW10pO1xuICB1c2VFZmZlY3QoKCkgPT4ge1xuICAgIGxldCBjdXJyZW50ID0gdHJ1ZTtcbiAgICBzZXRMb2FkaW5nKHRydWUpOyBzZXRFcnJvcignJyk7IHNldERhdGEobnVsbCk7XG4gICAgY29uc3QgcmVzb3VyY2UgPSBwdWJsaWNWaWV3ID8gYC9zZWxsZXItcHJvZmlsZXMvJHtzdG9yZUlkfS9jb25uZWN0aW9uc2AgOiAnL3N0b3JlLWZvbGxvd3MvbWluZSc7XG4gICAgY29uc3QgcXVlcnkgPSBkaWFsb2dPcGVuID8gYD92aWV3PSR7YWN0aXZlVGFifSZwYWdlPSR7cGFnZX1gIDogJz9jb3VudHNPbmx5PXRydWUnO1xuICAgIGFwaTxTdG9yZUZvbGxvd1BhZ2UgfCB7IGZvbGxvd2VyQ291bnQ6IG51bWJlcjsgZm9sbG93aW5nQ291bnQ6IG51bWJlciB9PihyZXNvdXJjZSArIHF1ZXJ5KVxuICAgICAgLnRoZW4ocmVzdWx0ID0+IHtcbiAgICAgICAgaWYgKCFjdXJyZW50KSByZXR1cm47XG4gICAgICAgIGlmICghZGlhbG9nT3Blbikge1xuICAgICAgICAgIGlmICh0eXBlb2YgcmVzdWx0LmZvbGxvd2VyQ291bnQgIT09ICdudW1iZXInIHx8IHR5cGVvZiByZXN1bHQuZm9sbG93aW5nQ291bnQgIT09ICdudW1iZXInKVxuICAgICAgICAgICAgdGhyb3cgbmV3IEVycm9yKCdTdG9yZSBjb25uZWN0aW9ucyBhcmUgbm90IGF2YWlsYWJsZSB5ZXQuJyk7XG4gICAgICAgICAgc2V0Q291bnRzKHsgZm9sbG93ZXJzOiByZXN1bHQuZm9sbG93ZXJDb3VudCwgZm9sbG93aW5nOiByZXN1bHQuZm9sbG93aW5nQ291bnQgfSk7XG4gICAgICAgICAgcmV0dXJuO1xuICAgICAgICB9XG4gICAgICAgIGlmICghKCdpdGVtcycgaW4gcmVzdWx0KSkgdGhyb3cgbmV3IEVycm9yKCdTdG9yZSBjb25uZWN0aW9ucyBhcmUgbm90IGF2YWlsYWJsZSB5ZXQuJyk7XG4gICAgICAgIGlmICh0eXBlb2YgcmVzdWx0LmZvbGxvd2luZ0NvdW50ICE9PSAnbnVtYmVyJylcbiAgICAgICAgICB0aHJvdyBuZXcgRXJyb3IoJ1N0b3JlIGNvbm5lY3Rpb25zIGFyZSBub3QgYXZhaWxhYmxlIHlldC4gUGxlYXNlIHRyeSBhZ2FpbiBsYXRlci4nKTtcbiAgICAgICAgaWYgKGFjdGl2ZVRhYiA9PT0gJ2ZvbGxvd2luZycgJiYgKHR5cGVvZiByZXN1bHQuZm9sbG93ZXJDb3VudCAhPT0gJ251bWJlcicgfHxcbiAgICAgICAgICByZXN1bHQuaXRlbXMuc29tZShpdGVtID0+ICEoJ3N0b3JlSWQnIGluIGl0ZW0pKSkpXG4gICAgICAgICAgdGhyb3cgbmV3IEVycm9yKCdGb2xsb3dpbmcgaXMgbm90IGF2YWlsYWJsZSB5ZXQuIFBsZWFzZSB0cnkgYWdhaW4gbGF0ZXIuJyk7XG4gICAgICAgIHNldERhdGEocmVzdWx0KTtcbiAgICAgICAgc2V0Q291bnRzKGFjdGl2ZVRhYiA9PT0gJ2ZvbGxvd2VycydcbiAgICAgICAgICA/IHsgZm9sbG93ZXJzOiByZXN1bHQudG90YWwsIGZvbGxvd2luZzogcmVzdWx0LmZvbGxvd2luZ0NvdW50IH1cbiAgICAgICAgICA6IHsgZm9sbG93ZXJzOiByZXN1bHQuZm9sbG93ZXJDb3VudCEsIGZvbGxvd2luZzogcmVzdWx0LnRvdGFsIH0pO1xuICAgICAgfSlcbiAgICAgIC5jYXRjaChjYXVzZSA9PiB7IGlmIChjdXJyZW50KSBzZXRFcnJvcihleHBsYWluKGNhdXNlKSk7IH0pXG4gICAgICAuZmluYWxseSgoKSA9PiB7IGlmIChjdXJyZW50KSBzZXRMb2FkaW5nKGZhbHNlKTsgfSk7XG4gICAgcmV0dXJuICgpID0+IHsgY3VycmVudCA9IGZhbHNlOyB9O1xuICB9LCBbc3RvcmVJZCwgcHVibGljVmlldywgYWN0aXZlVGFiLCBwYWdlLCByZXRyeUtleSwgZGlhbG9nT3Blbl0pO1xuICBjb25zdCBjaGFuZ2VUYWIgPSAodGFiOiBGb2xsb3dUYWIpID0+IHsgc2V0QWN0aXZlVGFiKHRhYik7IHNldFBhZ2UoMSk7IH07XG4gIHJldHVybiA8U3RvcmVGb2xsb3dlcnNWaWV3IGFjdGl2ZVRhYj17YWN0aXZlVGFifSBkYXRhPXtkYXRhfSBjb3VudHM9e2NvdW50c30gbG9hZGluZz17bG9hZGluZ30gZXJyb3I9e2Vycm9yfVxuICAgIG9uVGFiPXtjaGFuZ2VUYWJ9IG9uUGFnZT17c2V0UGFnZX0gb25SZXRyeT17KCkgPT4gc2V0UmV0cnlLZXkodmFsdWUgPT4gdmFsdWUgKyAxKX0gb25PcGVuQ2hhbmdlPXtzZXREaWFsb2dPcGVufSBwdWJsaWNWaWV3PXtwdWJsaWNWaWV3fSAvPjtcbn1cbiJdLCJmaWxlIjoiQzovVXNlcnMvYWNlci9Eb3dubG9hZHMvY3BzdS1zdHVkZW50LW1hcmtldHBsYWNlL2FwcHMvd2ViL3NyYy9zdG9yZS1mb2xsb3dlcnMudHN4In0=

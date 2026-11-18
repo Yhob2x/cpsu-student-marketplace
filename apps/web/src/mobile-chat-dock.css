@@ -1,0 +1,25 @@
+/* Mobile: the persistent Chat shortcut occupies a reserved dock slot.
+   Its floating panel still overlays the page only when the student opens it. */
+@media (max-width: 860px) {
+  body:has(.floating-chat) .tabbar {
+    padding-right: calc(72px + env(safe-area-inset-right, 0px));
+  }
+  .floating-chat {
+    right: max(10px, env(safe-area-inset-right, 0px));
+    bottom: calc(8px + env(safe-area-inset-bottom, 0px));
+    width: 52px;
+    height: 52px;
+    min-width: 52px;
+    min-height: 52px;
+    border-radius: 15px 15px 5px 15px;
+  }
+  .floating-chat-panel {
+    bottom: calc(80px + env(safe-area-inset-bottom, 0px));
+    height: min(520px, calc(100dvh - 92px - env(safe-area-inset-bottom, 0px)));
+  }
+}
+@media (min-width: 701px) and (max-width: 860px) {
+  .floating-chat {
+    right: max(calc(4vw + 10px), calc((100vw - 720px) / 2 + 10px));
+  }
+}

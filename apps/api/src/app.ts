@@ -12,10 +12,12 @@ import sellerRoutes from './routes/seller.js';
 import inquiryRoutes from './routes/inquiries.js';
 import transactionRoutes from './routes/transactions.js';
 import adminRoutes from './routes/admin.js';
+import homePageAdminRoutes from './routes/home-page-admin.js';
+import homePagePublicRoutes from './routes/home-page-public.js';
 import reviewerRoutes from './routes/reviewers.js';
 import accountRoutes from './routes/account.js';
 import pushRoutes from './routes/push.js';
-import { makeStoreFollowRouter } from './store-follows.js';
+import { makePublicStoreConnectionsRouter, makeStoreFollowRouter } from './store-follows.js';
 import { prisma } from './db.js';
 
 export function createApp() {
@@ -28,12 +30,20 @@ export function createApp() {
   app.use(cors({ origin: origins, credentials: true }));
   app.use(express.json({ limit: '100kb' }));
   app.use(cookieParser());
-  app.use(rateLimit({ windowMs: 60_000, limit: 300 }));
+  // Browsing and background reads must not starve logins or writes on a shared campus IP.
+  // Keep both buckets bounded: 300 mutations/min and 900 reads/min per IP.
+  // Health is inexpensive and must stay usable when a client hits either budget.
+  app.use(rateLimit({ windowMs: 60_000, limit: 300, skip: req => req.method === 'GET' }));
+  app.use(rateLimit({ windowMs: 60_000, limit: 900,
+    skip: req => req.method !== 'GET' || req.path === '/health',
+  }));
   app.use(authenticate);
   app.get('/health', (_req, res) => res.json({ ok: true }));
   const v1 = express.Router();
   v1.use('/auth', rateLimit({ windowMs: 15 * 60_000, limit: env.NODE_ENV === 'production' ? 30 : 300 }), authRoutes);
   v1.use(publicRoutes);
+  v1.use(makePublicStoreConnectionsRouter(prisma));
+  v1.use('/home-page', homePagePublicRoutes);
   v1.use('/store-follows', makeStoreFollowRouter(prisma));
   v1.use(accountRoutes);
   v1.use('/push', pushRoutes);
@@ -41,6 +51,7 @@ export function createApp() {
   v1.use('/inquiries', inquiryRoutes);
   v1.use('/transactions', transactionRoutes);
   v1.use('/admin/reviewers', reviewerRoutes);
+  v1.use('/admin/content/home-page', homePageAdminRoutes);
   v1.use('/admin', adminRoutes);
   app.use('/api/v1', v1);
   app.use(errorHandler);

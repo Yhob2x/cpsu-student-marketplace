@@ -2,9 +2,14 @@ import { FormEvent, useEffect, useRef, useState } from 'react';
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { api, explain, peso, setToken, timeAgo } from './api';
 import { useMe } from './main';
+import { assessListingReadability } from './listing-quality';
+import { categoriesForKind, categoryMatchesKind, type ListingKind } from './listing-categories';
 import { useForegroundRefresh } from './foreground-refresh';
 import { ListingCard, Listing } from './pages-public';
 import { ConversationListingCard } from './conversation-listing-card';
+import { StoreFollowers } from './store-followers';
+import { SellerAvatar } from './seller-avatar';
+import './storefront.css';
 import { Icon } from './icons';
 import { MAX_LISTING_PHOTOS, selectedPhotosError, uploadListingPhotos } from './listing-photo-uploads';
 import { coverFirst } from './photo-cover-order';
@@ -193,12 +198,16 @@ function StoreListingPhoto({ media, title, type }: { media: { id: number; positi
   </div>;
 }
 
-type RepeatListing = { id: number; categoryId: number; title: string; description: string; price: number; priceBasis?: string | null; condition?: string | null };
+type RepeatListing = { id: number; type: ListingKind; categoryId: number; title: string; description: string; price: number; priceBasis?: string | null; condition?: string | null };
 
 export function Dashboard() {
   const { me, reload } = useMe(); const [listings, setListings] = useState<any[]>([]); const [cats, setCats] = useState<any[]>([]); const [err, setErr] = useState(''); const [ok, setOk] = useState('');
+  const [ownerStore, setOwnerStore] = useState<{ storeName: string; avatarUrl?: string | null } | null>(null);
   const [pending, setPending] = useState<number | null>(null); const [editing, setEditing] = useState<any | null>(null);
   const [listingLoadError, setListingLoadError] = useState('');
+  const [categoriesLoading, setCategoriesLoading] = useState(true);
+  const [categoriesError, setCategoriesError] = useState('');
+  const [newListingKind, setNewListingKind] = useState<ListingKind | ''>('');
   const [newCategoryId, setNewCategoryId] = useState('');
   const [editCategoryId, setEditCategoryId] = useState('');
   const [listingsLoading, setListingsLoading] = useState(true);
@@ -216,21 +225,38 @@ export function Dashboard() {
   const [listingPage, setListingPage] = useState(1);
   const [repeatListing, setRepeatListing] = useState<RepeatListing | null>(null);
   const [createDirty, setCreateDirty] = useState(false);
+  const [editDirty, setEditDirty] = useState(false);
+  const listingRequest = useRef(0);
   const createInFlight = useRef(false);
   const editInFlight = useRef(false);
   const listingsHeading = useRef<HTMLHeadingElement>(null);
   const createDetails = useRef<HTMLDetailsElement>(null);
   const createTitle = useRef<HTMLInputElement>(null);
   const load = (quiet = false) => {
+    const request = ++listingRequest.current;
     if (!quiet) setListingsLoading(true);
     return api('/seller/listings')
-      .then(r => { setListings(r); setListingLoadError(''); })
-      .catch(x => setListingLoadError(explain(x)))
-      .finally(() => { if (!quiet) setListingsLoading(false); });
+      .then(r => { if (request === listingRequest.current) { setListings(r); setListingLoadError(''); } })
+      .catch(x => { if (request === listingRequest.current) setListingLoadError(explain(x)); })
+      .finally(() => { if (request === listingRequest.current) setListingsLoading(false); });
+  };
+  const loadCategories = () => {
+    setCategoriesLoading(true); setCategoriesError('');
+    return api<any[]>('/categories').then(result => { setCats(result); setCategoriesError(''); })
+      .catch(x => { setCats([]); setCategoriesError(explain(x)); })
+      .finally(() => setCategoriesLoading(false));
   };
   useEffect(() => {
     if (me?.storeId) void load();
-    api('/categories').then(setCats).catch(x => setErr(explain(x)));
+    void loadCategories();
+  }, [me?.storeId]);
+  useEffect(() => {
+    let active = true;
+    setOwnerStore(null);
+    if (me?.storeId) void api<{ storeName: string; avatarUrl?: string | null }>('/seller/store')
+      .then(store => { if (active) setOwnerStore(store); })
+      .catch(() => { /* The management controls remain available if identity details fail to load. */ });
+    return () => { active = false; };
   }, [me?.storeId]);
   // Review decisions and availability changes appear in My Store with no page refresh.
   // Quiet refreshes preserve the seller's open editor and unsaved form input.
@@ -254,15 +280,25 @@ export function Dashboard() {
   const sellAgain = (listing: RepeatListing) => {
     if (createDirty && !window.confirm('Replace the unsaved details in your new listing form?')) return;
     setRepeatListing(listing);
+    setNewListingKind(listing.type);
     setNewCategoryId(String(listing.categoryId));
     setNewFiles([]); setNewCoverIndex(0); setNewSelectionError('');
     setCreateDirty(false);
     if (createDetails.current) createDetails.current.open = true;
     requestAnimationFrame(() => createTitle.current?.focus());
   };
+  const openListingComposer = () => {
+    if (!createDetails.current) return;
+    createDetails.current.open = true;
+    requestAnimationFrame(() => {
+      createDetails.current?.scrollIntoView({ block: 'start' });
+      createTitle.current?.focus({ preventScroll: true });
+    });
+  };
   const startBlankListing = () => {
     if (createDirty && !window.confirm('Clear the unsaved details in your new listing form?')) return;
     setRepeatListing(null);
+    setNewListingKind('');
     setNewCategoryId('');
     setNewFiles([]); setNewCoverIndex(0); setNewSelectionError('');
     setCreateDirty(false);
@@ -282,7 +318,10 @@ export function Dashboard() {
     const cat = cats.find(c => c.id === Number(d.categoryId));
     const files = coverFirst(newFiles, newCoverIndex);
     const invalidPhotos = selectedPhotosError(files);
-    if (invalidPhotos || !cat) { setErr(invalidPhotos || 'Choose a valid category.'); return; }
+    if (invalidPhotos || !categoryMatchesKind(cat, newListingKind)) {
+      setErr(invalidPhotos || (!newListingKind ? 'Choose Product or Service first.' : 'Choose a category for the selected listing type.'));
+      return;
+    }
     createInFlight.current = true;
     setCreatingListing(true); setErr(''); setOk('');
     try {
@@ -297,7 +336,7 @@ export function Dashboard() {
       }
       setPhotoProgress('');
       form.reset(); setNewFiles([]); setNewCoverIndex(0); setNewSelectionError('');
-      setNewCategoryId(''); setRepeatListing(null); setCreateDirty(false);
+      setNewCategoryId(''); setNewListingKind(''); setRepeatListing(null); setCreateDirty(false);
       await load();
       if (uploadFailure) {
         setErr(`Draft "${d.title}" was saved. ${uploadFailure} Use Edit on that draft to select only the photos that did not upload. Do not create another draft.`);
@@ -360,20 +399,63 @@ export function Dashboard() {
         catch (x) { coverFailure = `Cover photo was not changed. ${explain(x)}`; }
       }
       setPhotoProgress('');
-      setEditing(null); setEditFiles([]); setEditCover(null); setEditSelectionError('');
+      setEditing(null); setEditFiles([]); setEditCover(null); setEditSelectionError(''); setEditDirty(false);
       await load();
       if (uploadFailure || coverFailure) setErr(`Listing details were saved. ${uploadFailure ? `${uploadFailure} Select Edit to retry only the remaining photos. ` : ''}${coverFailure}`.trim());
       else setOk(files.length ? `${files.length} ${files.length === 1 ? 'photo' : 'photos'} saved. Submit the listing for review again before it appears publicly.` : 'Listing updated.');
     } catch (x) { setErr(explain(x)); }
     finally { editInFlight.current = false; setSavingEdit(false); setPhotoProgress(''); }
   };
+  const closeEditor = (restoreFocus = true) => {
+    if (editDirty && !window.confirm('Discard unsaved changes to this listing?')) return false;
+    setEditing(null); setEditFiles([]); setEditCover(null); setEditSelectionError(''); setEditDirty(false);
+    if (restoreFocus) requestAnimationFrame(() => document.getElementById(`store-listing-${editing?.id}`)?.focus());
+    return true;
+  };
+  const openEditor = (listing: any) => {
+    if (editing && !closeEditor(false)) return;
+    setEditing(listing); setEditDirty(false);
+    setEditCategoryId(String(listing.categoryId)); setEditFiles([]);
+    setEditCover(listing.media.length ? { source: 'existing', id: listing.media.slice().sort((a: any, b: any) => a.position - b.position || a.id - b.id)[0].id } : null);
+    setEditSelectionError(''); setErr(''); setOk('');
+  };
+  const campus = me.affiliations.find(a => a.status === 'verified') ?? me.affiliations[0];
   return <div className="my-store">
-    <div className="page-head">
-      <div><h1>My store</h1></div>
-      {me.storeId && <div className="row store-header-actions"><Link className="btn ghost" to="/profile#store-profile">Store profile</Link><Link className="btn ghost" to={`/stores/${me.storeId}`}>View public store</Link></div>}
-    </div>
-    <div className="panel store-affiliation"><h2 className="panel-heading-small">CPSU affiliation</h2>{me.affiliations.map(a => <p key={a.id}>{a.campus.name}: <span className={`status ${a.status}`}>{a.status}</span></p>)}
-      {!verified && <p className="muted">A campus reviewer must verify you before you can sell.</p>}</div>
+    {me.storeId ? <section className="storefront-identity store-dashboard-identity" aria-labelledby="store-dashboard-name">
+      <div className="storefront-banner" aria-hidden="true"><Icon name="store" size={32} /></div>
+      <div className="storefront-identity-content">
+        <div className="storefront-primary">
+          <SellerAvatar name={ownerStore?.storeName ?? me.displayName} src={ownerStore?.avatarUrl} size="large" />
+          <div className="storefront-primary-text">
+            <h1 id="store-dashboard-name">{ownerStore?.storeName ?? 'My store'}</h1>
+            {campus && <p className="storefront-campus"><Icon name="pin" size={16} /> {campus.campus.name}</p>}
+            <span className="storefront-affiliation"><Icon name="shield" size={14} /> {verified ? 'Verified CPSU community member' : 'Verification pending'}</span>
+          </div>
+        </div>
+        <div className="storefront-owner-actions store-dashboard-actions">
+          <button type="button" className="btn store-new-listing-action" onClick={openListingComposer}>
+            <Icon name="plus" size={18} /> {repeatListing ? 'Continue draft' : 'New listing'}
+          </button>
+          <Link className="btn ghost" to={`/stores/${me.storeId}`}>View public store</Link>
+          <Link className="btn ghost" to="/profile#store-profile">Store settings</Link>
+        </div>
+      </div>
+      <div className="storefront-facts">
+        <div><span>Your listings</span><strong>{listingsLoading || listingLoadError ? '—' : visibleListings.length.toLocaleString('en-PH')}</strong></div>
+        <StoreFollowers key={me.id} storeId={me.storeId} />
+        {campus && <div><span>Campus</span><strong>{campus.campus.name}</strong></div>}
+      </div>
+    </section> : <div className="page-head store-workspace-head">
+      <div className="store-workspace-title">
+        <h1>My store</h1>
+        <p className="muted">Manage listings and see who follows your store.</p>
+      </div>
+    </div>}
+    {!me.storeId && <div className="panel store-affiliation">
+      <h2 className="panel-heading-small">CPSU affiliation</h2>
+      {me.affiliations.map(a => <p key={a.id}>{a.campus.name} <span className={`status ${a.status}`}>{a.status}</span></p>)}
+      {!verified && <p className="muted">A campus reviewer must verify you before you can sell.</p>}
+    </div>}
     {err && <p className="err" role="alert">{err}</p>}{ok && <p role="status">{ok}</p>}
     {verified && !me.storeId && <form className="panel stack" onSubmit={createStore}><h2>Open your store</h2>
       <label className="field">Store name<input name="storeName" placeholder="Name students will see" required minLength={2} maxLength={80} /></label>
@@ -381,24 +463,49 @@ export function Dashboard() {
       <button className="btn">Open store</button></form>}
     {me.storeId && <>
       <details className="panel store-create" ref={createDetails}><summary><span>{repeatListing ? 'Sell again' : 'New listing'}</span><span className="store-create-hint">Save a draft</span></summary>
-      <form key={repeatListing?.id ?? 'new'} className="stack seller-composer" onChange={() => setCreateDirty(true)} onSubmit={createListing}><p className="muted">{repeatListing ? 'Review this new draft. Your sold listing stays sold.' : 'Save a draft, then submit it for review.'}</p>
+      <form key={repeatListing?.id ?? 'new'} className="stack seller-composer listing-composer" onChange={() => setCreateDirty(true)} onSubmit={createListing}>
+        <div className="listing-composer-intro"><span>YOUR NEXT LISTING</span><p>{repeatListing ? 'Create a fresh draft from this sold listing. The original stays sold.' : 'Add the details, save your draft, then submit it for campus review.'}</p></div>
+        {categoriesError && <p className="err" role="alert">Could not load categories: {categoriesError} <button type="button" className="btn ghost" onClick={() => { void loadCategories(); }}>Retry categories</button></p>}
+        {categoriesLoading && <p className="muted" role="status">Loading categories…</p>}
         {repeatListing && <button type="button" className="btn ghost store-start-blank" onClick={startBlankListing}>Start blank instead</button>}
-        <label className="field">Title<input ref={createTitle} name="title" placeholder="What are you offering?" defaultValue={repeatListing?.title ?? ''} required minLength={3} maxLength={120} /></label>
+        <fieldset className="listing-kind-field" disabled={creatingListing}>
+          <legend>What are you listing?</legend>
+          <p className="listing-kind-hint">Choose one to see the right categories.</p>
+          <div className="listing-kind-options">
+            <label className={`listing-kind-option ${newListingKind === 'physical_product' ? 'is-selected' : ''}`}>
+              <input type="radio" name="listingKind" value="physical_product" required checked={newListingKind === 'physical_product'} onChange={() => { setNewListingKind('physical_product'); setNewCategoryId(''); }} />
+              <Icon name="package" size={22} /><span><strong>Product</strong><small>Items, books, food and supplies</small></span>
+            </label>
+            <label className={`listing-kind-option ${newListingKind === 'service' ? 'is-selected' : ''}`}>
+              <input type="radio" name="listingKind" value="service" required checked={newListingKind === 'service'} onChange={() => { setNewListingKind('service'); setNewCategoryId(''); }} />
+              <Icon name="wrench" size={22} /><span><strong>Service</strong><small>Skills, lessons and creative work</small></span>
+            </label>
+          </div>
+        </fieldset>
+        <label className="field">Title<input ref={createTitle} name="title" placeholder={newListingKind === 'service' ? 'e.g. Portrait photography for graduation' : 'e.g. Used Calculus textbook, 2nd edition'} defaultValue={repeatListing?.title ?? ''} required minLength={3} maxLength={120} /></label>
+        <p className="muted listing-editor-guidance">Write the actual item or service name, not just “Product” or “Service”. A clear title and useful description help students decide.</p>
         <label className="field">Category
-          <select name="categoryId" required value={newCategoryId} onChange={e => setNewCategoryId(e.target.value)}><option value="" disabled>Select a category</option>{cats.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}</select>
+          <select name="categoryId" required disabled={!newListingKind || categoriesLoading || Boolean(categoriesError) || creatingListing} value={newCategoryId} onChange={e => setNewCategoryId(e.target.value)}>
+            <option value="" disabled>{!newListingKind ? 'Choose Product or Service first' : `Select a ${newListingKind === 'service' ? 'service' : 'product'} category`}</option>
+            {categoriesForKind(cats, newListingKind).map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+          </select>
         </label>
-        {cats.find(c => c.id === Number(newCategoryId))?.listingType === 'physical_product' && <label className="field">Product condition<select name="condition" defaultValue={repeatListing?.condition ?? ''} required><option value="" disabled>Select condition</option><option value="new">New</option><option value="like_new">Like new</option><option value="good">Good</option><option value="fair">Fair</option></select></label>}
-        <label className="field">Description<textarea name="description" placeholder="Describe it: condition, size, what is included" defaultValue={repeatListing?.description ?? ''} required minLength={10} maxLength={3000} /></label>
+        {newListingKind && !categoriesLoading && !categoriesError && categoriesForKind(cats, newListingKind).length === 0 && <p className="err" role="alert">No {newListingKind === 'service' ? 'service' : 'product'} categories are available. Try reloading categories.</p>}
+        {newListingKind === 'physical_product' && <label className="field">Product condition<select name="condition" defaultValue={repeatListing?.condition ?? ''} required disabled={creatingListing}><option value="" disabled>Select condition</option><option value="new">New</option><option value="like_new">Like new</option><option value="good">Good</option><option value="fair">Fair</option></select></label>}
+        <label className="field">Description<textarea name="description" placeholder={newListingKind === 'service' ? 'Explain what you offer, what is included and when you are available' : 'Describe the item, its condition, size and what is included'} defaultValue={repeatListing?.description ?? ''} required minLength={10} maxLength={3000} rows={4} /></label>
         <div className="row">
           <label className="field">Price (PHP)<input name="price" type="number" min="1" max="1000000" step="1" defaultValue={repeatListing ? Number(repeatListing.price) : ''} required /></label>
-          <label className="field">Price basis (optional)<input name="priceBasis" placeholder="Per item or per hour" defaultValue={repeatListing?.priceBasis ?? ''} maxLength={40} /></label>
+          <label className="field">Price basis (optional)<input name="priceBasis" placeholder={newListingKind === 'service' ? 'e.g. Per hour or per project' : 'e.g. Per item or per set'} defaultValue={repeatListing?.priceBasis ?? ''} maxLength={40} /></label>
         </div>
         <label className="field">Photos (select up to {MAX_LISTING_PHOTOS}, JPEG, PNG or WebP, 3 MB each) <input name="image" type="file" multiple accept="image/jpeg,image/png,image/webp" disabled={creatingListing} aria-describedby="new-photo-policy" onChange={e => { const photos = Array.from(e.currentTarget.files ?? []); setNewFiles(photos); setNewCoverIndex(0); setNewSelectionError(selectedPhotosError(photos)); }} /></label>
         <p className="muted" role="status">{newFiles.length} of {MAX_LISTING_PHOTOS} photos selected</p>{newSelectionError && <p className="err" role="alert">{newSelectionError}</p>}
         {!newSelectionError && <SelectedPhotoPreviews files={newFiles} coverIndex={newCoverIndex} onCoverChange={setNewCoverIndex} disabled={creatingListing} />}
         {creatingListing && photoProgress && <p role="status">{photoProgress}</p>}
-        <p className="muted" id="new-photo-policy">Add 1–{MAX_LISTING_PHOTOS} photos to submit; drafts need none. Choose the cover before saving; it uploads first. No pornography, sexual imagery, graphic violence or other prohibited content. A campus reviewer checks photos before publication.</p>
-        <button className="btn" disabled={creatingListing}>{creatingListing ? 'Saving draft…' : 'Save draft'}</button></form></details>
+        <div className="listing-photo-policy" id="new-photo-policy">
+          <p><strong>Drafts do not need photos.</strong> Add 1–{MAX_LISTING_PHOTOS} photos before submitting for review. Select your cover before saving; it uploads first.</p>
+          <p><Icon name="shield" size={17} /> No pornography, sexual imagery, graphic violence or other prohibited content. Campus reviewers check photos before publication.</p>
+        </div>
+        <div className="listing-composer-footer"><p>Saving creates a private draft, not a public listing.</p><button className="btn" disabled={creatingListing || categoriesLoading || Boolean(categoriesError) || (newListingKind !== '' && categoriesForKind(cats, newListingKind).length === 0)}>{creatingListing ? 'Saving draft…' : 'Save draft'}</button></div></form></details>
       <div className="store-listings-head"><div><h2 ref={listingsHeading} tabIndex={-1}>Your listings</h2></div>{!listingsLoading && !listingLoadError && <span className="store-listing-count">{visibleListings.length} {visibleListings.length === 1 ? 'listing' : 'listings'}</span>}</div>
       {listingsLoading && <p className="muted" role="status">Loading your listings…</p>}
       {listingLoadError && <p className="err" role="alert">Could not load your listings: {listingLoadError} <button type="button" className="btn ghost" onClick={() => { void load(); }}>Retry</button></p>}
@@ -411,10 +518,15 @@ export function Dashboard() {
         {matchingListings.length === 0 ? <div className="panel store-empty"><h3>No matching listings</h3><p className="muted">Try another title or status to find your listing.</p><button type="button" className="btn ghost" onClick={() => { setListingQuery(''); setListingStatus('all'); setListingPage(1); }}>Clear filters</button></div> : <p className="store-listing-range" role="status">Showing {(currentPage - 1) * pageSize + 1}–{Math.min(currentPage * pageSize, matchingListings.length)} of {matchingListings.length} {matchingListings.length === 1 ? 'listing' : 'listings'}</p>}
       </>}
       {!listingsLoading && !listingLoadError && pageListings.length > 0 && <div className="store-card-grid">{pageListings.map(l => editing?.id === l.id
-        ? <form key={l.id} className="panel stack store-edit-form" onSubmit={saveEdit}><h2>Edit listing</h2>
+        ? <form key={l.id} className="panel stack store-edit-form" onChange={() => setEditDirty(true)} onSubmit={saveEdit}><h2>Edit listing</h2>
+            {categoriesError && <p className="err" role="alert">Could not load categories: {categoriesError} <button type="button" className="btn ghost" onClick={() => { void loadCategories(); }}>Retry categories</button></p>}
             <label className="field">Title<input name="title" defaultValue={l.title} required minLength={3} maxLength={120} /></label>
+            {assessListingReadability(l.title, l.description).length > 0 && <div className="listing-editor-guidance" role="note">
+              <strong>Improve this listing before resubmitting:</strong>
+              <ul>{assessListingReadability(l.title, l.description).map(issue => <li key={issue}>{issue}</li>)}</ul>
+            </div>}
             <label className="field">Category
-              <select name="categoryId" required value={editCategoryId} onChange={e => setEditCategoryId(e.target.value)}>{cats.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}</select>
+              <select name="categoryId" required disabled={categoriesLoading || Boolean(categoriesError)} value={editCategoryId} onChange={e => setEditCategoryId(e.target.value)}>{cats.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}</select>
             </label>
             {cats.find(c => c.id === Number((editCategoryId || l.categoryId)))?.listingType === 'physical_product' && <label className="field">Product condition<select name="condition" defaultValue={l.condition ?? ''} required><option value="" disabled>Select condition</option><option value="new">New</option><option value="like_new">Like new</option><option value="good">Good</option><option value="fair">Fair</option></select></label>}
             <label className="field">Description<textarea name="description" defaultValue={l.description} required minLength={10} maxLength={3000} /></label>
@@ -424,7 +536,7 @@ export function Dashboard() {
             </div>
             <p className="muted">{l.media.length} {l.media.length === 1 ? 'photo' : 'photos'} · {MAX_LISTING_PHOTOS} maximum{l.media.length >= MAX_LISTING_PHOTOS && ' (limit reached)'}</p>
             <ExistingPhotoChoices media={l.media} coverMediaId={editCover?.source === 'existing' ? editCover.id : null}
-              onCoverChange={id => setEditCover({ source: 'existing', id })} disabled={savingEdit} />
+              onCoverChange={id => { setEditCover({ source: 'existing', id }); setEditDirty(true); }} disabled={savingEdit} />
             <label className="field">Add photos (JPEG, PNG or WebP, 3 MB each) <input name="image" type="file" multiple accept="image/jpeg,image/png,image/webp" disabled={savingEdit || l.media.length >= MAX_LISTING_PHOTOS} aria-describedby="edit-photo-policy" onChange={e => {
               const photos = Array.from(e.currentTarget.files ?? []);
               setEditFiles(photos); setEditSelectionError(selectedPhotosError(photos, l.media.length));
@@ -434,13 +546,13 @@ export function Dashboard() {
             }} /></label>
              <p className="muted" role="status">{editFiles.length} new {editFiles.length === 1 ? 'photo' : 'photos'} selected · {Math.max(0, MAX_LISTING_PHOTOS - l.media.length)} remaining</p>{editSelectionError && <p className="err" role="alert">{editSelectionError}</p>}
             {!editSelectionError && <SelectedPhotoPreviews files={editFiles} coverIndex={editCover?.source === 'new' ? editCover.index : -1}
-              onCoverChange={index => setEditCover({ source: 'new', index })} disabled={savingEdit} />}
+              onCoverChange={index => { setEditCover({ source: 'new', index }); setEditDirty(true); }} disabled={savingEdit} />}
             {savingEdit && photoProgress && <p role="status">{photoProgress}</p>}
             <p className="muted" id="edit-photo-policy">Choose a cover from existing or new photos. Explicit or harmful images are prohibited. Adding photos to a published listing sends it back for review.</p>
-            <div className="row"><button className="btn" disabled={savingEdit}>{savingEdit ? 'Saving…' : 'Save changes'}</button><button type="button" className="btn ghost" disabled={savingEdit} onClick={() => { setEditing(null); setEditFiles([]); setEditCover(null); }}>Cancel</button></div></form>
-        : <article key={l.id} className="panel store-listing"><StoreListingPhoto media={l.media} title={l.title} type={l.type} /><div className="store-listing-main"><div className="store-listing-title"><h3>{l.title}</h3><strong>{peso(Number(l.price))}</strong></div><p className="store-listing-category">{l.category?.name}</p><div className="store-listing-meta"><span className={`status ${l.status}`}>{l.status.replace('_', ' ')}</span>{l.status === 'published' && <span className="status">{l.availabilityState || 'available'}</span>}</div>
+            <div className="row"><button className="btn" disabled={savingEdit || categoriesLoading || Boolean(categoriesError)}>{savingEdit ? 'Saving…' : 'Save changes'}</button><button type="button" className="btn ghost" disabled={savingEdit} onClick={() => closeEditor()}>Cancel</button></div></form>
+        : <article key={l.id} id={`store-listing-${l.id}`} tabIndex={-1} className="panel store-listing"><StoreListingPhoto media={l.media} title={l.title} type={l.type} /><div className="store-listing-main"><div className="store-listing-title"><h3>{l.title}</h3><strong>{peso(Number(l.price))}</strong></div><p className="store-listing-category">{l.category?.name}</p><div className="store-listing-meta"><span className={`status ${l.status}`}>{l.status.replace('_', ' ')}</span>{l.status === 'published' && <span className="status">{l.availabilityState || 'available'}</span>}</div>
             <p className="muted store-listing-help">{l.status === 'draft' ? 'Draft only · submit for campus review when ready.' : l.status === 'changes_requested' ? 'Changes requested · edit and resubmit for review.' : l.status === 'pending_review' ? 'Waiting for a campus reviewer.' : l.status === 'published' ? l.availabilityState === 'sold' ? 'Sold · use Sell again to make a new draft.' : 'Published · manage availability below.' : l.status === 'rejected' ? 'Not approved for publication.' : l.status === 'suspended' ? 'Removed from public browsing by a reviewer.' : 'Check this listing’s review status.'}</p>{l.status === 'published' && <Link className="store-listing-view" to={`/listings/${l.id}`}>View listing <Icon name="arrow" size={15} /></Link>}</div>
-            <div className="store-listing-actions">{!['pending_review', 'suspended', 'rejected'].includes(l.status) && l.availabilityState !== 'sold' && <button type="button" className="btn ghost" onClick={() => { setEditing(l); setEditCategoryId(String(l.categoryId)); setEditFiles([]); setEditCover(l.media.length ? { source: 'existing', id: l.media.slice().sort((a: any, b: any) => a.position - b.position || a.id - b.id)[0].id } : null); setEditSelectionError(''); setErr(''); setOk(''); }}>Edit</button>}
+            <div className="store-listing-actions">{!['pending_review', 'suspended', 'rejected'].includes(l.status) && l.availabilityState !== 'sold' && <button type="button" className="btn ghost" onClick={() => openEditor(l)}>Edit</button>}
             {['draft', 'changes_requested'].includes(l.status) && <button type="button" className="btn" disabled={pending === l.id} onClick={() => submit(l.id)}>{pending === l.id ? 'Submitting…' : 'Submit for review'}</button>}
             {l.status === 'published' && l.availabilityState !== 'sold' && <select aria-label={`Availability for ${l.title}`} value={l.availabilityState || 'available'} disabled={pending === l.id} onChange={async e => { const next = e.target.value as 'available' | 'reserved' | 'sold'; if (!(await changeAvailability(l.id, next))) e.target.value = l.availabilityState || 'available'; }}><option value="available">Available</option><option value="reserved">Reserved</option><option value="sold">Sold (final)</option></select>}
             {l.status === 'published' && l.availabilityState === 'sold' && <button type="button" className="btn" aria-label={`Sell ${l.title} again`} disabled={creatingListing} onClick={() => sellAgain(l)}>Sell again</button>}

@@ -12,6 +12,8 @@ import {
 import { requirePhotoReview } from '../photo-review.js';
 import { suppressSmallCount } from '../analytics-privacy.js';
 import { DEFAULT_GUIDELINES, plainContent } from '../managed-content.js';
+import { contentEditorErrorHandler } from '../content-editor-errors.js';
+import { rowAccess } from '../row-access.js';
 
 const r = Router();
 r.use(requireAuth, requireReviewer);
@@ -46,7 +48,7 @@ r.post('/listings/:id/decision', async (req, res) => {
     reason: z.string().trim().min(5).max(1000),
     photosReviewed: z.boolean().optional(),
   }).parse(req.body);
-  const l = await prisma.listing.findUnique({ where: { id: Number(req.params.id) },
+  const l = await prisma.listing.findFirst({ where: { id: Number(req.params.id), ...rowAccess.reviewListing(req.user!) },
     include: { seller: { include: { owner: { select: { status: true } } } }, media: true } });
   if (!l || !canReview(req.user!, l.campusId)) throw new HttpError(404, 'not_found'); // out-of-scope looks like not found
   if (l.deletedAt) throw new HttpError(409, 'listing_deleted');
@@ -62,7 +64,7 @@ r.post('/listings/:id/decision', async (req, res) => {
   // The guarded transition prevents concurrent reviewers from creating duplicate alerts.
   const recorded = await prisma.$transaction(async tx => {
     const changed = await tx.listing.updateMany({
-      where: { id: l.id, status: 'pending_review', deletedAt: null },
+      where: { id: l.id, ...rowAccess.reviewListing(req.user!), status: 'pending_review', deletedAt: null },
       data: { status },
     });
     if (changed.count !== 1) throw new HttpError(409, 'not_pending');
@@ -106,9 +108,13 @@ r.post('/listings/:id/decision', async (req, res) => {
 // Verifies a pending campus affiliation (the doc's /admin/sellers/:id/verify, keyed on the affiliation).
 r.post('/affiliations/:id/verify', async (req, res) => {
   const b = z.object({ decision: z.enum(['verified', 'rejected']), reason: z.string().trim().min(3).max(500) }).parse(req.body);
-  const a = await prisma.affiliation.findUnique({ where: { id: Number(req.params.id) } });
+  const a = await prisma.affiliation.findFirst({ where: { id: Number(req.params.id), ...rowAccess.reviewAffiliation(req.user!) } });
   if (!a || !canReview(req.user!, a.campusId)) throw new HttpError(404, 'not_found');
-  await prisma.affiliation.update({ where: { id: a.id }, data: { verificationStatus: b.decision, verifiedAt: b.decision === 'verified' ? new Date() : null } });
+  const updated = await prisma.affiliation.updateMany({
+    where: { id: a.id, ...rowAccess.reviewAffiliation(req.user!) },
+    data: { verificationStatus: b.decision, verifiedAt: b.decision === 'verified' ? new Date() : null },
+  });
+  if (updated.count !== 1) throw new HttpError(404, 'not_found');
   await audit(req.user!.id, `affiliation.${b.decision}`, 'affiliation', a.id, { reason: b.reason });
   await notify(a.userId, 'affiliation.decision', { decision: b.decision, reason: b.reason });
   res.json({ id: a.id, status: b.decision });
@@ -116,10 +122,14 @@ r.post('/affiliations/:id/verify', async (req, res) => {
 
 r.post('/listings/:id/suspend', async (req, res) => {
   const b = z.object({ reason: z.string().trim().min(5).max(500) }).parse(req.body);
-  const l = await prisma.listing.findUnique({ where: { id: Number(req.params.id) }, include: { seller: true } });
+  const l = await prisma.listing.findFirst({ where: { id: Number(req.params.id), ...rowAccess.reviewListing(req.user!) }, include: { seller: true } });
   if (!l || !canReview(req.user!, l.campusId)) throw new HttpError(404, 'not_found');
   if (l.deletedAt) throw new HttpError(409, 'listing_deleted');
-  await prisma.listing.update({ where: { id: l.id }, data: { status: 'suspended' } });
+  const updated = await prisma.listing.updateMany({
+    where: { id: l.id, ...rowAccess.reviewListing(req.user!), deletedAt: null },
+    data: { status: 'suspended' },
+  });
+  if (updated.count !== 1) throw new HttpError(404, 'not_found');
   await audit(req.user!.id, 'listing.suspend', 'listing', l.id, { reason: b.reason });
   await notify(l.seller.ownerUserId, 'listing.suspended', { listingId: l.id, reason: b.reason });
   res.json({ id: l.id, status: 'suspended' });
@@ -132,9 +142,7 @@ r.get('/transactions', async (req, res) => {
     page: z.coerce.number().int().min(1).max(1000).default(1),
     pageSize: z.coerce.number().int().min(1).max(30).default(20),
   }).strict().parse(req.query);
-  const campuses = reviewCampusIds(req.user!);
-  const where: Prisma.TransactionWhereInput = campuses === 'all'
-    ? {} : { listing: { campusId: { in: campuses } } };
+  const where: Prisma.TransactionWhereInput = rowAccess.reviewTransaction(req.user!);
   const [items, total] = await prisma.$transaction([
     prisma.transaction.findMany({
       where, orderBy: { id: 'desc' }, skip: (page - 1) * pageSize, take: pageSize,
@@ -259,6 +267,9 @@ r.post('/content/announcements/:id/archive', async (req, res) => {
   await audit(req.user!.id, 'announcement.archived', 'announcement', id);
   res.json(item);
 });
+
+// Map only the managed-content schema activation errors; do not hide other admin errors.
+r.use('/content', contentEditorErrorHandler);
 
 r.get('/audit-logs', async (req, res) => {
   if (!accountAdmin(req)) throw new HttpError(403, 'forbidden');

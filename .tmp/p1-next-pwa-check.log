@@ -1,0 +1,8 @@
+$ node scripts/validate-pwa.cjs
+✓ icons/icon-192.png (192×192)
+✓ icons/icon-512.png (512×512)
+✓ icons/icon-maskable-192.png (192×192)
+✓ icons/icon-maskable-512.png (512×512)
+✓ icons/apple-touch-icon.png (180×180)
+✓ Manifest, Apple metadata, install shortcuts and offline-only service worker contracts
+✓ All PWA assets validated

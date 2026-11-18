@@ -1,6 +1,8 @@
 import type { Prisma, PrismaClient } from '@prisma/client';
 import { z } from 'zod';
 import { HttpError } from './http.js';
+import { rowAccess } from './row-access.js';
+import { visibleStudentStoreWhere } from './store-visibility.js';
 
 /**
  * Public reports target exactly one known listing OR seller profile.
@@ -23,8 +25,7 @@ export async function resolvePublicReportTarget(
 ): Promise<PublicReportTarget> {
   if (request.listingId !== undefined) {
     const listing = await db.listing.findFirst({
-      where: { id: request.listingId, status: 'published', deletedAt: null,
-        seller: { approvalStatus: 'approved', owner: { status: 'active' } } },
+      where: { id: request.listingId, ...rowAccess.publicListing() },
       select: { id: true, seller: { select: { ownerUserId: true } } },
     });
     if (!listing) throw new HttpError(404, 'not_found');
@@ -33,7 +34,7 @@ export async function resolvePublicReportTarget(
   }
   if (request.sellerProfileId !== undefined) {
     const seller = await db.sellerProfile.findFirst({
-      where: { id: request.sellerProfileId, approvalStatus: 'approved', owner: { status: 'active' } },
+      where: { id: request.sellerProfileId, ...visibleStudentStoreWhere() },
       select: { id: true, ownerUserId: true },
     });
     if (!seller) throw new HttpError(404, 'not_found');

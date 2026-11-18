@@ -18,3 +18,7 @@ Until those tables exist, the public guidelines API returns the existing guideli
 ## Verification
 
 Isolated integration tests cover global-admin versus campus-reviewer write access, fallback and published guideline visibility, private drafts, stale-publish conflicts, announcement revisions, publication and archive. API typecheck and web production build pass. Browser and assistive-technology acceptance remain open. Announcement-triggered in-app notifications are not included in this change.
+
+## Local development activation — 18 November 2026
+
+The earlier pending-development status above has been superseded for the local `cpsu_marketplace` database only. The owner requested activation of the previously prepared editors. Both `20261116220000_managed_student_content` and `20261116221000_pending_announcement_edits` were backed up, rehearsed in a restored disposable database, and successfully applied to local development. Only `20261117230000_private_student_identity` remains pending. See `docs/MANAGED_CONTENT_DEV_ACTIVATION_2026-11-18.md`. Production remains unmodified.

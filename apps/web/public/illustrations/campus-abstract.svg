@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 900" role="img" aria-label="Abstract campus marketplace artwork">
+  <defs>
+    <clipPath id="round"><rect width="900" height="900" rx="30"/></clipPath>
+    <linearGradient id="sky" x2="1" y2="1"><stop stop-color="#f9efdf"/><stop offset="1" stop-color="#e9d5b8"/></linearGradient>
+    <pattern id="lines" width="18" height="18" patternUnits="userSpaceOnUse"><path d="M0 17.5h18" stroke="#f4e7d4" stroke-width="1"/></pattern>
+  </defs>
+  <g clip-path="url(#round)">
+    <rect width="900" height="900" fill="url(#sky)"/>
+    <circle cx="719" cy="183" r="151" fill="#eba91d"/>
+    <path d="M0 275c128-72 215-28 325 42 76 48 135 70 226 50 68-16 150-61 349-9v542H0Z" fill="#d8b592"/>
+    <path d="M0 369c159-82 269-89 385-39 87 38 181 27 287-15 84-34 149-32 228-8v593H0Z" fill="#0b4932"/>
+    <path d="M0 480c128-63 229-58 333-15 110 46 206 49 309 12 96-34 167-36 258-7v430H0Z" fill="#0f5a3b"/>
+    <path d="M105 583c94-143 203-188 338-127 94 42 151 114 257 95 82-14 131-56 200-66v415H0V701c27-30 60-67 105-118Z" fill="#f5e7d1"/>
+    <path d="M125 613c58-129 139-204 259-202 119 1 215 73 319 57 71-11 127-47 197-40v130c-89-5-153 44-259 65-125 25-222-55-317-41-78 11-132 80-199 170Z" fill="#e79854"/>
+    <path d="M104 636c95-64 165-82 243-46 90 41 153 102 257 101 80-1 159-35 296-48v257H0V731c26-35 61-69 104-95Z" fill="#af4a27"/>
+    <path d="M0 789c150-55 245-32 351 17 145 67 278 55 549-18v112H0Z" fill="#e7a51f"/>
+    <path d="M145 241c104-88 233-85 370-1" fill="none" stroke="#f7ebd8" stroke-width="4" opacity=".75"/>
+    <path d="M118 275c127-95 271-86 395-1" fill="none" stroke="#f7ebd8" stroke-width="4" opacity=".75"/>
+    <path d="M644 76c52 9 91 49 105 101" fill="none" stroke="#fff3df" stroke-width="4" opacity=".65"/>
+    <path d="M0 0h900v900H0Z" fill="url(#lines)" opacity=".07"/>
+  </g>
+</svg>

@@ -5,6 +5,7 @@ import { prisma } from '../db.js';
 import { HttpError } from '../http.js';
 import { requireStudent } from '../auth.js';
 import { deliverPush } from '../push.js';
+import { rowAccess } from '../row-access.js';
 
 const r = Router();
 r.use(requireStudent);
@@ -26,9 +27,9 @@ async function eligibleStudent(userId: number) {
 }
 
 async function participant(userId: number, id: number) {
-  const t = await prisma.transaction.findUnique({ where: { id },
+  const t = await prisma.transaction.findFirst({ where: { id, ...rowAccess.transactionParticipant(userId) },
     include: { listing: { include: { seller: { select: { approvalStatus: true, ownerUserId: true } } } } } });
-  if (!t || (t.buyerUserId !== userId && t.sellerUserId !== userId)) throw new HttpError(404, 'not_found');
+  if (!t) throw new HttpError(404, 'not_found');
   return t;
 }
 
@@ -145,7 +146,7 @@ r.get('/', async (req, res) => {
     page: z.coerce.number().int().min(1).max(1000).default(1),
     pageSize: z.coerce.number().int().min(1).max(30).default(20),
   }).strict().parse(req.query);
-  const where = { OR: [{ buyerUserId: req.user!.id }, { sellerUserId: req.user!.id }] };
+  const where = rowAccess.transactionParticipant(req.user!.id);
   const [items, total] = await prisma.$transaction([
     prisma.transaction.findMany({ where, orderBy: { createdAt: 'desc' },
       include: { listing: { select: { title: true, type: true } },
@@ -194,7 +195,7 @@ r.post('/:id/decision', async (req, res) => {
         } },
       } });
       if (!eligibleBuyer) throw new HttpError(409, 'buyer_unavailable');
-      const updated = await tx.transaction.updateMany({ where: { id: t.id, status: 'pending', activeThreadId: t.inquiryThreadId },
+      const updated = await tx.transaction.updateMany({ where: { id: t.id, ...rowAccess.transactionParticipant(userId), status: 'pending', activeThreadId: t.inquiryThreadId },
         data: { status: 'accepted' } });
       if (!updated.count) throw new HttpError(409, 'invalid_transaction_state');
       // Guard inventory with one row-level conditional UPDATE: two accepted requests
@@ -212,7 +213,7 @@ r.post('/:id/decision', async (req, res) => {
       }
       pushNotice = await logEvent(tx, t, userId, 'accepted', 'pending', 'accepted');
     } else {
-      const updated = await tx.transaction.updateMany({ where: { id: t.id, status: 'pending', activeThreadId: t.inquiryThreadId },
+      const updated = await tx.transaction.updateMany({ where: { id: t.id, ...rowAccess.transactionParticipant(userId), status: 'pending', activeThreadId: t.inquiryThreadId },
         data: { status: 'cancelled', activeThreadId: null } });
       if (!updated.count) throw new HttpError(409, 'invalid_transaction_state');
       pushNotice = await logEvent(tx, t, userId, 'rejected', 'pending', 'cancelled', b.reason);
@@ -231,7 +232,7 @@ r.post('/:id/negotiating', async (req, res) => {
   if (t.status !== 'accepted') throw new HttpError(409, 'invalid_transaction_state');
   ensureListingNotModerated(t.listing);
   const result = await prisma.$transaction(async tx => {
-    const changed = await tx.transaction.updateMany({ where: { id: t.id, status: 'accepted' }, data: { status: 'negotiating' } });
+    const changed = await tx.transaction.updateMany({ where: { id: t.id, ...rowAccess.transactionParticipant(userId), status: 'accepted' }, data: { status: 'negotiating' } });
     if (!changed.count) throw new HttpError(409, 'invalid_transaction_state');
     const pushNotice = await logEvent(tx, t, userId, 'negotiating', 'accepted', 'negotiating');
     return { transaction: await tx.transaction.findUniqueOrThrow({ where: { id: t.id } }), pushNotice };
@@ -250,14 +251,14 @@ r.post('/:id/confirm-meetup', async (req, res) => {
   const field = t.buyerUserId === userId ? 'buyerMeetupConfirmedAt' : 'sellerMeetupConfirmedAt';
   const result = await prisma.$transaction(async tx => {
     const changed = await tx.transaction.updateMany({ where: {
-      id: t.id, status: { in: ['accepted', 'negotiating'] }, [field]: null,
+      id: t.id, ...rowAccess.transactionParticipant(userId), status: { in: ['accepted', 'negotiating'] }, [field]: null,
     }, data: { [field]: new Date() } });
     if (!changed.count) throw new HttpError(409, 'already_confirmed_or_changed');
     const updated = await tx.transaction.findUniqueOrThrow({ where: { id: t.id } });
     const both = !!updated.buyerMeetupConfirmedAt && !!updated.sellerMeetupConfirmedAt;
     if (both) {
       const advanced = await tx.transaction.updateMany({ where: {
-        id: t.id, status: { in: ['accepted', 'negotiating'] },
+        id: t.id, ...rowAccess.transactionParticipant(userId), status: { in: ['accepted', 'negotiating'] },
       }, data: { status: 'for_meetup' } });
       if (!advanced.count) throw new HttpError(409, 'invalid_transaction_state');
     }
@@ -279,7 +280,7 @@ r.post('/:id/confirm-completion', async (req, res) => {
   const field = t.buyerUserId === userId ? 'buyerCompletionConfirmedAt' : 'sellerCompletionConfirmedAt';
   const result = await prisma.$transaction(async tx => {
     const changed = await tx.transaction.updateMany({ where: {
-      id: t.id, status: 'for_meetup', [field]: null,
+      id: t.id, ...rowAccess.transactionParticipant(userId), status: 'for_meetup', [field]: null,
     }, data: { [field]: new Date() } });
     if (!changed.count) throw new HttpError(409, 'already_confirmed_or_changed');
     const updated = await tx.transaction.findUniqueOrThrow({ where: { id: t.id } });
@@ -291,7 +292,7 @@ r.post('/:id/confirm-completion', async (req, res) => {
         }, data: { availabilityState: 'sold', availability: 'sold', reservationTransactionId: null } });
         if (!sold.count) throw new HttpError(409, 'reservation_changed');
       }
-      const finish = await tx.transaction.updateMany({ where: { id: t.id, status: 'for_meetup', activeThreadId: t.inquiryThreadId },
+      const finish = await tx.transaction.updateMany({ where: { id: t.id, ...rowAccess.transactionParticipant(userId), status: 'for_meetup', activeThreadId: t.inquiryThreadId },
         data: { status: 'completed', activeThreadId: null } });
       if (!finish.count) throw new HttpError(409, 'invalid_transaction_state');
     }
@@ -310,7 +311,7 @@ r.post('/:id/cancel', async (req, res) => {
   if (terminal.includes(t.status as typeof terminal[number])) throw new HttpError(409, 'invalid_transaction_state');
   const result = await prisma.$transaction(async tx => {
     const cancelled = await tx.transaction.updateMany({ where: {
-      id: t.id, status: { notIn: ['completed', 'cancelled'] }, activeThreadId: t.inquiryThreadId,
+      id: t.id, ...rowAccess.transactionParticipant(userId), status: { notIn: ['completed', 'cancelled'] }, activeThreadId: t.inquiryThreadId,
     }, data: { status: 'cancelled', activeThreadId: null } });
     if (!cancelled.count) throw new HttpError(409, 'invalid_transaction_state');
     if (t.listing.type === 'physical_product' && t.status !== 'pending') {

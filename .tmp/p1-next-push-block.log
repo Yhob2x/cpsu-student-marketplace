@@ -1,0 +1,15 @@
+$ node scripts/check-push-staging.mjs
+CPSU PWA PUSH — STAGE 3 READINESS (READ-ONLY)
+PASS    Development push release switches remain disabled — Local development must not activate subscription enrollment or outbound relay delivery
+PASS    Persistent matching VAPID key pair — Stored in local API environment; key material not printed
+BLOCKED Valid non-local VAPID contact syntax — Replace development-only localhost subject with an approved, monitored contact before public staging
+PASS    Private API environment excluded from Git — Never commit VAPID private keys or DB credentials
+BLOCKED Approved publicly reachable HTTPS staging URL supplied — No approved HTTPS staging URL given; localhost/HTTP/sample domains are not valid device staging
+PASS    Installable PWA manifest and maskable icons — Static metadata only; physical Android/iPhone installation must be tested
+PASS    Service worker push/click handlers and offline privacy contract — Static code check; remote push relay delivery and permission prompts remain untested
+PASS    Explicit local notification preview action available — This tests only local display; it is not proof of Web Push delivery
+PASS    VAPID private key not found in built web assets — Checks local build assets without printing secrets
+Remaining independent gates: approved staging deployment, monitored contact, trusted TLS,
+physical Android/iPhone permission + background push + badge testing, privacy approval.
+No files, network services, subscriptions, or databases were changed by this audit.
+Readiness: 2 staging preparation gate(s) blocked

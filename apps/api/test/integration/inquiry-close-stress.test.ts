@@ -155,15 +155,17 @@ if (process.env.CPSU_INTEGRATION_TESTS === '1') {
           raceElapsedMsMax: sorted.at(-1) }));
     });
 
-    test('the actual global per-instance API limiter still returns 429 after its 300-request budget', async () => {
-      // This is intentionally a distinct app instance: its normal production middleware is unchanged.
+    test('bounded public reads do not starve writes while liveness remains available', async () => {
+      // Use the actual middleware, not an isolated limiter stub. This test was
+      // updated after GET and mutation budgets were separated for campus NATs.
       const limited = createApp();
-      for (let i = 0; i < 300; i++) {
-        const response = await request(limited).get('/health');
-        expect(response.status).toBe(200);
-      }
-      const blocked = await request(limited).get('/health');
-      expect(blocked.status).toBe(429);
+      const reads = await Promise.all(Array.from({ length: 902 }, () =>
+        request(limited).get('/api/v1/unused-synthetic-route')));
+      expect(reads.filter(response => response.status === 404)).toHaveLength(900);
+      expect(reads.filter(response => response.status === 429)).toHaveLength(2);
+      expect((await request(limited).get('/health')).status).toBe(200);
+      // The read budget cannot consume a mutation's independently bounded quota.
+      expect((await request(limited).post('/api/v1/unused-synthetic-route')).status).toBe(404);
     });
   });
 } else {

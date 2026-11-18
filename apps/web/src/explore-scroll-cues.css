@@ -1,0 +1,46 @@
+
+/* Discoverable chip rails: edge fade and explicit bidirectional controls,
+   only when content actually overflows. No dropdown or filter-state changes. */
+.explore-options-shell { position: relative; min-width: 0; max-width: 100%; }
+.explore-options-shell[data-can-scroll="true"] > .explore-inline-filter-options {
+  padding-inline-end: 48px;
+  scroll-padding-inline-end: 48px;
+}
+.explore-filter-scroll-fade {
+  position: absolute;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  width: 55px;
+  pointer-events: none;
+  background: linear-gradient(to right, transparent, var(--paper) 74%);
+}
+.explore-filter-scroll-button {
+  position: absolute;
+  top: 50%;
+  z-index: 2;
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  padding: 0;
+  transform: translateY(-50%);
+  border: 1px solid var(--surface-stroke);
+  border-radius: 10px;
+  background: var(--paper);
+  color: var(--forest);
+  box-shadow: 0 1px 5px var(--shadow-card);
+  cursor: pointer;
+  touch-action: manipulation;
+}
+.explore-filter-scroll-next { right: 0; }
+.explore-filter-scroll-prev { left: 0; }
+.explore-filter-scroll-prev svg { transform: rotate(180deg); }
+.explore-filter-scroll-button:focus-visible { outline: 3px solid var(--mango); outline-offset: 2px; }
+@media (max-width: 860px) {
+  .explore-filter-scroll-button { width: 44px; height: 44px; }
+  .explore-options-shell[data-can-scroll="true"] > .explore-inline-filter-options {
+    padding-inline-end: 53px;
+    scroll-padding-inline-end: 53px;
+  }
+}

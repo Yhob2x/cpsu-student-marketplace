@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { api, explain, peso } from './api';
+import { Icon } from './icons';
+import { assessListingReadability } from './listing-quality';
 import { useMe } from './main';
 import { useForegroundRefresh } from './foreground-refresh';
 import { ManagedContentAdmin } from './pages-managed-content';
@@ -195,7 +197,8 @@ export function Admin() {
   const changeSection = (id: string) => { setActiveSection(id); setNotice(''); };
   return <div className="admin-workspace">
     <div className="page-head"><div><h1>{accountAdmin ? 'University administration' : 'Campus review workspace'}</h1>
-      <p className="muted">{accountAdmin ? 'Manage students, reviews and campus activity.' : 'Review listings, affiliations and reports for your campus.'}</p></div></div>
+      <p className="muted">{accountAdmin ? 'Manage students, reviews and campus activity.' : 'Review listings, affiliations and reports for your campus.'}</p></div>
+      <Link className="btn ghost admin-marketplace-search" to="/explore" aria-label="Search marketplace listings"><Icon name="search" size={17} /> Search marketplace</Link></div>
     {notice && <p className="admin-action-notice" role="status">{notice}</p>}
     <label className="admin-workspace-mobile-nav field">Workspace section
       <select value={activeSection} onChange={event => changeSection(event.target.value)}>
@@ -251,13 +254,18 @@ export function Admin() {
           onClick={() => setSelectedListingId(listing.id)}>
           <strong>{listing.title}</strong>
           <span>{listing.campus} · {listing.store}</span>
-          <span>{listing.flags.length ? `${listing.flags.length} policy flag${listing.flags.length === 1 ? '' : 's'}` : 'Awaiting photo review'}</span>
+          <span>{assessListingReadability(listing.title, listing.description).length > 0 ? 'Check listing clarity' : listing.flags.length ? `${listing.flags.length} policy flag${listing.flags.length === 1 ? '' : 's'}` : 'Awaiting photo review'}</span>
         </button>)}
       </section>
       <div className="admin-review-detail">
         {q.listings.filter((listing: any) => listing.id === selectedListing?.id).map((l: any) => <article key={l.id} className="panel stack review-listing">
       <div className="review-listing-heading"><div><h3>{l.title}</h3><p className="muted">{l.store} · {l.campus} · {l.category}</p></div><span className="tag">{peso(l.price)}</span></div>
       <p className="review-description">{l.description}</p>
+      {assessListingReadability(l.title, l.description).length > 0 && <aside className="review-listing-clarity" aria-label="Listing clarity guidance">
+        <strong>Content clarity review</strong>
+        <ul>{assessListingReadability(l.title, l.description).map(issue => <li key={issue}>{issue}</li>)}</ul>
+        <p>Editorial suggestions only. Check the actual listing and request changes where needed; no automatic rejection or title changes.</p>
+      </aside>}
       <div className="row">{l.flags.map((f: string) => <span key={f} className="flag">{FLAG_TEXT[f] ?? f}</span>)}{l.flags.length === 0 && <span className="muted">No text/category flags — photos still need human review</span>}</div>
       <p className="muted">Inspect all {l.images.length} {l.images.length === 1 ? 'photo' : 'photos'}; explicit content is not checked automatically.</p>
       <div className="review-photos">{l.images.length === 0 && <span className="muted">No photos attached</span>}

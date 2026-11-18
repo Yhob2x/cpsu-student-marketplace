@@ -10,3 +10,33 @@ uploads
 /apps/web/playwright-report/
 /graphify-out/
 /.tmp/
+
+# Local secrets; keep safe example templates committed.
+.env.*
+!.env.example
+!.env.*.example
+
+# Generated logs, Python bytecode, and tooling caches.
+*.log
+*.log.*
+__pycache__/
+*.py[cod]
+*.tsbuildinfo
+.cache/
+.turbo/
+.nyc_output/
+coverage/
+
+# Test runners and local operating-system metadata.
+test-results/
+playwright-report/
+.DS_Store
+Thumbs.db
+
+# Local database files (Prisma migration SQL stays tracked).
+*.sqlite
+*.sqlite3
+*.db
+
+# One-off local browser inspection scripts.
+/apps/web/.cpsu-*.mjs

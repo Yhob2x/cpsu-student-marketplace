@@ -13,8 +13,7 @@ import { StorefrontView, type PublicStorefront } from './pages-storefront';
 import { StoresInResults } from './stores-in-results';
 import { MostFollowedStores, type MostFollowedStore } from './most-followed-stores';
 import { resolveHomePageContent, type HomePageView } from './home-page-content';
-import { ExploreScrollOptions } from './explore-scroll-options';
-import { categoriesForExplore, cleanExploreQuery, DEFAULT_EXPLORE_FILTERS, exploreAdvancedSummary, explorePriceError, updateExploreQuery, type ExploreCategory, type ExploreFilters } from './explore-filters';
+import { categoriesForExplore, cleanExploreQuery, DEFAULT_EXPLORE_FILTERS, exploreAdvancedSummary, explorePriceError, previewExploreOptions, updateExploreQuery, type ExploreCategory, type ExploreFilters } from './explore-filters';
 
 export type Listing = { id: number; type: string; title: string; description: string; price: number; priceBasis: string; availability: string; condition?: 'new' | 'like_new' | 'good' | 'fair' | null;
   handoffNote?: string; category: { name: string }; campus: { code: string; name: string }; seller: { id: number; storeName: string; avatarUrl?: string | null }; images: string[]; status?: string };
@@ -246,12 +245,16 @@ export function Discover() {
   const [cats, setCats] = useState<ExploreCategory[]>([]);
   const [filterError, setFilterError] = useState(''); const [filtersLoading, setFiltersLoading] = useState(false);
   const [filtersOpen, setFiltersOpen] = useState(false);
+  const [allCampusesOpen, setAllCampusesOpen] = useState(false);
+  const [allCategoriesOpen, setAllCategoriesOpen] = useState(false);
   const [items, setItems] = useState<Listing[] | null>(null); const [total, setTotal] = useState<number | null>(null);
   const [error, setError] = useState('');
   const [retryRequest, setRetryRequest] = useState(0);
   const currentPage = Math.max(1, Number(sp.get('page')) || 1);
   const pageCount = Math.ceil((total ?? 0) / 20);
   const availableCats = categoriesForExplore(cats, f.type);
+  const campusPreview = previewExploreOptions(campuses, f.campusId);
+  const categoryPreview = previewExploreOptions(availableCats, f.categoryId);
   const priceError = explorePriceError(f.minPrice, f.maxPrice);
   const activeFilters = exploreAdvancedSummary(f, campuses, cats);
   const secondaryFilterLabels = activeFilters.labels.filter(label => label.startsWith('Condition:') || label.startsWith('Price:'));

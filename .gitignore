@@ -11,6 +11,9 @@ uploads
 /graphify-out/
 /.tmp/
 
+# Bun-only workspace: do not track a duplicate npm lockfile.
+package-lock.json
+
 # Local secrets; keep safe example templates committed.
 .env.*
 !.env.example

@@ -500,8 +500,10 @@ export function ListingDetail() {
       const created = await api<{ id: number }>('/transactions', { body: { listingId: l.id } });
       showActionFeedback({ kind: 'success', title: 'Request created', message: 'Your request is ready for the seller to review.' });
       navigate(`/transactions/${created.id}`);
-    } catch (e) { setErr(explain(e)); }
-    finally { setBusy(false); }
+    } catch (e) {
+      setErr(explain(e));
+      showActionFeedback({ kind: 'error', title: 'Request not created', message: explain(e) });
+    } finally { setBusy(false); }
   };
   const save = async () => {
     if (!me) { navigate(loginForListing); return; }
@@ -517,45 +519,113 @@ export function ListingDetail() {
   const heart = <button className="heart-btn" aria-pressed={saved} aria-label={heartLabel}
     title={heartLabel} disabled={busy} onClick={save}>
     <Icon name="heart" filled={saved} size={22} /></button>;
-  return <article className="listing-detail">
-    <Link className="listing-back" to="/explore">← Browse all listings</Link>
+  const isService = l.type === 'service';
+  const priceBasisLabel = /[a-z]/i.test(l.priceBasis ?? '') ? l.priceBasis : '';
+  const conditionLabel = l.condition ? l.condition.replaceAll('_', ' ') : '';
+  return <article className="listing-detail listing-detail-refined">
+    <Link className="listing-back" to="/explore"><Icon name="chevronLeft" size={17} /> Browse all listings</Link>
     <div className="listing-detail-layout">
       <ListingGallery key={l.id} photos={l.images} title={l.title}
         saveControl={!staff && !isOwner && (isAvailable || saved) ? heart : undefined} />
       <div className="listing-detail-content">
-    <h1 className="listing-detail-title">{l.title}</h1>
-    {/* Only show a basis that carries meaning; a value like "1" would render as "₱150 1". */}
-    <div className="row listing-facts"><span className="tag">{peso(l.price)}</span>{/[a-z]/i.test(l.priceBasis ?? '') && <span className="muted">{l.priceBasis}</span>}<span className="status">{l.category.name}</span>{l.condition && <span className="status">Condition: {l.condition.replace('_',' ')}</span>}<span className="status">{l.availability}</span>{l.status && <span className={`status ${l.status}`}>{l.status.replace('_', ' ')}</span>}</div>
-    <p className="listing-description">{l.description}</p>
-    <p className="muted listing-seller seller-byline"><SellerAvatar name={l.seller.storeName} src={l.seller.avatarUrl} size="medium" /><span>Sold by <Link to={`/stores/${l.seller.id}`}>{l.seller.storeName}</Link> at {l.campus.name}. {l.handoffNote && `Handoff: ${l.handoffNote}.`}</span></p>
-    <div className="panel stack">
-      {!isAvailable && <p className="muted" role="status">This listing is {l.availability}. New inquiries are disabled.</p>}
-      {isOwner && <p className="muted">This is your own listing.</p>}
-      {staff && <p className="muted">Staff accounts can browse and review listings. Student purchase, messaging and reporting actions use a separate student account.</p>}
-      <p className="muted">Payment and handoff are arranged directly between you and the seller. The marketplace does not hold money or deliver items.</p>
-      {me && !staff && !isOwner && isAvailable && <div className="listing-request-action">
-        <h2>Ready to proceed?</h2>
-        <p className="muted">Send a request for the seller to review. You can discuss the details in the conversation.</p>
-        {!canRequest && <p className="muted">Purchase requests require a verified student account.</p>}
-        <button type="button" className="btn" disabled={busy || !canRequest} onClick={() => void requestTransaction()}>
-          {l.type === 'service' ? 'Request service' : 'Request item'}
-        </button>
-      </div>}
-      {me && !staff ? <><h2>Ask the seller</h2><label className="field">Your message to the seller
-        <textarea value={body} onChange={e => setBody(e.target.value)} maxLength={1000} placeholder="Is this still available? Where can we meet on campus?" />
-      </label>
-        <div className="row"><button className="btn ghost" disabled={busy || !body.trim() || !isAvailable || isOwner} onClick={send}>Send inquiry</button>
-          {l.images.length === 0 && !isOwner && (isAvailable || saved) && heart}
-          <button className="btn ghost" disabled={busy} onClick={() => { setReporting(!reporting); setErr(''); }}>Report</button></div>
-        {reporting && <div className="stack">
-          <label className="field">Why are you reporting this listing?
-            <textarea value={reason} onChange={e => setReason(e.target.value)} maxLength={1000} placeholder="Describe the issue (at least 10 characters)" />
-          </label>
-          <div className="row"><button className="btn danger" disabled={busy || reason.trim().length < 10} onClick={report}>Send report</button>
-            <button className="btn ghost" disabled={busy} onClick={() => setReporting(false)}>Cancel</button></div></div>}</>
-        : !me ? <p><Link to={loginForListing}>Sign in</Link> to message this seller.</p> : null}
-      {note && <p role="status">{note} {inquiryThreadId !== null && <Link to={`/inquiries/${inquiryThreadId}`}>Open conversation</Link>}</p>}{err && <p className="err" role="alert">{err}</p>}
-    </div>
+        <header className="listing-detail-intro">
+          <div className="listing-detail-overline">
+            <span>{isService ? 'Service' : 'Product'}</span>
+            <span className="listing-detail-overline-dot" aria-hidden="true" />
+            <span>{l.category.name}</span>
+          </div>
+          <h1 className="listing-detail-title">{l.title}</h1>
+          <div className="listing-detail-price-row">
+            <strong className="listing-detail-price">{peso(l.price)}</strong>
+            {priceBasisLabel && <span className="listing-detail-price-basis">{priceBasisLabel}</span>}
+            <span className={`listing-detail-availability ${isAvailable ? 'is-available' : 'is-unavailable'}`}>
+              {isAvailable ? 'Available' : l.availability.replaceAll('_', ' ')}
+            </span>
+          </div>
+          {conditionLabel && <p className="listing-detail-condition">Condition: <strong>{conditionLabel}</strong></p>}
+        </header>
+
+        <section className="listing-detail-seller-card" aria-label="Seller information">
+          <SellerAvatar name={l.seller.storeName} src={l.seller.avatarUrl} size="medium" />
+          <div className="listing-detail-seller-details">
+            <span className="listing-detail-seller-kicker">{isService ? 'Service offered by' : 'Listed by'}</span>
+            <Link to={`/stores/${l.seller.id}`} className="listing-detail-seller-name">{l.seller.storeName}</Link>
+            <span className="listing-detail-seller-location"><Icon name="pin" size={15}/>{l.campus.name}</span>
+          </div>
+          <Link className="listing-detail-view-store" to={`/stores/${l.seller.id}`}>View store <Icon name="arrow" size={15}/></Link>
+        </section>
+
+        <section className="listing-detail-about" aria-labelledby="listing-about-title">
+          <h2 id="listing-about-title">About this {isService ? 'service' : 'listing'}</h2>
+          <p className="listing-description">{l.description?.trim() || 'No description provided.'}</p>
+          {l.handoffNote && <p className="listing-detail-handoff"><Icon name="pin" size={16}/><span><strong>Handoff details:</strong> {l.handoffNote}</span></p>}
+        </section>
+
+        {isOwner ? <section className="listing-detail-action-card listing-owner-card" aria-label="Manage your listing">
+          <div className="listing-detail-owner-heading"><Icon name="check" size={18}/><strong>This is your listing</strong></div>
+          <p>Buyers can view this page and contact your store. To update the details, manage it from My Store.</p>
+          {l.status && <span className="listing-detail-owner-status">Status: {l.status.replaceAll('_', ' ')}</span>}
+          <Link className="btn listing-detail-primary-action" to="/dashboard">Manage in My Store <Icon name="arrow" size={17}/></Link>
+        </section> : staff ? <section className="listing-detail-action-card" aria-label="Staff account notice">
+          <h2>Viewing as staff</h2>
+          <p>Student purchase and messaging features are not available to staff accounts.</p>
+        </section> : <section className="listing-detail-action-card" aria-labelledby="listing-contact-heading">
+          <h2 id="listing-contact-heading">{isAvailable ? 'Interested in this listing?' : 'Listing unavailable'}</h2>
+          {!isAvailable
+            ? <p className="listing-detail-action-help" role="status">This listing is {l.availability.replaceAll('_', ' ')}. New inquiries and requests are currently unavailable.</p>
+            : !me ? <div className="listing-detail-signin">
+                <p>Sign in with your CPSU account to message the seller or request this {isService ? 'service' : 'item'}.</p>
+                <Link className="btn listing-detail-primary-action" to={loginForListing}>Sign in to contact seller</Link>
+              </div>
+            : <>
+                <div className="listing-detail-request-row">
+                  <div>
+                    <strong>{isService ? 'Request this service' : 'Request this item'}</strong>
+                    <p>Send the seller a request to review, then discuss the arrangements in chat.</p>
+                  </div>
+                  <button type="button" className="btn listing-detail-primary-action" disabled={busy || !canRequest}
+                    onClick={() => void requestTransaction()}>{isService ? 'Request service' : 'Request item'}</button>
+                </div>
+                {!canRequest && <p className="listing-detail-action-help">Requests require a verified CPSU student account.</p>}
+                <div className="listing-detail-message-block">
+                  <h3>Message the seller</h3>
+                  <label className="field listing-detail-message-field">
+                    <span>Your message</span>
+                    <textarea value={body} onChange={e => setBody(e.target.value)}
+                      maxLength={1000} rows={3} placeholder="Hi! Is this still available?" />
+                  </label>
+                  <div className="listing-detail-message-actions">
+                    <button type="button" className="btn ghost" disabled={busy || !body.trim()}
+                      onClick={() => void send()}>{busy ? 'Sending…' : 'Send message'}</button>
+                    {l.images.length === 0 && (isAvailable || saved) && heart}
+                  </div>
+                </div>
+              </>}
+          {me && <div className="listing-detail-report-area">
+            <button type="button" className="listing-detail-report-toggle" disabled={busy}
+              aria-expanded={reporting} onClick={() => { setReporting(!reporting); setErr(''); }}>
+              <Icon name="flag" size={16}/> Report this listing
+            </button>
+            {reporting && <div className="listing-detail-report-form">
+              <label className="field"><span>Reason for reporting</span>
+                <textarea value={reason} onChange={e => setReason(e.target.value)}
+                  maxLength={1000} placeholder="Describe the issue (at least 10 characters)" />
+              </label>
+              <div className="row">
+                <button type="button" className="btn danger" disabled={busy || reason.trim().length < 10}
+                  onClick={() => void report()}>Send report</button>
+                <button type="button" className="btn ghost" disabled={busy}
+                  onClick={() => setReporting(false)}>Cancel</button>
+              </div>
+            </div>}
+          </div>}
+          {note && <p className="listing-detail-feedback" role="status">{note} {inquiryThreadId !== null &&
+            <Link to={`/inquiries/${inquiryThreadId}`}>Open conversation</Link>}</p>}
+          {err && <p className="err" role="alert">{err}</p>}
+        </section>}
+        <p className="listing-detail-safety-note"><Icon name="shield" size={17}/>
+          Payment and pickup are arranged directly between students. CPSU Market does not hold payments or deliver items.
+        </p>
       </div>
     </div>
   </article>;

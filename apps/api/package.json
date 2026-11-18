@@ -12,6 +12,7 @@
     "db:seed": "bun prisma/seed.ts",
     "test": "bun test",
     "test:integration": "bun test/run-integration.ts",
+    "test:integration:preflight": "bun scripts/integration-target-preflight.ts --audit-only",
     "test:push:integration": "bun test/run-push-integration.ts",
     "db:integrity-preflight": "bun scripts/integrity-preflight.ts --audit-only",
     "db:restore-rehearsal": "bun scripts/verify-integrity-restore.ts --isolated-restore",

@@ -44,7 +44,7 @@ try {
     );
     let rows = 0n;
     for (const { name } of tables) {
-      if (!/^[a-z][a-z0-9_]*$/i.test(name)) throw new Error('STOP: unexpected test table identifier.');
+      if (!/^[a-z_][a-z0-9_]*$/i.test(name)) throw new Error('STOP: unexpected test table identifier.');
       if (name.toLowerCase() === '_prisma_migrations') continue;
       const count = await target.$queryRawUnsafe<{ n: bigint }[]>(
         'SELECT COUNT(*) AS n FROM `' + name + '`',

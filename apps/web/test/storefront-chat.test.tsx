@@ -56,6 +56,14 @@ describe('public store messaging CTA and real categories',()=>{
     expect(followed.indexOf('storefront-follow-notices')).toBeGreaterThan(followed.indexOf('storefront-owner-actions'));
     expect(followed.indexOf('storefront-follow-notices')).toBeLessThan(followed.indexOf('storefront-facts'));
   });
+  test('owner edit is primary and browsing remains a real in-page link',()=>{
+    const html = draw({}, {isOwner:true,canChat:false});
+    const actions = html.match(/<div class="storefront-owner-actions">([\s\S]*?)<\/div>/)?.[1] ?? '';
+    expect(actions).toContain('class="btn storefront-edit-action"');
+    expect(actions).toContain('class="storefront-browse-action"');
+    expect(actions).toContain('href="#storefront-listings"');
+    expect(actions.indexOf('Edit my store')).toBeLessThan(actions.indexOf('Browse listings'));
+  });
   test('store owner or staff does not get buyer chat action',()=>{
     expect(draw({}, {isOwner:true,canChat:false})).not.toContain('Chat with seller');
     expect(draw({}, {canChat:false})).not.toContain('Chat with seller');

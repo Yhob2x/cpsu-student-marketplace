@@ -15,6 +15,21 @@ describe('Shared action feedback', () => {
     expect(screen.queryByRole('status')).toBeNull();
   });
 
+  test('keeps routine actions as compact feedback', () => {
+    render(<ActionFeedbackHost />);
+    act(() => showActionFeedback({ kind: 'success', title: 'Store followed', message: 'You will see updates.' }));
+    expect(screen.getByRole('status').getAttribute('data-presentation')).toBe('toast');
+  });
+
+  test('centers milestone confirmations without becoming a blocking dialog', () => {
+    render(<ActionFeedbackHost />);
+    act(() => showActionFeedback({ kind: 'success', title: 'Submitted for review', message: 'A reviewer will check your listing.', presentation: 'center' }));
+    const status = screen.getByRole('status');
+    expect(status.getAttribute('data-presentation')).toBe('center');
+    expect(status.textContent).toContain('Submitted for review');
+    expect(screen.queryByRole('dialog')).toBeNull();
+  });
+
   test('uses alert semantics for errors and replaces an earlier success', () => {
     render(<ActionFeedbackHost />);
     act(() => showActionFeedback({ kind: 'success', title: 'Saved', message: 'Success.' }));

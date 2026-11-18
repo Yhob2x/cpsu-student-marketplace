@@ -1,5 +1,5 @@
 import { useEffect, useId, useRef, useState } from 'react';
-import type { KeyboardEvent, PointerEvent, WheelEvent } from 'react';
+import type { KeyboardEvent, PointerEvent } from 'react';
 import { createPortal } from 'react-dom';
 import { Icon } from './icons';
 import { adjacentPhotoIndex, clampPhotoIndex } from './gallery-navigation';
@@ -17,6 +17,43 @@ function distance(a: Point, b: Point): number {
   return Math.hypot(a.x - b.x, a.y - b.y);
 }
 
+/** Size occupied by the photo inside an object-fit: contain viewer. */
+export function fittedPhotoSize(
+  naturalWidth: number, naturalHeight: number,
+  viewportWidth: number, viewportHeight: number,
+): { width: number; height: number } {
+  if (naturalWidth <= 0 || naturalHeight <= 0 || viewportWidth <= 0 || viewportHeight <= 0)
+    return { width: 0, height: 0 };
+  const ratio = Math.min(viewportWidth / naturalWidth, viewportHeight / naturalHeight);
+  return { width: naturalWidth * ratio, height: naturalHeight * ratio };
+}
+
+/** Pan only where the zoomed, visible photo exceeds the viewer's dimensions. */
+export function limitPhotoPan(
+  offset: Offset, scale: number, photoWidth: number, photoHeight: number,
+  viewportWidth: number, viewportHeight: number,
+): Offset {
+  if (scale <= 1) return { x: 0, y: 0 };
+  const xLimit = Math.max(0, (photoWidth * scale - viewportWidth) / 2);
+  const yLimit = Math.max(0, (photoHeight * scale - viewportHeight) / 2);
+  return {
+    x: Math.max(-xLimit, Math.min(xLimit, offset.x)),
+    y: Math.max(-yLimit, Math.min(yLimit, offset.y)),
+  };
+}
+
+/** Keep the same point under the fingers/cursor when the image scales. */
+export function anchorPhotoZoom(
+  oldScale: number, newScale: number, previous: Offset,
+  from: Point, to: Point = from,
+): Offset {
+  const ratio = newScale / oldScale;
+  return {
+    x: to.x - (from.x - previous.x) * ratio,
+    y: to.y - (from.y - previous.y) * ratio,
+  };
+}
+
 export function ImageZoomDialog({ photos, title, initialIndex, onClose, instantEntry = false }: {
   photos: readonly string[];
   title: string;
@@ -32,6 +69,7 @@ export function ImageZoomDialog({ photos, title, initialIndex, onClose, instantE
   const scaleRef = useRef(1);
   const offsetRef = useRef<Offset>({ x: 0, y: 0 });
   const surfaceRef = useRef<HTMLDivElement>(null);
+  const imageRef = useRef<HTMLImageElement>(null);
   const dialogRef = useRef<HTMLDivElement>(null);
   const closeRef = useRef<HTMLButtonElement>(null);
   const filmstripRef = useRef<HTMLDivElement>(null);
@@ -81,17 +119,41 @@ export function ImageZoomDialog({ photos, title, initialIndex, onClose, instantE
   const updateZoom = (nextScale: number, nextOffset: Offset = offsetRef.current) => {
     const value = clampZoom(nextScale);
     const box = surfaceRef.current;
-    const maxX = ((box?.clientWidth ?? 0) * (value - 1)) / 2;
-    const maxY = ((box?.clientHeight ?? 0) * (value - 1)) / 2;
-    const bounded = value <= 1 ? { x: 0, y: 0 } : {
-      x: Math.max(-maxX, Math.min(maxX, nextOffset.x)),
-      y: Math.max(-maxY, Math.min(maxY, nextOffset.y)),
-    };
+    const photo = imageRef.current;
+    const viewWidth = box?.clientWidth ?? 0;
+    const viewHeight = box?.clientHeight ?? 0;
+    const fitted = fittedPhotoSize(photo?.naturalWidth ?? 0, photo?.naturalHeight ?? 0, viewWidth, viewHeight);
+    const bounded = limitPhotoPan(nextOffset, value, fitted.width, fitted.height, viewWidth, viewHeight);
     scaleRef.current = value;
     offsetRef.current = bounded;
     setScale(value);
     setOffset(bounded);
   };
+
+  const zoomAt = (nextScale: number, clientPoint: Point) => {
+    const box = surfaceRef.current?.getBoundingClientRect();
+    if (!box) { updateZoom(nextScale); return; }
+    const point = {
+      x: clientPoint.x - box.left - box.width / 2,
+      y: clientPoint.y - box.top - box.height / 2,
+    };
+    const value = clampZoom(nextScale);
+    updateZoom(value, anchorPhotoZoom(scaleRef.current, value, offsetRef.current, point));
+  };
+
+  // Wheel or trackpad zoom works throughout the fullscreen photo canvas.
+  // The non-passive listener can prevent the page underneath from scrolling.
+  useEffect(() => {
+    const surface = surfaceRef.current;
+    if (!surface) return;
+    const handleWheel = (event: globalThis.WheelEvent) => {
+      event.preventDefault();
+      const step = event.deltaY < 0 ? .25 : -.25;
+      zoomAt(scaleRef.current + step, { x: event.clientX, y: event.clientY });
+    };
+    surface.addEventListener('wheel', handleWheel, { passive: false });
+    return () => surface.removeEventListener('wheel', handleWheel);
+  });
 
   const resetView = () => {
     pointers.current.clear();
@@ -136,10 +198,14 @@ export function ImageZoomDialog({ photos, title, initialIndex, onClose, instantE
     if (pointers.current.size >= 2 && pinch.current) {
       const [a, b] = Array.from(pointers.current.values());
       const midpoint = { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 };
-      updateZoom(pinch.current.scale * distance(a, b) / pinch.current.distance, {
-        x: pinch.current.offset.x + midpoint.x - pinch.current.midpoint.x,
-        y: pinch.current.offset.y + midpoint.y - pinch.current.midpoint.y,
-      });
+      const nextScale = clampZoom(pinch.current.scale * distance(a, b) / pinch.current.distance);
+      const bounds = event.currentTarget.getBoundingClientRect();
+      const center = { x: bounds.left + bounds.width / 2, y: bounds.top + bounds.height / 2 };
+      updateZoom(nextScale, anchorPhotoZoom(
+        pinch.current.scale, nextScale, pinch.current.offset,
+        { x: pinch.current.midpoint.x - center.x, y: pinch.current.midpoint.y - center.y },
+        { x: midpoint.x - center.x, y: midpoint.y - center.y },
+      ));
     } else if (pointers.current.size === 1 && drag.current && scaleRef.current > 1) {
       updateZoom(scaleRef.current, {
         x: drag.current.offset.x + point.x - drag.current.start.x,
@@ -179,7 +245,7 @@ export function ImageZoomDialog({ photos, title, initialIndex, onClose, instantE
       const previous = lastTap.current;
       const point = { x: event.clientX, y: event.clientY };
       if (previous && now - previous.at < 320 && distance(previous.point, point) < 36) {
-        updateZoom(scaleRef.current > 1 ? 1 : 2, { x: 0, y: 0 });
+        zoomAt(scaleRef.current > 1 ? 1 : 2, point);
         lastTap.current = null;
       } else lastTap.current = { at: now, point };
     }
@@ -205,12 +271,6 @@ export function ImageZoomDialog({ photos, title, initialIndex, onClose, instantE
     if (event.key === 'ArrowLeft') { event.preventDefault(); showPhoto(index - 1); }
   };
 
-  const onWheel = (event: WheelEvent<HTMLDivElement>) => {
-    if (!event.ctrlKey) return;
-    event.preventDefault();
-    updateZoom(scaleRef.current + (event.deltaY < 0 ? .25 : -.25));
-  };
-
   return createPortal(
     <div className="image-zoom-overlay" ref={dialogRef} role="dialog" aria-modal="true"
       aria-labelledby={headingId} onKeyDown={onKeyDown} data-motion-phase={motionPhase}
@@ -232,14 +292,15 @@ export function ImageZoomDialog({ photos, title, initialIndex, onClose, instantE
       </div>
       <div className="image-zoom-view">
         {photos.length > 1 && <button type="button" className="image-zoom-prev" aria-label="Previous zoom photo" disabled={index === 0 || scale > 1} onClick={() => showPhoto(index - 1)}><Icon name="chevronLeft" size={24} /></button>}
-        <div className="image-zoom-surface" ref={surfaceRef}
+        <div className="image-zoom-surface" ref={surfaceRef} data-zoomed={scale > 1}
           onPointerDown={onPointerDown} onPointerMove={onPointerMove} onPointerUp={onPointerEnd}
-          onPointerCancel={onPointerEnd} onWheel={onWheel}
-          onDoubleClick={() => updateZoom(scaleRef.current > 1 ? 1 : 2, { x: 0, y: 0 })}>
+          onPointerCancel={onPointerEnd}
+          onDoubleClick={event => zoomAt(scaleRef.current > 1 ? 1 : 2, { x: event.clientX, y: event.clientY })}>
           {failed.includes(index)
             ? <div className="image-zoom-unavailable"><Icon name="tag" size={32} /><span>Photo unavailable</span></div>
-            : <img src={photos[index]} alt={'Zoomed photo ' + (index + 1) + ' of ' + photos.length + ': ' + title}
+            : <img ref={imageRef} src={photos[index]} alt={'Zoomed photo ' + (index + 1) + ' of ' + photos.length + ': ' + title}
                 draggable={false} style={{ transform: 'translate3d(' + offset.x + 'px, ' + offset.y + 'px, 0) scale(' + scale + ')' }}
+                onLoad={() => updateZoom(scaleRef.current, offsetRef.current)}
                 onError={() => setFailed(values => values.includes(index) ? values : [...values, index])} />}
         </div>
         {photos.length > 1 && <button type="button" className="image-zoom-next" aria-label="Next zoom photo" disabled={index === photos.length - 1 || scale > 1} onClick={() => showPhoto(index + 1)}><Icon name="chevronRight" size={24} /></button>}
@@ -254,7 +315,7 @@ export function ImageZoomDialog({ photos, title, initialIndex, onClose, instantE
                 onError={() => setFailed(values => values.includes(photoIndex) ? values : [...values, photoIndex])} />}
         </button>)}
       </div>}
-      <p className="image-zoom-help">Pinch or double-tap to zoom · Drag to move · Swipe photos when not zoomed</p>
+      <p className="image-zoom-help">Scroll, pinch, or double-tap to zoom · Drag the enlarged photo to explore · Swipe to change photos at 100%</p>
     </div>, document.body
   );
 }

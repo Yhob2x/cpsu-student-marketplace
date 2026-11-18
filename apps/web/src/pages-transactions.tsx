@@ -125,7 +125,7 @@ export function TransactionDetail() {
       await reload();
       void syncUnread();
       setNotice('Transaction updated. The other student has been notified.');
-      showActionFeedback({ kind: 'success', title: 'Transaction updated', message: 'The new status has been recorded and the other student notified.' });
+      showActionFeedback({ kind: 'success', title: 'Transaction updated', message: 'The new status has been recorded and the other student notified.', presentation: 'center' });
     } catch (e) { setActionError(explain(e)); showActionFeedback({ kind: 'error', title: 'Transaction not updated', message: explain(e) }); await reload(); }
     finally { setBusy(false); }
   };

@@ -498,7 +498,7 @@ export function ListingDetail() {
     setBusy(true); setErr('');
     try {
       const created = await api<{ id: number }>('/transactions', { body: { listingId: l.id } });
-      showActionFeedback({ kind: 'success', title: 'Request created', message: 'Your request is ready for the seller to review.' });
+      showActionFeedback({ kind: 'success', title: 'Request created', message: 'Your request is ready for the seller to review.', presentation: 'center' });
       navigate(`/transactions/${created.id}`);
     } catch (e) {
       setErr(explain(e));
@@ -513,7 +513,7 @@ export function ListingDetail() {
       else setErr('Could not update your saved list. Check you are still signed in.');
     } finally { setBusy(false); }
   };
-  const report = async () => { setBusy(true); try { await api('/reports', { body: { listingId: l.id, reason } }); setReason(''); setReporting(false); setInquiryThreadId(null); setNote('Report sent to a campus reviewer.'); setErr(''); showActionFeedback({ kind: 'success', title: 'Report submitted', message: 'A campus reviewer will review your report.' }); } catch (e) { setErr(explain(e)); showActionFeedback({ kind: 'error', title: 'Report not submitted', message: explain(e) }); } finally { setBusy(false); } };
+  const report = async () => { setBusy(true); try { await api('/reports', { body: { listingId: l.id, reason } }); setReason(''); setReporting(false); setInquiryThreadId(null); setNote('Report sent to a campus reviewer.'); setErr(''); showActionFeedback({ kind: 'success', title: 'Report submitted', message: 'A campus reviewer will review your report.', presentation: 'center' }); } catch (e) { setErr(explain(e)); showActionFeedback({ kind: 'error', title: 'Report not submitted', message: explain(e) }); } finally { setBusy(false); } };
   // One button, two homes: over the first photo when there is one, in the action row when there is not.
   const heartLabel = !me ? 'Sign in to save this listing' : saved ? 'Remove from saved' : 'Save for later';
   const heart = <button className="heart-btn" aria-pressed={saved} aria-label={heartLabel}

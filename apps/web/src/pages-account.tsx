@@ -305,7 +305,7 @@ export function Dashboard() {
     setCreateDirty(false);
     requestAnimationFrame(() => createTitle.current?.focus());
   };
-  const createStore = async (e: FormEvent<HTMLFormElement>) => { e.preventDefault(); try { await api('/seller/store', { body: Object.fromEntries(new FormData(e.currentTarget)) }); await reload(); showActionFeedback({ kind: 'success', title: 'Store created', message: 'Your store details were saved.' }); } catch (x) { setErr(explain(x)); } };
+  const createStore = async (e: FormEvent<HTMLFormElement>) => { e.preventDefault(); try { await api('/seller/store', { body: Object.fromEntries(new FormData(e.currentTarget)) }); await reload(); showActionFeedback({ kind: 'success', title: 'Store created', message: 'Your store details were saved.', presentation: 'center' }); } catch (x) { setErr(explain(x)); } };
   const uploadOnePhoto = async (id: number, file: File) => {
     const fd = new FormData();
     fd.append('image', file);
@@ -369,7 +369,7 @@ export function Dashboard() {
       setErr(''); setOk('Listing removed from marketplace browsing.'); showActionFeedback({ kind: 'success', title: 'Listing removed', message: 'This listing is no longer shown in the marketplace.' }); await load();
     } catch (x) { setErr(explain(x)); } finally { setPending(null); }
   };
-  const submit = async (id: number) => { setPending(id); try { await api(`/seller/listings/${id}/submit`, { method: 'POST', body: {} }); setOk('Submitted. A reviewer will decide soon.'); setErr(''); showActionFeedback({ kind: 'success', title: 'Submitted for review', message: 'Your listing has been sent to a campus reviewer.' }); await load(); } catch (x) { setErr(explain(x)); } finally { setPending(null); } };
+  const submit = async (id: number) => { setPending(id); try { await api(`/seller/listings/${id}/submit`, { method: 'POST', body: {} }); setOk('Submitted. A reviewer will decide soon.'); setErr(''); showActionFeedback({ kind: 'success', title: 'Submitted for review', message: 'Your listing has been sent to a campus reviewer.', presentation: 'center' }); await load(); } catch (x) { setErr(explain(x)); } finally { setPending(null); } };
   const saveEdit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (editInFlight.current || !editing) return;

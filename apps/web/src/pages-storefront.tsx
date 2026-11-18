@@ -61,7 +61,7 @@ export function StorefrontView({ store, isOwner, canFollow, onFollow, followBusy
 
   return <div className="storefront">
     <section className="storefront-identity" aria-labelledby="storefront-name">
-      <div className="storefront-banner" aria-hidden="true"><Icon name="store" size={32} /></div>
+      <div className="storefront-banner" aria-hidden="true" />
       <div className="storefront-identity-content">
         <div className="storefront-primary">
           <SellerAvatar name={store.storeName} src={store.avatarUrl} size="large" />
@@ -72,9 +72,9 @@ export function StorefrontView({ store, isOwner, canFollow, onFollow, followBusy
           </div>
         </div>
         <div className="storefront-owner-actions">
-          <a className="btn storefront-browse-action" href="#storefront-listings"><Icon name="grid" size={17} /> Browse listings</a>
+          {isOwner && <Link className="btn storefront-edit-action" to="/profile#store-profile">Edit my store</Link>}
           {!isOwner && canFollow && <button type="button"
-            className="btn ghost storefront-follow-action"
+            className="btn storefront-follow-action"
             aria-pressed={Boolean(store.follow?.isFollowing)}
             disabled={followBusy || !store.follow?.available}
             onClick={onFollow}>
@@ -91,7 +91,7 @@ export function StorefrontView({ store, isOwner, canFollow, onFollow, followBusy
             }}>
             <Icon name="chat" size={17} /> Chat with seller
           </button>}
-          {isOwner && <Link className="btn ghost" to="/profile#store-profile">Edit my store</Link>}
+          <a className="storefront-browse-action" href="#storefront-listings"><Icon name="grid" size={16} /> Browse listings</a>
         </div>
         {canChat && store.listings.length === 0 &&
           <p className="storefront-chat-note muted">Messaging becomes available once this store has a published, available listing.</p>}
@@ -143,7 +143,12 @@ export function StorefrontView({ store, isOwner, canFollow, onFollow, followBusy
     <section className="storefront-products" aria-labelledby="storefront-listings">
       <div className="storefront-products-heading">
         <div><h2 id="storefront-listings" tabIndex={-1}>Browse this store</h2><p>Find products and services from {store.storeName}.</p></div>
-        <span className="storefront-results" role="status" aria-live="polite">{visible.length} {visible.length === 1 ? 'result' : 'results'}</span>
+        <div className="storefront-results-group">
+          <span className="storefront-results" role="status" aria-live="polite">{visible.length} {visible.length === 1 ? 'result' : 'results'}</span>
+          {(filter !== 'all' || category !== 'all' || query.trim() !== '') &&
+            <button type="button" className="storefront-clear-filters"
+              onClick={() => { setFilter('all'); setCategory('all'); setQuery(''); }}>Clear filters</button>}
+        </div>
       </div>
       <nav className="storefront-navigation" aria-label="Store listings and categories">
         <div className="storefront-toolbar">

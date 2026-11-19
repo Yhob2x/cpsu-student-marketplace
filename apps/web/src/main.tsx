@@ -52,6 +52,7 @@ import './action-feedback.css';
 import './listing-detail-polish.css';
 import './concise-controls.css';
 import './storefront-hierarchy.css';
+import './ui-consistency.css';
 
 export type Me = { id: number; email: string; displayName: string; roles: { role: string; campusId: number | null }[];
   affiliations: { id: number; campus: { id: number; name: string }; status: string }[]; storeId: number | null };

@@ -91,6 +91,18 @@
 .transaction-tools p { color: var(--ink-soft); font-size: .85rem; }
 .transaction-tool-links { display: flex; flex-wrap: wrap; gap: 10px 16px; align-items: center; }
 .transaction-tool-links .btn { display: inline-flex; align-items: center; gap: 8px; text-decoration: none; }
+.transaction-refresh {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  min-height: 44px; padding: 9px 13px; border-radius: 10px;
+  border: 1px solid var(--line); background: var(--surface-soft); color: var(--forest);
+  font-size: .87rem; font-weight: 650; cursor: pointer;
+}
+.transaction-refresh:hover:not(:disabled) { background: var(--color-primary-light); }
+.transaction-refresh:disabled { cursor: progress; opacity: .7; }
+.transaction-refresh-note { display: inline-flex; align-items: center; gap: 6px; color: var(--forest) !important; font-size: .8rem !important; }
+.transaction-refresh-spin { animation: transaction-refresh-rotate 900ms linear infinite; }
+@keyframes transaction-refresh-rotate { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .transaction-refresh-spin { animation: none; } }
 .transaction-history { padding: 17px 21px; }
 .transaction-history > summary { cursor: pointer; min-height: 44px; display: flex; align-items: center; gap: 10px; justify-content: space-between; font-weight: 750; }
 .transaction-history > summary span { font-size: .78rem; font-weight: 500; color: var(--ink-soft); }
@@ -111,10 +123,13 @@
 @media (max-width: 390px) {
   .transaction-filter { padding-inline: 13px; }
   .transaction-item-meta { gap: 5px 9px; }
-  .transaction-progress li { font-size: .66rem; }
+  .transaction-progress li { font-size: .75rem; }
   .transaction-progress li:not(:last-child)::after { left: calc(50% + 19px); right: calc(-50% + 19px); }
   .transaction-close-actions .btn { width: 100%; }
 }
 @media (prefers-reduced-motion: reduce) {
   .transaction-page .btn { transition: none; }
 }
+
+.transaction-history > summary::after { content: '⌄'; color: var(--forest); font-size: 1.25rem; line-height: 1; margin-left: 3px; }
+.transaction-history[open] > summary::after { transform: rotate(180deg); }

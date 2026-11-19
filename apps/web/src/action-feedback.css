@@ -22,14 +22,14 @@
   display: grid;
   grid-template-columns: 48px minmax(0, 1fr) 44px;
   align-items: center;
-  column-gap: 13px;
+  column-gap: 12px;
   max-width: 100%;
-  padding: 14px 8px 14px 16px;
+  padding: 12px 8px 12px 16px;
   border: 1px solid var(--line);
-  border-radius: 16px;
+  border-radius: 12px;
   background: var(--paper);
   color: var(--ink);
-  box-shadow: 0 18px 48px var(--shadow-shot), 0 4px 14px var(--shadow-card);
+  box-shadow: var(--ui-shadow-lg);
   pointer-events: auto;
   opacity: 1;
   transform: translateY(0) scale(1);
@@ -62,7 +62,7 @@
   display: block;
   color: var(--ink);
   font-family: var(--font-heading);
-  font-size: 15px;
+  font-size: 16px;
   font-weight: 700;
   line-height: 1.35;
   overflow-wrap: anywhere;
@@ -70,7 +70,7 @@
 .action-feedback-content p {
   margin: 5px 0 0;
   color: var(--ink-soft);
-  font-size: 13px;
+  font-size: 14px;
   line-height: 1.5;
   overflow-wrap: anywhere;
 }
@@ -98,14 +98,14 @@
   width: min(380px, 100%);
   max-height: calc(100dvh - 32px);
   overflow-y: auto;
-  padding: 30px 28px 28px;
+  padding: 32px 24px 24px;
   text-align: center;
-  border-radius: 20px;
+  border-radius: 12px;
 }
 .action-feedback--center .action-feedback-symbol {
-  width: 74px;
-  height: 74px;
-  margin-bottom: 5px;
+  width: 64px;
+  height: 64px;
+  margin-bottom: 4px;
   border: 1px solid var(--mint);
   box-shadow: 0 0 0 8px var(--mango-soft);
 }
@@ -130,7 +130,7 @@
 @media (max-width: 640px) {
   .action-feedback-viewport { width: calc(100% - 24px); }
   .action-feedback-viewport--center { width: auto; }
-  .action-feedback--center { padding: 28px 24px 25px; }
+  .action-feedback--center { padding: 24px; }
 }
 @media (prefers-reduced-motion: reduce) {
   .action-feedback { transition: none; transform: none; }

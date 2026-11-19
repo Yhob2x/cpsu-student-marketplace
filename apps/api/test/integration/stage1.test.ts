@@ -54,6 +54,18 @@ if (process.env.CPSU_INTEGRATION_TESTS === '1') {
       expect(mine.status).toBe(200);
       expect(mine.body.items.some((t: any) => t.id === created.body.id)).toBe(true);
       expect((await request(app).get(url).set(token(fx.outsider.id))).body.items.some((t: any) => t.id === created.body.id)).toBe(false);
+      // Each role filter is enforced by SQL before pagination, not just client-side hiding.
+      const buying = await request(app).get(url + '?role=buying').set(token(fx.buyer.id));
+      const selling = await request(app).get(url + '?role=selling').set(token(fx.seller.id));
+      expect(buying.status).toBe(200);
+      expect(selling.status).toBe(200);
+      expect(buying.body.items.some((t: any) => t.id === created.body.id)).toBe(true);
+      expect(selling.body.items.some((t: any) => t.id === created.body.id)).toBe(true);
+      expect((await request(app).get(url + '?role=selling').set(token(fx.buyer.id)))
+        .body.items.some((t: any) => t.id === created.body.id)).toBe(false);
+      expect((await request(app).get(url + '?role=buying').set(token(fx.outsider.id)))
+        .body.items.some((t: any) => t.id === created.body.id)).toBe(false);
+      expect((await request(app).get(url + '?role=invalid').set(token(fx.buyer.id))).status).toBe(400);
     });
 
     test('WP3: seller cannot accept a request after buyer loses active verified student status', async () => {

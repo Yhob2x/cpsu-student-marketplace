@@ -32,7 +32,7 @@ const OPTIONS: { id: StoreFilter; name: string }[] = [
 ];
 
 export function StorefrontView({ store, isOwner, canFollow, onFollow, followBusy, followMessage,
-  canChat, signedIn, onChatSignIn, onChat, chatBusy, chatError, renderListing }: {
+  canChat, signedIn, onChatSignIn, onChat, chatBusy, chatError, renderListing, reportSellerSlot }: {
   store: PublicStorefront;
   isOwner: boolean;
   canFollow: boolean;
@@ -46,6 +46,7 @@ export function StorefrontView({ store, isOwner, canFollow, onFollow, followBusy
   chatBusy: boolean;
   chatError: string;
   renderListing: (listing: Listing) => ReactNode;
+  reportSellerSlot?: ReactNode;
 }) {
   const [filter, setFilter] = useState<StoreFilter>('all');
   const [query, setQuery] = useState('');
@@ -200,7 +201,8 @@ export function StorefrontView({ store, isOwner, canFollow, onFollow, followBusy
     <section className="storefront-about" aria-label="About this store">
       <h2>About the store</h2>
       <p>{store.description}</p>
-      <p className="muted">Campus verification confirms eligibility for this marketplace, not a university endorsement of products or services. Contact sellers through individual listings.</p>
+      <p className="muted">Campus verification confirms marketplace eligibility, not an endorsement of products or services.</p>
+      {reportSellerSlot}
     </section>
   </div>;
 }

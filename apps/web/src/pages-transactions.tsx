@@ -1,10 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { ArrowRight, Check, CheckCircle2, Clock3, MessageCircle, X } from 'lucide-react';
+import { ArrowRight, Check, CheckCircle2, Clock3, MessageCircle, RefreshCw, X } from 'lucide-react';
 import { api, explain, peso } from './api';
 import { useMe } from './main';
 import { showActionFeedback } from './action-feedback';
-import { IconAction } from './icon-action';
 import { TransactionStoreReview } from './store-review-widgets';
 import { useForegroundRefresh } from './foreground-refresh';
 import { MeetupLocationCard, type MeetupHandoff } from './meetup-location-card';
@@ -161,6 +160,7 @@ export function TransactionDetail() {
   const [closing, setClosing] = useState(false);
   const [busy, setBusy] = useState(false);
   const [refreshingStatus, setRefreshingStatus] = useState(false);
+  const [refreshNotice, setRefreshNotice] = useState('');
   const requestVersion = useRef(0);
 
   const reload = useCallback(async () => {
@@ -178,17 +178,32 @@ export function TransactionDetail() {
     }
   }, [id]);
   useEffect(() => {
-    setData(null); setLoading(true); setError(''); setActionError(''); setClosing(false);
+    setData(null); setLoading(true); setError(''); setActionError(''); setClosing(false); setRefreshNotice('');
     void reload();
     return () => { requestVersion.current += 1; };
   }, [reload]);
   useForegroundRefresh(() => reload(), 5_000,
-    Boolean(me && data && data.status !== 'completed' && data.status !== 'cancelled'));
+    Boolean(me && data && !refreshingStatus && data.status !== 'completed' && data.status !== 'cancelled'));
 
   const refreshStatus = async () => {
     if (refreshingStatus || busy) return;
     setRefreshingStatus(true);
-    try { await reload(); } finally { setRefreshingStatus(false); }
+    setRefreshNotice('');
+    // A manual check reports success only after the server actually returns fresh data.
+    const version = ++requestVersion.current;
+    try {
+      const next = await api<Detail>('/transactions/' + id);
+      if (version !== requestVersion.current) return;
+      setData(next);
+      setError('');
+      setRefreshNotice('Checked just now');
+    } catch (e) {
+      if (version !== requestVersion.current) return;
+      setError(explain(e));
+      setRefreshNotice('');
+    } finally {
+      setRefreshingStatus(false);
+    }
   };
 
   const act = async (suffix: string, body: unknown = {}) => {
@@ -209,10 +224,16 @@ export function TransactionDetail() {
             : updated.status === 'cancelled'
               ? 'This request is now closed. The other student has been notified.'
               : 'The updated status is visible to both students.';
+      const accepted = suffix === 'decision' && (body as { action?: string }).action === 'accept';
+      const title = updated.status === 'completed' ? 'Transaction completed'
+        : updated.status === 'cancelled' ? 'Request closed'
+          : accepted ? 'Request accepted'
+            : suffix === 'confirm-meetup' ? 'Meetup confirmed'
+              : suffix === 'confirm-completion' ? 'Confirmation saved'
+                : 'Discussion started';
       showActionFeedback({
-        kind: 'success', title: updated.status === 'completed' ? 'Transaction completed' :
-          updated.status === 'cancelled' ? 'Request closed' : 'Status updated',
-        message, presentation: updated.status === 'completed' || updated.status === 'cancelled' ? 'center' : 'toast',
+        kind: 'success', title, message,
+        presentation: updated.status === 'completed' || updated.status === 'cancelled' || accepted ? 'center' : 'toast',
       });
     } catch (e) {
       setActionError(explain(e));
@@ -277,7 +298,7 @@ export function TransactionDetail() {
       <p className="transaction-disclosure">Statuses are reported by students, not verified payment or delivery records.</p>
     </section>
 
-    {!terminal && <section className="panel transaction-next-card" aria-label="Your next action">
+    {!terminal && <section className="panel transaction-next-card" aria-label="Your next action" aria-busy={busy}>
       <div className="transaction-section-heading">
         <div><span className="transaction-eyebrow">Your next step</span><h2>{nextTitle}</h2></div>
         <Clock3 size={23} aria-hidden="true" className="transaction-next-icon" />
@@ -361,15 +382,22 @@ export function TransactionDetail() {
     </section>}
     {buyer && data.status === 'completed' && <TransactionStoreReview transactionId={data.id} />}
     <section className="panel transaction-tools" aria-label="Transaction options">
-      <div className="transaction-section-heading"><h2>Details & conversation</h2></div>
+      <div className="transaction-section-heading"><h2>Other options</h2></div>
       <p>Arrange payment and handoff directly with the other student. CPSU Market does not handle money.</p>
       <div className="transaction-tool-links">
-        <Link to={'/inquiries/' + data.inquiryThreadId} className="btn ghost"><MessageCircle size={17} aria-hidden="true" /> Open chat</Link>
+        {terminal && <Link to={'/inquiries/' + data.inquiryThreadId} className="transaction-text-link"><MessageCircle size={17} aria-hidden="true" /> Chat</Link>}
         <Link to={'/listings/' + data.listingId} className="transaction-text-link">View listing <ArrowRight size={16} aria-hidden="true" /></Link>
-        <IconAction className="btn ghost" icon="refresh" label="Refresh transaction status"
-          disabled={busy} busy={refreshingStatus} onClick={() => void refreshStatus()} />
+        <button type="button" className="transaction-refresh" disabled={busy || refreshingStatus}
+          aria-label={refreshingStatus ? 'Checking for transaction updates' : 'Check for transaction updates'}
+          onClick={() => void refreshStatus()}>
+          <RefreshCw size={17} className={refreshingStatus ? 'transaction-refresh-spin' : ''} aria-hidden="true" />
+          {refreshingStatus ? 'Checking…' : 'Check for updates'}
+        </button>
       </div>
-      {error && <p className="err" role="alert">Could not refresh the latest details: {error}</p>}
+      {refreshNotice && !error && <p className="transaction-refresh-note" role="status">
+        <Check size={15} aria-hidden="true" /> {refreshNotice}
+      </p>}
+      {error && <p className="err" role="alert">Could not check for updates: {error}</p>}
     </section>
     <details className="panel transaction-history" >
       <summary>Activity history <span>{data.history.length} updates</span></summary>

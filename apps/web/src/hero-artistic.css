@@ -39,9 +39,9 @@
 .hero h1 { max-width: none; margin-bottom: 1.25rem; font-size: clamp(3.65rem, 5.8vw, 5.6rem); line-height: .92; color: var(--color-primary-dark); }
 .hero h1 .hero-line, .hero h1 em { display: block; overflow-wrap: anywhere; }
 .hero h1 .hero-line-connect { margin-left: -.18em; }
-.hero h1 em { padding-left: .34em; color: var(--color-warning-ink); }
-.hero h1 .hero-amp { color: var(--color-warning-ink); font-style: italic; font-size: 1.23em; line-height: .55; vertical-align: -.08em; }
-.hero p { max-width: 38ch; margin: 1.1rem 0 0; color: var(--color-primary-dark); line-height: 1.48; font-size: .95rem; }
+.hero h1 em { padding-left: .34em; color: var(--color-primary); }
+.hero h1 .hero-amp { color: var(--color-primary); font-style: italic; font-size: 1.23em; line-height: .55; vertical-align: -.08em; }
+.hero p { max-width: 38ch; margin: 1.1rem 0 0; color: var(--color-text-muted); line-height: 1.48; font-size: .95rem; }
 .hero-actions { display: flex; flex-wrap: wrap; gap: .75rem; margin-top: 1.45rem; }
 .hero-actions .btn { min-height: 45px; padding-inline: 1.3rem; font-size: .84rem; }
 .hero .hero-actions .btn:not(.ghost) { background: var(--forest); color: var(--color-card); border-color: var(--forest); box-shadow: 0 4px 10px color-mix(in srgb, var(--color-primary-dark) 16%, transparent); }

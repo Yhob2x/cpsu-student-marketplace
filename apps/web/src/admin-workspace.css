@@ -75,3 +75,13 @@
 @media (prefers-reduced-motion: reduce) {
   .admin-workspace-nav-item, .admin-review-queue-item, .admin-overview-shortcuts button { scroll-behavior: auto; }
 }
+/* Read-only transaction monitoring uses the same status vocabulary as student views. */
+.admin-workspace-main .admin-transaction-list { max-width: none; gap: 10px; margin-top: 14px; }
+.admin-workspace-main .admin-transaction-row {
+  display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-start;
+  gap: 12px; padding: 15px 17px; margin: 0;
+}
+.admin-workspace-main .admin-transaction-row > div { min-width: 0; flex: 1 1 220px; }
+.admin-workspace-main .admin-transaction-row strong { font-size: .98rem; overflow-wrap: anywhere; }
+.admin-workspace-main .admin-transaction-row p { margin: 4px 0 3px; font-size: .83rem; }
+.admin-workspace-main .admin-transaction-row time { font-size: .78rem; }

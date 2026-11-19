@@ -1,4 +1,4 @@
-.store-reviews-section { border-top: 1px solid var(--line); padding-top: 1.4rem; display: grid; gap: .9rem; }
+.store-reviews-section { border-top: 1px solid var(--line); padding-top: 1.15rem; display: grid; gap: .75rem; }
 .store-reviews-heading { display:flex; align-items:baseline; justify-content:space-between; flex-wrap:wrap; gap: .65rem 1.2rem; }
 .store-reviews-heading h2 { margin: 0; font-size: 1.25rem; }
 .store-review-summary { display:flex; flex-wrap:wrap; align-items:center; gap: .4rem .75rem; }
@@ -6,7 +6,7 @@
 .store-review-summary > span:last-child { font-size:.83rem; color:var(--ink-soft); }
 .store-rating-stars { display:inline-flex; align-items:center; gap:.05em; color: var(--color-warning-ink); font-size:1rem; letter-spacing:.01em; }
 .store-rating-large { font-size:1.2rem; }
-.store-review-disclosure { margin:0; max-width:76ch; font-size:.82rem; line-height:1.55; }
+.store-review-disclosure { margin:0; max-width:76ch; font-size:.77rem; line-height:1.55; }
 .store-review-distribution { display: grid; gap: .3rem; width: min(100%, 21rem); }
 .store-review-distribution-row { display: grid; grid-template-columns: 2rem minmax(0, 1fr) 2.5rem; gap: .7rem; align-items: center; font-size: .8rem; color: var(--ink-soft); font-variant-numeric: tabular-nums; }
 .store-review-distribution-row span:last-child { text-align: right; }
@@ -92,29 +92,13 @@
   }
 }
 
-/* Public review entry: a quiet, compact empty state and one discoverable action. */
-.store-review-empty {
-  display: grid;
-  justify-items: center;
-  gap: .35rem;
-  padding: clamp(1.35rem, 3vw, 2rem) 1rem;
-  border: 1px solid var(--line);
-  border-radius: 12px;
-  text-align: center;
-}
-.store-review-empty-stars {
-  color: var(--forest);
-  font-size: 1.4rem;
-  line-height: 1.25;
-  letter-spacing: .14em;
-}
-.store-review-empty strong { font-size: 1rem; line-height: 1.4; }
-.store-review-empty p {
-  margin: 0;
-  color: var(--ink-soft);
-  font-size: .84rem;
-  line-height: 1.5;
-}
+/* Small, task-led empty state: icon and text beside one meaningful action. */
+.store-review-empty {display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:.75rem 1.25rem;padding:clamp(1rem,2vw,1.35rem) clamp(1rem,2vw,1.4rem);border:1px solid var(--line);border-radius:12px;background:var(--paper)}
+.store-review-empty-intro {display:flex;align-items:center;gap:.85rem;min-width:0}
+.store-review-empty-icon {display:grid;flex:0 0 44px;place-items:center;width:44px;height:44px;border-radius:10px;background:var(--surface-soft);color:var(--forest)}
+.store-review-empty-copy {display:grid;gap:.2rem;min-width:0}
+.store-review-empty-copy strong {font-size:.95rem;line-height:1.35;color:var(--ink)}
+.store-review-empty-copy p {margin:0;color:var(--ink-soft);font-size:.83rem;line-height:1.5}
 .store-review-entry {
   display: grid;
   justify-items: start;
@@ -157,13 +141,15 @@
 .store-review-entry-pagination .btn { min-height: 44px; }
 .store-review-entry .field select { min-height: 44px; }
 
-.store-review-empty .store-review-entry {
-  justify-items: center;
-  width: 100%;
-  margin-top: .65rem;
+/* Expanded review form spans both columns; on mobile, actions stack. */
+.store-review-empty .store-review-entry {display:contents}
+.store-review-empty .store-review-write-button {grid-column:2;grid-row:1;justify-self:end;padding-inline:1.1rem}
+.store-review-empty .store-review-entry-panel {grid-column:1/-1;width:100%;max-width:52rem;text-align:left;justify-items:stretch}
+.store-review-empty .store-review-entry-notice {grid-column:1/-1}
+@media(max-width:620px){
+  .store-review-empty {grid-template-columns:minmax(0,1fr);gap:.8rem}
+  .store-review-empty-intro {grid-column:1}
+  .store-review-empty .store-review-write-button {grid-column:1;grid-row:2;justify-self:start}
+  .store-review-empty .store-review-entry-panel,
+  .store-review-empty .store-review-entry-notice {grid-column:1}
 }
-.store-review-empty .store-review-entry-panel {
-  text-align: left;
-  justify-items: stretch;
-}
-.store-review-empty .store-review-entry-panel h3 { text-align: left; }

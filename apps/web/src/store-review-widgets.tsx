@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, type FormEvent, type ReactNode } from 'react';
 import { api, ApiError, explain } from './api';
 import { showActionFeedback } from './action-feedback';
+import { Icon } from './icons';
 import './store-reviews.css';
 
 type Review = { id: number; rating: number; body: string | null; createdAt: string;
@@ -53,15 +54,18 @@ export function StoreRatingsAndReviews({ storeId, reviewAction }: { storeId: num
           <span>{data.summary!.distribution?.[stars] ?? 0}</span>
         </div>)}
       </div>}
-    <p className="muted store-review-disclosure">Only verified buyers of completed transactions can rate stores. Reviews are student opinions, not CPSU endorsements.</p>
     {loading && <p className="muted" role="status">Loading store reviews…</p>}
     {error && <p className="err" role="alert">Could not load store reviews: {error} <button type="button" className="btn ghost" onClick={load}>Retry</button></p>}
     {!loading && !error && data?.available === false && <p className="muted">Store ratings and reviews are being prepared.</p>}
     {!loading && !error && data?.available && data.summary?.count === 0 &&
       <div className="store-review-empty">
-        <span className="store-review-empty-stars" aria-hidden="true">☆☆☆☆☆</span>
-        <strong>No reviews yet</strong>
-        <p>Approved buyer reviews will appear here.</p>
+        <div className="store-review-empty-intro">
+          <span className="store-review-empty-icon" aria-hidden="true"><Icon name="star" size={21} /></span>
+          <div className="store-review-empty-copy">
+            <strong>No reviews yet</strong>
+            <p>Approved buyer reviews will appear here.</p>
+          </div>
+        </div>
         {reviewAction}
       </div>}
     {!loading && !error && data?.available && data.items.length > 0 && <div className="store-review-list">
@@ -73,6 +77,7 @@ export function StoreRatingsAndReviews({ storeId, reviewAction }: { storeId: num
       </article>)}
     </div>}
     {!loading && !error && data?.available && data.summary?.count !== 0 && reviewAction}
+    <p className="muted store-review-disclosure">Only verified buyers of completed transactions can rate stores. Reviews are student opinions, not CPSU endorsements.</p>
     {!loading && !error && data?.available && pages > 1 && <nav className="store-review-pagination" aria-label="Store review pages">
       <button type="button" className="btn ghost" disabled={page <= 1} onClick={() => setPage(p => p - 1)}>Previous</button>
       <span>Page {page} of {pages}</span>

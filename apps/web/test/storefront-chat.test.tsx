@@ -11,7 +11,7 @@ const sample = {
   campus: {code:'MAIN', name:'CPSU Main Campus'},
   listings: [{id: 10, title:'Textbook', category:{name:'Books'},type:'physical_product'} as Listing],
 } satisfies PublicStorefront;
-function draw(overrides:Partial<PublicStorefront>={}, opts:{canChat?:boolean;signedIn?:boolean;isOwner?:boolean;followBusy?:boolean;followMessage?:string}={}) {
+function draw(overrides:Partial<PublicStorefront>={}, opts:{canChat?:boolean;signedIn?:boolean;isOwner?:boolean;followBusy?:boolean;followMessage?:string;report?:boolean}={}) {
   const store={...sample,...overrides};
   return renderToStaticMarkup(
     <StaticRouter location="/">
@@ -19,7 +19,8 @@ function draw(overrides:Partial<PublicStorefront>={}, opts:{canChat?:boolean;sig
         canFollow={!opts.isOwner} onFollow={()=>{}} followBusy={opts.followBusy ?? false} followMessage={opts.followMessage ?? ""}
         canChat={opts.canChat ?? true} signedIn={opts.signedIn ?? false}
         onChatSignIn={()=>{}} onChat={()=>{}} chatBusy={false} chatError=""
-        renderListing={item=><article data-item={item.id}>{item.title}</article>}/>
+        renderListing={item=><article data-item={item.id}>{item.title}</article>}
+        reportSellerSlot={opts.report ? <div className="storefront-report"><button type="button">Report this seller</button></div> : undefined}/>
     </StaticRouter>
   );
 }
@@ -88,6 +89,14 @@ describe('public store messaging CTA and real categories',()=>{
     expect(actions).not.toContain('Browse listings');
     expect(actions).not.toContain('Chat with seller</button>');
     expect(actions).not.toContain('Follow</button>');
+  });
+  test('seller reporting shares the about section instead of creating a separate card',()=>{
+    const html=draw({}, { report:true });
+    const about=html.slice(html.indexOf('class="storefront-about"'));
+    expect(about).toContain('About the store');
+    expect(about).toContain('Report this seller');
+    expect(html.match(/Report this seller/g)).toHaveLength(1);
+    expect(html).not.toContain('aria-label="Report seller"');
   });
   test('store owner or staff does not get buyer chat action',()=>{
     expect(draw({}, {isOwner:true,canChat:false})).not.toContain('Chat with seller');

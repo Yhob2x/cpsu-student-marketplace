@@ -27,6 +27,7 @@ const PATHS: Record<string, ReactNode> = {
   wrench: <><path d="M14.5 6.5a5 5 0 0 0-6.4 6.4L3.5 17.5a2.1 2.1 0 0 0 3 3l4.6-4.6a5 5 0 0 0 6.4-6.4l-3 3-3-3Z" /></>,
   grid: <><rect x="3.5" y="3.5" width="7" height="7" rx="2" /><rect x="13.5" y="3.5" width="7" height="7" rx="2" /><rect x="3.5" y="13.5" width="7" height="7" rx="2" /><rect x="13.5" y="13.5" width="7" height="7" rx="2" /></>,
   heart: <path d="M12 20s-7-4.4-7-9.3A4 4 0 0 1 12 8a4 4 0 0 1 7 2.7C19 15.6 12 20 12 20Z" />,
+  star: <path d="m12 2 3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14l-5-4.87 6.91-1.01L12 2Z" />,
   heartSolid: <path fill="currentColor" stroke="none" d="M12 21s-8-4.9-8-10.6C4 6.1 6.6 4 9.2 4c1.2 0 2.2.5 2.8 1.3C12.6 4.5 13.6 4 14.8 4c2.6 0 5.2 2.1 5.2 6.4C20 16.1 12 21 12 21Z" />,
   chat: <path d="M20 12a7.5 7.5 0 0 1-11 6.7L4.5 20l1.3-4.3A7.5 7.5 0 1 1 20 12Z" />,
   chatSolid: <path fill="currentColor" stroke="none" d="M12 3C6.75 3 2.5 6.68 2.5 11.3c0 2 .82 3.8 2.2 5.2L3.9 21l4.65-2.1c1.08.46 2.25.7 3.45.7 5.25 0 9.5-3.68 9.5-8.3S17.25 3 12 3Z" />,

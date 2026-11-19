@@ -739,10 +739,12 @@ export function StorePage() {
     onChatSignIn={() => navigate(`/login?next=${encodeURIComponent(publicStorePath)}`)}
     onChat={(listingId, body) => void startStoreChat(listingId, body)}
     chatBusy={chatBusy} chatError={chatError}
-    renderListing={l => <ListingCard key={l.id} l={l} />} />
-    {me && !staff && !isOwner && <section className="panel stack" aria-label="Report seller" style={{ maxWidth: '42rem', marginBlock: '1rem' }}>
-      <div className="row"><button type="button" className="btn ghost" aria-expanded={reporting} disabled={reportBusy}
-        onClick={() => { setReporting(open => !open); setReportError(''); }}>Report this seller</button></div>
+    renderListing={l => <ListingCard key={l.id} l={l} />}
+    reportSellerSlot={me && !staff && !isOwner ? <div className="storefront-report stack">
+      <div className="row"><button type="button" className="btn ghost storefront-report-trigger"
+        aria-expanded={reporting} disabled={reportBusy}
+        onClick={() => { setReporting(open => !open); setReportError(''); }}>
+        <Icon name="flag" size={16} /> Report this seller</button></div>
       {reporting && <>
         <p className="muted">Report suspected scams, harassment, or rule violations. Describe what happened; reports go to authorized campus reviewers.</p>
         <label className="field">Why are you reporting this seller?
@@ -754,7 +756,7 @@ export function StorePage() {
           <button type="button" className="btn ghost" disabled={reportBusy} onClick={() => setReporting(false)}>Cancel</button></div>
       </>}
       {reportNotice && <p role="status">{reportNotice}</p>}{reportError && <p className="err" role="alert">{reportError}</p>}
-    </section>}
+    </div> : undefined} />
     </>;
 }
 

@@ -11,7 +11,7 @@
     height: 52px;
     min-width: 52px;
     min-height: 52px;
-    border-radius: 15px 15px 5px 15px;
+    border-radius: 15px 15px var(--ui-radius-sm) 15px;
   }
   .floating-chat-panel {
     bottom: calc(80px + env(safe-area-inset-bottom, 0px));

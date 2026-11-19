@@ -4,6 +4,8 @@ import helmet from 'helmet';
 import cookieParser from 'cookie-parser';
 import rateLimit from 'express-rate-limit';
 import { env } from './env.js';
+import { requestDiagnostics } from './request-diagnostics.js';
+import { makeReadinessHandler } from './readiness.js';
 import { authenticate } from './auth.js';
 import { errorHandler } from './http.js';
 import authRoutes from './routes/auth.js';
@@ -27,12 +29,22 @@ export function createApp() {
   const app = express();
   // Only the same-host production reverse proxy may supply a client address.
   app.set('trust proxy', env.NODE_ENV === 'production' ? 'loopback' : false);
+  // Emit a privacy-safe request ID for every response, including 404/429/500.
+  // Structured timing logs default on only in production and may be opted in for isolated staging.
+  const logHttp = env.HTTP_ACCESS_LOG_ENABLED === 'true' ||
+    (env.NODE_ENV === 'production' && env.HTTP_ACCESS_LOG_ENABLED !== 'false');
+  app.use(requestDiagnostics(logHttp ? record => console.info(JSON.stringify(record)) : undefined));
   app.use(helmet({ crossOriginResourcePolicy: { policy: 'cross-origin' } }));
   // The responsive web/PWA uses the same-origin /api proxy. Only configured CORS origins are allowed.
   const origins = env.CORS_ORIGINS.split(',');
   app.use(cors({ origin: origins, credentials: true }));
   app.use(express.json({ limit: '100kb' }));
   app.use(cookieParser());
+  // Internal liveness stays at /health. Readiness checks DB availability but is
+  // loopback-only, and is deliberately outside the public /api reverse proxy.
+  app.get('/internal/ready', makeReadinessHandler(async () => {
+    await prisma.$queryRaw`SELECT 1`;
+  }));
   // Browsing and background reads must not starve logins or writes on a shared campus IP.
   // Keep both buckets bounded: 300 mutations/min and 900 reads/min per IP.
   // Health is inexpensive and must stay usable when a client hits either budget.

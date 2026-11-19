@@ -1,0 +1,47 @@
+/* Quiet loading states that retain the geometry of real listing cards. */
+.listing-skeleton-wrap { margin-block: var(--ui-space-4, 16px); }
+.listing-skeleton { overflow: hidden; pointer-events: none; min-width: 0; padding: 0; }
+.listing-skeleton-image { width: 100%; aspect-ratio: 4 / 3; border-radius: 0; }
+.listing-skeleton-body { padding: 18px; display: grid; gap: 12px; }
+.skeleton-block { background: var(--color-primary-light, #e6f4ec); border-radius: 6px; opacity: .78; }
+.listing-skeleton-title { width: 74%; height: 21px; }
+.listing-skeleton-short { width: 46%; height: 14px; }
+.listing-skeleton-line { width: 90%; height: 15px; }
+.listing-skeleton-action { width: 38%; height: 36px; margin-top: 10px; border-radius: var(--ui-radius-sm); }
+@media (prefers-reduced-motion: no-preference) {
+  .skeleton-block { animation: cpsu-skeleton-pulse 1.45s ease-in-out infinite alternate; }
+  @keyframes cpsu-skeleton-pulse { to { opacity: .38; } }
+}
+.operation-progress { display: grid; gap: var(--ui-space-2); padding: 14px 16px; border: 1px solid var(--color-border, #e2e8f0); background: var(--color-primary-light, #e6f4ec); border-radius: 12px; min-width: 0; }
+.operation-progress-head, .operation-progress-detail { display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; column-gap: 16px; row-gap: 4px; margin: 0; }
+.operation-progress-head strong { font-size: var(--ui-type-sm); font-weight: 650; }
+.operation-progress-percent { font-size: var(--ui-type-sm); font-weight: 700; font-variant-numeric: tabular-nums; }
+.operation-progress progress { appearance: none; display: block; width: 100%; height: 8px; border: 0; border-radius: var(--ui-radius-full); overflow: hidden; background: var(--color-border, #e2e8f0); }
+.operation-progress progress::-webkit-progress-bar { background: var(--color-border, #e2e8f0); border-radius: var(--ui-radius-full); }
+.operation-progress progress::-webkit-progress-value { background: var(--color-primary, #0b6b3a); border-radius: var(--ui-radius-full); }
+.operation-progress progress::-moz-progress-bar { background: var(--color-primary, #0b6b3a); border-radius: var(--ui-radius-full); }
+.operation-progress-indeterminate { height: 8px; overflow: hidden; background: var(--color-border, #e2e8f0); border-radius: var(--ui-radius-full); }
+.operation-progress-indeterminate > span { display: block; background: var(--color-primary, #0b6b3a); height: 100%; width: 35%; border-radius: var(--ui-radius-full); }
+@media (prefers-reduced-motion: no-preference) {
+  .operation-progress-indeterminate > span { animation: cpsu-progress-travel 1.7s ease-in-out infinite alternate; }
+  @keyframes cpsu-progress-travel { to { transform: translateX(185%); } }
+}
+.operation-progress-detail { color: var(--color-text-muted, #475569); font-size: var(--ui-type-xs); line-height: 1.45; }
+@media (max-width: 480px) { .operation-progress { padding: 12px; } .operation-progress-detail { gap: 4px; } }
+
+.detail-skeleton { padding-block: 20px; }
+.detail-skeleton-layout { display: grid; gap: clamp(18px, 3vw, 38px); }
+.detail-skeleton-photo { width: 100%; aspect-ratio: 4 / 3; border-radius: 12px; }
+.detail-skeleton-content { display: grid; align-content: start; gap: 14px; padding-block: 8px; }
+.detail-skeleton-title { width: 78%; height: 32px; }
+.detail-skeleton-price { width: 34%; height: 23px; }
+.detail-skeleton-description { width: 100%; height: 14px; }
+.detail-skeleton-description.short { width: 64%; }
+.detail-skeleton-button { margin-block-start: 30px; width: 48%; height: 44px; }
+@media (min-width: 900px) { .detail-skeleton-layout { grid-template-columns: minmax(0, .9fr) minmax(0, 1.1fr); } }
+
+.storefront-skeleton { padding-block: 6px 20px; }
+.storefront-skeleton-cover { height: clamp(110px, 24vw, 210px); width: 100%; border-radius: var(--ui-radius-md); }
+.storefront-skeleton-identity { display: flex; align-items: center; gap: 18px; margin: -26px 16px 24px; position: relative; }
+.storefront-skeleton-avatar { width: 78px; height: 78px; border: 4px solid var(--color-card, #fff); border-radius: 50%; flex: none; }
+.storefront-skeleton-heading { display: grid; gap: 12px; flex: 1; padding-top: 28px; max-width: 380px; }

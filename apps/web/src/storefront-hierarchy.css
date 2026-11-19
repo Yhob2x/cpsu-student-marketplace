@@ -7,11 +7,11 @@
   min-height: 116px;
   padding-bottom: 20px;
 }
-.storefront .storefront-primary { min-width: 0; gap: 15px; }
+.storefront .storefront-primary { min-width: 0; gap: var(--ui-space-4); }
 .storefront .storefront-primary-text { padding-top: 10px; }
 .storefront .storefront-primary h1 { font-size: clamp(1.6rem, 2.1vw, 2.05rem); line-height: 1.16; }
-.storefront .storefront-campus { gap: 7px; margin-bottom: 6px; }
-.storefront .storefront-affiliation { gap: 7px; font-weight: 650; }
+.storefront .storefront-campus { gap: var(--ui-space-2); margin-bottom: 6px; }
+.storefront .storefront-affiliation { gap: var(--ui-space-2); font-weight: 650; }
 
 /* Three equal, icon-only targets with no permanent strokes or outlines.
    Active and hover surfaces convey state without changing button geometry. */
@@ -21,7 +21,7 @@
   align-items: center;
   flex-wrap: nowrap;
   width: max-content;
-  gap: 5px;
+  gap: var(--ui-space-1);
 }
 .storefront .storefront-owner-actions .btn.storefront-icon-action,
 .storefront .storefront-owner-actions .store-appreciation-button.storefront-icon-action {
@@ -34,7 +34,7 @@
   min-height: 46px;
   padding: 0;
   border: 0;
-  border-radius: 11px;
+  border-radius: var(--ui-radius-md);
   background: transparent;
   color: var(--forest);
   box-shadow: none;
@@ -78,32 +78,32 @@
 }
 .storefront .storefront-facts > div {
   min-width: 0;
-  gap: 5px;
+  gap: var(--ui-space-1);
   padding: 0;
   border: 0;
 }
-.storefront .storefront-facts span { font-size: .77rem; line-height: 1.4; }
+.storefront .storefront-facts span { font-size: var(--ui-type-xs); line-height: 1.4; }
 .storefront .storefront-facts strong,
 .storefront .storefront-facts .storefront-follow-count { font-size: 1rem; line-height: 1.35; }
 
 /* One unmistakable listings heading, one type switcher and a secondary search. */
-.storefront .storefront-products-heading { margin-bottom: 15px; }
+.storefront .storefront-products-heading { margin-bottom: var(--ui-space-4); }
 .storefront .storefront-products-heading h2 { margin: 0; }
 .storefront .storefront-navigation { gap: 12px; padding-bottom: 14px; margin-bottom: 18px; }
 .storefront .storefront-toolbar { gap: 12px; }
 .storefront .storefront-tabs {
   display: inline-flex;
   width: fit-content;
-  padding: 3px;
-  gap: 3px;
-  border-radius: 11px;
+  padding: var(--ui-space-1);
+  gap: var(--ui-space-1);
+  border-radius: var(--ui-radius-md);
   background: var(--surface-soft);
 }
 .storefront .storefront-tabs button {
   border: 0;
-  border-radius: 8px;
+  border-radius: var(--ui-radius-sm);
   min-height: 42px;
-  padding-inline: 15px;
+  padding-inline: var(--ui-space-4);
   font-weight: 650;
 }
 .storefront .storefront-tabs button[aria-pressed="true"] {
@@ -112,13 +112,13 @@
   border: 0;
 }
 .storefront .storefront-browser { flex: 0 1 300px; min-width: 200px; }
-.storefront .storefront-search { min-height: 46px; border-radius: 10px; }
+.storefront .storefront-search { min-height: 46px; border-radius: var(--ui-radius-md); }
 .storefront .storefront-search input { height: 44px; }
 .storefront .storefront-category-strip { gap: 12px; }
-.storefront .storefront-category-tabs { gap: 7px; padding-bottom: 8px; scroll-padding-inline: 3px; }
+.storefront .storefront-category-tabs { gap: var(--ui-space-2); padding-bottom: 8px; scroll-padding-inline: var(--ui-space-1); }
 .storefront .storefront-category-tabs button {
   min-height: 40px;
-  padding: 8px 13px;
+  padding: 8px var(--ui-space-3);
   font-weight: 600;
   background: transparent;
 }
@@ -138,7 +138,7 @@
     row-gap: 10px;
     padding-bottom: 16px;
   }
-  .storefront .storefront-primary { gap: 11px; }
+  .storefront .storefront-primary { gap: var(--ui-space-3); }
   .storefront .storefront-primary h1 { font-size: clamp(1.35rem, 5vw, 1.65rem); }
   .storefront .storefront-owner-actions {
     display: flex;
@@ -157,15 +157,15 @@
   .storefront .storefront-facts {
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 14px 12px;
-    padding: 15px;
+    padding: var(--ui-space-4);
   }
   .storefront .storefront-facts > div,
   .storefront .storefront-facts > div:nth-of-type(3n + 1),
   .storefront .storefront-facts > div:nth-of-type(2n + 1) { border: 0; padding: 0; }
   .storefront .storefront-tabs { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); width: 100%; }
-  .storefront .storefront-tabs button { min-width: 0; padding-inline: 7px; }
+  .storefront .storefront-tabs button { min-width: 0; padding-inline: var(--ui-space-2); }
   .storefront .storefront-browser { flex: 1 1 100%; min-width: 0; }
-  .storefront .storefront-category-strip { grid-template-columns: minmax(0, 1fr); gap: 5px; }
+  .storefront .storefront-category-strip { grid-template-columns: minmax(0, 1fr); gap: var(--ui-space-1); }
   .storefront .storefront-listings .product-card .body { padding-inline: 8px; }
 }
 @media (prefers-reduced-motion: reduce) {
@@ -248,20 +248,20 @@
 .storefront .storefront-facts > div {
   min-width: 0;
   min-height: 0;
-  gap: 3px;
+  gap: var(--ui-space-1);
   padding: 0;
   border: 0;
 }
 .storefront .storefront-facts > div > span {
   color: var(--ink-soft);
-  font-size: .77rem;
+  font-size: var(--ui-type-xs);
   line-height: 1.3;
   font-weight: 450;
 }
 .storefront .storefront-facts strong,
 .storefront .storefront-facts .storefront-follow-count {
   color: var(--ink);
-  font-size: 1.05rem;
+  font-size: var(--ui-type-md);
   font-weight: 720;
   line-height: 1.25;
   font-variant-numeric: tabular-nums;
@@ -271,9 +271,9 @@
   min-width: 44px;
   min-height: 44px;
   margin: -9px 0 -12px -8px;
-  padding: 9px 8px;
+  padding: var(--ui-space-2) 8px;
   border: 0;
-  border-radius: 8px;
+  border-radius: var(--ui-radius-sm);
   background: transparent;
   color: var(--forest);
   text-align: left;
@@ -293,15 +293,15 @@
 @media (max-width: 700px) {
   .storefront .storefront-facts {
     grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 15px 10px;
-    padding: 14px 15px;
+    gap: var(--ui-space-4) 10px;
+    padding: 14px var(--ui-space-4);
   }
 }
 
 /* Store footer: one coherent reading flow, no redundant cards or boxed report. */
 .storefront .storefront-about {
   max-width: none;
-  gap: .45rem;
+  gap: var(--ui-space-2);
   padding: 16px 0 0;
   border: 0;
   border-top: 1px solid var(--line);
@@ -310,7 +310,7 @@
 }
 .storefront .storefront-about h2 {
   margin: 0 0 2px;
-  font-size: 1.13rem;
+  font-size: var(--ui-type-lg);
   font-weight: 700;
   line-height: 1.35;
 }
@@ -320,7 +320,7 @@
 }
 .storefront .storefront-about p.muted {
   max-width: 75ch;
-  font-size: .78rem;
+  font-size: var(--ui-type-xs);
   line-height: 1.5;
 }
 .storefront .storefront-report {
@@ -339,12 +339,12 @@
   align-items: center;
   gap: .5rem;
   min-height: 44px;
-  padding: 8px 3px;
+  padding: 8px var(--ui-space-1);
   border: 0;
   background: transparent;
   box-shadow: none;
   color: var(--ink-soft);
-  font-size: .82rem;
+  font-size: var(--ui-type-sm);
   font-weight: 650;
 }
 .storefront .storefront-report .storefront-report-trigger.btn.ghost:hover:not(:disabled) {

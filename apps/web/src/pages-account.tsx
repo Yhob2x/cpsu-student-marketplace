@@ -15,6 +15,8 @@ import { SellerAvatar } from './seller-avatar';
 import './storefront.css';
 import { Icon } from './icons';
 import { IconAction } from './icon-action';
+import { EmptyState, ErrorState, LoadingState } from './components/ui/screen-state';
+import { ListingCardsSkeleton, OperationProgress } from './components/ui/async-feedback';
 import { MAX_LISTING_PHOTOS, selectedPhotosError, uploadListingPhotos } from './listing-photo-uploads';
 import { coverFirst } from './photo-cover-order';
 import { ExistingPhotoChoices, SelectedPhotoPreviews } from './selected-photo-previews';
@@ -230,7 +232,8 @@ export function Dashboard() {
   const [editCover, setEditCover] = useState<{ source: 'existing'; id: number } | { source: 'new'; index: number } | null>(null);
   const [newSelectionError, setNewSelectionError] = useState('');
   const [editSelectionError, setEditSelectionError] = useState('');
-  const [photoProgress, setPhotoProgress] = useState('');
+  const [photoProgress, setPhotoProgress] = useState<{ completed: number; total: number; startedAt: number; lastCompletedAt: number } | null>(null);
+  const [saveStage, setSaveStage] = useState<'saving' | 'uploading' | 'refreshing'>('saving');
   const [listingQuery, setListingQuery] = useState('');
   const [listingStatus, setListingStatus] = useState('all');
   const [listingPage, setListingPage] = useState(1);
@@ -334,18 +337,20 @@ export function Dashboard() {
       return;
     }
     createInFlight.current = true;
-    setCreatingListing(true); setErr(''); setOk('');
+    setCreatingListing(true); setSaveStage('saving'); setPhotoProgress(null); setErr(''); setOk('');
     try {
       const l = await api<{ id: number }>('/seller/listings', { body: { type: cat.listingType, categoryId: cat.id, title: d.title, description: d.description, price: Number(d.price), priceBasis: d.priceBasis || undefined, condition: cat.listingType === 'physical_product' ? d.condition || null : null } });
       // Once the server creates a draft, upload failure must not suggest that nothing was saved.
       let uploadFailure = '';
       if (files.length) {
+        setSaveStage('uploading');
         const result = await uploadListingPhotos(l.id, files, uploadOnePhoto,
-          (done, total) => setPhotoProgress(`Uploading photos: ${done} of ${total}`));
+          (done, total) => setPhotoProgress(previous => done === 0 || !previous
+            ? { completed: 0, total, startedAt: Date.now(), lastCompletedAt: Date.now() } : { ...previous, completed: done, lastCompletedAt: Date.now() }));
         if (result.failedIndex !== null)
           uploadFailure = `${result.uploaded} of ${files.length} photos uploaded. ${explain(result.error)}`;
       }
-      setPhotoProgress('');
+      setPhotoProgress(null); setSaveStage('refreshing');
       form.reset(); setNewFiles([]); setNewCoverIndex(0); setNewSelectionError('');
       setNewCategoryId(''); setNewListingKind(''); setRepeatListing(null); setCreateDirty(false);
       await load();
@@ -357,7 +362,7 @@ export function Dashboard() {
         setOk(files.length ? `Draft saved with ${files.length} ${files.length === 1 ? 'photo' : 'photos'}. Submit it for review when ready.` : 'Draft saved. Add at least one photo before submitting it for review.');
       }
     } catch (x) { setErr(explain(x)); }
-    finally { createInFlight.current = false; setCreatingListing(false); setPhotoProgress(''); }
+    finally { createInFlight.current = false; setCreatingListing(false); setPhotoProgress(null); }
   };
   const changeAvailability = async (id: number, availability: 'available' | 'reserved' | 'sold'): Promise<boolean> => {
     // Sold is terminal in v1: the listing leaves public search and cannot be relisted, so a mis-picked option must not end it silently.
@@ -391,18 +396,20 @@ export function Dashboard() {
     const invalidPhotos = selectedPhotosError(files, editing.media.length);
     if (invalidPhotos || !cat) { setErr(invalidPhotos || 'Choose a valid category.'); return; }
     editInFlight.current = true;
-    setSavingEdit(true); setErr(''); setOk('');
+    setSavingEdit(true); setSaveStage('saving'); setPhotoProgress(null); setErr(''); setOk('');
     try {
       await api(`/seller/listings/${editing.id}`, { method: 'PATCH', body: { type: cat.listingType, categoryId: cat.id, title: d.title, description: d.description, price: Number(d.price), priceBasis: d.priceBasis || undefined, condition: cat.listingType === 'physical_product' ? d.condition || null : null } });
       let uploadFailure = '';
       let coverFailure = '';
       const uploadedIds: number[] = [];
       if (files.length) {
+        setSaveStage('uploading');
         const result = await uploadListingPhotos(editing.id, files, async (id, file) => {
           const photo = await uploadOnePhoto(id, file);
           uploadedIds.push(photo.id);
         },
-          (done, total) => setPhotoProgress(`Uploading photos: ${done} of ${total}`));
+          (done, total) => setPhotoProgress(previous => done === 0 || !previous
+            ? { completed: 0, total, startedAt: Date.now(), lastCompletedAt: Date.now() } : { ...previous, completed: done, lastCompletedAt: Date.now() }));
         if (result.failedIndex !== null)
           uploadFailure = `${result.uploaded} of ${files.length} new photos uploaded. ${explain(result.error)}`;
       }
@@ -412,13 +419,13 @@ export function Dashboard() {
         try { await api(`/seller/listings/${editing.id}/media/cover`, { method: 'PATCH', body: { mediaId: coverMediaId } }); }
         catch (x) { coverFailure = `Cover photo was not changed. ${explain(x)}`; }
       }
-      setPhotoProgress('');
+      setPhotoProgress(null); setSaveStage('refreshing');
       setEditing(null); setEditFiles([]); setEditCover(null); setEditSelectionError(''); setEditDirty(false);
       await load();
       if (uploadFailure || coverFailure) { showActionFeedback({ kind: 'warning', title: 'Listing partially updated', message: 'Details were saved, but some photo changes need attention.' }); setErr(`Listing details were saved. ${uploadFailure ? `${uploadFailure} Select Edit to retry only the remaining photos. ` : ''}${coverFailure}`.trim()); }
       else { showActionFeedback({ kind: 'success', title: 'Listing updated', message: 'Your changes were saved successfully.' }); setOk(files.length ? `${files.length} ${files.length === 1 ? 'photo' : 'photos'} saved. Submit the listing for review again before it appears publicly.` : 'Listing updated.'); }
     } catch (x) { setErr(explain(x)); showActionFeedback({ kind: 'error', title: 'Could not save listing', message: explain(x) }); }
-    finally { editInFlight.current = false; setSavingEdit(false); setPhotoProgress(''); }
+    finally { editInFlight.current = false; setSavingEdit(false); setPhotoProgress(null); }
   };
   const closeEditor = (restoreFocus = true) => {
     if (editDirty && !window.confirm('Discard unsaved changes to this listing?')) return false;
@@ -515,14 +522,14 @@ export function Dashboard() {
         <label className="field">Photos (select up to {MAX_LISTING_PHOTOS}, JPEG, PNG or WebP, 3 MB each) <input name="image" type="file" multiple accept="image/jpeg,image/png,image/webp" disabled={creatingListing} aria-describedby="new-photo-policy" onChange={e => { const photos = Array.from(e.currentTarget.files ?? []); setNewFiles(photos); setNewCoverIndex(0); setNewSelectionError(selectedPhotosError(photos)); }} /></label>
         <p className="muted" role="status">{newFiles.length} of {MAX_LISTING_PHOTOS} photos selected</p>{newSelectionError && <p className="err" role="alert">{newSelectionError}</p>}
         {!newSelectionError && <SelectedPhotoPreviews files={newFiles} coverIndex={newCoverIndex} onCoverChange={setNewCoverIndex} disabled={creatingListing} />}
-        {creatingListing && photoProgress && <p role="status">{photoProgress}</p>}
+        {creatingListing && <OperationProgress stage={saveStage} progress={photoProgress} />}
         <div className="listing-photo-policy" id="new-photo-policy">
           <p><strong>Drafts do not need photos.</strong> Add 1–{MAX_LISTING_PHOTOS} photos before submitting for review. Select your cover before saving; it uploads first.</p>
           <p><Icon name="shield" size={17} /> Show the actual item or your own service work. Do not use unrelated photos or misleading promotional images. Pornography, sexual imagery, graphic violence and other prohibited content are not allowed; campus reviewers check photos before publication.</p>
         </div>
         <div className="listing-composer-footer"><p>Saving creates a private draft, not a public listing.</p><button className="btn" disabled={creatingListing || categoriesLoading || Boolean(categoriesError) || (newListingKind !== '' && categoriesForKind(cats, newListingKind).length === 0)}>{creatingListing ? 'Saving draft…' : 'Save draft'}</button></div></form></details>
       <div className="store-listings-head"><div><h2 ref={listingsHeading} tabIndex={-1}>Your listings</h2></div>{!listingsLoading && !listingLoadError && <span className="store-listing-count">{visibleListings.length} {visibleListings.length === 1 ? 'listing' : 'listings'}</span>}</div>
-      {listingsLoading && <p className="muted" role="status">Loading your listings…</p>}
+      {listingsLoading && <ListingCardsSkeleton />}
       {listingLoadError && <p className="err" role="alert">Could not load your listings: {listingLoadError} <button type="button" className="btn ghost" onClick={() => { void load(); }}>Retry</button></p>}
       {!listingsLoading && !listingLoadError && visibleListings.length === 0 && <div className="panel store-empty"><h3>No listings yet</h3><p className="muted">Create a draft, then submit it for campus review.</p></div>}
       {!listingsLoading && !listingLoadError && visibleListings.length > 0 && <>
@@ -562,7 +569,7 @@ export function Dashboard() {
              <p className="muted" role="status">{editFiles.length} new {editFiles.length === 1 ? 'photo' : 'photos'} selected · {Math.max(0, MAX_LISTING_PHOTOS - l.media.length)} remaining</p>{editSelectionError && <p className="err" role="alert">{editSelectionError}</p>}
             {!editSelectionError && <SelectedPhotoPreviews files={editFiles} coverIndex={editCover?.source === 'new' ? editCover.index : -1}
               onCoverChange={index => { setEditCover({ source: 'new', index }); setEditDirty(true); }} disabled={savingEdit} />}
-            {savingEdit && photoProgress && <p role="status">{photoProgress}</p>}
+            {savingEdit && <OperationProgress stage={saveStage} progress={photoProgress} />}
             <p className="muted" id="edit-photo-policy">Choose a cover from existing or new photos. Explicit or harmful images are prohibited. Adding photos to a published listing sends it back for review.</p>
             <div className="row"><button className="btn" disabled={savingEdit || categoriesLoading || Boolean(categoriesError)}>{savingEdit ? 'Saving…' : 'Save changes'}</button><button type="button" className="btn ghost" disabled={savingEdit} onClick={() => closeEditor()}>Cancel</button></div></form>
         : <article key={l.id} id={`store-listing-${l.id}`} tabIndex={-1} className="panel store-listing"><StoreListingPhoto media={l.media} title={l.title} type={l.type} /><div className="store-listing-main"><div className="store-listing-title"><h3>{l.title}</h3><strong>{peso(Number(l.price))}</strong></div><p className="store-listing-category">{l.category?.name}</p><div className="store-listing-meta"><span className={`status ${l.status}`}>{l.status.replace('_', ' ')}</span>{l.status === 'published' && <span className="status">{l.availabilityState || 'available'}</span>}</div>
@@ -664,16 +671,13 @@ export function Inquiries() {
           }}>
           <Icon name="bell" size={17} /> {receiveSoundOn ? 'Sound on' : 'Sound off'}
         </button>
-        {receiveSoundOn && <button type="button" className="btn ghost"
-          aria-label="Test sound — play test incoming message sound"
-          onClick={() => { unlockMessageReceiveSound(); playMessageReceiveSound(); }}>Test sound</button>}
         <Link className="btn ghost" to="/explore">Browse listings</Link>
       </div>
     </div>
-    {rows === null && !error && <p className="muted" role="status">Loading conversations…</p>}
-    {error && rows === null && <div className="empty" role="alert"><h2>Messages could not load</h2><p className="muted">{error}</p><button type="button" className="btn" onClick={load}>Try again</button></div>}
-    {error && rows !== null && <p className="err" role="alert">Could not refresh messages: {error} <button type="button" className="btn ghost" onClick={load}>Retry</button></p>}
-    {rows?.length === 0 && !error && <div className="empty"><h2>No conversations yet</h2><p className="muted">Explore listings and send a seller a question to start a conversation.</p><Link className="btn" to="/explore">Explore listings</Link></div>}
+    {rows === null && !error && <LoadingState>Loading conversations…</LoadingState>}
+    {error && rows === null && <ErrorState title="Messages could not load" retry={load} retryText="Try again">{error}</ErrorState>}
+    {error && rows !== null && <ErrorState title="Could not refresh messages" retry={load} compact>{error}</ErrorState>}
+    {rows?.length === 0 && !error && <EmptyState title="No conversations yet" action={<Link className="btn" to="/explore">Explore listings</Link>}>Explore listings and send a seller a question to start a conversation.</EmptyState>}
     {rows !== null && rows.length > 0 && <div className="inquiry-list">{rows.map(t => <Link key={t.id} to={`/inquiries/${t.id}`} className="inquiry-row">
       <span className="avatar" aria-hidden="true">{initials(t.otherStudentName || 'Student')}</span>
       <span className="inq-main">
@@ -966,9 +970,6 @@ export function Thread() {
           onClick={() => { const enabled = !receiveSoundOn; setReceiveSoundOn(enabled); setMessageReceiveSoundEnabled(enabled); if (enabled) unlockMessageReceiveSound(); }}>
           <Icon name="bell" size={17} /> {receiveSoundOn ? 'Sound on' : 'Sound off'}
         </button>}
-        {!closed && receiveSoundOn && <button type="button" className="btn ghost conversation-sound-preview"
-          onClick={() => { unlockMessageReceiveSound(); playMessageReceiveSound(); }}
-          aria-label="Test sound — play test incoming message sound">Test sound</button>}
         {closed && <span className="status closed">Closed</span>}
         {!closed && <button type="button" className="btn ghost" disabled={closing || busy}
           aria-label="End conversation" aria-expanded={closeConfirm} onClick={() => { setCloseConfirm(open => !open); setSafetyError(''); }}>
@@ -1054,12 +1055,13 @@ export function Saved() {
   const [error, setError] = useState('');
   const { me, savedIds } = useMe();
   const load = () => api<Listing[]>('/saved').then(r => { setRows(r); setError(''); }).catch(x => setError(explain(x)));
-  // savedIds in deps: unsaving a card here removes it from this list immediately.
-  useEffect(() => { if (me) load(); }, [me?.id, savedIds]);
+  // Render local saves immediately. Refetching on each optimistic change could race the write.
+  useEffect(() => { if (me) void load(); }, [me?.id]);
+  const visibleSaved = rows?.filter(listing => savedIds.includes(listing.id));
   return <><h1>Saved</h1>
-    {rows === null && !error && <p className="muted" role="status">Loading saved listings…</p>}
-    {error && <p className="err" role="alert">Could not load saved listings: {error} <button type="button" className="btn ghost" onClick={load}>Retry</button></p>}
-    {rows?.length === 0 && !error && <p className="muted">Nothing saved yet. Use Save on a listing to keep it here.</p>}
-    {!error && <div className="grid listing-grid">{rows?.map(l => <ListingCard key={l.id} l={l} />)}</div>}
+    {rows === null && !error && <ListingCardsSkeleton />}
+    {error && <ErrorState title="Could not load saved listings" retry={load} compact>{error}</ErrorState>}
+    {visibleSaved?.length === 0 && !error && <EmptyState compact>Nothing saved yet. Use Save on a listing to keep it here.</EmptyState>}
+    {!error && <div className="grid listing-grid">{visibleSaved?.map(l => <ListingCard key={l.id} l={l} />)}</div>}
   </>;
 }

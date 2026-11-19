@@ -1,3 +1,10 @@
 import { createApp } from './app.js';
 import { env } from './env.js';
-createApp().listen(env.PORT, env.BIND_HOST, () => console.log(`CPSU Marketplace API on ${env.BIND_HOST}:${env.PORT}`));
+import { prisma } from './db.js';
+import { createShutdown } from './graceful-shutdown.js';
+
+const server = createApp().listen(env.PORT, env.BIND_HOST, () =>
+  console.log(`CPSU Marketplace API on ${env.BIND_HOST}:${env.PORT}`));
+const shutdown = createShutdown(server, () => prisma.$disconnect());
+process.once('SIGTERM', () => shutdown('SIGTERM'));
+process.once('SIGINT', () => shutdown('SIGINT'));

@@ -26,6 +26,6 @@
   height: 4px;
 }
 .explore-options-shell > .explore-inline-filter-options::-webkit-scrollbar-thumb {
-  border-radius: 99px;
+  border-radius: var(--ui-radius-full);
   background: var(--line);
 }

@@ -1,9 +1,11 @@
 import { FormEvent, useEffect, useLayoutEffect, useRef, useState, type CSSProperties } from 'react';
 import { Link } from 'react-router-dom';
+import { Bell, BellOff } from 'lucide-react';
 import { ApiError, api, explain, timeAgo } from './api';
+import { showActionFeedback } from './action-feedback';
 import { Icon } from './icons';
 import { ConversationListingCard, type ConversationListing } from './conversation-listing-card';
-import { hasNewIncomingMessage, playMessageReceiveSound, prepareMessageReceiveSound, unlockMessageReceiveSound } from './message-receive-sound';
+import { hasNewIncomingMessage, messageReceiveSoundEnabled, playMessageReceiveSound, prepareMessageReceiveSound, setMessageReceiveSoundEnabled, unlockMessageReceiveSound } from './message-receive-sound';
 import { MeetupLocationCard, type MeetupHandoff } from './meetup-location-card';
 import { decodeMeetupLocation } from './meetup-location';
 
@@ -58,6 +60,10 @@ export function FloatingChatPanel({ onClose, onUnreadChanged, motionState, motio
   const [draft, setDraft] = useState('');
   const [sendError, setSendError] = useState('');
   const [sending, setSending] = useState(false);
+  const [receiveSoundOn, setReceiveSoundOn] = useState(messageReceiveSoundEnabled);
+  const [endConfirm, setEndConfirm] = useState(false);
+  const [ending, setEnding] = useState(false);
+  const [endError, setEndError] = useState('');
   const [editing, setEditing] = useState(false);
   const [keyboardOffset, setKeyboardOffset] = useState(0);
   const [visibleHeight, setVisibleHeight] = useState(0);
@@ -71,6 +77,7 @@ export function FloatingChatPanel({ onClose, onUnreadChanged, motionState, motio
   const seenConfirmedRef = useRef(0);
   const seenPendingRef = useRef(0);
   const pingRef = useRef(0);
+  const endLockRef = useRef(false);
 
   useEffect(() => { prepareMessageReceiveSound(); }, []);
   useEffect(() => { titleRef.current?.focus(); }, [threadId]);
@@ -101,6 +108,8 @@ export function FloatingChatPanel({ onClose, onUnreadChanged, motionState, motio
     setDraft('');
     setEditing(false);
     setMeetupOpen(false);
+    setEndConfirm(false);
+    setEndError('');
     if (threadId !== null) setConversation(null);
 
     const refresh = async () => {
@@ -209,6 +218,35 @@ export function FloatingChatPanel({ onClose, onUnreadChanged, motionState, motio
     pingRef.current = Date.now();
     void api(`/inquiries/${threadId}/typing`, { body: {} }).catch(() => {});
   };
+  const toggleReceiveSound = () => {
+    const enabled = !receiveSoundOn;
+    setReceiveSoundOn(enabled);
+    setMessageReceiveSoundEnabled(enabled);
+    if (enabled) unlockMessageReceiveSound();
+  };
+  const endConversation = async () => {
+    if (endLockRef.current || sending || !conversation || threadId === null || conversation.thread.status === 'closed') return;
+    endLockRef.current = true;
+    setEnding(true);
+    setEndError('');
+    const closingThread = threadId;
+    try {
+      await api(`/inquiries/${closingThread}/close`, { body: {} });
+      // Match full chat: remove the composer immediately and preserve history.
+      setConversation(current => current?.thread.id === closingThread
+        ? { ...current, thread: { ...current.thread, status: 'closed' }, typing: false }
+        : current);
+      setEndConfirm(false);
+      showActionFeedback({ kind: 'success', title: 'Chat ended',
+        message: 'Your messages remain available. This does not cancel a transaction.' });
+      await refreshRef.current();
+    } catch (error) {
+      setEndError(explain(error));
+    } finally {
+      endLockRef.current = false;
+      setEnding(false);
+    }
+  };
   const threadName = conversation?.thread.otherStudentName || selectedName;
   const closed = conversation?.thread.status === 'closed';
   const transaction = conversation?.transaction;
@@ -240,6 +278,12 @@ export function FloatingChatPanel({ onClose, onUnreadChanged, motionState, motio
         aria-label="Back to conversations" onClick={event => { setViewMotion(event.detail !== 0); setThreadId(null); }}>
         <Icon name="chevronLeft" size={20} /></button>}
       <h2 ref={titleRef} key={threadId ?? 'inbox'} tabIndex={-1}>{threadId === null ? 'Messages' : threadName}</h2>
+      <button type="button" className="floating-chat-icon-button floating-chat-sound"
+        aria-label={receiveSoundOn ? 'Mute incoming message sounds' : 'Turn on incoming message sounds'}
+        title={receiveSoundOn ? 'Sound on — tap to mute' : 'Sound off — tap to unmute'}
+        aria-pressed={receiveSoundOn} onClick={toggleReceiveSound}>
+        {receiveSoundOn ? <Bell size={19} aria-hidden="true" /> : <BellOff size={19} aria-hidden="true" />}
+      </button>
       <button type="button" className="floating-chat-icon-button floating-chat-close" aria-label="Close chat"
         onClick={event => onClose(event.detail === 0)}>×</button>
     </header>
@@ -270,6 +314,17 @@ export function FloatingChatPanel({ onClose, onUnreadChanged, motionState, motio
         <span>{conversation?.otherActiveInChat ? '● Active in chat' : closed ? 'Conversation closed' : 'Conversation'}</span>
         <span>Listing conversation</span>
       </div>
+      {endConfirm && !closed && <div className="floating-chat-end-confirm" role="group" aria-label="End conversation confirmation">
+        <strong>End this chat for both students?</strong>
+        <p>Messages stay readable. This won't cancel a transaction or block the student elsewhere.</p>
+        <div className="floating-chat-end-actions">
+          <button className="btn danger" type="button" disabled={ending || sending}
+            onClick={() => void endConversation()}>{ending ? 'Ending…' : 'Yes, end chat'}</button>
+          <button className="btn ghost" type="button" disabled={ending}
+            onClick={() => { setEndConfirm(false); setEndError(''); }}>Keep chatting</button>
+        </div>
+        {endError && <p className="err" role="alert">Couldn't end chat: {endError}</p>}
+      </div>}
       {conversation?.listing && <div className="floating-chat-product" aria-label="Product or service being discussed">
         <ConversationListingCard key={conversation.listing.id} listing={conversation.listing} compact onNavigate={() => onClose(true)} />
       </div>}
@@ -305,7 +360,7 @@ export function FloatingChatPanel({ onClose, onUnreadChanged, motionState, motio
       {!closed && <form className="floating-chat-compose" onSubmit={event => void send(event)}>
         <label htmlFor="floating-chat-reply" className="sr-only">Your message</label>
         <textarea id="floating-chat-reply" rows={1} maxLength={1000} enterKeyHint="send"
-          value={draft} disabled={sending || !conversation} placeholder="Write a message…"
+          value={draft} disabled={sending || ending || endConfirm || !conversation} placeholder="Write a message…"
           onFocus={() => setEditing(true)} onBlur={() => setEditing(false)}
           onChange={event => { setDraft(event.target.value); pingTyping(); }}
           onKeyDown={event => {
@@ -313,7 +368,7 @@ export function FloatingChatPanel({ onClose, onUnreadChanged, motionState, motio
               event.preventDefault(); void send();
             }
           }} />
-        <button type="submit" className="floating-chat-send" disabled={sending || !draft.trim() || !conversation}
+        <button type="submit" className="floating-chat-send" disabled={sending || ending || endConfirm || !draft.trim() || !conversation}
           aria-label={sending ? 'Sending message' : 'Send message'}><Icon name="arrow" size={18} /></button>
       </form>}
       {sendError && <p className="floating-chat-compose-error" role="alert">{sendError}</p>}
@@ -339,8 +394,18 @@ export function FloatingChatPanel({ onClose, onUnreadChanged, motionState, motio
           View transaction and confirm meetup
         </Link>}
       </div>}
-      <div className="floating-chat-panel-foot"><Link to={`/inquiries/${threadId}`} onClick={() => onClose(true)}>
-        Open full conversation <Icon name="arrow" size={15} /></Link></div>
+      <div className="floating-chat-panel-foot floating-chat-thread-actions">
+        {conversation && <Link to={`/listings/${conversation.thread.listingId}`} onClick={() => onClose(true)}>
+          View listing
+        </Link>}
+        {conversation && !closed && <button type="button" disabled={ending || sending}
+          aria-expanded={endConfirm} onClick={() => { setEndConfirm(value => !value); setEndError(''); }}>
+          End chat
+        </button>}
+        <Link to={`/inquiries/${threadId}`} onClick={() => onClose(true)}>
+          Full chat <Icon name="arrow" size={15} />
+        </Link>
+      </div>
     </>}
   </section>;
 }

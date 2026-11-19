@@ -68,7 +68,7 @@
   overflow-wrap: anywhere;
 }
 .action-feedback-content p {
-  margin: 5px 0 0;
+  margin: var(--ui-space-1) 0 0;
   color: var(--ink-soft);
   font-size: 14px;
   line-height: 1.5;
@@ -110,7 +110,7 @@
   box-shadow: 0 0 0 8px var(--mango-soft);
 }
 .action-feedback--center .action-feedback-content strong { font-size: 20px; line-height: 1.3; }
-.action-feedback--center .action-feedback-content p { margin-top: 7px; font-size: 14px; }
+.action-feedback--center .action-feedback-content p { margin-top: var(--ui-space-2); font-size: 14px; }
 .action-feedback--center .action-feedback-dismiss {
   position: absolute;
   inset-block-start: 6px;

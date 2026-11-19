@@ -8,7 +8,7 @@
   margin: 8px 0 12px;
   padding: 14px 16px;
   border: 1px solid var(--surface-stroke);
-  border-radius: 14px;
+  border-radius: var(--ui-radius-md);
   background: var(--paper);
 }
 .explore-inline-filter-group {
@@ -28,7 +28,7 @@
   gap: 6px;
   min-width: 0;
   max-width: 100%;
-  padding: 3px 2px 7px;
+  padding: var(--ui-space-1) 2px var(--ui-space-2);
   overflow-x: auto;
   overflow-y: hidden;
   overscroll-behavior-x: contain;
@@ -39,7 +39,7 @@
 .explore-inline-filter-options button {
   flex: 0 0 auto;
   min-height: 38px;
-  padding: 7px 12px;
+  padding: var(--ui-space-2) 12px;
   border: 1px solid var(--surface-stroke);
   border-radius: 9px;
   color: var(--ink);
@@ -89,7 +89,7 @@
   width: 100%;
   min-width: 0;
   min-height: 40px;
-  padding: 7px 10px;
+  padding: var(--ui-space-2) 10px;
   border: 1px solid var(--surface-stroke);
   border-radius: 9px;
   color: var(--ink);
@@ -113,7 +113,7 @@
     min-height: 40px;
     padding: 8px 12px;
     border: 1px solid transparent;
-    border-radius: 8px;
+    border-radius: var(--ui-radius-sm);
     color: var(--forest);
     background: transparent;
     font: 650 13px/1.3 var(--font-body);
@@ -133,14 +133,14 @@
   .explore-control-header .explore-inline-filters {
     grid-template-columns: minmax(0, 1fr);
     gap: 8px;
-    margin: 9px 0 8px;
+    margin: var(--ui-space-2) 0 8px;
     padding: 10px;
   }
   .explore-inline-filter-group {
     grid-template-columns: minmax(0, 1fr);
     gap: 4px;
   }
-  .explore-inline-filter-options { padding-bottom: 5px; }
+  .explore-inline-filter-options { padding-bottom: var(--ui-space-1); }
   .explore-inline-filter-options button { min-height: 44px; }
   .explore-inline-price-inputs input { min-height: 44px; }
   /* Scrolling turns the sticky header into the existing compact search/type
@@ -161,7 +161,7 @@
   }
 }
 @media (max-width: 360px) {
-  .explore-control-header .explore-inline-filters { padding: 9px; }
+  .explore-control-header .explore-inline-filters { padding: var(--ui-space-2); }
   .explore-inline-filter-options button { padding-inline: 10px; }
 }
 @media (prefers-reduced-motion: reduce) {

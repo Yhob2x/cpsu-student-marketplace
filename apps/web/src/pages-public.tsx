@@ -4,8 +4,8 @@ import { ApiError, api, explain, peso } from './api';
 import { useMe } from './main';
 import { Icon } from './icons';
 import { IconAction } from './icon-action';
+import { ListingDetailSkeleton, StorefrontSkeleton } from './components/ui/async-feedback';
 import { showActionFeedback } from './action-feedback';
-import { InstallApp } from './install-app';
 import { selectHomeListings } from './home-listings';
 import { MobileBrowseControls, SwipeableListingRail } from './mobile-browse-controls';
 import { ListingGallery } from './listing-gallery';
@@ -22,13 +22,14 @@ export type Listing = { id: number; type: string; title: string; description: st
 
 export function ListingCard({ l, priority = false }: { l: Listing; priority?: boolean }) {
   const nav = useNavigate();
-  const { me, savedIds, toggleSaved } = useMe();
+  const { me, savedIds, pendingSavedIds, toggleSaved } = useMe();
   const [busy, setBusy] = useState(false);
   const [saveError, setSaveError] = useState('');
   const [failedImageSrc, setFailedImageSrc] = useState<string | null>(null);
   const imageSrc = l.images[0];
   const showImage = Boolean(imageSrc && failedImageSrc !== imageSrc);
   const saved = savedIds.includes(l.id);
+  const saveSyncing = pendingSavedIds.includes(l.id);
   const isOwner = me != null && me.storeId === l.seller.id;
   const staff = me?.roles.some(role => ['campus_reviewer', 'university_admin', 'system_admin', 'establishment'].includes(role.role));
   const canSave = !staff && !isOwner && (l.availability === 'available' || saved);
@@ -37,7 +38,7 @@ export function ListingCard({ l, priority = false }: { l: Listing; priority?: bo
     : !me ? 'Sign in to save this listing'
     : saved ? 'Remove from saved' : 'Save for later';
   const flip = async () => {
-    if (!canSave || busy) return;
+    if (!canSave || busy || saveSyncing) return;
     setSaveError('');
     if (!me) { nav(`/login?next=${encodeURIComponent(`/listings/${l.id}`)}`); return; }
     setBusy(true);
@@ -58,7 +59,7 @@ export function ListingCard({ l, priority = false }: { l: Listing; priority?: bo
         <span className="listing-kind">{l.type === 'service' ? 'Service' : 'Product'}</span>
         {l.images.length > 1 && <span className="product-photo-multiple">{l.images.length} photos</span>}
         {!staff && <button type="button" className="heart-btn" aria-pressed={saved} aria-label={saveLabel}
-          title={saveLabel} aria-busy={busy} disabled={busy || !canSave} onClick={flip}>
+          title={saveLabel} aria-busy={busy || saveSyncing} disabled={busy || saveSyncing || !canSave} onClick={flip}>
           <Icon name="heart" filled={saved} size={16} /></button>}
       </div>
       <div className="body">
@@ -153,7 +154,11 @@ export function Home() {
           <span className="hero-line hero-line-connect"><span className="hero-amp">{copy.heroAccent}</span> {copy.heroLine2}</span>
           <em>{copy.heroLine3}</em></h1>
         <p>{copy.heroBody}</p>
-        {/* Search is available in the site header on every page; this hero keeps the editorial message and approved image. */}
+        <div className="home-hero-actions">
+          <Link to="/explore" className="home-hero-explore">Explore listings <span aria-hidden="true"><Icon name="arrow" size={17} /></span></Link>
+          <Link to="/guidelines" className="home-hero-guide">How it works <Icon name="arrow" size={15} /></Link>
+        </div>
+        {/* Search stays in the global header; these links use existing routes. */}
       </div>
       <div className="hero-art" aria-hidden="true">
         {/* Scale-independent asymmetric crop; the admin-managed image remains unchanged. */}
@@ -168,6 +173,10 @@ export function Home() {
           <img src={homeContent.images.hero ?? '/illustrations/campus-abstract.svg'} alt="" decoding="async"
             onError={e => { e.currentTarget.onerror = null; e.currentTarget.src = '/illustrations/campus-abstract.svg'; }} />
         </figure>
+        <div className="home-hero-photo-signature" aria-hidden="true">
+          <span className="home-hero-photo-symbol"><Icon name="store" size={19} /></span>
+          <span><strong>CPSU Student Marketplace</strong><small>Our campus community</small></span>
+        </div>
       </div>
     </section>
 
@@ -176,7 +185,7 @@ export function Home() {
       <div className="cat-rail home-category-grid" role="group" aria-label="All categories"
         style={{ '--category-count': Math.max(1, cats.length) } as CSSProperties}>
         {cats.map(c => <Link key={c.id} className="cat" to={`/explore?categoryId=${c.id}`}
-          aria-label={c.name} title={c.name}>
+          aria-label={shortCategoryName(c.name) === c.name ? c.name : `${shortCategoryName(c.name)} — ${c.name}`} title={c.name}>
           <span className="cat-ico" aria-hidden="true"><Icon name={categoryIcon(c.name)} size={20} /></span>
           <span className="category-label-full" aria-hidden="true">{c.name}</span>
           <span className="category-label-short" aria-hidden="true">{shortCategoryName(c.name)}</span>
@@ -223,7 +232,6 @@ export function Home() {
       <Link className="btn gold" to="/dashboard">Start selling</Link>
     </section>}
 
-    <InstallApp />
   </>;
 }
 
@@ -477,7 +485,7 @@ export function Discover() {
 }
 
 export function ListingDetail() {
-  const { id } = useParams(); const { me, savedIds, toggleSaved } = useMe();
+  const { id } = useParams(); const { me, savedIds, pendingSavedIds, toggleSaved } = useMe();
   const navigate = useNavigate();
   const [l, setL] = useState<Listing | null>(null); const [body, setBody] = useState(''); const [note, setNote] = useState(''); const [err, setErr] = useState('');
   const [inquiryThreadId, setInquiryThreadId] = useState<number | null>(null);
@@ -497,10 +505,11 @@ export function ListingDetail() {
     <div className="row">{!isPublicNotFound(loadError) && <button type="button" className="btn" onClick={loadListing}>Retry listing</button>}
       <Link className="btn ghost" to="/explore">Browse listings</Link></div>
   </section>;
-  if (!l) return <p className="muted" role="status">Loading listing…</p>;
+  if (!l) return <ListingDetailSkeleton />;
   const loginForListing = `/login?next=${encodeURIComponent(`/listings/${l.id}`)}`;
   // Saved state comes from the shell (one fetch at sign-in), shared with the hearts on every card.
   const saved = savedIds.includes(l.id);
+  const saveSyncing = pendingSavedIds.includes(l.id);
   const isOwner = me?.storeId === l.seller.id;
   const staff = me?.roles.some(role => ['campus_reviewer', 'university_admin', 'system_admin', 'establishment'].includes(role.role));
   const isAvailable = l.availability === 'available';
@@ -519,6 +528,7 @@ export function ListingDetail() {
   };
   const save = async () => {
     if (!me) { navigate(loginForListing); return; }
+    if (saveSyncing) return;
     setBusy(true);
     try {
       if (await toggleSaved(l.id, !saved)) { setInquiryThreadId(null); setNote(saved ? 'Removed from your saved list.' : 'Saved to your list.'); setErr(''); }
@@ -529,7 +539,7 @@ export function ListingDetail() {
   // One button, two homes: over the first photo when there is one, in the action row when there is not.
   const heartLabel = !me ? 'Sign in to save this listing' : saved ? 'Remove from saved' : 'Save for later';
   const heart = <button className="heart-btn" aria-pressed={saved} aria-label={heartLabel}
-    title={heartLabel} disabled={busy} onClick={save}>
+    title={heartLabel} aria-busy={busy || saveSyncing} disabled={busy || saveSyncing} onClick={save}>
     <Icon name="heart" filled={saved} size={22} /></button>;
   const isService = l.type === 'service';
   const priceBasisLabel = /[a-z]/i.test(l.priceBasis ?? '') ? l.priceBasis : '';
@@ -675,18 +685,26 @@ export function StorePage() {
     <div className="row">{!isPublicNotFound(loadError) && <button type="button" className="btn" onClick={loadStore}>Retry store</button>}
       <Link className="btn ghost" to="/explore">Browse listings</Link></div>
   </section>;
-  if (!s) return <p className="muted" role="status">Loading store…</p>;
+  if (!s) return <StorefrontSkeleton />;
   const staff = me?.roles.some(role => ['campus_reviewer', 'university_admin', 'system_admin', 'establishment'].includes(role.role));
   const isOwner = me?.storeId === s.id;
   const publicStorePath = `/store/${encodeURIComponent(s.slug)}`;
   const toggleFollow = async () => {
     if (!me) { navigate(`/login?next=${encodeURIComponent(publicStorePath)}`); return; }
     if (staff || isOwner || followLock.current || !s.follow?.available) return;
+    const storeId = s.id;
+    const previous = s.follow;
+    const following = !previous.isFollowing;
     followLock.current = true;
     setFollowBusy(true); setFollowMessage('');
+    // Show the requested state before network syncing, without claiming it was saved yet.
+    setS(current => current?.id === storeId ? { ...current, follow: {
+      ...previous, isFollowing: following, count: typeof previous.count === 'number'
+        ? Math.max(0, previous.count + (following ? 1 : -1)) : null,
+    } } : current);
     try {
-      const result = await api<{ count: number; isFollowing: boolean }>(`/store-follows/${s.id}`, {
-        method: s.follow.isFollowing ? 'DELETE' : 'PUT',
+      const result = await api<{ count: number; isFollowing: boolean }>(`/store-follows/${storeId}`, {
+        method: following ? 'PUT' : 'DELETE',
       });
       setS(current => current?.id === s.id ? {
         ...current, follow: { count: result.count, isFollowing: result.isFollowing, available: true },
@@ -695,7 +713,8 @@ export function StorePage() {
       showActionFeedback({ kind: 'success', title: result.isFollowing ? 'Store followed' : 'Store unfollowed', message: result.isFollowing ? 'You will see updates from this store.' : 'You will no longer receive this store’s updates.' });
       window.dispatchEvent(new Event('store-follow-changed'));
     } catch (error) {
-      setFollowMessage(explain(error));
+      setS(current => current?.id === storeId ? { ...current, follow: previous } : current);
+      setFollowMessage('Could not sync following. Your previous state was restored.');
       showActionFeedback({ kind: 'error', title: 'Follow action failed', message: explain(error) });
     } finally {
       followLock.current = false;
@@ -760,17 +779,86 @@ export function StorePage() {
     </>;
 }
 
+type GuidelineSection = { id: string; title: string; paragraphs: string[] };
+
+export function parseGuidelineSections(body: string): GuidelineSection[] {
+  const sections: GuidelineSection[] = [];
+  for (const line of body.split(/\r?\n/)) {
+    const text = line.trim();
+    if (!text) continue;
+    if (text.startsWith('# ')) {
+      sections.push({ id: `guideline-${sections.length + 1}`, title: text.slice(2).trim(), paragraphs: [] });
+    } else {
+      if (sections.length === 0) sections.push({ id: 'guideline-1', title: 'Overview', paragraphs: [] });
+      sections[sections.length - 1].paragraphs.push(text);
+    }
+  }
+  return sections;
+}
+
 export function Guidelines() {
   const [content, setContent] = useState<{ body: string; publishedAt: string | null } | null>(null);
   const [error, setError] = useState('');
-  const load = () => api<{ body: string; publishedAt: string | null }>('/guidelines').then(r => { setContent(r); setError(''); }).catch(e => setError(explain(e)));
+  const [loading, setLoading] = useState(true);
+  const load = () => {
+    setLoading(true);
+    setError('');
+    return api<{ body: string; publishedAt: string | null }>('/guidelines')
+      .then(result => setContent(result))
+      .catch(e => setError(explain(e)))
+      .finally(() => setLoading(false));
+  };
   useEffect(() => { void load(); }, []);
-  return <div className="guidelines-content">
-    <h1>Marketplace guidelines</h1>
-    {error && <p className="err" role="alert">Could not load guidelines: {error} <button className="btn ghost" type="button" onClick={load}>Retry</button></p>}
-    {!content && !error && <p className="muted" role="status">Loading guidelines…</p>}
-    {content && <><p className="muted">{content.publishedAt ? `Published ${new Date(content.publishedAt).toLocaleDateString('en-PH')}` : 'Draft for discussion. Final rules are set by CPSU before launch.'}</p>
-      {content.body.split(/\n/).filter(line => line.trim()).map((line, i) => line.startsWith('# ') ? <h2 key={i}>{line.slice(2)}</h2> : <p key={i}>{line}</p>)}</>}
+  const sections = content ? parseGuidelineSections(content.body) : [];
+
+  return <div className="guidelines-page">
+    <nav className="guidelines-breadcrumb" aria-label="Breadcrumb">
+      <Link to="/">Home</Link><Icon name="chevronRight" size={15} /><span aria-current="page">Guidelines</span>
+    </nav>
+
+    <header className="guidelines-hero">
+      <span className="guidelines-eyebrow"><Icon name="book" size={16} /> CPSU Market guide</span>
+      <h1>Marketplace guidelines</h1>
+      <p className="guidelines-intro">A simple guide to buying, selling, and connecting respectfully within the CPSU community.</p>
+      {content && <p className="guidelines-version"><Icon name="shield" size={16} />
+        {content.publishedAt
+          ? <>Published <time dateTime={content.publishedAt}>{new Date(content.publishedAt).toLocaleDateString('en-PH', { year: 'numeric', month: 'long', day: 'numeric' })}</time></>
+          : 'Pre-launch guidance · Final rules are set by CPSU before launch'}
+      </p>}
+    </header>
+
+    {loading && !content && <div className="guidelines-state" role="status" aria-live="polite">
+      <span className="guidelines-loading-icon" aria-hidden="true"><Icon name="book" size={22} /></span>
+      <div><strong>Loading guidelines</strong><p>Getting the community guide ready.</p></div>
+    </div>}
+
+    {error && <div className="guidelines-state guidelines-state-error" role="alert">
+      <span className="guidelines-state-icon" aria-hidden="true"><Icon name="refresh" size={22} /></span>
+      <div><strong>Guidelines couldn't be loaded</strong><p>{error}</p>
+        <button className="btn ghost" type="button" onClick={() => void load()} disabled={loading}>
+          <Icon name="refresh" size={17} /> {loading ? 'Trying again…' : 'Try again'}
+        </button>
+      </div>
+    </div>}
+
+    {content && <div className="guidelines-layout">
+      {sections.length > 1 && <nav className="guidelines-toc" aria-label="Guidelines sections">
+        <h2>On this page</h2>
+        <ol>{sections.map((section, index) => <li key={section.id}>
+          <a href={`#${section.id}`}><span aria-hidden="true">{String(index + 1).padStart(2, '0')}</span>{section.title}</a>
+        </li>)}</ol>
+      </nav>}
+      <article className="guidelines-article" aria-label="Community guidelines">
+        {sections.map((section, index) => <section className="guidelines-section" id={section.id} key={section.id}
+          aria-labelledby={`${section.id}-title`}>
+          <span className="guidelines-section-number" aria-hidden="true">{String(index + 1).padStart(2, '0')}</span>
+          <div className="guidelines-section-body">
+            <h2 id={`${section.id}-title`}>{section.title}</h2>
+            {section.paragraphs.map((paragraph, paragraphIndex) => <p key={paragraphIndex}>{paragraph}</p>)}
+          </div>
+        </section>)}
+      </article>
+    </div>}
   </div>;
 }
 

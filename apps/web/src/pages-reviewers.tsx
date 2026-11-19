@@ -1,3 +1,4 @@
+import { Field } from './components/ui/primitives';
 import { useEffect, useState, type FormEvent } from 'react';
 import { api, explain } from './api';
 
@@ -82,15 +83,15 @@ export function ReviewerAdmin({ active, campuses, campusesError, onRetryCampuses
     {notice && <p role="status">{notice}</p>}
     {showCreate && <form className="panel stack admin-reviewer-form" onSubmit={createReviewer}>
       <h3>New campus reviewer</h3>
-      <label className="field">Full name<input required minLength={2} maxLength={80} autoComplete="name" value={create.displayName} onChange={e => setCreate(previous => ({ ...previous, displayName: e.target.value }))} /></label>
-      <label className="field">Email<input required type="email" maxLength={191} autoComplete="off" value={create.email} onChange={e => setCreate(previous => ({ ...previous, email: e.target.value }))} /></label>
-      <label className="field">Campus<select required value={create.campusId} onChange={e => setCreate(previous => ({ ...previous, campusId: e.target.value }))}><option value="">Select campus</option>{campuses.map(campus => <option key={campus.id} value={campus.id}>{campus.name}</option>)}</select></label>
-      <label className="field">Initial password<input required type="password" minLength={12} maxLength={128} autoComplete="new-password" value={create.password} onChange={e => setCreate(previous => ({ ...previous, password: e.target.value }))} /></label>
+      <Field>Full name<input required minLength={2} maxLength={80} autoComplete="name" value={create.displayName} onChange={e => setCreate(previous => ({ ...previous, displayName: e.target.value }))} /></Field>
+      <Field>Email<input required type="email" maxLength={191} autoComplete="off" value={create.email} onChange={e => setCreate(previous => ({ ...previous, email: e.target.value }))} /></Field>
+      <Field>Campus<select required value={create.campusId} onChange={e => setCreate(previous => ({ ...previous, campusId: e.target.value }))}><option value="">Select campus</option>{campuses.map(campus => <option key={campus.id} value={campus.id}>{campus.name}</option>)}</select></Field>
+      <Field>Initial password<input required type="password" minLength={12} maxLength={128} autoComplete="new-password" value={create.password} onChange={e => setCreate(previous => ({ ...previous, password: e.target.value }))} /></Field>
       <p className="muted">Use a unique password of at least 12 characters. Share it with the reviewer through a private channel.</p>
       <button className="btn" disabled={saving || !campuses.length}>{saving ? 'Creating…' : 'Create reviewer'}</button>
     </form>}
     <form className="panel admin-student-filters" role="search" aria-label="Search reviewers" onSubmit={e => { e.preventDefault(); void load(query.trim(), 1); }}>
-      <label className="field">Name or email<input type="search" maxLength={80} value={query} onChange={e => setQuery(e.target.value)} placeholder="Search reviewers" /></label>
+      <Field>Name or email<input type="search" maxLength={80} value={query} onChange={e => setQuery(e.target.value)} placeholder="Search reviewers" /></Field>
       <button className="btn" disabled={loading}>Search</button>
     </form>
     {loading && <p role="status" className="muted">Loading reviewers…</p>}
@@ -106,12 +107,12 @@ export function ReviewerAdmin({ active, campuses, campusesError, onRetryCampuses
         {selected && <form className="stack" onSubmit={saveReviewer}>
           <h3>Edit {selected.displayName}</h3>
           <p className="muted">Role: Campus reviewer{selected._count.affiliations > 0 ? ' · Legacy student affiliation retained for record integrity' : ''}</p>
-          <label className="field">Full name<input required minLength={2} maxLength={80} value={edit.displayName} onChange={e => setEdit(previous => ({ ...previous, displayName: e.target.value }))} /></label>
-          <label className="field">Email<input required type="email" maxLength={191} value={edit.email} onChange={e => setEdit(previous => ({ ...previous, email: e.target.value }))} /></label>
-          <label className="field">Campus<select required value={edit.campusId} onChange={e => setEdit(previous => ({ ...previous, campusId: e.target.value }))}>{campuses.map(campus => <option key={campus.id} value={campus.id}>{campus.name}</option>)}</select></label>
-          <label className="field">Account status<select value={edit.status} onChange={e => setEdit(previous => ({ ...previous, status: e.target.value as Editor['status'] }))}><option value="active">Active</option><option value="suspended">Suspended</option></select></label>
-          <label className="field">New password (optional)<input type="password" minLength={12} maxLength={128} autoComplete="new-password" value={edit.password} onChange={e => setEdit(previous => ({ ...previous, password: e.target.value }))} /></label>
-          <label className="field">Reason for change<input required minLength={10} maxLength={500} value={edit.reason} onChange={e => setEdit(previous => ({ ...previous, reason: e.target.value }))} /></label>
+          <Field>Full name<input required minLength={2} maxLength={80} value={edit.displayName} onChange={e => setEdit(previous => ({ ...previous, displayName: e.target.value }))} /></Field>
+          <Field>Email<input required type="email" maxLength={191} value={edit.email} onChange={e => setEdit(previous => ({ ...previous, email: e.target.value }))} /></Field>
+          <Field>Campus<select required value={edit.campusId} onChange={e => setEdit(previous => ({ ...previous, campusId: e.target.value }))}>{campuses.map(campus => <option key={campus.id} value={campus.id}>{campus.name}</option>)}</select></Field>
+          <Field>Account status<select value={edit.status} onChange={e => setEdit(previous => ({ ...previous, status: e.target.value as Editor['status'] }))}><option value="active">Active</option><option value="suspended">Suspended</option></select></Field>
+          <Field>New password (optional)<input type="password" minLength={12} maxLength={128} autoComplete="new-password" value={edit.password} onChange={e => setEdit(previous => ({ ...previous, password: e.target.value }))} /></Field>
+          <Field>Reason for change<input required minLength={10} maxLength={500} value={edit.reason} onChange={e => setEdit(previous => ({ ...previous, reason: e.target.value }))} /></Field>
           <button className="btn" disabled={saving || !campuses.length}>{saving ? 'Saving…' : 'Save reviewer'}</button>
         </form>}
       </aside>

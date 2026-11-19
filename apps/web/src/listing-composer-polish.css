@@ -4,23 +4,23 @@
   color: var(--ink);
 }
 .my-store .listing-composer-intro {
-  padding: 13px 15px;
+  padding: var(--ui-space-3) var(--ui-space-4);
   border: 1px solid var(--line);
-  border-radius: 10px;
+  border-radius: var(--ui-radius-md);
   background: var(--surface-soft);
 }
 .my-store .listing-composer-intro span {
   display: block;
-  margin-bottom: 5px;
+  margin-bottom: var(--ui-space-1);
   color: var(--forest);
-  font-size: .69rem;
+  font-size: var(--ui-type-xs);
   font-weight: 800;
   letter-spacing: .09em;
 }
 .my-store .listing-composer-intro p {
   margin: 0;
   color: var(--ink-soft);
-  font-size: .88rem;
+  font-size: var(--ui-type-sm);
   line-height: 1.55;
 }
 .my-store .listing-kind-field {
@@ -32,13 +32,13 @@
 .my-store .listing-kind-field legend {
   padding: 0;
   color: var(--forest);
-  font-size: .95rem;
+  font-size: var(--ui-type-md);
   font-weight: 750;
 }
 .my-store .listing-kind-hint {
-  margin: 3px 0 11px;
+  margin: var(--ui-space-1) 0 var(--ui-space-3);
   color: var(--ink-soft);
-  font-size: .82rem;
+  font-size: var(--ui-type-sm);
   line-height: 1.45;
 }
 .my-store .listing-kind-options {
@@ -53,7 +53,7 @@
   gap: 12px;
   min-width: 0;
   min-height: 86px;
-  padding: 17px 15px;
+  padding: var(--ui-space-4) var(--ui-space-4);
   border: 1px solid var(--line);
   border-radius: 12px;
   background: var(--paper);
@@ -72,13 +72,13 @@
 }
 .my-store .listing-kind-option strong {
   color: var(--forest);
-  font-size: .95rem;
+  font-size: var(--ui-type-md);
   font-weight: 750;
   line-height: 1.25;
 }
 .my-store .listing-kind-option small {
   color: var(--ink-soft);
-  font-size: .79rem;
+  font-size: var(--ui-type-xs);
   line-height: 1.45;
 }
 .my-store .store-create .seller-composer .listing-kind-option input[type="radio"] {
@@ -104,9 +104,9 @@
 .my-store .listing-kind-field:disabled .listing-kind-option { opacity: .65; cursor: wait; }
 .my-store .listing-composer .field {
   color: var(--forest);
-  font-size: .88rem;
+  font-size: var(--ui-type-sm);
   font-weight: 650;
-  gap: 7px;
+  gap: var(--ui-space-2);
 }
 .my-store .listing-composer .field :is(input:not([type="radio"]), textarea, select) {
   font-weight: 450;
@@ -122,21 +122,21 @@
 .my-store .listing-composer > .row > .field { min-width: 0; }
 .my-store .listing-photo-policy {
   display: grid;
-  gap: 9px;
+  gap: var(--ui-space-2);
   padding: 12px 14px;
-  border-radius: 10px;
+  border-radius: var(--ui-radius-md);
   background: var(--surface-soft);
 }
 .my-store .listing-photo-policy p {
   margin: 0;
   color: var(--ink-soft);
-  font-size: .82rem;
+  font-size: var(--ui-type-sm);
   line-height: 1.55;
 }
 .my-store .listing-photo-policy p + p {
   display: flex;
   align-items: flex-start;
-  gap: 7px;
+  gap: var(--ui-space-2);
 }
 .my-store .listing-photo-policy strong { color: var(--forest); }
 .my-store .listing-photo-policy svg { flex: none; margin-top: 1px; color: var(--forest); }
@@ -152,7 +152,7 @@
 .my-store .listing-composer-footer p {
   margin: 0;
   color: var(--ink-soft);
-  font-size: .8rem;
+  font-size: var(--ui-type-xs);
   line-height: 1.5;
 }
 .my-store .listing-composer-footer .btn { min-height: 46px; min-width: 138px; }
@@ -160,10 +160,10 @@
   .my-store .listing-kind-option:hover { border-color: var(--forest); }
 }
 @media (max-width: 520px) {
-  .my-store .listing-kind-options { grid-template-columns: 1fr; gap: 9px; }
-  .my-store .listing-kind-option { min-height: 73px; padding: 13px 14px; }
-  .my-store .listing-kind-option.is-selected { padding: 12px 13px; }
-  .my-store .listing-composer > .row { grid-template-columns: 1fr; gap: 13px; }
+  .my-store .listing-kind-options { grid-template-columns: 1fr; gap: var(--ui-space-2); }
+  .my-store .listing-kind-option { min-height: 73px; padding: var(--ui-space-3) 14px; }
+  .my-store .listing-kind-option.is-selected { padding: 12px var(--ui-space-3); }
+  .my-store .listing-composer > .row { grid-template-columns: 1fr; gap: var(--ui-space-3); }
   .my-store .listing-composer-footer { align-items: stretch; }
   .my-store .listing-composer-footer .btn { width: 100%; }
 }

@@ -1,3 +1,4 @@
+import { Field, Panel } from './components/ui/primitives';
 import { useEffect, useState } from 'react';
 import { api, explain } from './api';
 import { HomePageEditor } from './home-page-editor';
@@ -97,7 +98,7 @@ export function ManagedContentAdmin() {
     <p className="muted">Confirm institutional approval before publishing policy text.</p>
     <HomePageEditor />
 
-    <section className="panel stack" aria-labelledby="guideline-editor-title">
+    <Panel as="section" className="stack" aria-labelledby="guideline-editor-title">
       <div>
         <h3 id="guideline-editor-title">Marketplace guidelines</h3>
         {guidelines && <p className="muted">{guidelines.publishedAt
@@ -108,10 +109,10 @@ export function ManagedContentAdmin() {
       {guidelinesError && <p className="err" role="alert">{guidelinesError}{' '}
         <button className="btn ghost" type="button" disabled={guidelinesLoading} onClick={() => void loadGuidelines()}>Retry guidelines</button>
       </p>}
-      {guidelines && <label className="field">Draft text <span className="muted">Use # at the start of a line for a section heading. Plain text only.</span>
+      {guidelines && <Field>Draft text <span className="muted">Use # at the start of a line for a section heading. Plain text only.</span>
         <textarea value={draft} onChange={e => setDraft(e.target.value)} maxLength={10000} rows={15}
           disabled={guidelinesBusy || guidelinesLoading || Boolean(guidelinesError)} />
-      </label>}
+      </Field>}
       {guidelines && draft !== guidelines.draftBody && <p className="muted">You have unsaved changes.</p>}
       {guidelines && <div className="row">
         <button type="button" className="btn ghost"
@@ -122,7 +123,7 @@ export function ManagedContentAdmin() {
           onClick={publishGuidelines}>Publish saved draft</button>
       </div>}
       {guidelinesNotice && <p role="status" className="muted">{guidelinesNotice}</p>}
-    </section>
+    </Panel>
 
     <section aria-labelledby="announcement-editor-title">
       <h3 id="announcement-editor-title">Announcements</h3>
@@ -146,10 +147,10 @@ export function ManagedContentAdmin() {
           </button>)}
         </div>
         <div className="panel stack">
-          <label className="field">Title<input value={title} onChange={e => setTitle(e.target.value)} maxLength={120}
-            disabled={announcementsBusy || announcementsLoading || Boolean(announcementsError) || selected?.status === 'archived'} /></label>
-          <label className="field">Message<textarea value={body} onChange={e => setBody(e.target.value)} maxLength={2000} rows={7}
-            disabled={announcementsBusy || announcementsLoading || Boolean(announcementsError) || selected?.status === 'archived'} /></label>
+          <Field>Title<input value={title} onChange={e => setTitle(e.target.value)} maxLength={120}
+            disabled={announcementsBusy || announcementsLoading || Boolean(announcementsError) || selected?.status === 'archived'} /></Field>
+          <Field>Message<textarea value={body} onChange={e => setBody(e.target.value)} maxLength={2000} rows={7}
+            disabled={announcementsBusy || announcementsLoading || Boolean(announcementsError) || selected?.status === 'archived'} /></Field>
           <div className="row">
             <button className="btn ghost" type="button"
               disabled={announcementsBusy || announcementsLoading || Boolean(announcementsError) || selected?.status === 'archived' || !title.trim() || !body.trim()}

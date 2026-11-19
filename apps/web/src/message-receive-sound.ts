@@ -179,7 +179,7 @@ function webAudioFallback(): void {
 
 /**
  * Call when a genuinely new INCOMING message is observed while the chat is in focus.
- * The Test sound button also calls this from a trusted gesture.
+ * The sound preference controls only mute or unmute; they do not play a preview.
  */
 export function playMessageReceiveSound(): void {
   if (!messageReceiveSoundEnabled()) return;

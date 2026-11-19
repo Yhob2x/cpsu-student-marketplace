@@ -1,3 +1,4 @@
+import { Field } from './components/ui/primitives';
 import { useEffect, useState, type FormEvent } from 'react';
 import { api, explain } from './api';
 import { showActionFeedback } from './action-feedback';
@@ -102,8 +103,8 @@ export function CatalogAdmin({ onCampusesChange }: { onCampusesChange: () => voi
         <form className="catalog-admin-add" onSubmit={event => void addCampus(event)}>
           <strong>Add campus</strong>
           <div className="catalog-admin-fields">
-            <label className="field">Code<input required minLength={2} maxLength={24} pattern="[A-Za-z0-9_-]+" value={newCampus.code} placeholder="e.g. MAIN" onChange={event => setNewCampus(current => ({ ...current, code: event.target.value }))} /></label>
-            <label className="field">Campus name<input required minLength={2} maxLength={100} value={newCampus.name} placeholder="Campus name" onChange={event => setNewCampus(current => ({ ...current, name: event.target.value }))} /></label>
+            <Field>Code<input required minLength={2} maxLength={24} pattern="[A-Za-z0-9_-]+" value={newCampus.code} placeholder="e.g. MAIN" onChange={event => setNewCampus(current => ({ ...current, code: event.target.value }))} /></Field>
+            <Field>Campus name<input required minLength={2} maxLength={100} value={newCampus.name} placeholder="Campus name" onChange={event => setNewCampus(current => ({ ...current, name: event.target.value }))} /></Field>
           </div>
           <button className="btn" disabled={Boolean(busy) || !newCampus.name.trim() || !newCampus.code.trim()} type="submit">{busy === 'add-campus' ? 'Adding…' : 'Add campus'}</button>
         </form>
@@ -111,8 +112,8 @@ export function CatalogAdmin({ onCampusesChange }: { onCampusesChange: () => voi
           {data.campuses.map(campus => <div className="catalog-admin-item" key={campus.id}>
             {editCampus === campus.id ? <form onSubmit={event => { event.preventDefault(); void updateCampus(campus, campusDraft); }}>
               <div className="catalog-admin-fields">
-                <label className="field">Code<input required minLength={2} maxLength={24} pattern="[A-Za-z0-9_-]+" value={campusDraft.code} onChange={event => setCampusDraft(prev => ({ ...prev, code: event.target.value }))} /></label>
-                <label className="field">Campus name<input required minLength={2} maxLength={100} value={campusDraft.name} onChange={event => setCampusDraft(prev => ({ ...prev, name: event.target.value }))} /></label>
+                <Field>Code<input required minLength={2} maxLength={24} pattern="[A-Za-z0-9_-]+" value={campusDraft.code} onChange={event => setCampusDraft(prev => ({ ...prev, code: event.target.value }))} /></Field>
+                <Field>Campus name<input required minLength={2} maxLength={100} value={campusDraft.name} onChange={event => setCampusDraft(prev => ({ ...prev, name: event.target.value }))} /></Field>
               </div>
               <div className="catalog-admin-actions"><button className="btn" type="submit" disabled={Boolean(busy)}>Save</button>
                 <button className="btn ghost" type="button" onClick={() => setEditCampus(null)} disabled={Boolean(busy)}>Cancel</button></div>
@@ -148,12 +149,12 @@ export function CatalogAdmin({ onCampusesChange }: { onCampusesChange: () => voi
         </div>
         <form className="catalog-admin-add" onSubmit={event => void addCategory(event)}>
           <strong>Add {categoryLabel.toLowerCase()} category</strong>
-          <label className="field">What {categoryLabel.toLowerCase()} category would you like to add?
+          <Field>What {categoryLabel.toLowerCase()} category would you like to add?
             <input required minLength={2} maxLength={80}
               placeholder={selectedKind === 'service' ? 'e.g. Event photography' : 'e.g. School supplies'}
               value={newCategory[selectedKind]}
               onChange={event => setNewCategory(current => ({ ...current, [selectedKind]: event.target.value }))} />
-          </label>
+          </Field>
           <button className="btn" type="submit" disabled={Boolean(busy) || newCategory[selectedKind].trim().length < 2}>
             {busy === 'add-category' ? 'Adding…' : 'Add ' + categoryLabel.toLowerCase() + ' category'}
           </button>
@@ -162,8 +163,8 @@ export function CatalogAdmin({ onCampusesChange }: { onCampusesChange: () => voi
           <p className="catalog-admin-subtitle">{categoryLabel} categories ({filteredCategories.length})</p>
           {filteredCategories.map(category => <div className="catalog-admin-item" key={category.id}>
             {editCategory === category.id ? <form onSubmit={event => { event.preventDefault(); void updateCategory(category); }}>
-              <label className="field">Category name<input required minLength={2} maxLength={80} value={categoryDraft}
-                onChange={event => setCategoryDraft(event.target.value)} /></label>
+              <Field>Category name<input required minLength={2} maxLength={80} value={categoryDraft}
+                onChange={event => setCategoryDraft(event.target.value)} /></Field>
               <div className="catalog-admin-actions"><button type="submit" className="btn" disabled={Boolean(busy) || categoryDraft.trim().length < 2}>Save</button>
                 <button className="btn ghost" type="button" onClick={() => setEditCategory(null)} disabled={Boolean(busy)}>Cancel</button></div>
             </form> : <>

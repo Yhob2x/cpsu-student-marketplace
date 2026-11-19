@@ -7,8 +7,10 @@ import { Discover, Home, ListingDetail, Guidelines, StorePage } from './pages-pu
 import { Icon } from './icons';
 import { ActionFeedbackHost, showActionFeedback } from './action-feedback';
 import { SiteFooter } from './site-footer';
+import { InstallApp } from './install-app';
 import { FloatingChat } from './floating-chat';
 import { useForegroundRefresh } from './foreground-refresh';
+import { withSavedListing } from './saved-state';
 import { Login, Dashboard, Inquiries, Thread, Saved } from './pages-account';
 import { Profile, Notifications } from './pages-profile';
 import { Admin } from './pages-admin';
@@ -19,7 +21,6 @@ import './storefront-theme.css';
 import './message-motion.css';
 import './notifications.css';
 import './mobile-refinements.css';
-import './install-app.css';
 import './push-settings.css';
 import './my-store.css';
 import './listing-gallery.css';
@@ -52,7 +53,11 @@ import './action-feedback.css';
 import './listing-detail-polish.css';
 import './concise-controls.css';
 import './storefront-hierarchy.css';
+import './install-app.css';
 import './ui-consistency.css';
+import './guidelines-page.css';
+import './home-color-polish.css';
+import './async-feedback.css';
 
 export type Me = { id: number; email: string; displayName: string; roles: { role: string; campusId: number | null }[];
   affiliations: { id: number; campus: { id: number; name: string }; status: string }[]; storeId: number | null };
@@ -60,7 +65,7 @@ export type Me = { id: number; email: string; displayName: string; roles: { role
 type Session = { me: Me | null; reload: () => Promise<Me | null>; logout: () => Promise<void>; ready: boolean;
   unread: number; syncUnread: () => Promise<void>;
   queue: number; syncQueue: (known?: number) => Promise<void>;
-  savedIds: number[]; toggleSaved: (id: number, saved: boolean) => Promise<boolean> };
+  savedIds: number[]; pendingSavedIds: number[]; toggleSaved: (id: number, saved: boolean) => Promise<boolean> };
 
 const Ctx = createContext<Session>(null!);
 export const useMe = () => useContext(Ctx);
@@ -100,6 +105,9 @@ function Shell() {
   const [unreadMessages, setUnreadMessages] = useState(0);
   const [queue, setQueue] = useState(0);
   const [savedIds, setSavedIds] = useState<number[]>([]);
+  const [pendingSavedIds, setPendingSavedIds] = useState<number[]>([]);
+  const savedPending = useRef(new Set<number>());
+  const savedRevision = useRef(0);
   const [loggingOut, setLoggingOut] = useState(false);
   const [logoutError, setLogoutError] = useState('');
   const logoutLock = useRef(false);
@@ -118,16 +126,34 @@ function Shell() {
   // One shared source of saved-listing ids: fetched at sign-in, so hearts on cards and the listing page stay in sync.
   const syncSaved = async () => {
     if (isStaff) { setSavedIds([]); return; }
-    try { const rows = await api<{ id: number }[]>('/saved'); setSavedIds(rows.map(r => r.id)); } catch { /* keep previous */ }
+    const before = savedRevision.current;
+    try {
+      const rows = await api<{ id: number }[]>('/saved');
+      // A delayed initial fetch must not undo a newer local user action.
+      if (before === savedRevision.current) setSavedIds(rows.map(r => r.id));
+    } catch { /* keep previous */ }
   };
   const toggleSaved = async (id: number, saved: boolean) => {
-    if (isStaff) return false;
+    if (isStaff || !me || savedPending.current.has(id)) return false;
+    savedPending.current.add(id);
+    setPendingSavedIds(previous => withSavedListing(previous, id, true));
+    savedRevision.current++;
+    // Update the heart immediately; only confirm success after server acknowledgement.
+    setSavedIds(previous => withSavedListing(previous, id, saved));
     try {
       await api(`/saved/${id}`, { method: saved ? 'PUT' : 'DELETE' });
-      setSavedIds(prev => saved ? [...prev, id] : prev.filter(x => x !== id));
       showActionFeedback({ kind: 'success', title: saved ? 'Listing saved' : 'Listing removed', message: saved ? 'You can find it in Saved items.' : 'Removed from your saved items.' });
       return true;
-    } catch { showActionFeedback({ kind: 'error', title: 'Could not update saved items', message: 'Check your connection and try again.' }); return false; }
+    } catch {
+      // Keep other cards' saves intact; rollback this listing alone.
+      savedRevision.current++;
+      setSavedIds(previous => withSavedListing(previous, id, !saved));
+      showActionFeedback({ kind: 'error', title: 'Save not synced', message: 'The heart was restored. Check your connection and retry.' });
+      return false;
+    } finally {
+      savedPending.current.delete(id);
+      setPendingSavedIds(previous => withSavedListing(previous, id, false));
+    }
   };
   const isReviewer = me?.roles.some(r => ['campus_reviewer', 'university_admin'].includes(r.role));
   // Pending affiliations plus listings, so reviewers see the queue depth before opening it.
@@ -139,7 +165,7 @@ function Shell() {
     } catch { /* keep the previous count */ }
   };
   useEffect(() => {
-    if (!me) { setUnread(0); setUnreadMessages(0); setSavedIds([]); setQueue(0); return; }
+    if (!me) { savedRevision.current++; savedPending.current.clear(); setPendingSavedIds([]); setUnread(0); setUnreadMessages(0); setSavedIds([]); setQueue(0); return; }
     syncUnread(); syncSaved(); if (isReviewer) syncQueue();
   }, [me]);
 
@@ -197,7 +223,7 @@ function Shell() {
   const signedOut = ready && !me;
 
   return (
-    <Ctx.Provider value={{ me, reload, logout, ready, unread, syncUnread, queue, syncQueue, savedIds, toggleSaved }}>
+    <Ctx.Provider value={{ me, reload, logout, ready, unread, syncUnread, queue, syncQueue, savedIds, pendingSavedIds, toggleSaved }}>
       <a className="skip-link" href="#main-content">Skip to main content</a>
       <header className="top">
         <div className="strip"><div className="wrap">
@@ -218,6 +244,7 @@ function Shell() {
             <NavLink to="/profile" aria-label="Profile" title="Profile"><Icon name="user" size={22} /></NavLink>
           </nav>}
           <div className={me ? 'who' : 'who who-guest'}>
+            <InstallApp />
             {me ? <button className="btn ghost" onClick={() => void logout()} disabled={loggingOut}>{loggingOut ? 'Signing out…' : 'Sign out'}</button>
               : <NavLink className="signin" to="/login">Sign in</NavLink>}
           </div>

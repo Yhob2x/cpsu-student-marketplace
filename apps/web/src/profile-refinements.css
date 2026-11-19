@@ -33,7 +33,7 @@
 .profile-page label.field {
   color: var(--forest);
   font-weight: 700;
-  font-size: .9rem;
+  font-size: var(--ui-type-sm);
   line-height: 1.5;
 }
 .profile-page :is(.profile-name-help, .seller-store-settings__header p, .seller-avatar-editor__heading p),
@@ -43,7 +43,7 @@
   line-height: 1.6;
 }
 .profile-page .seller-avatar-editor__form form p { font-size: .875rem; }
-.profile-page .seller-avatar-editor__photos small { font-size: .8125rem; }
+.profile-page .seller-avatar-editor__photos small { font-size: var(--ui-type-xs); }
 .profile-page .profile-store-editors > .panel {
   border-color: var(--color-primary-light);
   box-shadow: 0 1px 3px color-mix(in srgb, var(--color-primary-dark) 5%, transparent);
@@ -65,12 +65,12 @@
   outline-offset: 3px;
 }
 /* The file chooser needs the same clear boundary as the text fields. */
-.profile-page input[type="file"] { padding: .45rem .55rem; }
+.profile-page input[type="file"] { padding: var(--ui-space-2) var(--ui-space-2); }
 .profile-page input[type="file"]::file-selector-button {
   min-height: 38px;
   padding: .4rem .75rem;
   border: 1px solid var(--profile-control-border);
-  border-radius: 7px;
+  border-radius: var(--ui-radius-sm);
   background: var(--color-primary-light);
   color: var(--forest);
   font-weight: 700;
@@ -88,7 +88,7 @@
   color: var(--profile-disabled-ink);
   cursor: not-allowed;
 }
-.profile-page-intro { font-size: .9rem; line-height: 1.5; }
+.profile-page-intro { font-size: var(--ui-type-sm); line-height: 1.5; }
 .profile-page .profile-grid {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
@@ -96,7 +96,7 @@
   gap: 1rem;
 }
 .profile-page .profile-grid > * { min-width: 0; }
-.profile-page .profile-grid > .panel { margin: 0; padding: clamp(1rem, 2.5vw, 1.3rem); border-radius: 14px; }
+.profile-page .profile-grid > .panel { margin: 0; padding: clamp(1rem, 2.5vw, 1.3rem); border-radius: var(--ui-radius-md); }
 .profile-store-disclosure { scroll-margin-top: 10rem; }
 .profile-store-disclosure summary {
   display: flex;
@@ -106,7 +106,7 @@
   min-height: 76px;
   padding: .9rem 1.2rem;
   border: 1px solid var(--line);
-  border-radius: 14px;
+  border-radius: var(--ui-radius-md);
   background: var(--paper);
   color: var(--forest);
   cursor: pointer;
@@ -114,9 +114,9 @@
 }
 .profile-store-disclosure summary::-webkit-details-marker { display: none; }
 .profile-store-disclosure summary::marker { content: ''; }
-.profile-store-disclosure summary span { display: grid; gap: .2rem; min-width: 0; }
+.profile-store-disclosure summary span { display: grid; gap: var(--ui-space-1); min-width: 0; }
 .profile-store-disclosure summary strong { font: 750 1.12rem/1.25 var(--font-heading); }
-.profile-store-disclosure summary small { color: var(--ink-soft); font-size: .84rem; line-height: 1.45; }
+.profile-store-disclosure summary small { color: var(--ink-soft); font-size: var(--ui-type-sm); line-height: 1.45; }
 .profile-store-disclosure summary svg { flex: 0 0 auto; }
 .profile-store-disclosure[open] summary svg { transform: rotate(180deg); }
 .profile-store-disclosure summary:focus-visible { outline: 3px solid var(--mango); outline-offset: 2px; }
@@ -124,7 +124,7 @@
   .profile-store-disclosure summary:hover { border-color: var(--sage); background: var(--surface-soft); }
 }
 .profile-store-editors { display: grid; gap: 1rem; margin-top: 1rem; }
-.profile-store-editors > .panel { min-width: 0; margin: 0; padding: clamp(1rem, 2.5vw, 1.3rem); border-radius: 14px; }
+.profile-store-editors > .panel { min-width: 0; margin: 0; padding: clamp(1rem, 2.5vw, 1.3rem); border-radius: var(--ui-radius-md); }
 .profile-page .panel h2 { font-size: clamp(1.12rem, 2vw, 1.3rem); margin-bottom: 1rem; }
 .profile-page .seller-store-settings__header h2,
 .profile-page .seller-avatar-editor__heading h2 { margin-bottom: .25rem; }
@@ -135,7 +135,7 @@
   flex: 0 0 52px;
   width: 52px;
   height: 52px;
-  border-radius: 14px;
+  border-radius: var(--ui-radius-md);
   background: var(--forest);
   color: var(--on-forest);
   font: 750 1.05rem/1 var(--font-heading);
@@ -143,33 +143,33 @@
 }
 .profile-identity-copy { display: grid; gap: .15rem; min-width: 0; }
 .profile-identity-copy strong { font: 750 1.13rem/1.25 var(--font-heading); color: var(--forest); overflow-wrap: anywhere; }
-.profile-identity-copy span { font-size: .83rem; line-height: 1.4; color: var(--ink-soft); }
-.profile-account-facts { margin-bottom: .7rem; }
+.profile-identity-copy span { font-size: var(--ui-type-sm); line-height: 1.4; color: var(--ink-soft); }
+.profile-account-facts { margin-bottom: var(--ui-space-3); }
 .profile-account-facts dd { overflow-wrap: anywhere; }
-.profile-privacy-note { display: flex; align-items: flex-start; gap: .45rem; font-size: .79rem; margin: .7rem 0 0; }
+.profile-privacy-note { display: flex; align-items: flex-start; gap: var(--ui-space-2); font-size: var(--ui-type-xs); margin: var(--ui-space-3) 0 0; }
 .profile-privacy-note svg { flex: 0 0 auto; margin-top: .15rem; }
 .profile-registration { min-width: 0; }
 .profile-registration-heading { display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: .5rem 1rem; }
 .profile-page .profile-registration-heading h2 { margin-bottom: .35rem; }
-.profile-registration-heading p { margin: 0 0 .9rem; font-size: .86rem; line-height: 1.5; }
-.profile-registration-badge { display: inline-flex; align-items: center; min-height: 28px; padding: .3rem .65rem; border-radius: 999px; background: var(--surface-soft); color: var(--forest); font-size: .75rem; font-weight: 700; }
+.profile-registration-heading p { margin: 0 0 .9rem; font-size: var(--ui-type-sm); line-height: 1.5; }
+.profile-registration-badge { display: inline-flex; align-items: center; min-height: 28px; padding: var(--ui-space-1) .65rem; border-radius: var(--ui-radius-full); background: var(--surface-soft); color: var(--forest); font-size: .75rem; font-weight: 700; }
 .profile-registration-list { margin: 0; }
-.profile-registration-list > div { display: grid; grid-template-columns: minmax(10rem, .32fr) minmax(0, 1fr); gap: .35rem 1rem; padding: .8rem 0; border-top: 1px solid var(--line); }
-.profile-registration-list dt { color: var(--ink-soft); font-size: .86rem; font-weight: 650; }
-.profile-registration-list dd { display: grid; gap: .2rem; min-width: 0; margin: 0; overflow-wrap: anywhere; }
-.profile-registration-list dd strong { color: var(--ink); font-size: .9rem; font-weight: 650; }
-.profile-registration-list dd span { color: var(--ink-soft); font-size: .81rem; line-height: 1.45; }
-.profile-registration-note { margin: .85rem 0 0; color: var(--forest); font-size: .84rem; font-weight: 600; line-height: 1.5; }
+.profile-registration-list > div { display: grid; grid-template-columns: minmax(10rem, .32fr) minmax(0, 1fr); gap: .35rem 1rem; padding: var(--ui-space-3) 0; border-top: 1px solid var(--line); }
+.profile-registration-list dt { color: var(--ink-soft); font-size: var(--ui-type-sm); font-weight: 650; }
+.profile-registration-list dd { display: grid; gap: var(--ui-space-1); min-width: 0; margin: 0; overflow-wrap: anywhere; }
+.profile-registration-list dd strong { color: var(--ink); font-size: var(--ui-type-sm); font-weight: 650; }
+.profile-registration-list dd span { color: var(--ink-soft); font-size: var(--ui-type-xs); line-height: 1.45; }
+.profile-registration-note { margin: .85rem 0 0; color: var(--forest); font-size: var(--ui-type-sm); font-weight: 600; line-height: 1.5; }
 .profile-page .profile-registration > form { max-width: 34rem; margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--line); }
-.profile-settings-subheading { margin: 0 0 .2rem; color: var(--forest); font: 750 1.05rem/1.3 var(--font-heading); }
+.profile-settings-subheading { margin: 0 0 var(--ui-space-1); color: var(--forest); font: 750 1.05rem/1.3 var(--font-heading); }
 .profile-review-state { display: flex; gap: .65rem; align-items: center; min-width: 0; margin-bottom: .75rem; }
-.profile-review-state h3 { color: var(--forest); font-size: 1.07rem; font-weight: 750; margin: 0; }
+.profile-review-state h3 { color: var(--forest); font-size: var(--ui-type-lg); font-weight: 750; margin: 0; }
 .profile-review-symbol {
   display: grid;
   place-items: center;
   flex: 0 0 36px;
   height: 36px;
-  border-radius: 10px;
+  border-radius: var(--ui-radius-md);
   background: var(--mango-soft);
   color: var(--forest);
 }
@@ -178,33 +178,33 @@
 .profile-review-symbol--missing { background: var(--mango-soft); }
 .profile-campus-list { margin: 0; padding: 0; list-style: none; display: grid; gap: .5rem; }
 .profile-campus-list li { display: flex; gap: .5rem; flex-wrap: wrap; align-items: center; justify-content: space-between; overflow-wrap: anywhere; }
-.profile-campus-list li > span:first-child { font-weight: 600; font-size: .89rem; }
-.profile-review-description { font-size: .87rem; line-height: 1.65; margin: .75rem 0 1rem; }
+.profile-campus-list li > span:first-child { font-weight: 600; font-size: var(--ui-type-sm); }
+.profile-review-description { font-size: var(--ui-type-sm); line-height: 1.65; margin: .75rem 0 1rem; }
 .profile-status-action {
   display: inline-flex;
-  gap: .55rem;
+  gap: var(--ui-space-2);
   align-items: center;
   justify-content: center;
   min-height: 44px;
-  padding: .55rem .85rem;
+  padding: var(--ui-space-2) .85rem;
   border-radius: 9px;
   background: var(--forest);
   color: var(--on-forest);
-  font-size: .89rem;
+  font-size: var(--ui-type-sm);
   font-weight: 650;
   text-decoration: none;
 }
 .profile-status-action:hover { background: var(--pine); color: var(--on-forest); }
 .profile-status-action svg { flex: 0 0 auto; }
-.profile-status-secondary { display: inline-flex; align-items: center; min-height: 44px; margin-left: .5rem; font-size: .85rem; font-weight: 650; }
-.profile-settings .stack { max-width: none; gap: .55rem; }
+.profile-status-secondary { display: inline-flex; align-items: center; min-height: 44px; margin-left: .5rem; font-size: var(--ui-type-sm); font-weight: 650; }
+.profile-settings .stack { max-width: none; gap: var(--ui-space-2); }
 .profile-settings .field { display: block; margin: 0; }
 .profile-settings input { width: 100%; min-width: 0; }
 .profile-settings input[aria-invalid="true"] { border-color: var(--danger); }
-.profile-name-help { font-size: .81rem; line-height: 1.55; margin: .1rem 0 .5rem; }
-.profile-field-error { margin: -.1rem 0 .4rem; font-size: .81rem; color: var(--danger); }
+.profile-name-help { font-size: var(--ui-type-xs); line-height: 1.55; margin: .1rem 0 .5rem; }
+.profile-field-error { margin: -.1rem 0 .4rem; font-size: var(--ui-type-xs); color: var(--danger); }
 .profile-save-button { justify-self: start; min-width: 135px; }
-.profile-save-success { display: inline-flex; align-items: center; gap: .4rem; font-size: .85rem; font-weight: 650; color: var(--leaf); margin: .3rem 0 0; }
+.profile-save-success { display: inline-flex; align-items: center; gap: .4rem; font-size: var(--ui-type-sm); font-weight: 650; color: var(--leaf); margin: var(--ui-space-1) 0 0; }
 .profile-save-success svg { flex: 0 0 auto; }
 .profile-shortcuts-panel { min-width: 0; }
 .profile-shortcuts-panel nav { width: 100%; }
@@ -212,15 +212,15 @@
 .profile-shortcut {
   display: flex;
   align-items: center;
-  gap: .55rem;
+  gap: var(--ui-space-2);
   min-height: 55px;
   width: 100%;
-  padding: .7rem .7rem;
+  padding: var(--ui-space-3) var(--ui-space-3);
   border: 1px solid var(--line);
-  border-radius: 10px;
+  border-radius: var(--ui-radius-md);
   color: var(--forest);
   text-decoration: none;
-  font-size: .83rem;
+  font-size: var(--ui-type-sm);
   font-weight: 650;
 }
 .profile-shortcut svg { flex: 0 0 auto; }
@@ -228,18 +228,6 @@
 .profile-shortcut svg:last-child { width: 15px; }
 .profile-shortcut:hover { background: var(--mango-soft); border-color: var(--sage); }
 .profile-shortcut:focus-visible, .profile-status-action:focus-visible { outline: 3px solid var(--mango); outline-offset: 2px; }
-.profile-install { margin: 0; }
-.profile-install .install-app--panel {
-  margin: 0;
-  display: flex;
-  flex-direction: column;
-  align-items: stretch;
-  gap: .75rem;
-}
-.profile-install .install-app__intro { flex: 0 1 auto; min-width: 0; }
-.profile-install .install-app__button { flex: 0 0 auto; align-self: flex-start; }
-.profile-install .install-app__guide { flex: 0 1 auto; width: 100%; }
-/* The Store profile remains full-width; Install app lives in the page header. */
 .profile-actions-row {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
@@ -257,55 +245,6 @@
 .profile-page .page-head > div:first-child { flex: 1 1 230px; min-width: 0; }
 .profile-page .page-head h1 { margin: 0; line-height: 1.13; }
 .profile-page .page-head .profile-page-intro { margin-top: 6px; line-height: 1.5; }
-/* Comfortable PWA install card, still alongside the heading on wide screens. */
-.profile-page .profile-header-install {
-  flex: 0 1 400px;
-  width: min(100%, 400px);
-  min-width: 0;
-}
-.profile-page .profile-header-install:empty { display: none; }
-.profile-page .profile-header-install .install-app--panel {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  align-items: center;
-  gap: 10px 12px;
-  padding: 12px 14px;
-  min-height: 0;
-  height: auto;
-}
-.profile-page .profile-header-install .install-app__intro {
-  flex: initial;
-  min-width: 0;
-  gap: 10px;
-}
-.profile-page .profile-header-install .install-app__intro img {
-  width: 38px;
-  height: 38px;
-  flex-basis: 38px;
-  border-radius: 10px;
-}
-.profile-page .profile-header-install .install-app__intro > div { min-width: 0; }
-.profile-page .profile-header-install .install-app h2 { font-size: .88rem; line-height: 1.3; margin-bottom: 2px; }
-.profile-page .profile-header-install .install-app p { font-size: .77rem; line-height: 1.4; }
-.profile-page .profile-header-install .install-app__button {
-  justify-self: end;
-  align-self: center;
-  min-height: 44px;
-  padding: .5rem .7rem;
-  font-size: .8rem;
-}
-.profile-page .profile-header-install .install-app__guide,
-.profile-page .profile-header-install .install-app__feedback {
-  grid-column: 1 / -1;
-}
-@media (max-width: 650px) {
-  .profile-page .profile-header-install { flex: 1 1 100%; width: 100%; }
-}
-@media (max-width: 390px) {
-  .profile-page .profile-header-install .install-app--panel { grid-template-columns: minmax(0, 1fr); }
-  .profile-page .profile-header-install .install-app__button { justify-self: start; }
-}
-
 /* Two compact desktop columns; registration shares the height of settings and links.
    Area maps keep keyboard/reading order unchanged in the JSX and the mobile stack. */
 @media (min-width: 720px) {
@@ -362,7 +301,7 @@
   .profile-page .seller-avatar-editor__content { grid-template-columns: minmax(0, 1fr); }
   .profile-page .seller-avatar-editor__form,
   .profile-page .seller-store-settings__form { min-width: 0; }
-  .profile-registration-list > div { grid-template-columns: minmax(0, 1fr); gap: .2rem; padding: .7rem 0; }
+  .profile-registration-list > div { grid-template-columns: minmax(0, 1fr); gap: var(--ui-space-1); padding: var(--ui-space-3) 0; }
 }
 @media (max-width: 860px) {
   .profile-store-disclosure { scroll-margin-top: 1rem; }
@@ -370,19 +309,16 @@
 @media (max-width: 480px) {
   .profile-store-disclosure summary { padding: .85rem 1rem; }
   .profile-store-editors > .panel { padding: 1rem; }
-  .profile-page .profile-grid { gap: .8rem; }
+  .profile-page .profile-grid { gap: var(--ui-space-3); }
   .profile-page .profile-grid > .panel { padding: 1rem; }
-  .profile-shortcuts { gap: .45rem; }
-  .profile-shortcut { padding: .6rem .55rem; font-size: .8rem; }
-  .profile-install .install-app--panel { flex-direction: column; align-items: stretch; }
-  .profile-install .install-app__intro { flex: 0 1 auto; }
-  .profile-install .install-app__button { align-self: stretch; }
+  .profile-shortcuts { gap: var(--ui-space-2); }
+  .profile-shortcut { padding: .6rem var(--ui-space-2); font-size: var(--ui-type-xs); }
+
+
+
   .profile-status-secondary { margin: .5rem 0 0; display: flex; }
-  .profile-registration-list > div { grid-template-columns: 1fr; gap: .2rem; padding: .7rem 0; }
+  .profile-registration-list > div { grid-template-columns: 1fr; gap: var(--ui-space-1); padding: var(--ui-space-3) 0; }
 }
 @media (max-width: 359px) {
   .profile-shortcuts { grid-template-columns: 1fr; }
 }
-
-/* Installed PWAs render no installation card; avoid a blank last grid row. */
-.profile-install:empty { display: none; }

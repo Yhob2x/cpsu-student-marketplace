@@ -8,6 +8,8 @@ const schema = z.object({
   DATABASE_URL: z.string().min(1),
   JWT_SECRET: z.string().min(32),
   CORS_ORIGINS: z.string().default('http://localhost:5173'),
+  // Production defaults on; development/test can opt in without recording sensitive request data.
+  HTTP_ACCESS_LOG_ENABLED: z.enum(['true', 'false']).optional(),
   COOKIE_SECURE: z.enum(['true', 'false']).default('false'),
   UPLOAD_DIR: z.string().default('./uploads'),
   // Sensitive student-number collection is disabled until CPSU DPO approval AND a separately applied migration.

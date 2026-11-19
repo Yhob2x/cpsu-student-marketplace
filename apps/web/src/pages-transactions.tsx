@@ -85,7 +85,7 @@ export function Transactions() {
         <h1 id="transactions-heading">My transactions</h1>
         <p className="muted">Keep track of requests, meetup plans and completed exchanges.</p>
       </div>
-      <Link to="/explore" className="btn ghost">Browse listings</Link>
+      <Link to="/explore" className="transaction-browse-link">Browse listings <ArrowRight size={17} aria-hidden="true" /></Link>
     </header>
     <div className="transaction-filters" role="group" aria-label="Show transactions">
       {(['all', 'buying', 'selling'] as const).map(option => <button

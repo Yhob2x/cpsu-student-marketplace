@@ -9,9 +9,9 @@
   align-items: flex-end;
   justify-content: space-between;
   flex-wrap: wrap;
-  gap: 14px 24px;
+  gap: var(--ui-space-3) 24px;
   margin-bottom: 16px;
-  padding: 4px 0 14px;
+  padding: 4px 0 var(--ui-space-3);
   border-bottom: 1px solid var(--line);
 }
 .my-store .store-workspace-title { min-width: 0; }
@@ -22,7 +22,7 @@
   line-height: 1.1;
 }
 .my-store .store-workspace-title p {
-  margin: 5px 0 0;
+  margin: var(--ui-space-1) 0 0;
   max-width: 54ch;
   font: 400 .88rem/1.5 var(--font-body);
 }
@@ -38,8 +38,8 @@
   justify-content: center;
   gap: 8px;
   min-height: 44px;
-  padding: 9px 14px;
-  border-radius: 9px;
+  padding: var(--ui-space-2) 14px;
+  border-radius: var(--ui-radius-sm);
   font: 650 .85rem/1.25 var(--font-body);
   white-space: nowrap;
   text-decoration: none;
@@ -57,9 +57,9 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 5px;
+  gap: var(--ui-space-1);
   min-height: 44px;
-  padding: 8px 5px;
+  padding: 8px var(--ui-space-1);
   color: var(--forest);
   font: 600 .83rem/1.4 var(--font-body);
   text-decoration: underline;
@@ -74,11 +74,11 @@
 .my-store .store-affiliation {
   display: flex;
   align-items: center;
-  gap: 6px 18px;
-  padding: 11px 16px;
+  gap: var(--ui-space-1) var(--ui-space-4);
+  padding: var(--ui-space-3) 16px;
   margin-bottom: 0;
   border: 1px solid var(--line);
-  border-radius: 11px;
+  border-radius: var(--ui-radius-md);
   background: var(--paper);
 }
 .my-store .store-affiliation h2 {
@@ -89,11 +89,11 @@
   display: flex;
   align-items: center;
   flex-wrap: wrap;
-  gap: 7px;
-  font-size: .84rem;
+  gap: var(--ui-space-2);
+  font-size: var(--ui-type-sm);
 }
 .my-store .store-create {
-  margin-top: 14px;
+  margin-top: var(--ui-space-3);
   border: 1px solid var(--line);
   border-radius: 12px;
   background: var(--paper);
@@ -101,69 +101,69 @@
 }
 .my-store .store-create summary {
   min-height: 56px;
-  padding: 12px 17px;
+  padding: 12px var(--ui-space-4);
   font: 650 .97rem/1.3 var(--font-body);
 }
 .my-store .store-create[open] > summary {
   border-bottom: 1px solid var(--line);
 }
-.my-store .store-create .seller-composer { padding: 17px; }
+.my-store .store-create .seller-composer { padding: var(--ui-space-4); }
 .my-store .store-create .seller-composer .field { min-width: 0; }
 .my-store .store-create .seller-composer :is(input, select, textarea) {
-  border-radius: 9px;
+  border-radius: var(--ui-radius-sm);
 }
 .my-store .store-listings-head {
   display: flex;
   align-items: baseline;
   justify-content: space-between;
-  gap: 10px;
-  margin: 22px 0 14px;
-  padding-bottom: 10px;
+  gap: var(--ui-space-2);
+  margin: var(--ui-space-5) 0 var(--ui-space-3);
+  padding-bottom: var(--ui-space-2);
   border-bottom: 1px solid var(--line);
 }
 .my-store .store-listings-head h2 {
   color: var(--forest);
-  font-size: 1.35rem;
+  font-size: var(--ui-type-xl);
   line-height: 1.25;
 }
 .my-store .store-listing-count { font-weight: 600; }
 .my-store .store-listing-filters { gap: 12px; }
-.my-store .store-listing-filters .field { font-size: .86rem; }
+.my-store .store-listing-filters .field { font-size: var(--ui-type-sm); }
 .my-store .store-listing-filters :is(input, select) {
   min-height: 46px;
-  border-radius: 9px;
+  border-radius: var(--ui-radius-sm);
 }
 .my-store .store-empty {
-  padding: 22px;
+  padding: var(--ui-space-5);
   border: 1px solid var(--line);
   border-radius: 12px;
   background: var(--paper);
 }
-.my-store .store-empty h3 { margin: 0 0 6px; color: var(--forest); }
+.my-store .store-empty h3 { margin: 0 0 var(--ui-space-1); color: var(--forest); }
 .my-store .store-empty p { margin: 0; line-height: 1.55; }
 .my-store .store-followers {
-  margin: 14px 0 0;
-  padding: 18px 20px;
+  margin: var(--ui-space-3) 0 0;
+  padding: var(--ui-space-4) 20px;
   border: 1px solid var(--line);
   border-radius: 12px;
   background: var(--paper);
 }
 .my-store .store-followers-head { align-items: center; }
-.my-store .store-followers-heading h2 { font-size: 1.07rem; }
+.my-store .store-followers-heading h2 { font-size: var(--ui-type-lg); }
 .my-store .store-followers-heading p { line-height: 1.45; }
-.my-store .store-followers-summary strong { font-size: 1.4rem; }
+.my-store .store-followers-summary strong { font-size: var(--ui-type-2xl); }
 .my-store .store-followers-summary .btn {
   min-height: 44px;
-  border-radius: 9px;
+  border-radius: var(--ui-radius-sm);
 }
 .my-store .store-followers-list {
-  gap: 0 18px;
-  margin-top: 14px;
+  gap: 0 var(--ui-space-4);
+  margin-top: var(--ui-space-3);
   border-top: 1px solid var(--line);
 }
 .my-store .store-follower {
   min-height: 66px;
-  padding: 12px 2px;
+  padding: 12px var(--ui-space-1);
   border: 0;
   border-bottom: 1px solid var(--line);
   border-radius: 0;
@@ -178,8 +178,8 @@
 .my-store .store-follower-detail strong { color: var(--ink); }
 .my-store .store-followers-more {
   min-height: 44px;
-  padding-inline: 2px;
-  font-size: .84rem;
+  padding-inline: var(--ui-space-1);
+  font-size: var(--ui-type-sm);
   text-decoration: underline;
   text-decoration-color: transparent;
   text-underline-offset: 3px;
@@ -196,7 +196,7 @@
   .my-store .store-workspace-title h1 { font-size: 2.1rem; }
 }
 @media (max-width: 620px) {
-  .my-store .store-workspace-head { gap: 14px; }
+  .my-store .store-workspace-head { gap: var(--ui-space-3); }
   .my-store .store-header-actions {
     display: grid;
     grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
@@ -207,15 +207,15 @@
     grid-column: 1 / -1;
     width: 100%;
   }
-  .my-store .store-header-actions > a.btn { min-width: 0; padding-inline: 8px; font-size: .81rem; }
-  .my-store .store-profile-link { min-width: 0; font-size: .81rem; }
-  .my-store .store-affiliation { gap: 6px 10px; padding: 11px 13px; }
+  .my-store .store-header-actions > a.btn { min-width: 0; padding-inline: 8px; font-size: var(--ui-type-xs); }
+  .my-store .store-profile-link { min-width: 0; font-size: var(--ui-type-xs); }
+  .my-store .store-affiliation { gap: var(--ui-space-1) var(--ui-space-2); padding: var(--ui-space-3) var(--ui-space-3); }
   .my-store .store-affiliation h2 { flex: 0 0 auto; }
-  .my-store .store-followers { padding: 15px; }
+  .my-store .store-followers { padding: var(--ui-space-4); }
   .my-store .store-followers-list { grid-template-columns: minmax(0, 1fr); }
   .my-store .store-follower { min-height: 62px; }
   .my-store .store-listings-head { margin-top: 20px; }
-  .my-store .store-listing-filters { gap: 10px; }
+  .my-store .store-listing-filters { gap: var(--ui-space-2); }
 }
 @media (prefers-reduced-motion: no-preference) {
   .my-store .store-header-actions .btn,
@@ -228,17 +228,17 @@
 /* Follower management: reference-inspired full list, using only authorized
    display names and follow dates supplied by the existing private endpoint. */
 .my-store .store-followers {
-  padding: 20px 22px;
+  padding: 20px var(--ui-space-5);
 }
-.my-store .store-followers-heading h2 { font-size: 1.16rem; letter-spacing: -.018em; }
+.my-store .store-followers-heading h2 { font-size: var(--ui-type-lg); letter-spacing: -.018em; }
 .my-store .store-followers-heading p { max-width: 45ch; }
-.my-store .store-followers-summary { gap: 10px; }
+.my-store .store-followers-summary { gap: var(--ui-space-2); }
 .my-store .store-followers-count {
   min-width: 48px;
   min-height: 44px;
-  padding: 5px 9px;
+  padding: var(--ui-space-1) var(--ui-space-2);
   border: 1px solid transparent;
-  border-radius: 10px;
+  border-radius: var(--ui-radius-md);
   background: var(--surface-soft);
   color: var(--forest);
   font: 750 1.25rem/1.3 var(--font-body);
@@ -255,34 +255,34 @@
   display: grid;
   grid-template-columns: minmax(0, 1fr);
   gap: 0;
-  margin-top: 17px;
+  margin-top: var(--ui-space-4);
   border-top: 1px solid var(--line);
 }
 .my-store .store-follower {
   min-height: 74px;
-  gap: 13px;
-  padding: 13px 2px;
+  gap: var(--ui-space-3);
+  padding: var(--ui-space-3) 2px;
 }
 .my-store .store-follower-avatar {
   flex: 0 0 44px;
   width: 44px;
   height: 44px;
-  font-size: .83rem;
+  font-size: var(--ui-type-sm);
   background: var(--color-neutral-300);
 }
 .my-store .store-follower-detail strong {
-  font-size: .9rem;
+  font-size: var(--ui-type-sm);
   line-height: 1.35;
 }
-.my-store .store-follower-detail span { font-size: .79rem; }
+.my-store .store-follower-detail span { font-size: var(--ui-type-xs); }
 .my-store .store-followers-more {
   justify-self: start;
-  gap: 9px;
+  gap: var(--ui-space-2);
   min-height: 44px;
   margin-top: 12px;
-  padding: 8px 3px;
+  padding: 8px var(--ui-space-1);
   color: var(--forest);
-  font-size: .85rem;
+  font-size: var(--ui-type-sm);
   text-decoration: none;
 }
 .my-store .store-followers-more svg {
@@ -305,7 +305,7 @@
   margin: auto;
   padding: 0;
   border: 1px solid var(--line);
-  border-radius: 16px;
+  border-radius: var(--ui-radius-md);
   background: var(--paper);
   color: var(--ink);
   box-shadow: 0 22px 70px color-mix(in srgb, var(--color-primary-dark) 20%, transparent);
@@ -328,29 +328,29 @@
   align-items: flex-start;
   justify-content: space-between;
   gap: 20px;
-  padding: 22px 26px 18px;
+  padding: var(--ui-space-5) var(--ui-space-5) var(--ui-space-4);
   border-bottom: 1px solid var(--line);
 }
 .my-store .store-followers-dialog-head h2 {
   display: flex;
   align-items: center;
   flex-wrap: wrap;
-  gap: 11px;
+  gap: var(--ui-space-3);
   margin: 0;
   color: var(--forest);
   font: 700 1.4rem/1.3 var(--font-body);
 }
 .my-store .store-followers-dialog-count {
-  padding: 4px 10px;
-  border-radius: 99px;
+  padding: 4px var(--ui-space-2);
+  border-radius: var(--ui-radius-full);
   color: var(--forest);
   background: var(--surface-soft);
   font: 650 .82rem/1.3 var(--font-body);
   font-variant-numeric: tabular-nums;
 }
 .my-store .store-followers-dialog-head p {
-  margin: 5px 0 0;
-  font-size: .84rem;
+  margin: var(--ui-space-1) 0 0;
+  font-size: var(--ui-type-sm);
   line-height: 1.5;
 }
 .my-store .store-followers-dialog-close {
@@ -360,7 +360,7 @@
   width: 44px;
   height: 44px;
   border: 1px solid var(--line);
-  border-radius: 10px;
+  border-radius: var(--ui-radius-md);
   color: var(--ink);
   background: var(--paper);
   cursor: pointer;
@@ -369,7 +369,7 @@
 .my-store .store-followers-dialog-scroll {
   flex: 1 1 auto;
   min-height: 0;
-  padding: 0 26px 14px;
+  padding: 0 var(--ui-space-5) var(--ui-space-3);
   overflow-y: auto;
   overscroll-behavior: contain;
 }
@@ -379,16 +379,16 @@
 }
 .my-store .store-followers-dialog .store-follower {
   min-height: 86px;
-  padding-block: 15px;
+  padding-block: var(--ui-space-4);
 }
 .my-store .store-followers-dialog .store-follower-avatar {
   flex-basis: 52px;
   width: 52px;
   height: 52px;
-  font-size: .94rem;
+  font-size: var(--ui-type-md);
 }
 .my-store .store-followers-dialog .store-follower-detail strong { font-size: 1rem; }
-.my-store .store-followers-dialog .store-followers-feedback { margin: 18px 0; }
+.my-store .store-followers-dialog .store-followers-feedback { margin: var(--ui-space-4) 0; }
 .my-store .store-followers-dialog .store-followers-pages {
   flex: 0 0 auto;
   justify-content: space-between;
@@ -406,15 +406,15 @@
   .my-store .store-followers { padding: 16px; }
   .my-store .store-followers-heading h2 { font-size: 1rem; }
   .my-store .store-followers-heading p { font-size: .75rem; }
-  .my-store .store-follower { min-height: 68px; padding-block: 11px; }
+  .my-store .store-follower { min-height: 68px; padding-block: var(--ui-space-3); }
   .my-store .store-followers-dialog {
     width: calc(100vw - 16px);
     max-height: calc(100dvh - 28px);
-    border-radius: 13px;
+    border-radius: var(--ui-radius-md);
   }
-  .my-store .store-followers-dialog-head { padding: 17px 16px 15px; }
-  .my-store .store-followers-dialog-head h2 { font-size: 1.15rem; }
-  .my-store .store-followers-dialog-head p { font-size: .79rem; }
+  .my-store .store-followers-dialog-head { padding: var(--ui-space-4) 16px var(--ui-space-4); }
+  .my-store .store-followers-dialog-head h2 { font-size: var(--ui-type-lg); }
+  .my-store .store-followers-dialog-head p { font-size: var(--ui-type-xs); }
   .my-store .store-followers-dialog-scroll { padding-inline: 16px; }
   .my-store .store-followers-dialog .store-follower { min-height: 78px; }
   .my-store .store-followers-dialog .store-followers-pages { padding-inline: 16px; }

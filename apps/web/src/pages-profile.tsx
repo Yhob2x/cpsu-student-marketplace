@@ -7,7 +7,6 @@ import { useForegroundRefresh } from './foreground-refresh';
 import { Icon, type IconName } from './icons';
 import { IconAction } from './icon-action';
 import { PushSettings } from './push-settings';
-import { InstallApp } from './install-app';
 import { SellerStoreDetails } from './seller-store-details';
 import { SellerAvatarEditor } from './seller-avatar-editor';
 import { affiliationLabel, campusStatusSummary, displayNameChange } from './profile-presentation';
@@ -126,9 +125,6 @@ export function Profile() {
       <div>
         <h1>Profile</h1>
         <p className="muted profile-page-intro">{staff ? 'Manage your staff account and notifications.' : me.storeId ? 'Manage your CPSU account, activity, and store.' : 'Manage your CPSU account and marketplace activity.'}</p>
-      </div>
-      <div className="profile-install profile-header-install">
-        <InstallApp variant="panel" />
       </div>
     </div>
 

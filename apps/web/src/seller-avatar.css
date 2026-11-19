@@ -1,16 +1,16 @@
 .seller-avatar { display: inline-grid; place-items: center; flex: 0 0 auto; overflow: hidden; border-radius: 50%; background: var(--surface-soft); color: var(--forest); vertical-align: middle; font-weight: 750; user-select: none; }
 .seller-avatar img { display: block; width: 100%; height: 100%; object-fit: cover; }
 .seller-avatar--small { width: 24px; height: 24px; font-size: .65rem; }
-.seller-avatar--medium { width: 44px; height: 44px; font-size: .85rem; }
-.seller-avatar--large { width: 78px; height: 78px; font-size: 1.3rem; }
+.seller-avatar--medium { width: 44px; height: 44px; font-size: var(--ui-type-sm); }
+.seller-avatar--large { width: 78px; height: 78px; font-size: var(--ui-type-xl); }
 .seller-avatar__initials { line-height: 1; }
-.seller-byline { display: inline-flex; align-items: center; gap: .45rem; min-width: 0; }
+.seller-byline { display: inline-flex; align-items: center; gap: var(--ui-space-2); min-width: 0; }
 .seller-byline > span:last-child { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .seller-store-link { position: relative; z-index: 2; color: inherit; text-decoration: underline; text-decoration-color: transparent; text-underline-offset: .14em; }
 .seller-store-link:hover, .seller-store-link:focus-visible { color: var(--forest); text-decoration-color: currentColor; }
 .seller-store-link:focus-visible { outline: 2px solid var(--color-focus); outline-offset: 2px; }
 .listing-seller.seller-byline > span:last-child { white-space: normal; overflow: visible; }
-.store-profile-heading { display: flex; align-items: center; gap: 1rem; margin: .7rem 0 1rem; }
+.store-profile-heading { display: flex; align-items: center; gap: 1rem; margin: var(--ui-space-3) 0 1rem; }
 .store-profile-heading h1 { margin: 0; overflow-wrap: anywhere; }
-.store-profile-heading .status { display: inline-block; margin-top: .45rem; }
+.store-profile-heading .status { display: inline-block; margin-top: var(--ui-space-2); }
 @media (max-width: 440px) { .seller-avatar--large { width: 68px; height: 68px; } }

@@ -1,10 +1,10 @@
 .storefront-owner-actions .store-appreciation { display: inline-flex; align-items: center; justify-content: center; flex: 0 0 44px; width: 44px; min-width: 44px; height: 44px; }
-.storefront-owner-actions .store-appreciation-button { display: inline-flex; align-items: center; justify-content: center; min-height: 44px; width: 44px; min-width: 44px; padding: 0; border-radius: 10px; }
+.storefront-owner-actions .store-appreciation-button { display: inline-flex; align-items: center; justify-content: center; min-height: 44px; width: 44px; min-width: 44px; padding: 0; border-radius: var(--ui-radius-md); }
 .store-appreciation-button:focus-visible { outline: 3px solid var(--color-focus); outline-offset: 2px; }
-.store-appreciation-hint { font-size: .72rem; line-height: 1.25; min-height: 1rem; color: var(--ink-soft); text-align: center; }
-.store-appreciation-hint button { border: 0; padding: .1rem .3rem; background: transparent; color: var(--forest); text-decoration: underline; cursor: pointer; }
+.store-appreciation-hint { font-size: var(--ui-type-xs); line-height: 1.25; min-height: 1rem; color: var(--ink-soft); text-align: center; }
+.store-appreciation-hint button { border: 0; padding: .1rem var(--ui-space-1); background: transparent; color: var(--forest); text-decoration: underline; cursor: pointer; }
 .storefront-owner-actions .store-appreciation-button[aria-pressed="true"] { border: 0; background: var(--surface-soft); color: var(--forest); }
-.store-appreciation-loading { align-self: center; font-size: .8rem; }
-.store-appreciation-error { display: inline-flex; align-items: center; gap: .4rem; max-width: 30ch; font-size: .78rem; }
+.store-appreciation-loading { align-self: center; font-size: var(--ui-type-xs); }
+.store-appreciation-error { display: inline-flex; align-items: center; gap: .4rem; max-width: 30ch; font-size: var(--ui-type-xs); }
 .store-appreciation-error button { border: 0; padding: .35rem; background: transparent; color: var(--forest); text-decoration: underline; cursor: pointer; }
 @media (max-width: 480px) { .storefront-owner-actions .store-appreciation { flex: 0 0 44px; width: 44px; } }

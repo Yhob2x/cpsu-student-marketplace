@@ -64,24 +64,31 @@ export function StoreAppreciation({ storeId, signedIn = false, onSignIn, readOnl
     }
     if (!signedIn) { onSignIn?.(); return; }
     inFlight.current = true; setBusy(true); setError('');
-    const removing = data.isAppreciated;
+    const previous = data;
+    const removing = previous.isAppreciated;
+    const optimistic: Appreciation = { ...previous,
+      isAppreciated: !removing,
+      count: typeof previous.count === 'number' ? Math.max(0, previous.count + (removing ? -1 : 1)) : null,
+    };
+    const publish = (summary: Appreciation) => window.dispatchEvent(new CustomEvent('store-appreciation-changed', {
+      detail: { storeId, summary },
+    }));
+    // Apply locally first; publish the server's authoritative total on completion.
+    setData(optimistic); publish(optimistic);
     try {
       const result = await api<Appreciation>(`/store-appreciations/${storeId}`, {
         method: removing ? 'DELETE' : 'PUT',
       });
       if (!result.available) throw new Error('Appreciations are not available right now.');
-      setData(result);
-      window.dispatchEvent(new CustomEvent('store-appreciation-changed', {
-        detail: { storeId, summary: result },
-      }));
+      setData(result); publish(result);
       showActionFeedback({
         kind: 'success',
         title: removing ? 'Appreciation removed' : 'Appreciation sent',
         message: removing ? 'Your appreciation was removed.' : 'Thanks for supporting a fellow CPSU student.',
       });
     } catch (e) {
-      setError(explain(e));
-      showActionFeedback({ kind: 'error', title: 'Could not update appreciation', message: explain(e) });
+      setData(previous); publish(previous);
+      showActionFeedback({ kind: 'error', title: 'Appreciation not synced', message: `${explain(e)} Your previous choice was restored.` });
     } finally { inFlight.current = false; setBusy(false); }
   };
 

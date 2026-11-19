@@ -76,3 +76,18 @@ Fixtures must contain `writePlan.followStoreId` for a visible synthetic store **
 ## Data-growth scenarios (not seeded)
 
 The planned isolated datasets should model 1,000, 5,000 and 15,000 synthetic students, explicit verified-affiliation and seller proportions, listings/store, message-thread lengths, followers, transaction states and review counts. Record all distribution assumptions; only seed after separate authorization. Never reuse development/production student tables.
+
+## Iteration 2: offline request-log summary (no traffic generated)
+
+API responses now include a generated `X-Request-ID`. Structured `http_request` JSON log lines are enabled by default when `NODE_ENV=production`; use `HTTP_ACCESS_LOG_ENABLED=true` to opt in on an approved isolated test API, or `false` to opt out. Each record includes an ISO UTC timestamp, HTTP method, **route template** (never the request URL), response status and total request duration in milliseconds. No query strings, URL IDs, request/response bodies, auth tokens or student identifiers are logged.
+
+Capture **only the isolated staging instance's** JSONL console logs into an operator-owned, access-controlled local file. With a verified private file, analyze it offline using Bun:
+
+```powershell
+bun performance/summarize-requests.mjs .tmp/staging-access.jsonl
+bun test performance/config.test.js performance/summarize-requests.test.js
+```
+
+The analyzer prints observed read/write p95, route-level p95, server errors, 429 counts, average requests/sec over the observed window, and the peak one-second count. It skips unrelated/malformed lines and refuses to present a summary if **zero** valid diagnostic records exist. The analyzer makes no network calls, reads no DB, and never prints source log lines. The results are **not a capacity certification** unless the input covers a verified 10-minute approved isolated mixed workload, with load generator metrics, SQL traces, CPU/RAM/pool and recovery evidence. Keep diagnostic files private and define retention before collecting real logs.
+
+Internal readiness is available at `GET http://127.0.0.1:<PORT>/internal/ready` only from loopback, not under the public `/api/` Nginx proxy. It checks `SELECT 1` with a 1.5 s response deadline and returns only `{ "ok": true|false }`; non-loopback or forwarded public IPs receive 404. It is **not** a replacement for the cheap public `GET /health` liveness probe. Do not expose `/internal/ready` through Nginx.

@@ -1,6 +1,7 @@
 import type { Page } from '@playwright/test';
+import { DEFAULT_HOME_PAGE } from '../../src/home-page-content';
 
-export type Persona = 'guest' | 'buyer' | 'seller' | 'reviewer';
+export type Persona = 'guest' | 'buyer' | 'seller' | 'reviewer' | 'admin';
 const campus = { id: 1, code: 'MAIN', name: 'CPSU Main Campus' };
 const categories = [
   { id: 1, parentId: null, name: 'Books', listingType: 'physical_product' },
@@ -29,12 +30,13 @@ export async function mockMarketplace(page: Page, initialPersona: Persona = 'gue
     if (state.persona === 'guest') return null;
     const isSeller = state.persona === 'seller';
     const isReviewer = state.persona === 'reviewer';
+    const isAdmin = state.persona === 'admin';
     return {
-      id: isSeller ? 8 : isReviewer ? 9 : 7,
-      email: isSeller ? 'seller@example.invalid' : isReviewer ? 'reviewer@example.invalid' : 'buyer@example.invalid',
-      displayName: isSeller ? 'Synthetic Seller' : isReviewer ? 'Synthetic Reviewer' : 'Synthetic Buyer',
-      roles: isReviewer ? [{ role: 'campus_reviewer', campusId: 1 }] : [],
-      affiliations: isReviewer ? [] : [{ id: 80, campus, status: 'verified' }],
+      id: isSeller ? 8 : isAdmin ? 10 : isReviewer ? 9 : 7,
+      email: isSeller ? 'seller@example.invalid' : isAdmin ? 'admin@example.invalid' : isReviewer ? 'reviewer@example.invalid' : 'buyer@example.invalid',
+      displayName: isSeller ? 'Synthetic Seller' : isAdmin ? 'Synthetic Administrator' : isReviewer ? 'Synthetic Reviewer' : 'Synthetic Buyer',
+      roles: isAdmin ? [{ role: 'university_admin', campusId: null }] : isReviewer ? [{ role: 'campus_reviewer', campusId: 1 }] : [],
+      affiliations: isAdmin || isReviewer ? [] : [{ id: 80, campus, status: 'verified' }],
       storeId: isSeller ? 30 : null,
     };
   };
@@ -145,6 +147,18 @@ export async function mockMarketplace(page: Page, initialPersona: Persona = 'gue
       data = [];
     } else if (path === '/admin/analytics/overview') {
       data = { note: 'Synthetic browser test', campuses: [] };
+    } else if (path.startsWith('/admin/reviewers') && method === 'GET') {
+      data = { items: [], total: 0, page: 1 };
+    } else if (path === '/admin/catalog') {
+      data = { campuses: [], categories: [] };
+    } else if (path === '/admin/store-reviews') {
+      data = { items: [], hasMore: false };
+    } else if (path === '/admin/content/guidelines') {
+      data = { draftBody: 'Synthetic guidelines draft', publishedBody: null, publishedAt: null };
+    } else if (path === '/admin/content/announcements') {
+      data = { items: [] };
+    } else if (path === '/admin/content/home-page') {
+      data = { draft: DEFAULT_HOME_PAGE, published: null, revision: 1, publishedRevision: 1, publishedAt: null };
     } else if (path.startsWith('/admin/transactions')) {
       data = { items: [], total: 0 };
     } else if (path.startsWith('/admin/users')) {

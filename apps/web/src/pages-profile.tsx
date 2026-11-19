@@ -39,6 +39,8 @@ export function noticeText(n: Notice): string {
     case 'transaction.rejected': return 'The seller rejected your request. Review the transaction history.';
     case 'transaction.negotiating': return 'The other student marked your transaction as being discussed.';
     case 'transaction.meetup_confirmed': return 'The other student confirmed meetup arrangements. Your confirmation may still be needed.';
+    case 'transaction.meetup_location_shared': return 'The other student shared a meetup location and time. View the map.';
+    case 'transaction.meetup_location_revised': return 'The meetup location changed. Both students need to confirm the new arrangement.';
     case 'transaction.completion_confirmed': return 'The other student reported completion. Both confirmations are required.';
     case 'transaction.cancelled': return 'The other student cancelled the transaction. Review the recorded reason.';
     default: return 'Marketplace update.';
@@ -217,7 +219,7 @@ export function Profile() {
       <div className="profile-actions-row">
         {!staff && me.storeId && <details id="store-profile" className="profile-store-disclosure" ref={storeProfileRef}>
           <summary ref={storeProfileSummaryRef}>
-            <span><strong>Store profile</strong><small>Manage the name, description, and picture students see.</small></span>
+            <span><strong>Store profile</strong><small>Name, description and photo</small></span>
             <Icon name="chevronDown" size={20} />
           </summary>
           <div className="profile-store-editors">
@@ -353,7 +355,6 @@ export function Notifications() {
   return <section className="notifications-page">
     <header className="notifications-heading">
       <div>
-        <span className="notifications-eyebrow"><Icon name="bell" size={15} /> YOUR ACTIVITY</span>
         <h1>Notifications</h1>
       </div>
       <IconAction className="notifications-refresh" icon="refresh" label="Refresh notifications"
@@ -363,17 +364,16 @@ export function Notifications() {
     <div className="notifications-summary">
       <span className="notifications-summary-icon" aria-hidden="true"><Icon name="bell" size={23} /></span>
       <div className="notifications-summary-copy">
-        <strong>{rows === null ? (err ? 'Notifications unavailable' : 'Your activity') : unread > 0
-          ? unread + (unread === 1 ? ' unread notification' : ' unread notifications') : 'You’re all caught up'}</strong>
-        <p>{rows === null ? (err ? 'Try again to see your recent activity.' : 'Checking recent activity…')
-          : unread > 0 ? 'See what needs your attention.' : 'No unread updates right now.'}</p>
+        <strong>{rows === null ? (err ? 'Notifications unavailable' : 'Checking notifications…') : unread > 0
+          ? unread + ' unread' : 'You’re caught up'}</strong>
+        {rows === null && err && <p>Try again to load your notifications.</p>}
       </div>
       <button type="button" className="btn notifications-mark-all" onClick={() => void markAll()}
         disabled={rows === null || busy || markingId !== null || unread === 0} aria-busy={busy}
-        aria-label={busy ? 'Marking all notifications as read' : 'Mark all read — mark all notifications as read'}
-        title={busy ? 'Marking all notifications as read' : 'Mark all notifications as read'}>
+        aria-label={busy ? 'Marking all notifications as read' : 'Mark all as read'}
+        title={busy ? 'Marking all notifications as read' : 'Mark all as read'}>
         <Icon name="checks" size={19} />
-        <span className="notifications-mark-all-copy">{busy ? 'Marking…' : 'Mark all read'}</span>
+        <span className="sr-only">{busy ? 'Marking notifications read' : 'Mark all read'}</span>
       </button>
     </div>
 

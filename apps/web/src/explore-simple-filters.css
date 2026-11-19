@@ -6,7 +6,7 @@
   align-items: center;
   justify-content: space-between;
   gap: 16px;
-  margin: 14px 0 19px;
+  margin: 0 0 16px;
 }
 .explore-page-heading h1 {
   margin: 0;
@@ -210,7 +210,7 @@
   }
 }
 @media (max-width: 760px) {
-  .explore-page-heading { margin: 9px 0 12px; }
+  .explore-page-heading { margin: 0 0 12px; }
   .explore-page-heading h1 { font-size: 1.55rem; }
   .explore-mobile-filter-toggle {
     display: inline-flex;

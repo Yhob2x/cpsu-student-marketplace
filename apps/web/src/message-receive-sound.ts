@@ -12,6 +12,7 @@ const oldPreferenceKey = 'cpsu-market:message-send-sound'; // Keep existing opt-
 
 let activeChoice: boolean | null = null;
 let sound: HTMLAudioElement | null = null;
+let soundConstructor: typeof Audio | null = null;
 let wavDataUri: string | null = null;
 let fallbackContext: AudioContext | null = null;
 const activeBellGains = new Set<GainNode>();
@@ -88,9 +89,14 @@ function makeWavDataUri(): string {
 
 /** Safe to call on mount: prepares local audio without playing it or needing permission. */
 export function prepareMessageReceiveSound(): void {
-  if (!messageReceiveSoundEnabled() || sound || typeof Audio === 'undefined') return;
+  if (!messageReceiveSoundEnabled() || typeof Audio === 'undefined') return;
+  // Recreate the element if the browser's Audio implementation changes; this
+  // also keeps chat component tests isolated from a previous synthetic DOM.
+  if (sound && soundConstructor !== Audio) sound = null;
+  if (sound) return;
   try {
     sound = new Audio(makeWavDataUri());
+    soundConstructor = Audio;
     sound.preload = 'auto';
     sound.volume = 0.7;
     sound.load();

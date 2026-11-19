@@ -17,6 +17,11 @@
   --mango: #e0bb46; --on-mango: #073b2a; --mango-soft: #edf4ef;
   --line: #dce6de; --danger: #a12a1c;
   --font-heading: 'Plus Jakarta Sans', system-ui, sans-serif; --font-body: 'Inter', system-ui, sans-serif;
+  /* Shared spacing scale for navigation, headings, controls, and content surfaces. */
+  --space-1: 4px; --space-2: 8px; --space-3: 12px; --space-4: 16px;
+  --space-5: 24px; --space-6: 32px; --space-7: 40px;
+  --page-top-space: clamp(14px, 1.6vw, 20px);
+  --panel-space: 16px;
   color-scheme: light;
 }
 * { box-sizing: border-box; }
@@ -115,7 +120,7 @@ textarea { width: 100%; min-height: 96px; }
 .card .body { padding: .75rem; flex: 1; display: flex; flex-direction: column; } .card p { margin: .15rem 0 0; color: var(--ink-soft); font-size: .9rem; }
 /* The price tag is the one distinctive element: a notched label like those clipped onto market stalls. */
 .tag { display: inline-block; background: var(--mango); color: var(--on-mango); font: 800 1rem var(--font-heading); padding: .2rem .7rem .2rem 1.1rem; clip-path: polygon(.6rem 0, 100% 0, 100% 100%, .6rem 100%, 0 50%); margin-top: .4rem; }
-.panel { background: var(--paper); color: var(--ink); border: 1px solid var(--line); border-radius: 10px; padding: 1rem; margin-bottom: 1rem; }
+.panel { background: var(--paper); color: var(--ink); border: 1px solid var(--line); border-radius: 10px; padding: var(--panel-space); margin-bottom: var(--space-4); }
 .row { display: flex; gap: .75rem; flex-wrap: wrap; align-items: center; min-width: 0; } .stack { display: grid; gap: .75rem; max-width: 34rem; }
 .row > .field { flex: 1 1 150px; min-width: 0; }
 .row > .field input { width: 100%; }
@@ -198,8 +203,10 @@ textarea { width: 100%; min-height: 96px; }
 .status.rejected, .status.suspended, .status.cancelled { border-color: var(--danger); color: var(--danger); }
 .flag { background: var(--mango-soft); border-radius: 6px; padding: .1rem .5rem; font-size: .8rem; }
 /* Page header pattern used by Profile and Notifications. */
-.page-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 1rem; flex-wrap: wrap; margin-bottom: 1.25rem; }
-.page-head p { margin: .25rem 0 0; max-width: 55ch; }
+/* Shared interior-page heading rhythm, independent from the editorial hero. */
+.page-head { display: flex; align-items: center; justify-content: space-between; gap: 12px 20px; flex-wrap: wrap; margin-bottom: 16px; }
+.page-head h1 { margin: 0; }
+.page-head p { margin: 6px 0 0; max-width: 55ch; line-height: 1.5; }
 .profile-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(290px, 100%), 1fr)); gap: 1rem; align-items: start; }
 .facts { margin: 0 0 .75rem; display: grid; gap: .6rem; } .facts div { display: grid; gap: .1rem; }
 .facts dt { color: var(--ink-soft); font-size: .85rem; } .facts dd { margin: 0; font-weight: 600; overflow-wrap: anywhere; }

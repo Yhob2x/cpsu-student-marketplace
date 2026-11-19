@@ -8,6 +8,7 @@ import { showActionFeedback } from './action-feedback';
 import { useForegroundRefresh } from './foreground-refresh';
 import { ManagedContentAdmin } from './pages-managed-content';
 import { ReviewerAdmin } from './pages-reviewers';
+import { CatalogAdmin } from './pages-catalog-admin';
 import { StoreReviewModeration } from './store-review-widgets';
 import './admin-workspace.css';
 
@@ -24,6 +25,9 @@ const AUDIT_ACTION_TEXT: Record<string, string> = {
   'user.suspended': 'Student suspended', 'user.reactivated': 'Student reactivated',
   'reviewer.created': 'Reviewer account created', 'reviewer.updated': 'Reviewer account updated',
   'seller.avatar_published': 'Seller photo updated', 'seller.avatar_removed': 'Seller photo removed',
+  'campus.created': 'Campus added', 'campus.updated': 'Campus updated',
+  'service_category.created': 'Service category added', 'service_category.updated': 'Service category renamed',
+  'category.created': 'Listing category added', 'category.updated': 'Listing category renamed',
 };
 
 export function Admin() {
@@ -200,7 +204,7 @@ export function Admin() {
   const navGroups: { title: string; items: NavItem[] }[] = accountAdmin
     ? [
       { title: 'Dashboard', items: [{ id: 'overview', label: 'Overview' }] },
-      { title: 'Management', items: [{ id: 'students', label: 'Students' }, { id: 'staff', label: 'Reviewer accounts' }, { id: 'content', label: 'Content' }] },
+      { title: 'Management', items: [{ id: 'students', label: 'Students' }, { id: 'staff', label: 'Reviewer accounts' }, { id: 'catalog', label: 'Campuses & categories' }, { id: 'content', label: 'Content' }] },
       { title: 'Review & safety', items: [
         { id: 'listings', label: 'Listing reviews', count: q?.listings.length },
         { id: 'affiliations', label: 'Verifications', count: q?.affiliations.length },
@@ -401,6 +405,7 @@ export function Admin() {
     </section>}
     {accountAdmin && activeSection === 'staff' && <ReviewerAdmin active campuses={campuses} campusesError={campusesError} onRetryCampuses={() => void loadCampuses()} />}
     {accountAdmin && activeSection === 'content' && <ManagedContentAdmin />}
+    {accountAdmin && activeSection === 'catalog' && <CatalogAdmin onCampusesChange={() => { void loadCampuses(); }} />}
     {accountAdmin && <section hidden={activeSection !== 'audit'} aria-labelledby="audit-history-heading">
       <h2 id="audit-history-heading">Administrative audit history</h2>
       <p className="muted">Newest first.</p>

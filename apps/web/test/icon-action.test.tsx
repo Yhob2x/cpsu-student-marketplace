@@ -8,14 +8,16 @@ describe('icon-only button accessibility', () => {
     const page = readFileSync(new URL('../src/pages-profile.tsx', import.meta.url), 'utf8');
     const shell = readFileSync(new URL('../src/main.tsx', import.meta.url), 'utf8');
     const styles = readFileSync(new URL('../src/notifications.css', import.meta.url), 'utf8');
-    // Screen-reader name must start with the visible 'Mark all read' label for voice control.
-    expect(page).toContain('aria-label={busy ? \'Marking all notifications as read\' : \'Mark all read — mark all notifications as read\'}');
-    expect(page).toContain('className="notifications-mark-all-copy"');
+    // Icon-only actions keep an accessible name; main PWA tabs retain visible labels.
+    expect(page).toContain('aria-label={busy ? \'Marking all notifications as read\' : \'Mark all as read\'}');
+    expect(page).toContain('<span className="sr-only">{busy ? \'Marking notifications read\' : \'Mark all read\'}</span>');
     expect(page).toContain('role="group" aria-label="Filter notifications"');
-    expect(shell).toContain('className="alerts-word">Alerts</span>');
+    expect(shell).toContain('aria-label={unread > 0 ? `Notifications, ${unread} unread` : \'Notifications\'}');
+    expect(shell).toContain('aria-label="Saved listings" title="Saved listings"');
+    expect(shell).toContain('<Icon name="home" size={19} /><span>Home</span>');
     expect(shell).toContain('className="nav-badge" aria-hidden="true"');
-    expect(styles).toContain('.actions .alerts .alerts-word { display: none; }');
-    expect(styles).toContain('.notifications-mark-all-copy { display: none; }');
+    expect(styles).toContain('.actions .alerts .nav-badge {');
+    expect(styles).toContain('.notifications-mark-all.btn {');
     expect(styles).toContain('.notifications-summary-icon { display: none; }');
   });
   test('notification screen uses icon actions rather than duplicate visible text buttons', () => {

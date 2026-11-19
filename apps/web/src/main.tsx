@@ -50,6 +50,8 @@ import './explore-page-polish.css';
 import './explore-simple-filters.css';
 import './action-feedback.css';
 import './listing-detail-polish.css';
+import './concise-controls.css';
+import './storefront-hierarchy.css';
 
 export type Me = { id: number; email: string; displayName: string; roles: { role: string; campusId: number | null }[];
   affiliations: { id: number; campus: { id: number; name: string }; status: string }[]; storeId: number | null };
@@ -77,7 +79,7 @@ function HeaderSearch() {
     nav(q.trim() ? `/explore?q=${encodeURIComponent(q.trim())}` : '/explore');
   };
   return <form className="head-search" role="search" aria-label="Header listing search" onSubmit={submit}>
-    <input aria-label="Search listings" placeholder="Search products, services and skills…" maxLength={80} value={q} onChange={e => setQ(e.target.value)} />
+    <input aria-label="Search listings" placeholder="Search listings…" maxLength={80} value={q} onChange={e => setQ(e.target.value)} />
     <button className="btn" aria-label="Search"><Icon name="search" size={18} /></button>
   </form>;
 }
@@ -198,21 +200,21 @@ function Shell() {
       <a className="skip-link" href="#main-content">Skip to main content</a>
       <header className="top">
         <div className="strip"><div className="wrap">
-          <span><Icon name="shield" size={14} /> Verified CPSU students only</span>
-          <span><Icon name="chat" size={14} /> Message sellers directly</span>
-          <span><Icon name="pin" size={14} /> Payment and pickup arranged on campus</span>
+          <span><Icon name="shield" size={14} /> Verified CPSU students</span>
+          <span><Icon name="chat" size={14} /> Chat with sellers</span>
+          <span><Icon name="pin" size={14} /> Arrange payment and pickup on campus</span>
         </div></div>
         <div className="wrap masthead">
           <Link to="/" className="brand" aria-label="CPSU Market — CPSU Student Marketplace home">
             <span className="brand-symbol" aria-hidden="true"><Icon name="store" size={19} /></span>
-            <span className="brand-long">CPSU <b>Student Marketplace</b><small>Buy, sell and offer</small></span>
+            <span className="brand-long">CPSU <b>Student Marketplace</b></span>
             <span className="brand-short" aria-hidden="true">CPSU Market</span></Link>
           <HeaderSearch />
           {me && <nav className="actions" aria-label="Your activity">
-            {!isStaff && <NavLink to="/saved"><Icon name="heart" size={22} /><span>Saved</span></NavLink>}
-            <NavLink to="/notifications" className="alerts" aria-label={unread > 0 ? `Alerts, ${unread} unread` : 'Alerts'}>
-              <Icon name="bell" size={22} /><span className="alerts-copy"><span className="alerts-word">Alerts</span>{unread > 0 && <span className="nav-badge" aria-hidden="true">{unread}</span>}</span></NavLink>
-            <NavLink to="/profile"><Icon name="user" size={22} /><span>Profile</span></NavLink>
+            {!isStaff && <NavLink to="/saved" aria-label="Saved listings" title="Saved listings"><Icon name="heart" size={22} /></NavLink>}
+            <NavLink to="/notifications" className="alerts" aria-label={unread > 0 ? `Notifications, ${unread} unread` : 'Notifications'} title="Notifications">
+              <Icon name="bell" size={22} /><span className="alerts-copy">{unread > 0 && <span className="nav-badge" aria-hidden="true">{unread}</span>}</span></NavLink>
+            <NavLink to="/profile" aria-label="Profile" title="Profile"><Icon name="user" size={22} /></NavLink>
           </nav>}
           <div className={me ? 'who' : 'who who-guest'}>
             {me ? <button className="btn ghost" onClick={() => void logout()} disabled={loggingOut}>{loggingOut ? 'Signing out…' : 'Sign out'}</button>

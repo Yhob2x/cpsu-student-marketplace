@@ -16,6 +16,8 @@ import { canAddListingPhoto, MAX_LISTING_PHOTOS } from '../listing-photo-limit.j
 import { makeListingCoverHandler } from '../listing-cover-handler.js';
 import { publishSellerAvatar } from '../seller-avatar-update.js';
 import { sellerAvatarUrl } from '../seller-avatar-url.js';
+import { readStoreFollowSummary } from '../store-follows.js';
+import { storeActivityBadge } from '../store-activity-badge.js';
 import { screenSellerAvatar } from '../seller-avatar-screening.js';
 import { rowAccess } from '../row-access.js';
 
@@ -70,11 +72,18 @@ r.get('/store', async (req, res) => {
     select: { id: true, storeName: true, description: true, campusId: true, approvalStatus: true,
       avatarPath: true },
   });
+  const activity = store ? await Promise.all([
+    prisma.listing.count({ where: { sellerProfileId: store.id, status: 'published', deletedAt: null } }),
+    readStoreFollowSummary(prisma, store.id),
+  ]).then(([publishedListingCount, follow]) => storeActivityBadge({
+    publishedListingCount, followerCount: follow.count,
+  })) : null;
   res.setHeader('Cache-Control', 'private, no-store');
   res.json(store ? {
     id: store.id, storeName: store.storeName, description: store.description, campusId: store.campusId,
     approvalStatus: store.approvalStatus,
     avatarUrl: sellerAvatarUrl(store.id, store.avatarPath),
+    badge: activity!.label, badgeReason: activity!.reason,
   } : null);
 });
 

@@ -24,7 +24,10 @@
 body { background: var(--chalk); }
 h1, h2, h3 { font-weight: 400; }
 .wrap { max-width: 1240px; padding-inline: max(1.25rem, env(safe-area-inset-left, 0px)) max(1.25rem, env(safe-area-inset-right, 0px)); }
-main { padding-top: 0; }
+/* Keep the editorial homepage flush, but give interior routes breathing room. */
+main { padding-top: var(--page-top-space); }
+main:has(.home-hero),
+main:has(.conversation-page) { padding-top: 0; }
 header.top { background: var(--paper); border-bottom-color: var(--line); }
 .strip { background: #06452c; color: #f5eee3; font-size: .7rem; }
 .strip .wrap { padding-block: .32rem; gap: 1.3rem; }

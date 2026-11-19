@@ -416,3 +416,85 @@
   .floating-chat-icon-button:active,
   .floating-chat-send:active:not(:disabled) { transform: scale(.97); }
 }
+
+/* Meetup location stays inside the floating conversation, never behind it. */
+.floating-chat-meetup-strip {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex: 0 0 auto;
+  gap: .55rem;
+  min-height: 44px;
+  padding: .35rem .7rem;
+  border-top: 1px solid var(--line);
+  background: var(--surface-soft);
+}
+.floating-chat-meetup-label {
+  display: inline-flex;
+  align-items: center;
+  gap: .4rem;
+  min-width: 0;
+  color: var(--ink);
+  font-size: .8rem;
+  font-weight: 650;
+}
+.floating-chat-meetup-label > span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.floating-chat-meetup-label svg { flex: none; color: var(--leaf); }
+.floating-chat-meetup-toggle {
+  flex: none;
+  min-height: 36px;
+  padding: .35rem .6rem;
+  border-radius: 8px;
+  border: 1px solid var(--line);
+  color: var(--leaf);
+  background: var(--paper);
+  font-weight: 700;
+  font-size: .78rem;
+  cursor: pointer;
+}
+.floating-chat-meetup-sheet {
+  position: absolute;
+  z-index: 7;
+  inset: 60px 0 0;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  background: var(--paper);
+  padding: .75rem;
+}
+.floating-chat-meetup-sheet-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: .75rem;
+  margin-bottom: .8rem;
+}
+.floating-chat-meetup-sheet-head strong { font-size: 1rem; }
+.floating-chat-meetup-sheet-head .btn { min-height: 38px; }
+.floating-meetup-card {
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: .85rem;
+  background: var(--paper);
+}
+.floating-meetup-card h2 { font-size: 1.05rem; }
+.floating-meetup-card .meetup-map { height: 240px; min-height: 225px; }
+.floating-chat-meetup-transaction {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: .75rem .25rem;
+  font-size: .85rem;
+  font-weight: 700;
+  color: var(--leaf);
+}
+.floating-chat-meetup-strip:focus-within,
+.floating-chat-meetup-toggle:focus-visible { outline-offset: 2px; }
+@media (max-width: 560px) {
+  .floating-chat-meetup-sheet { padding: .5rem; }
+  .floating-meetup-card { padding: .65rem; }
+}

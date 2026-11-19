@@ -4,6 +4,8 @@ import { ApiError, api, explain, timeAgo } from './api';
 import { Icon } from './icons';
 import { ConversationListingCard, type ConversationListing } from './conversation-listing-card';
 import { hasNewIncomingMessage, playMessageReceiveSound, prepareMessageReceiveSound, unlockMessageReceiveSound } from './message-receive-sound';
+import { MeetupLocationCard, type MeetupHandoff } from './meetup-location-card';
+import { decodeMeetupLocation } from './meetup-location';
 
 type InboxItem = {
   id: number;
@@ -20,6 +22,15 @@ type Conversation = {
   thread: { id: number; otherStudentName?: string; listingId: number; status: string };
   listing: ConversationListing;
   messages: ChatMessage[];
+  handoff?: MeetupHandoff | null;
+  transaction?: {
+    id: number;
+    status: string;
+    buyerMeetupConfirmedAt: string | null;
+    sellerMeetupConfirmedAt: string | null;
+    buyerCompletionConfirmedAt: string | null;
+    sellerCompletionConfirmedAt: string | null;
+  } | null;
   typing?: boolean;
   otherActiveInChat?: boolean;
 };
@@ -38,6 +49,7 @@ function initials(name: string) {
 /** A non-modal quick view. Full-page conversations retain their existing advanced controls. */
 export function FloatingChatPanel({ onClose, onUnreadChanged, motionState, motionEnabled, onExitComplete }: Props) {
   const [threadId, setThreadId] = useState<number | null>(null);
+  const [meetupOpen, setMeetupOpen] = useState(false);
   const [viewMotion, setViewMotion] = useState(false); // The panel itself supplies the initial entrance.
   const [selectedName, setSelectedName] = useState('Student');
   const [inbox, setInbox] = useState<InboxItem[] | null>(null);
@@ -88,6 +100,7 @@ export function FloatingChatPanel({ onClose, onUnreadChanged, motionState, motio
     setSendError('');
     setDraft('');
     setEditing(false);
+    setMeetupOpen(false);
     if (threadId !== null) setConversation(null);
 
     const refresh = async () => {
@@ -198,6 +211,15 @@ export function FloatingChatPanel({ onClose, onUnreadChanged, motionState, motio
   };
   const threadName = conversation?.thread.otherStudentName || selectedName;
   const closed = conversation?.thread.status === 'closed';
+  const transaction = conversation?.transaction;
+  const shareableTransaction = transaction && ['accepted', 'negotiating', 'for_meetup'].includes(transaction.status);
+  const requiresReconfirmation = transaction?.status === 'for_meetup' ||
+    Boolean(transaction?.buyerMeetupConfirmedAt || transaction?.sellerMeetupConfirmedAt);
+  const locationEditable = Boolean(conversation && !closed && (
+    !transaction || (shareableTransaction && !transaction.buyerCompletionConfirmedAt
+      && !transaction.sellerCompletionConfirmedAt)
+  ));
+  const meeting = decodeMeetupLocation(conversation?.handoff?.generalLocation ?? '');
   const style = {
     '--floating-chat-keyboard-offset': `${keyboardOffset}px`,
     '--floating-chat-viewport-height': visibleHeight ? `${visibleHeight}px` : '100dvh',
@@ -267,6 +289,17 @@ export function FloatingChatPanel({ onClose, onUnreadChanged, motionState, motio
           <time dateTime={message.createdAt}>{new Date(message.createdAt).toLocaleTimeString('en-PH', { hour: 'numeric', minute: '2-digit' })}</time>
         </div>)}
       </div>
+      {conversation && <div className="floating-chat-meetup-strip">
+        <span className="floating-chat-meetup-label">
+          <Icon name="pin" size={16} />
+          <span>{meeting.point ? meeting.place || 'Meetup pin shared' : 'Meetup location'}</span>
+        </span>
+        <button type="button" className="floating-chat-meetup-toggle"
+          aria-expanded={meetupOpen} aria-controls="floating-chat-meetup-sheet"
+          onClick={() => setMeetupOpen(value => !value)}>
+          {meeting.point ? 'View map' : 'Add pin'}
+        </button>
+      </div>}
       {conversation?.typing && !closed && <p className="floating-chat-typing" role="status">{threadName} is typing…</p>}
       {closed && <p className="floating-chat-closed" role="status">This conversation has ended.</p>}
       {!closed && <form className="floating-chat-compose" onSubmit={event => void send(event)}>
@@ -284,6 +317,28 @@ export function FloatingChatPanel({ onClose, onUnreadChanged, motionState, motio
           aria-label={sending ? 'Sending message' : 'Send message'}><Icon name="arrow" size={18} /></button>
       </form>}
       {sendError && <p className="floating-chat-compose-error" role="alert">{sendError}</p>}
+      {conversation && meetupOpen && <div className="floating-chat-meetup-sheet" id="floating-chat-meetup-sheet">
+        <div className="floating-chat-meetup-sheet-head">
+          <strong>Meetup map</strong>
+          <button type="button" className="btn ghost" onClick={() => setMeetupOpen(false)}
+            aria-label="Close meetup map">Close</button>
+        </div>
+        <MeetupLocationCard key={conversation.thread.id}
+          inquiryThreadId={conversation.thread.id}
+          transactionId={transaction?.id}
+          handoff={conversation.handoff ?? null}
+          editable={locationEditable}
+          requiresReconfirmation={requiresReconfirmation}
+          unavailableReason={closed ? 'This conversation has ended. The meetup is read-only.'
+            : transaction?.status === 'pending'
+              ? 'The seller must accept the purchase request before a meetup pin can be saved.'
+              : 'This transaction is closed or completion has begun.'}
+          compact onSaved={() => refreshRef.current()} />
+        {transaction && <Link to={`/transactions/${transaction.id}`}
+          onClick={() => onClose(true)} className="floating-chat-meetup-transaction">
+          View transaction and confirm meetup
+        </Link>}
+      </div>}
       <div className="floating-chat-panel-foot"><Link to={`/inquiries/${threadId}`} onClick={() => onClose(true)}>
         Open full conversation <Icon name="arrow" size={15} /></Link></div>
     </>}

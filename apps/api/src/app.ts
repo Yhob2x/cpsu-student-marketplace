@@ -12,6 +12,7 @@ import sellerRoutes from './routes/seller.js';
 import inquiryRoutes from './routes/inquiries.js';
 import transactionRoutes from './routes/transactions.js';
 import adminRoutes from './routes/admin.js';
+import { catalogAdminRoutes } from './routes/catalog-admin.js';
 import homePageAdminRoutes from './routes/home-page-admin.js';
 import homePagePublicRoutes from './routes/home-page-public.js';
 import reviewerRoutes from './routes/reviewers.js';
@@ -20,6 +21,7 @@ import pushRoutes from './routes/push.js';
 import { makePublicStoreConnectionsRouter, makeStoreFollowRouter } from './store-follows.js';
 import { prisma } from './db.js';
 import { makeStoreReviewsRouter } from './store-reviews.js';
+import { makeStoreAppreciationsRouter } from './store-appreciations.js';
 
 export function createApp() {
   const app = express();
@@ -45,6 +47,7 @@ export function createApp() {
   v1.use(publicRoutes);
   v1.use(makePublicStoreConnectionsRouter(prisma));
   v1.use(makeStoreReviewsRouter(prisma));
+  v1.use(makeStoreAppreciationsRouter(prisma));
   v1.use('/home-page', homePagePublicRoutes);
   v1.use('/store-follows', makeStoreFollowRouter(prisma));
   v1.use(accountRoutes);
@@ -53,6 +56,7 @@ export function createApp() {
   v1.use('/inquiries', inquiryRoutes);
   v1.use('/transactions', transactionRoutes);
   v1.use('/admin/reviewers', reviewerRoutes);
+  v1.use('/admin/catalog', catalogAdminRoutes);
   v1.use('/admin/content/home-page', homePageAdminRoutes);
   v1.use('/admin', adminRoutes);
   app.use('/api/v1', v1);

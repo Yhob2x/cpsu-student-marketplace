@@ -3,6 +3,7 @@ import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { ApiError, api, explain, peso } from './api';
 import { useMe } from './main';
 import { Icon } from './icons';
+import { IconAction } from './icon-action';
 import { showActionFeedback } from './action-feedback';
 import { InstallApp } from './install-app';
 import { selectHomeListings } from './home-listings';
@@ -343,7 +344,7 @@ export function Discover() {
         data-mobile-open={mobileFiltersOpen} aria-label="Filter listings">
         <div className="explore-sidebar-title">
           <h2>Filters</h2>
-          {dirty && <button type="button" className="explore-sidebar-reset" onClick={reset}>Clear all</button>}
+          {dirty && <IconAction className="explore-sidebar-reset" icon="refresh" label="Clear all filters" onClick={reset} />}
         </div>
         {filterError && <div className="explore-sidebar-error" role="alert">
           <p>{filterError}</p>
@@ -466,9 +467,9 @@ export function Discover() {
       {items.map((l, index) => <ListingCard key={l.id} l={l} priority={index < 2} />)}
     </div>}
     {pageCount > 1 && <nav className="row" aria-label="Listing pages" style={{ justifyContent: 'center', marginTop: '1rem' }}>
-      <button type="button" className="btn ghost" disabled={currentPage <= 1} onClick={() => navigatePage(currentPage - 1)}>Previous</button>
+      <IconAction className="page-nav-button" icon="chevronLeft" label="Previous page" disabled={currentPage <= 1} onClick={() => navigatePage(currentPage - 1)} />
       <span className="muted" role="status">Page {currentPage} of {pageCount}</span>
-      <button type="button" className="btn ghost" disabled={currentPage >= pageCount} onClick={() => navigatePage(currentPage + 1)}>Next</button>
+      <IconAction className="page-nav-button" icon="chevronRight" label="Next page" disabled={currentPage >= pageCount} onClick={() => navigatePage(currentPage + 1)} />
     </nav>}
       </div>
     </div>

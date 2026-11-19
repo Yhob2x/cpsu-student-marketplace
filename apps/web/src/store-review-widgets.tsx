@@ -1,10 +1,11 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { api, ApiError, explain } from './api';
+import { showActionFeedback } from './action-feedback';
 import './store-reviews.css';
 
 type Review = { id: number; rating: number; body: string | null; createdAt: string;
   status?: string; moderationReason?: string | null };
-type PublicPage = { available: boolean; summary: { count: number; average: number | null } | null;
+type PublicPage = { available: boolean; summary: { count: number; average: number | null; distribution?: Record<number, number> } | null;
   items: Review[]; page: number; pageSize: number };
 
 function RatingStars({ value, size = 'normal' }: { value: number; size?: 'normal' | 'large' }) {
@@ -44,6 +45,14 @@ export function StoreRatingsAndReviews({ storeId }: { storeId: number }) {
         <span>from {data.summary.count} moderated {data.summary.count === 1 ? 'review' : 'reviews'}</span>
       </div>}
     </div>
+    {data?.available && data.summary && data.summary.count > 0 && data.summary.distribution &&
+      <div className="store-review-distribution" role="group" aria-label="Published rating distribution">
+        {[5, 4, 3, 2, 1].map(stars => <div key={stars} className="store-review-distribution-row">
+          <span>{stars} ★</span>
+          <progress aria-label={`${stars}-star reviews`} value={data.summary!.distribution?.[stars] ?? 0} max={data.summary!.count} />
+          <span>{data.summary!.distribution?.[stars] ?? 0}</span>
+        </div>)}
+      </div>}
     <p className="muted store-review-disclosure">Only buyers with completed CPSU Market transactions may rate a store. Ratings reflect student opinions and are not CPSU endorsements. Written reviews are checked before publication.</p>
     {loading && <p className="muted" role="status">Loading store reviews…</p>}
     {error && <p className="err" role="alert">Could not load store reviews: {error} <button type="button" className="btn ghost" onClick={load}>Retry</button></p>}
@@ -52,7 +61,7 @@ export function StoreRatingsAndReviews({ storeId }: { storeId: number }) {
     {!loading && !error && data?.available && data.items.length > 0 && <div className="store-review-list">
       {data.items.map(review => <article key={review.id} className="store-review-row">
         <div className="store-review-meta"><RatingStars value={review.rating} />
-          <span>Verified student buyer</span>
+          <span>Completed-transaction buyer</span>
           <time dateTime={review.createdAt}>{new Date(review.createdAt).toLocaleDateString('en-PH', { month: 'short', year: 'numeric' })}</time></div>
         {review.body && <p>{review.body}</p>}
       </article>)}
@@ -75,19 +84,23 @@ export function TransactionStoreReview({ transactionId }: { transactionId: numbe
   const [loading, setLoading] = useState(true);
   const [notice, setNotice] = useState('');
   const inFlight = useRef(false);
+  const requestId = useRef(0);
   const load = () => {
+    const request = ++requestId.current;
     setLoading(true);
     api<BuyerReviewState>(`/transactions/${transactionId}/store-review`)
-      .then(r => { setData(r); setError(''); })
+      .then(r => { if (request === requestId.current) { setData(r); setError(''); } })
       .catch(e => {
-        const text = explain(e);
+        if (request !== requestId.current) return;
         if (e instanceof ApiError && (e.status === 404 || e.code === 'store_reviews_not_ready')) {
           setData({ available: false, eligible: false, review: null }); setError('');
-        }
-        else setError(text);
-      }).finally(() => setLoading(false));
+        } else setError(explain(e));
+      }).finally(() => { if (request === requestId.current) setLoading(false); });
   };
-  useEffect(() => { load(); }, [transactionId]);
+  useEffect(() => {
+    setData(null); setRating(0); setBody(''); setNotice(''); setError('');
+    load(); return () => { requestId.current++; };
+  }, [transactionId]);
   const submit = async (event: FormEvent) => {
     event.preventDefault();
     if (inFlight.current || rating < 1 || rating > 5) return;
@@ -95,6 +108,7 @@ export function TransactionStoreReview({ transactionId }: { transactionId: numbe
     try {
       await api(`/transactions/${transactionId}/store-review`, { body: { rating, body: body.trim() || null } });
       setNotice('Review submitted. A campus reviewer will check it before publication.');
+      showActionFeedback({ kind: 'success', title: 'Rating submitted', message: 'Your store review is awaiting campus moderation.', presentation: 'center' });
       await load();
     } catch (e) { setError(explain(e)); }
     finally { setSaving(false); inFlight.current = false; }
@@ -108,7 +122,7 @@ export function TransactionStoreReview({ transactionId }: { transactionId: numbe
       {data.review.body && <p>{data.review.body}</p>}
       {data.review.moderationReason && data.review.status !== 'published' && <p className="muted">Reviewer note: {data.review.moderationReason}</p>}
     </div>}
-    {!loading && data?.available && data.eligible && <form className="store-rating-form" onSubmit={submit}>
+    {!loading && data?.available && data.eligible && <form className="store-rating-form" aria-busy={saving} onSubmit={submit}>
       <p className="muted">You can leave one rating for this completed transaction. Payment and delivery are self-reported, not independently verified by CPSU.</p>
       <fieldset className="store-review-picker"><legend>Your rating (required)</legend>
         {Array.from({ length: 5 }, (_, i) => <label key={i}>
@@ -142,22 +156,28 @@ export function StoreReviewModeration() {
   const [busy, setBusy] = useState<number | null>(null);
   const [reasons, setReasons] = useState<Record<number, string>>({});
   const [loading, setLoading] = useState(true);
+  const requestId = useRef(0);
   const load = async () => {
-    setLoading(true);
+    const request = ++requestId.current;
+    setLoading(true); setError('');
     try {
       const result = await api<{ items: QueueReview[]; hasMore: boolean }>(`/admin/store-reviews?status=${mode}&page=${page}`);
-      setItems(result.items); setHasMore(result.hasMore); setError('');
-    } catch (e) { setError(explain(e)); }
-    finally { setLoading(false); }
+      if (request !== requestId.current) return;
+      setItems(result.items); setHasMore(result.hasMore);
+    } catch (e) { if (request === requestId.current) { setItems([]); setError(explain(e)); } }
+    finally { if (request === requestId.current) setLoading(false); }
   };
-  useEffect(() => { void load(); }, [mode, page]);
+  useEffect(() => { void load(); return () => { requestId.current++; }; }, [mode, page]);
   const decide = async (id: number, decision: 'published' | 'rejected' | 'hidden') => {
     const reason = (reasons[id] || '').trim();
     if (reason.length < 10 || busy !== null) return;
+    if (decision === 'hidden' && !window.confirm('Hide this published review? It will no longer count toward the public rating.')) return;
     setBusy(id); setError(''); setNotice('');
     try {
       await api(`/admin/store-reviews/${id}/decision`, { body: { decision, reason } });
-      setNotice(`Store review #${id} ${decision === 'published' ? 'approved' : decision}. Decision recorded.`);
+      const action = decision === 'published' ? 'approved' : decision === 'rejected' ? 'rejected' : 'hidden';
+      setNotice(`Store review #${id} ${action}. Decision recorded.`);
+      showActionFeedback({ kind: 'success', title: `Review ${action}`, message: 'Your moderation decision was saved.', presentation: 'center' });
       setReasons(prev => ({ ...prev, [id]: '' }));
       await load();
     } catch (e) { setError(explain(e)); }
@@ -166,13 +186,13 @@ export function StoreReviewModeration() {
   return <section className="store-review-admin" aria-labelledby="store-review-admin-heading">
     <h2 id="store-review-admin-heading">Store rating moderation</h2>
     <p className="muted">Ratings from completed transactions need review before appearing publicly. You can hide published reviews if they violate CPSU marketplace rules.</p>
-    <div className="row"><button type="button" className="btn ghost" aria-pressed={mode === 'pending'} onClick={() => { setMode('pending'); setPage(1); }}>Awaiting review</button>
-      <button type="button" className="btn ghost" aria-pressed={mode === 'published'} onClick={() => { setMode('published'); setPage(1); }}>Published reviews</button></div>
+    <div className="row"><button type="button" className="btn ghost" disabled={busy !== null} aria-pressed={mode === 'pending'} onClick={() => { setMode('pending'); setPage(1); }}>Awaiting review</button>
+      <button type="button" className="btn ghost" disabled={busy !== null} aria-pressed={mode === 'published'} onClick={() => { setMode('published'); setPage(1); }}>Published reviews</button></div>
     {notice && <p role="status">{notice}</p>}
     {error && <p className="err" role="alert">{error} <button type="button" className="btn ghost" onClick={() => void load()}>Retry</button></p>}
     {loading && <p role="status">Loading store ratings…</p>}
     {!loading && !error && items.length === 0 && <p className="muted">No reviews in this category.</p>}
-    {!error && items.map(item => <article className="panel store-review-admin-card" key={item.id}>
+    {!loading && !error && items.map(item => <article className="panel store-review-admin-card" key={item.id}>
       <h3>{item.store.storeName} — {item.transaction.listing.title}</h3>
       <RatingStars value={item.rating} />
       <p className="muted">Review #{item.id} · {new Date(item.createdAt).toLocaleDateString('en-PH')}</p>
@@ -191,9 +211,9 @@ export function StoreReviewModeration() {
         onClick={() => void decide(item.id, 'hidden')}>Hide review</button>}</div>
     </article>)}
     {!error && !loading && (page > 1 || hasMore) && <nav className="row" aria-label="Moderated review pages">
-      <button type="button" className="btn ghost" disabled={page === 1} onClick={() => setPage(p => p - 1)}>Previous</button>
+      <button type="button" className="btn ghost" disabled={page === 1 || busy !== null} onClick={() => setPage(p => p - 1)}>Previous</button>
       <span>Page {page}</span>
-      <button type="button" className="btn ghost" disabled={!hasMore} onClick={() => setPage(p => p + 1)}>Next</button>
+      <button type="button" className="btn ghost" disabled={!hasMore || busy !== null} onClick={() => setPage(p => p + 1)}>Next</button>
     </nav>}
   </section>;
 }

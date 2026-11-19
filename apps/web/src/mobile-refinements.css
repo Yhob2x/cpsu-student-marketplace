@@ -290,7 +290,7 @@
   .masthead { padding-block: .68rem; }
   main h1 { font-size: clamp(1.65rem, 6.8vw, 2.05rem); line-height: 1.17; }
   main h2 { line-height: 1.27; }
-  .page-head { gap: .65rem; margin-bottom: 1rem; }
+  .page-head { gap: 12px; margin-bottom: 14px; }
   .page-head p { line-height: 1.55; }
 
   /* Shadcn-style segmented buttons: real aria-pressed controls already exist. */

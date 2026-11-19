@@ -14,6 +14,7 @@ function fixture(opts: Options = {}) {
     createdAt: new Date('2026-11-18T02:00:00Z'), moderatedAt: null, moderationReason: null };
   const model = {
     aggregate: async (args: any) => { record('aggregate', args); return { _avg: { rating: 4.5 }, _count: { _all: 2 } }; },
+    groupBy: async (args: any) => { record('groupBy', args); return [{ rating: 4, _count: { _all: 1 } }, { rating: 5, _count: { _all: 1 } }]; },
     findMany: async (args: any) => { record('findMany', args); return [{ id: 4, rating: 4, body: 'Nice', createdAt: new Date() }]; },
     findFirst: async (args: any) => { record('review.findFirst', args); return null; },
     create: async (args: any) => { record('review.create', args); if (opts.duplicate) throw { code: 'P2002' }; return review; },
@@ -56,7 +57,9 @@ describe('store reviews (synthetic, no database writes)', () => {
     const { app, queries } = fixture();
     const res = await request(app).get('/seller-profiles/2/reviews');
     expect(res.status).toBe(200);
-    expect(res.body.summary).toEqual({ count: 2, average: 4.5 });
+    expect(res.body.summary).toEqual({ count: 2, average: 4.5,
+      distribution: { 1: 0, 2: 0, 3: 0, 4: 1, 5: 1 } });
+    expect(queries.find(x => x.op === 'groupBy')!.args.where).toEqual({ sellerProfileId: 2, status: 'published' });
     const q = queries.find(x => x.op === 'findMany')!.args;
     expect(q.where).toEqual({ sellerProfileId: 2, status: 'published' });
     expect(Object.keys(q.select)).toEqual(['id', 'rating', 'body', 'createdAt']);
@@ -75,6 +78,13 @@ describe('store reviews (synthetic, no database writes)', () => {
       .post('/transactions/31/store-review').send({ rating: 4 })).status).toBe(403);
     expect((await request(fixture({ role: 'reviewer' }).app)
       .post('/transactions/31/store-review').send({ rating: 4 })).status).toBe(403);
+  });
+  test('review eligibility reflects verified affiliation, not only transaction status', async () => {
+    const verified = await request(fixture().app).get('/transactions/31/store-review');
+    const unverified = await request(fixture({ affiliation: false }).app).get('/transactions/31/store-review');
+    expect(verified.body.eligible).toBe(true);
+    expect(unverified.body.eligible).toBe(false);
+    expect(unverified.body.available).toBe(true);
   });
   test('completed buyer review is pending moderation and audit-logged', async () => {
     const h = fixture();

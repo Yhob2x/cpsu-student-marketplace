@@ -13,10 +13,15 @@
 .storefront-campus { display: flex; gap: .35rem; align-items: center; margin: 0 0 .45rem; color: var(--ink-soft); font-size: .88rem; }
 .storefront-affiliation { display: inline-flex; align-items: center; gap: .3rem; font-size: .77rem; font-weight: 700; color: var(--forest); }
 .storefront-owner-actions { display: flex; gap: .55rem; flex-wrap: wrap; align-items: center; }
+.storefront-owner-actions .btn.storefront-icon-action { flex: 0 0 44px; width: 44px; min-width: 44px; height: 44px; padding: 0; border: 0; box-shadow: none; background: transparent; color: var(--forest); display: inline-flex; align-items: center; justify-content: center; border-radius: 10px; }
+.storefront-owner-actions .btn.storefront-icon-action[aria-pressed="true"], .storefront-owner-actions .btn.storefront-icon-action[aria-expanded="true"] { border: 0; background: var(--surface-soft); color: var(--forest); }
+@media (hover: hover) and (pointer: fine) { .storefront-owner-actions .btn.storefront-icon-action:hover:not(:disabled) { border: 0; background: var(--surface-soft); } }
+.storefront-icon-action:focus-visible { outline: 3px solid var(--focus-green); outline-offset: 2px; }
 .storefront-owner-actions .btn { min-height: 44px; display: inline-flex; align-items: center; justify-content: center; gap: .4rem; }
 .storefront-owner-actions .btn[aria-pressed="true"] { border-color: var(--forest); color: var(--forest); }
-/* Reserve the widest Follow/Following/Updating label, so the action row never reflows. */
-.storefront-owner-actions .storefront-follow-action { flex: 0 0 8.5rem; width: 8.5rem; white-space: nowrap; }
+/* Icon-only actions never move when following state changes. */
+.storefront-owner-actions .storefront-follow-action { flex: 0 0 44px; width: 44px; }
+.storefront-owner-actions .btn.storefront-follow-action[aria-pressed="true"] { background: var(--surface-soft); border: 0; color: var(--forest); }
 .storefront-owner-actions .btn:disabled { opacity: .65; cursor: not-allowed; }
 /* Notices sit below the header row rather than altering its height and button positions. */
 .storefront-follow-notices { display: grid; gap: .2rem; padding: 0 clamp(1rem, 3vw, 1.8rem) .75rem; }
@@ -73,6 +78,7 @@
  .storefront-primary > .seller-avatar { width: 78px; height: 78px; margin-top: -24px; }
  .storefront-owner-actions { width: 100%; }
  .storefront-owner-actions .btn { flex: 1 1 auto; justify-content: center; }
+ .storefront-owner-actions .btn.storefront-icon-action { flex: 0 0 44px; }
  .storefront-browser, .storefront-search-filters { align-items: stretch; }
  .storefront-browser, .storefront-search-filters, .storefront-search { width: 100%; }
  .storefront-search { flex: 1 1 100%; }

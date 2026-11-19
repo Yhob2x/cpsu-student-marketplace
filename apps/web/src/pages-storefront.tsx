@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { Icon } from './icons';
 import { SellerAvatar } from './seller-avatar';
 import { StoreRatingsAndReviews } from './store-review-widgets';
+import { StoreAppreciation } from './store-appreciation';
 import { StoreFollowers } from './store-followers';
 import { filterStoreListings, type StoreFilter } from './storefront-filter';
 import type { Listing } from './pages-public';
@@ -14,6 +15,7 @@ export type PublicStorefront = {
   storeName: string;
   description: string;
   badge: string;
+  badgeReason?: string;
   avatarUrl?: string | null;
   createdAt: string;
   listingCount: number;
@@ -66,22 +68,22 @@ export function StorefrontView({ store, isOwner, canFollow, onFollow, followBusy
         <div className="storefront-primary">
           <SellerAvatar name={store.storeName} src={store.avatarUrl} size="large" />
           <div className="storefront-primary-text">
-            <h1 id="storefront-name">{store.storeName}</h1>
-            <p className="storefront-campus"><Icon name="pin" size={16} /> {store.campus?.name ?? store.campus?.code ?? 'CPSU campus'}</p>
-            <span className="storefront-affiliation"><Icon name="shield" size={14} /> {store.badge}</span>
-          </div>
-        </div>
-        <div className="storefront-owner-actions">
+            <div className="storefront-title-row">
+              <h1 id="storefront-name">{store.storeName}</h1>
+              <div className="storefront-owner-actions">
           {isOwner && <Link className="btn storefront-edit-action" to="/profile#store-profile">Edit my store</Link>}
           {!isOwner && canFollow && <button type="button"
-            className="btn storefront-follow-action"
+            className="btn storefront-follow-action storefront-icon-action"
             aria-pressed={Boolean(store.follow?.isFollowing)}
+            aria-label={followBusy ? 'Updating follow' : store.follow?.isFollowing ? 'Following' : 'Follow'}
+            title={store.follow?.isFollowing ? 'Unfollow this store' : 'Follow this store'}
             disabled={followBusy || !store.follow?.available}
             onClick={onFollow}>
-            <Icon name={store.follow?.isFollowing ? 'check' : 'plus'} size={17} />
-            {followBusy ? 'Updating…' : store.follow?.isFollowing ? 'Following' : 'Follow'}
+            <Icon name={store.follow?.isFollowing ? 'userCheck' : 'userPlus'} size={21} />
           </button>}
-          {canChat && <button type="button" className="btn ghost"
+          {canChat && <button type="button" className="btn ghost storefront-icon-action"
+            aria-label="Chat with seller"
+            title={chatOpen && signedIn ? 'Close seller chat' : 'Chat with seller'}
             aria-expanded={signedIn && chatOpen}
             aria-controls={signedIn && chatOpen ? 'storefront-chat-form' : undefined}
             disabled={chatBusy || store.listings.length === 0}
@@ -89,9 +91,14 @@ export function StorefrontView({ store, isOwner, canFollow, onFollow, followBusy
               if (!signedIn) { onChatSignIn(); return; }
               setChatOpen(open => !open);
             }}>
-            <Icon name="chat" size={17} /> Chat with seller
+            <Icon name="chat" size={21} />
           </button>}
-          <a className="storefront-browse-action" href="#storefront-listings"><Icon name="grid" size={16} /> Browse listings</a>
+          {!isOwner && canFollow && <StoreAppreciation storeId={store.id} signedIn={signedIn} onSignIn={onChatSignIn} />}
+              </div>
+            </div>
+            <p className="storefront-campus"><Icon name="pin" size={16} /> {store.campus?.name ?? store.campus?.code ?? 'CPSU campus'}</p>
+            <span className="storefront-affiliation" title={store.badgeReason}><Icon name="store" size={14} /> {store.badge}</span>
+          </div>
         </div>
         {canChat && store.listings.length === 0 &&
           <p className="storefront-chat-note muted">Messaging becomes available once this store has a published, available listing.</p>}
@@ -142,12 +149,12 @@ export function StorefrontView({ store, isOwner, canFollow, onFollow, followBusy
     </section>
     <section className="storefront-products" aria-labelledby="storefront-listings">
       <div className="storefront-products-heading">
-        <div><h2 id="storefront-listings" tabIndex={-1}>Browse this store</h2><p>Find products and services from {store.storeName}.</p></div>
+        <div><h2 id="storefront-listings" tabIndex={-1}>Listings</h2></div>
         <div className="storefront-results-group">
           <span className="storefront-results" role="status" aria-live="polite">{visible.length} {visible.length === 1 ? 'result' : 'results'}</span>
-          {(filter !== 'all' || category !== 'all' || query.trim() !== '') &&
-            <button type="button" className="storefront-clear-filters"
-              onClick={() => { setFilter('all'); setCategory('all'); setQuery(''); }}>Clear filters</button>}
+          {visible.length > 0 && (filter !== 'all' || category !== 'all' || query.trim() !== '') &&
+            <button type="button" className="storefront-clear-filters" aria-label="Clear store filters" title="Clear store filters"
+              onClick={() => { setFilter('all'); setCategory('all'); setQuery(''); }}><Icon name="refresh" size={18} /></button>}
         </div>
       </div>
       <nav className="storefront-navigation" aria-label="Store listings and categories">

@@ -209,6 +209,7 @@ model User {
   listingReviews        ListingReview[]      @relation("ListingReviewer")
   savedListings         SavedListing[]
   storeFollows          StoreFollow[]
+  storeAppreciations    StoreAppreciation[]
   buyerThreads          InquiryThread[]
   reportedItems         Report[]             @relation("ReportReporter")
   assignedReports       Report[]             @relation("ReportAssignee")
@@ -318,6 +319,7 @@ model SellerProfile {
   listings       Listing[]
   inquiryThreads InquiryThread[]
   storeFollows   StoreFollow[]
+  storeAppreciations StoreAppreciation[]
   storeReviews   StoreReview[]
   campus  Campus   @relation(fields: [campusId], references: [id], onDelete: Restrict, onUpdate: Cascade)
   reports Report[] @relation("ReportSeller")
@@ -327,6 +329,19 @@ model SellerProfile {
 // A student can follow a given store at most once. Public store connections
 // expose active followers' display names only, never private account fields.
 model StoreFollow {
+  userId          Int
+  sellerProfileId Int
+  createdAt       DateTime @default(now())
+
+  user  User          @relation(fields: [userId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  store SellerProfile @relation(fields: [sellerProfileId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+
+  @@id([userId, sellerProfileId])
+  @@index([sellerProfileId, createdAt])
+}
+
+// Appreciation is a reversible, non-transactional thank-you, not a rating or CPSU endorsement.
+model StoreAppreciation {
   userId          Int
   sellerProfileId Int
   createdAt       DateTime @default(now())

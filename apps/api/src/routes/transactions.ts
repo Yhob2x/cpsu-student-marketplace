@@ -6,6 +6,7 @@ import { HttpError } from '../http.js';
 import { requireStudent } from '../auth.js';
 import { deliverPush } from '../push.js';
 import { rowAccess } from '../row-access.js';
+import { meetupLocationBody, serializedMeetupLocation } from '../meetup-location.js';
 
 const r = Router();
 r.use(requireStudent);
@@ -239,6 +240,56 @@ r.post('/:id/negotiating', async (req, res) => {
   });
   dispatchCommittedTransactionPush(result.pushNotice);
   res.json(response(result.transaction));
+});
+
+// A pin stays participant-private. Revising an agreed meetup explicitly returns
+// it to negotiation and clears both confirmations, never silently changes a
+// previously confirmed meeting point.
+r.put('/:id/meetup-location', async (req, res) => {
+  const userId = req.user!.id;
+  await eligibleStudent(userId);
+  const b = meetupLocationBody.parse(req.body);
+  const t = await participant(userId, idOf(req.params.id));
+  if (!['accepted', 'negotiating', 'for_meetup'].includes(t.status) ||
+      t.buyerCompletionConfirmedAt || t.sellerCompletionConfirmedAt)
+    throw new HttpError(409, 'meetup_location_locked');
+  const needsReconfirmation = t.status === 'for_meetup' ||
+    Boolean(t.buyerMeetupConfirmedAt || t.sellerMeetupConfirmedAt);
+  if (needsReconfirmation && !b.resetConfirmations)
+    throw new HttpError(409, 'meetup_reconfirmation_required');
+  ensureListingNotModerated(t.listing);
+  const generalLocation = serializedMeetupLocation(b);
+  const result = await prisma.$transaction(async tx => {
+    const changed = await tx.transaction.updateMany({
+      where: {
+        id: t.id, ...rowAccess.transactionParticipant(userId),
+        status: { in: needsReconfirmation
+          ? ['accepted', 'negotiating', 'for_meetup'] : ['accepted', 'negotiating'] },
+        activeThreadId: t.inquiryThreadId,
+        buyerCompletionConfirmedAt: null, sellerCompletionConfirmedAt: null,
+        ...(needsReconfirmation ? {} : {
+          buyerMeetupConfirmedAt: null, sellerMeetupConfirmedAt: null,
+        }),
+      },
+      data: needsReconfirmation
+        ? { status: 'negotiating', buyerMeetupConfirmedAt: null, sellerMeetupConfirmedAt: null }
+        : { updatedAt: new Date() },
+    });
+    if (!changed.count) throw new HttpError(409, 'meetup_location_locked');
+    const next = await tx.handoff.upsert({
+      where: { inquiryThreadId: t.inquiryThreadId },
+      create: { inquiryThreadId: t.inquiryThreadId, method: 'campus_pickup',
+        timeWindow: b.timeWindow, generalLocation, status: 'proposed' },
+      update: { timeWindow: b.timeWindow, generalLocation, status: 'proposed' },
+    });
+    const pushNotice = await logEvent(tx, t, userId,
+      needsReconfirmation ? 'meetup_location_revised' : 'meetup_location_shared',
+      t.status, needsReconfirmation ? 'negotiating' : t.status);
+    return { handoff: next, pushNotice };
+  });
+  dispatchCommittedTransactionPush(result.pushNotice);
+  res.setHeader('Cache-Control', 'no-store');
+  res.json(result.handoff);
 });
 
 r.post('/:id/confirm-meetup', async (req, res) => {

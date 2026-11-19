@@ -92,6 +92,14 @@ r.get('/:id/messages', async (req, res) => {
   });
   const messages = await prisma.inquiryMessage.findMany({ where: { threadId: t.id }, orderBy: { createdAt: 'asc' }, include: { author: { select: { displayName: true } } } });
   const handoff = await prisma.handoff.findUnique({ where: { inquiryThreadId: t.id } });
+  const transaction = await prisma.transaction.findFirst({
+    where: { inquiryThreadId: t.id, ...rowAccess.transactionParticipant(req.user!.id) },
+    orderBy: { id: 'desc' },
+    select: {
+      id: true, status: true, buyerMeetupConfirmedAt: true, sellerMeetupConfirmedAt: true,
+      buyerCompletionConfirmedAt: true, sellerCompletionConfirmedAt: true,
+    },
+  });
   const other = t.buyerUserId === req.user!.id ? t.seller.ownerUserId : t.buyerUserId;
   const listingVisible = t.listing.status === 'published' && !t.listing.deletedAt && t.seller.approvalStatus === 'approved' && t.seller.owner.status === 'active';
   const leadPhoto = listingVisible ? [...t.listing.media].sort((a, b) => a.position - b.position)[0] : undefined;
@@ -106,7 +114,7 @@ r.get('/:id/messages', async (req, res) => {
     imageUrl: leadPhoto ? `/api/v1/media/${leadPhoto.id}` : null,
   }, messages: messages.map(m => ({
     id: m.id, body: m.body, createdAt: m.createdAt, mine: m.authorUserId === req.user!.id,
-    author: m.author.displayName, receipt: receipt(m), seenAt: m.seenAt })), handoff,
+    author: m.author.displayName, receipt: receipt(m), seenAt: m.seenAt })), handoff, transaction,
     // Never disclose stale heartbeats for a closed thread, even if a heartbeat races closure.
     typing: inquiryAllowsMessage(t.status) && (typing.get(`${t.id}:${other}`) ?? 0) > Date.now(),
     otherActiveInChat: inquiryAllowsMessage(t.status) && (presence.get(`${t.id}:${other}`) ?? 0) > Date.now() });
@@ -197,7 +205,28 @@ r.put('/:id/handoff', async (req, res) => {
     timeWindow: z.string().max(80), generalLocation: z.string().max(120),
     status: z.enum(['proposed', 'agreed', 'completed', 'cancelled', 'not_confirmed']).default('proposed'),
   }).parse(req.body);
-  const h = await prisma.handoff.upsert({ where: { inquiryThreadId: t.id }, create: { ...b, inquiryThreadId: t.id }, update: b });
+  const h = await prisma.$transaction(async tx => {
+    const latest = await tx.transaction.findFirst({
+      where: { inquiryThreadId: t.id }, orderBy: { id: 'desc' }, select: { id: true },
+    });
+    if (latest) {
+      // Serialize with confirm-meetup even for callers of this older handoff route.
+      await tx.transaction.updateMany({ where: { id: latest.id },
+        data: { updatedAt: new Date() } });
+    }
+    const confirmed = latest ? await tx.transaction.findUnique({
+      where: { id: latest.id }, select: {
+        buyerMeetupConfirmedAt: true, sellerMeetupConfirmedAt: true,
+      },
+    }) : null;
+    const existing = await tx.handoff.findUnique({ where: { inquiryThreadId: t.id } });
+    const arrangementChanged = !existing || existing.generalLocation !== b.generalLocation
+      || existing.timeWindow !== b.timeWindow || existing.method !== b.method;
+    if (arrangementChanged && (confirmed?.buyerMeetupConfirmedAt || confirmed?.sellerMeetupConfirmedAt))
+      throw new HttpError(409, 'meetup_location_locked');
+    return tx.handoff.upsert({ where: { inquiryThreadId: t.id },
+      create: { ...b, inquiryThreadId: t.id }, update: b });
+  });
   res.json(h);
 });
 export default r;

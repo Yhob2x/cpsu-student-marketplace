@@ -13,10 +13,13 @@
     "test:a11y": "playwright test e2e/accessibility.pw.ts e2e/accessibility-states.pw.ts"
   },
   "dependencies": {
+    "@maplibre/maplibre-gl-leaflet": "^0.1.4",
     "@tailwindcss/vite": "^4.3.5",
     "class-variance-authority": "^0.7.1",
     "cn": "^0.5.2",
+    "leaflet": "^1.9.4",
     "lucide-react": "^1.74.0",
+    "maplibre-gl": "^6.19.0",
     "radix-ui": "^1.8.1",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
@@ -32,6 +35,7 @@
     "@testing-library/jest-dom": "^7.0.1",
     "@testing-library/react": "^16.3.3",
     "@testing-library/user-event": "^14.6.12",
+    "@types/leaflet": "^1.9.22",
     "@types/react": "^18.3.12",
     "@types/react-dom": "^18.3.1",
     "@vitejs/plugin-react": "^4.3.4",

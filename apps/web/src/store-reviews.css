@@ -7,6 +7,13 @@
 .store-rating-stars { display:inline-flex; align-items:center; gap:.05em; color: #a35410; font-size:1rem; letter-spacing:.01em; }
 .store-rating-large { font-size:1.2rem; }
 .store-review-disclosure { margin:0; max-width:76ch; font-size:.82rem; line-height:1.55; }
+.store-review-distribution { display: grid; gap: .3rem; width: min(100%, 21rem); }
+.store-review-distribution-row { display: grid; grid-template-columns: 2rem minmax(0, 1fr) 2.5rem; gap: .7rem; align-items: center; font-size: .8rem; color: var(--ink-soft); font-variant-numeric: tabular-nums; }
+.store-review-distribution-row span:last-child { text-align: right; }
+.store-review-distribution-row progress { width: 100%; height: .5rem; border: 0; border-radius: 1rem; overflow: hidden; accent-color: var(--forest); }
+.store-review-distribution-row progress::-webkit-progress-bar { background: var(--surface-soft); border-radius: 1rem; }
+.store-review-distribution-row progress::-webkit-progress-value { background: var(--forest); border-radius: 1rem; }
+.store-review-distribution-row progress::-moz-progress-bar { background: var(--forest); border-radius: 1rem; }
 .store-review-list { display:grid; gap:.65rem; }
 .store-review-row { padding:1rem 0; border-bottom:1px solid var(--line); overflow-wrap:anywhere; }
 .store-review-meta { display:flex; align-items:center; flex-wrap:wrap; gap:.35rem .8rem; color:var(--ink-soft); font-size:.79rem; }

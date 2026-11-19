@@ -10,6 +10,7 @@ import { freshListingIdsQuery } from '../fresh-listings-query.js';
 import { sellerAvatarColumnExists } from '../optional-seller-avatar.js';
 import { sellerAvatarUrl } from '../seller-avatar-url.js';
 import { readStoreFollowSummary } from '../store-follows.js';
+import { storeActivityBadge } from '../store-activity-badge.js';
 import { readMostFollowedStores } from '../most-followed-stores.js';
 import { popularListingOrderBy } from '../popular-listing-ranking.js';
 import { visibleListingRows } from '../row-access.js';
@@ -159,14 +160,20 @@ async function sendPublicStore(req: Request, res: Response, id: number, stores?:
   });
   if (!s) throw new HttpError(404, 'not_found');
   const slug = canonicalStoreSlug(stores ?? await visibleStoreNames(), s);
-  const follow = await readStoreFollowSummary(prisma, s.id, req.user?.id);
+  const [follow, publishedListingCount] = await Promise.all([
+    readStoreFollowSummary(prisma, s.id, req.user?.id),
+    prisma.listing.count({ where: { sellerProfileId: s.id, status: 'published', deletedAt: null } }),
+  ]);
+  const activity = storeActivityBadge({ publishedListingCount, followerCount: follow.count });
   res.setHeader('Cache-Control', 'private, no-store');
   res.json({ id: s.id, slug, storeName: s.storeName, description: s.description,
     sellerType: s.sellerType, campusId: s.campusId, campus: s.campus, createdAt: s.createdAt,
     listingCount: s.listings.length,
     follow,
     avatarUrl: sellerAvatarUrl(s.id, s.avatarPath),
-    badge: s.sellerType === 'student' ? 'Verified CPSU community member' : 'Campus establishment', listings: s.listings.map(publicListing) });
+    badge: s.sellerType === 'student' ? activity.label : 'Campus establishment',
+    badgeReason: s.sellerType === 'student' ? activity.reason : undefined,
+    listings: s.listings.map(publicListing) });
 }
 
 r.get('/seller-profiles/by-slug/:slug', async (req, res) => {

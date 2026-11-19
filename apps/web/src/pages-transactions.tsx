@@ -6,6 +6,7 @@ import { showActionFeedback } from './action-feedback';
 import { IconAction } from './icon-action';
 import { TransactionStoreReview } from './store-review-widgets';
 import { useForegroundRefresh } from './foreground-refresh';
+import { MeetupLocationCard, type MeetupHandoff } from './meetup-location-card';
 
 type Status = 'pending' | 'accepted' | 'negotiating' | 'for_meetup' | 'completed' | 'cancelled';
 type TransactionRow = {
@@ -19,7 +20,7 @@ type TransactionRow = {
 };
 type Event = { id: number; actorUserId: number; event: string; fromStatus: Status | null;
   toStatus: Status; reason: string | null; createdAt: string };
-type Detail = TransactionRow & { history: Event[]; handoff: { method: string; timeWindow: string; generalLocation: string; status: string } | null };
+type Detail = TransactionRow & { history: Event[]; handoff: MeetupHandoff | null };
 
 const names: Record<Status, string> = {
   pending: 'Pending seller decision',
@@ -32,6 +33,7 @@ const names: Record<Status, string> = {
 const eventName: Record<string, string> = {
   requested: 'Request submitted', accepted: 'Seller accepted', rejected: 'Seller rejected',
   negotiating: 'Discussion started', meetup_confirmed: 'Meetup confirmed',
+  meetup_location_shared: 'Meetup location shared', meetup_location_revised: 'Meetup location changed; confirmation needed again',
   completion_confirmed: 'Completion confirmed', cancelled: 'Request cancelled',
 };
 const stamp = (value: string) => new Date(value).toLocaleString('en-PH', { dateStyle: 'medium', timeStyle: 'short' });
@@ -196,6 +198,15 @@ export function TransactionDetail() {
       {actionError && <p role="alert" className="err">{actionError}</p>}
       {notice && <p role="status">{notice}</p>}
     </section>}
+    {data.status !== 'pending' && (!terminal || data.handoff) && <MeetupLocationCard key={data.id}
+      transactionId={data.id} handoff={data.handoff}
+      editable={(canMeetup || data.status === 'for_meetup')
+        && !myCompletionConfirmed && !otherCompletionConfirmed}
+      requiresReconfirmation={data.status === 'for_meetup'
+        || myMeetupConfirmed || otherMeetupConfirmed}
+      unavailableReason={terminal ? 'This transaction is closed. The meetup pin is read-only.'
+        : 'Meetup location cannot be changed after completion starts.'}
+      onSaved={reload} />}
     {terminal && <p role="status">{data.status === 'completed'
       ? 'Both students confirmed completion. This is a mutual self-report, not an independently verified sale.'
       : 'This transaction is closed. The history below remains available to both students.'}</p>}
@@ -210,11 +221,6 @@ export function TransactionDetail() {
         <Link to={`/listings/${data.listingId}`} className="btn ghost">View listing</Link>
       </div>
     </section>
-    {data.handoff && <aside className="panel stack" aria-label="Previous handoff arrangements">
-      <h2>Handoff details (self-reported)</h2>
-      <p>{data.handoff.generalLocation} · {data.handoff.timeWindow}</p>
-      <p className="muted">Recorded separately in your conversation; this does not prove transaction completion.</p>
-    </aside>}
     <section className="panel stack" aria-labelledby="transaction-history-heading">
       <h2 id="transaction-history-heading">Activity history</h2>
       <ol className="stack" style={{ paddingInlineStart: '1.25rem' }}>

@@ -21,6 +21,7 @@ type ReviewModel = {
   findFirst(args: any): Promise<StoreReviewData | null>;
   findMany(args: any): Promise<any[]>;
   aggregate(args: any): Promise<{ _avg: { rating: number | null }; _count: { _all: number } }>;
+  groupBy(args: any): Promise<Array<{ rating: number; _count: { _all: number } }>>;
   create(args: any): Promise<StoreReviewData>;
   updateMany(args: any): Promise<{ count: number }>;
 };
@@ -55,15 +56,21 @@ export function makeStoreReviewsRouter(db: Db) {
     try {
       const reviews = requireModel(db);
       const where = { sellerProfileId: id, status: 'published' as const };
-      const [stats, items] = await Promise.all([
+      const [stats, groups, items] = await Promise.all([
         reviews.aggregate({ where, _avg: { rating: true }, _count: { _all: true } }),
+        reviews.groupBy({ by: ['rating'], where, _count: { _all: true } }),
         reviews.findMany({ where, select: publicFields,
           orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
           skip: (page - 1) * pageSize, take: pageSize }),
       ]);
       res.setHeader('Cache-Control', 'no-store');
+      const distribution = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
+      for (const row of groups) {
+        if (Number.isInteger(row.rating) && row.rating >= 1 && row.rating <= 5)
+          distribution[row.rating as keyof typeof distribution] = row._count._all;
+      }
       res.json({ available: true, summary: { count: stats._count._all,
-        average: stats._avg.rating === null ? null : Math.round(stats._avg.rating * 10) / 10 },
+        average: stats._avg.rating === null ? null : Math.round(stats._avg.rating * 10) / 10, distribution },
         items, page, pageSize });
     } catch (error) {
       if (notReady(error) || error instanceof HttpError && error.status === 503) {
@@ -86,9 +93,14 @@ export function makeStoreReviewsRouter(db: Db) {
       const review = await reviews.findFirst({ where: { transactionId: id, buyerUserId: req.user!.id },
         select: { id: true, rating: true, body: true, status: true, createdAt: true,
           moderationReason: true } });
+      const affiliation = transaction.status === 'completed' && !review ? await db.affiliation.findFirst({
+        where: { userId: req.user!.id, verificationStatus: 'verified', campus: { active: true },
+          OR: [{ expirationAt: null }, { expirationAt: { gt: new Date() } }] },
+        select: { id: true },
+      }) : null;
       res.setHeader('Cache-Control', 'private, no-store');
       res.json({ available: true,
-        eligible: transaction.status === 'completed' && transaction.sellerUserId !== req.user!.id && !review,
+        eligible: transaction.status === 'completed' && transaction.sellerUserId !== req.user!.id && Boolean(affiliation) && !review,
         review });
     } catch (error) {
       if (notReady(error) || error instanceof HttpError && error.status === 503) {

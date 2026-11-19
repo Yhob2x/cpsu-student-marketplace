@@ -6,12 +6,15 @@ import { showActionFeedback } from './action-feedback';
 import { assessListingReadability } from './listing-quality';
 import { categoriesForKind, categoryMatchesKind, type ListingKind } from './listing-categories';
 import { useForegroundRefresh } from './foreground-refresh';
+import { decodeMeetupLocation, openStreetMapPinUrl } from './meetup-location';
 import { ListingCard, Listing } from './pages-public';
 import { ConversationListingCard } from './conversation-listing-card';
 import { StoreFollowers } from './store-followers';
+import { StoreAppreciation } from './store-appreciation';
 import { SellerAvatar } from './seller-avatar';
 import './storefront.css';
 import { Icon } from './icons';
+import { IconAction } from './icon-action';
 import { MAX_LISTING_PHOTOS, selectedPhotosError, uploadListingPhotos } from './listing-photo-uploads';
 import { coverFirst } from './photo-cover-order';
 import { ExistingPhotoChoices, SelectedPhotoPreviews } from './selected-photo-previews';
@@ -19,6 +22,12 @@ import { runExclusive } from './auth-submit';
 import { safeLoginReturn } from './auth-return';
 import { authFieldForError, type AuthField } from './auth-field-error';
 import { hasNewIncomingMessage, messageReceiveSoundEnabled, playMessageReceiveSound, prepareMessageReceiveSound, setMessageReceiveSoundEnabled, unlockMessageReceiveSound } from './message-receive-sound';
+
+function HandoffPlace({ location }: { location: string }) {
+  const { place, point } = decodeMeetupLocation(location);
+  return <>{place}{point && <> · <a href={openStreetMapPinUrl(point)} target="_blank"
+    rel="noopener noreferrer">Open meetup map</a></>}</>;
+}
 
 export function Login() {
   const nav = useNavigate(); const location = useLocation(); const { reload } = useMe(); const [err, setErr] = useState('');
@@ -203,7 +212,8 @@ type RepeatListing = { id: number; type: ListingKind; categoryId: number; title:
 
 export function Dashboard() {
   const { me, reload } = useMe(); const [listings, setListings] = useState<any[]>([]); const [cats, setCats] = useState<any[]>([]); const [err, setErr] = useState(''); const [ok, setOk] = useState('');
-  const [ownerStore, setOwnerStore] = useState<{ storeName: string; avatarUrl?: string | null } | null>(null);
+  const [ownerStore, setOwnerStore] = useState<{ storeName: string; avatarUrl?: string | null; badge?: string; badgeReason?: string } | null>(null);
+  const [ownerStoreLoadError, setOwnerStoreLoadError] = useState(false);
   const [pending, setPending] = useState<number | null>(null); const [editing, setEditing] = useState<any | null>(null);
   const [listingLoadError, setListingLoadError] = useState('');
   const [categoriesLoading, setCategoriesLoading] = useState(true);
@@ -253,10 +263,10 @@ export function Dashboard() {
   }, [me?.storeId]);
   useEffect(() => {
     let active = true;
-    setOwnerStore(null);
-    if (me?.storeId) void api<{ storeName: string; avatarUrl?: string | null }>('/seller/store')
+    setOwnerStore(null); setOwnerStoreLoadError(false);
+    if (me?.storeId) void api<{ storeName: string; avatarUrl?: string | null; badge?: string; badgeReason?: string }>('/seller/store')
       .then(store => { if (active) setOwnerStore(store); })
-      .catch(() => { /* The management controls remain available if identity details fail to load. */ });
+      .catch(() => { if (active) setOwnerStoreLoadError(true); });
     return () => { active = false; };
   }, [me?.storeId]);
   // Review decisions and availability changes appear in My Store with no page refresh.
@@ -433,7 +443,7 @@ export function Dashboard() {
           <div className="storefront-primary-text">
             <h1 id="store-dashboard-name">{ownerStore?.storeName ?? 'My store'}</h1>
             {campus && <p className="storefront-campus"><Icon name="pin" size={16} /> {campus.campus.name}</p>}
-            <span className="storefront-affiliation"><Icon name="shield" size={14} /> {verified ? 'Verified CPSU community member' : 'Verification pending'}</span>
+            <span className="storefront-affiliation" title={ownerStore?.badgeReason}><Icon name={verified ? 'store' : 'shield'} size={14} /> {verified ? (ownerStore?.badge ?? (ownerStoreLoadError ? 'Activity unavailable' : 'Checking activity…')) : 'Verification pending'}</span>
           </div>
         </div>
         <div className="storefront-owner-actions store-dashboard-actions">
@@ -447,6 +457,7 @@ export function Dashboard() {
       <div className="storefront-facts">
         <div><span>Your listings</span><strong>{listingsLoading || listingLoadError ? '—' : visibleListings.length.toLocaleString('en-PH')}</strong></div>
         <StoreFollowers key={me.id} storeId={me.storeId} />
+        <StoreAppreciation storeId={me.storeId} readOnly />
         {campus && <div><span>Campus</span><strong>{campus.campus.name}</strong></div>}
       </div>
     </section> : <div className="page-head store-workspace-head">
@@ -513,7 +524,7 @@ export function Dashboard() {
       <div className="store-listings-head"><div><h2 ref={listingsHeading} tabIndex={-1}>Your listings</h2></div>{!listingsLoading && !listingLoadError && <span className="store-listing-count">{visibleListings.length} {visibleListings.length === 1 ? 'listing' : 'listings'}</span>}</div>
       {listingsLoading && <p className="muted" role="status">Loading your listings…</p>}
       {listingLoadError && <p className="err" role="alert">Could not load your listings: {listingLoadError} <button type="button" className="btn ghost" onClick={() => { void load(); }}>Retry</button></p>}
-      {!listingsLoading && !listingLoadError && visibleListings.length === 0 && <div className="panel store-empty"><h3>Your store is ready for its first listing</h3><p className="muted">Open New listing above, save a draft, then send it to a campus reviewer.</p></div>}
+      {!listingsLoading && !listingLoadError && visibleListings.length === 0 && <div className="panel store-empty"><h3>No listings yet</h3><p className="muted">Create a draft, then submit it for campus review.</p></div>}
       {!listingsLoading && !listingLoadError && visibleListings.length > 0 && <>
         <div className="store-listing-filters">
           <label className="field">Find a listing<input type="search" value={listingQuery} onChange={e => { setListingQuery(e.target.value); setListingPage(1); }} placeholder="Search by title" /></label>
@@ -556,12 +567,12 @@ export function Dashboard() {
             <div className="row"><button className="btn" disabled={savingEdit || categoriesLoading || Boolean(categoriesError)}>{savingEdit ? 'Saving…' : 'Save changes'}</button><button type="button" className="btn ghost" disabled={savingEdit} onClick={() => closeEditor()}>Cancel</button></div></form>
         : <article key={l.id} id={`store-listing-${l.id}`} tabIndex={-1} className="panel store-listing"><StoreListingPhoto media={l.media} title={l.title} type={l.type} /><div className="store-listing-main"><div className="store-listing-title"><h3>{l.title}</h3><strong>{peso(Number(l.price))}</strong></div><p className="store-listing-category">{l.category?.name}</p><div className="store-listing-meta"><span className={`status ${l.status}`}>{l.status.replace('_', ' ')}</span>{l.status === 'published' && <span className="status">{l.availabilityState || 'available'}</span>}</div>
             <p className="muted store-listing-help">{l.status === 'draft' ? 'Draft only · submit for campus review when ready.' : l.status === 'changes_requested' ? 'Changes requested · edit and resubmit for review.' : l.status === 'pending_review' ? 'Waiting for a campus reviewer.' : l.status === 'published' ? l.availabilityState === 'sold' ? 'Sold · use Sell again to make a new draft.' : 'Published · manage availability below.' : l.status === 'rejected' ? 'Not approved for publication.' : l.status === 'suspended' ? 'Removed from public browsing by a reviewer.' : 'Check this listing’s review status.'}</p>{l.status === 'published' && <Link className="store-listing-view" to={`/listings/${l.id}`}>View listing <Icon name="arrow" size={15} /></Link>}</div>
-            <div className="store-listing-actions">{!['pending_review', 'suspended', 'rejected'].includes(l.status) && l.availabilityState !== 'sold' && <button type="button" className="btn ghost" onClick={() => openEditor(l)}>Edit</button>}
+            <div className="store-listing-actions">{!['pending_review', 'suspended', 'rejected'].includes(l.status) && l.availabilityState !== 'sold' && <IconAction className="store-edit-action" icon="edit" label={`Edit ${l.title}`} onClick={() => openEditor(l)} />}
             {['draft', 'changes_requested'].includes(l.status) && <button type="button" className="btn" disabled={pending === l.id} onClick={() => submit(l.id)}>{pending === l.id ? 'Submitting…' : 'Submit for review'}</button>}
             {l.status === 'published' && l.availabilityState !== 'sold' && <select aria-label={`Availability for ${l.title}`} value={l.availabilityState || 'available'} disabled={pending === l.id} onChange={async e => { const next = e.target.value as 'available' | 'reserved' | 'sold'; if (!(await changeAvailability(l.id, next))) e.target.value = l.availabilityState || 'available'; }}><option value="available">Available</option><option value="reserved">Reserved</option><option value="sold">Sold (final)</option></select>}
             {l.status === 'published' && l.availabilityState === 'sold' && <button type="button" className="btn" aria-label={`Sell ${l.title} again`} disabled={creatingListing} onClick={() => sellAgain(l)}>Sell again</button>}
             <button type="button" className="btn ghost store-remove" disabled={pending === l.id} onClick={() => removeListing(l.id)}>Remove</button></div></article>)}</div>}
-      {!listingsLoading && !listingLoadError && pageCount > 1 && <nav className="store-pagination" aria-label="Your listings pages"><button type="button" className="btn ghost" disabled={currentPage === 1} onClick={() => changeListingPage(currentPage - 1)}>Previous</button><span>Page {currentPage} of {pageCount}</span><button type="button" className="btn ghost" disabled={currentPage === pageCount} onClick={() => changeListingPage(currentPage + 1)}>Next</button></nav>}
+      {!listingsLoading && !listingLoadError && pageCount > 1 && <nav className="store-pagination" aria-label="Your listings pages"><IconAction className="page-nav-button" icon="chevronLeft" label="Previous listings page" disabled={currentPage === 1} onClick={() => changeListingPage(currentPage - 1)} /><span>Page {currentPage} of {pageCount}</span><IconAction className="page-nav-button" icon="chevronRight" label="Next listings page" disabled={currentPage === pageCount} onClick={() => changeListingPage(currentPage + 1)} /></nav>}
     </>}
   </div>;
 }
@@ -1012,7 +1023,7 @@ export function Thread() {
     {d.handoff && <aside className="handoff-panel">
       <Icon name="pin" size={19} />
       <div><strong>Handoff arrangement</strong>
-        <p>{d.handoff.method.replaceAll('_', ' ')} · {d.handoff.timeWindow} · {d.handoff.generalLocation}</p>
+        <p>{d.handoff.method.replaceAll('_', ' ')} · {d.handoff.timeWindow} · <HandoffPlace location={d.handoff.generalLocation} /></p>
         <span className="status">{d.handoff.status.replaceAll('_', ' ')}</span>
       </div>
     </aside>}

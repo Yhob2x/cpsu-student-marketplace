@@ -6,7 +6,7 @@ import type { Listing } from '../src/pages-public';
 
 const sample = {
   id: 88, storeName: 'Synthetic Campus Store', description: 'For local tests only',
-  badge: 'Verified CPSU community member', createdAt: '2026-11-17T00:00:00Z',
+  badge: 'Active seller', badgeReason: 'Based on 1 published listing. Activity label only.', createdAt: '2026-11-17T00:00:00Z',
   listingCount: 1, follow: {count: 2, isFollowing: false, available: true},
   campus: {code:'MAIN', name:'CPSU Main Campus'},
   listings: [{id: 10, title:'Textbook', category:{name:'Books'},type:'physical_product'} as Listing],
@@ -50,19 +50,31 @@ describe('public store messaging CTA and real categories',()=>{
     }
     expect(followed).toContain('aria-pressed="true"');
     expect(unfollowed).toContain('aria-pressed="false"');
-    expect(actionRow(followed)).toContain('Following');
-    expect(actionRow(unfollowed)).toContain('Follow');
-    expect(actionRow(updating)).toContain('Updating');
+    expect(actionRow(followed)).toContain('aria-label="Following"');
+    expect(actionRow(unfollowed)).toContain('aria-label="Follow"');
+    expect(actionRow(updating)).toContain('aria-label="Updating follow"');
+    expect(actionRow(followed)).not.toContain('Following</button>');
     expect(followed.indexOf('storefront-follow-notices')).toBeGreaterThan(followed.indexOf('storefront-owner-actions'));
     expect(followed.indexOf('storefront-follow-notices')).toBeLessThan(followed.indexOf('storefront-facts'));
   });
-  test('owner edit is primary and browsing remains a real in-page link',()=>{
+  test('owner edit stays available and redundant browse action is removed',()=>{
     const html = draw({}, {isOwner:true,canChat:false});
     const actions = html.match(/<div class="storefront-owner-actions">([\s\S]*?)<\/div>/)?.[1] ?? '';
     expect(actions).toContain('class="btn storefront-edit-action"');
-    expect(actions).toContain('class="storefront-browse-action"');
-    expect(actions).toContain('href="#storefront-listings"');
-    expect(actions.indexOf('Edit my store')).toBeLessThan(actions.indexOf('Browse listings'));
+    expect(actions).toContain('Edit my store');
+    expect(actions).not.toContain('storefront-browse-action');
+    expect(html).toContain('id="storefront-listings"');
+  });
+  test('buyer store actions are icons with accessible names, without browse link',()=>{
+    const html = draw();
+    const actions = html.match(/<div class="storefront-owner-actions">([\s\S]*?)<\/div>/)?.[1] ?? '';
+    expect(actions).toContain('aria-label="Follow"');
+    expect(actions).toContain('aria-label="Chat with seller"');
+    expect(actions).toContain('aria-label="Appreciate this store');
+    expect(actions).toContain('storefront-icon-action');
+    expect(actions).not.toContain('Browse listings');
+    expect(actions).not.toContain('Chat with seller</button>');
+    expect(actions).not.toContain('Follow</button>');
   });
   test('store owner or staff does not get buyer chat action',()=>{
     expect(draw({}, {isOwner:true,canChat:false})).not.toContain('Chat with seller');

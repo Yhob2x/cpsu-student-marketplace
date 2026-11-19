@@ -43,6 +43,7 @@ export const pushDeliveryReady = pushPolicy.deliveryEnabled;
 const IMPORTANT_TRANSACTION_EVENTS = new Set([
   'transaction.requested', 'transaction.accepted', 'transaction.rejected',
   'transaction.meetup_confirmed', 'transaction.completion_confirmed', 'transaction.cancelled',
+  'transaction.meetup_location_shared', 'transaction.meetup_location_revised',
 ]);
 
 export function categoryForNotice(type: string): PushCategory | null {

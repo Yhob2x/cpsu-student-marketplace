@@ -1,0 +1,237 @@
+/* Storefront-only visual hierarchy: icon actions, facts and listing controls.
+   Keep interactions, API state, existing layout breakpoints and brand tokens. */
+.storefront .storefront-identity-content {
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  column-gap: clamp(12px, 2vw, 24px);
+  min-height: 116px;
+  padding-bottom: 20px;
+}
+.storefront .storefront-primary { min-width: 0; gap: 15px; }
+.storefront .storefront-primary-text { padding-top: 10px; }
+.storefront .storefront-primary h1 { font-size: clamp(1.6rem, 2.1vw, 2.05rem); line-height: 1.16; }
+.storefront .storefront-campus { gap: 7px; margin-bottom: 6px; }
+.storefront .storefront-affiliation { gap: 7px; font-weight: 650; }
+
+/* Three equal, icon-only targets with no permanent strokes or outlines.
+   Active and hover surfaces convey state without changing button geometry. */
+.storefront .storefront-owner-actions {
+  display: inline-flex;
+  justify-self: end;
+  align-items: center;
+  flex-wrap: nowrap;
+  width: max-content;
+  gap: 5px;
+}
+.storefront .storefront-owner-actions .btn.storefront-icon-action,
+.storefront .storefront-owner-actions .store-appreciation-button.storefront-icon-action {
+  display: inline-grid;
+  place-items: center;
+  flex: 0 0 46px;
+  width: 46px;
+  min-width: 46px;
+  height: 46px;
+  min-height: 46px;
+  padding: 0;
+  border: 0;
+  border-radius: 11px;
+  background: transparent;
+  color: var(--forest);
+  box-shadow: none;
+  line-height: 1;
+  cursor: pointer;
+}
+.storefront .storefront-owner-actions .store-appreciation {
+  flex: 0 0 46px;
+  width: 46px;
+  min-width: 46px;
+  height: 46px;
+}
+.storefront .storefront-owner-actions .btn.storefront-icon-action svg {
+  display: block;
+  flex-shrink: 0;
+}
+.storefront .storefront-owner-actions .btn.storefront-icon-action:is([aria-pressed="true"], [aria-expanded="true"]),
+.storefront .storefront-owner-actions .store-appreciation-button.storefront-icon-action[aria-pressed="true"] {
+  border: 0;
+  background: var(--surface-soft);
+  color: var(--forest);
+}
+.storefront .storefront-owner-actions .btn.storefront-icon-action:disabled { cursor: not-allowed; opacity: .45; }
+.storefront .storefront-owner-actions .store-appreciation.is-unavailable .store-appreciation-button { opacity: .72; }
+.storefront .storefront-owner-actions .btn.storefront-icon-action:focus-visible {
+  outline: 3px solid var(--focus-green);
+  outline-offset: 2px;
+}
+@media (hover: hover) and (pointer: fine) {
+  .storefront .storefront-owner-actions .btn.storefront-icon-action:hover:not(:disabled) {
+    border: 0;
+    background: var(--surface-soft);
+  }
+}
+
+/* Quiet, evenly spaced facts. The counts carry the emphasis, not separators. */
+.storefront .storefront-facts {
+  grid-template-columns: repeat(auto-fit, minmax(135px, 1fr));
+  gap: 12px 16px;
+  padding-block: 16px;
+}
+.storefront .storefront-facts > div {
+  min-width: 0;
+  gap: 5px;
+  padding: 0;
+  border: 0;
+}
+.storefront .storefront-facts span { font-size: .77rem; line-height: 1.4; }
+.storefront .storefront-facts strong,
+.storefront .storefront-facts .storefront-follow-count { font-size: 1rem; line-height: 1.35; }
+
+/* One unmistakable listings heading, one type switcher and a secondary search. */
+.storefront .storefront-products-heading { margin-bottom: 15px; }
+.storefront .storefront-products-heading h2 { margin: 0; }
+.storefront .storefront-navigation { gap: 12px; padding-bottom: 14px; margin-bottom: 18px; }
+.storefront .storefront-toolbar { gap: 12px; }
+.storefront .storefront-tabs {
+  display: inline-flex;
+  width: fit-content;
+  padding: 3px;
+  gap: 3px;
+  border-radius: 11px;
+  background: var(--surface-soft);
+}
+.storefront .storefront-tabs button {
+  border: 0;
+  border-radius: 8px;
+  min-height: 42px;
+  padding-inline: 15px;
+  font-weight: 650;
+}
+.storefront .storefront-tabs button[aria-pressed="true"] {
+  background: var(--forest);
+  color: var(--paper);
+  border: 0;
+}
+.storefront .storefront-browser { flex: 0 1 300px; min-width: 200px; }
+.storefront .storefront-search { min-height: 46px; border-radius: 10px; }
+.storefront .storefront-search input { height: 44px; }
+.storefront .storefront-category-strip { gap: 12px; }
+.storefront .storefront-category-tabs { gap: 7px; padding-bottom: 8px; scroll-padding-inline: 3px; }
+.storefront .storefront-category-tabs button {
+  min-height: 40px;
+  padding: 8px 13px;
+  font-weight: 600;
+  background: transparent;
+}
+.storefront .storefront-category-tabs button[aria-pressed="true"] {
+  background: var(--forest);
+  color: var(--paper);
+}
+.storefront .storefront-listings .product-card .body { padding-inline: 10px; }
+
+@media (min-width: 701px) and (max-width: 1120px) {
+  .storefront .storefront-identity-content { grid-template-columns: minmax(0, 1fr) auto; }
+  .storefront .storefront-owner-actions { justify-self: end; }
+}
+@media (max-width: 700px) {
+  .storefront .storefront-identity-content {
+    grid-template-columns: minmax(0, 1fr);
+    row-gap: 10px;
+    padding-bottom: 16px;
+  }
+  .storefront .storefront-primary { gap: 11px; }
+  .storefront .storefront-primary h1 { font-size: clamp(1.35rem, 5vw, 1.65rem); }
+  .storefront .storefront-owner-actions {
+    display: flex;
+    justify-self: start;
+    justify-content: flex-start;
+    width: max-content;
+    gap: 6px;
+    margin-left: -2px;
+  }
+  .storefront .storefront-owner-actions .btn.storefront-icon-action,
+  .storefront .storefront-owner-actions .store-appreciation-button.storefront-icon-action {
+    flex: 0 0 46px;
+    width: 46px;
+    min-width: 46px;
+  }
+  .storefront .storefront-facts {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px 12px;
+    padding: 15px;
+  }
+  .storefront .storefront-facts > div,
+  .storefront .storefront-facts > div:nth-of-type(3n + 1),
+  .storefront .storefront-facts > div:nth-of-type(2n + 1) { border: 0; padding: 0; }
+  .storefront .storefront-tabs { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); width: 100%; }
+  .storefront .storefront-tabs button { min-width: 0; padding-inline: 7px; }
+  .storefront .storefront-browser { flex: 1 1 100%; min-width: 0; }
+  .storefront .storefront-category-strip { grid-template-columns: minmax(0, 1fr); gap: 5px; }
+  .storefront .storefront-listings .product-card .body { padding-inline: 8px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .storefront .storefront-owner-actions .btn.storefront-icon-action { transition: none; }
+}
+/* Store name and actions now share the same semantic heading row.
+   Wrap naturally for long store names without moving the actions offscreen. */
+.storefront .storefront-identity-content { grid-template-columns: minmax(0, 1fr); }
+.storefront .storefront-primary { width: 100%; }
+.storefront .storefront-primary-text { flex: 1 1 auto; min-width: 0; }
+.storefront .storefront-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  flex-wrap: wrap;
+  gap: 2px 12px;
+  min-width: 0;
+  margin-bottom: 4px;
+}
+.storefront .storefront-title-row h1 {
+  flex: 0 1 auto;
+  min-width: 0;
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+.storefront .storefront-title-row .storefront-owner-actions {
+  flex: 0 0 auto;
+  justify-self: auto;
+  justify-content: flex-start;
+  width: auto;
+  margin: 0;
+}
+/* Add a real API-backed count beside the appreciation heart; don't show an
+   invented zero while the server is disabled or still loading. */
+.storefront .storefront-title-row .store-appreciation {
+  flex: 0 0 auto;
+  width: auto;
+  min-width: 46px;
+}
+.storefront .storefront-title-row .store-appreciation-button.storefront-icon-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  width: auto;
+  min-width: 46px;
+  padding: 0 9px;
+  gap: 5px;
+}
+.storefront .storefront-title-row .store-appreciation-count {
+  display: inline-block;
+  font-size: .8rem;
+  font-weight: 700;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  opacity: 1;
+}
+@media (min-width: 701px) and (max-width: 1120px) {
+  .storefront .storefront-identity-content { grid-template-columns: minmax(0, 1fr); }
+}
+@media (max-width: 700px) {
+  .storefront .storefront-title-row { gap: 2px 8px; }
+  .storefront .storefront-title-row .storefront-owner-actions { margin: 0; }
+  .storefront .storefront-title-row .store-appreciation-button.storefront-icon-action {
+    flex: 0 0 auto;
+    width: auto;
+    min-width: 46px;
+  }
+}

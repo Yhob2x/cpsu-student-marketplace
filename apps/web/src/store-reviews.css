@@ -1,7 +1,7 @@
 .store-reviews-section { border-top: 1px solid var(--line); padding-top: 1.15rem; display: grid; gap: .75rem; }
-.store-reviews-heading { display:flex; align-items:baseline; justify-content:space-between; flex-wrap:wrap; gap: .65rem 1.2rem; }
+.store-reviews-heading { display:flex; align-items:baseline; justify-content:space-between; flex-wrap:wrap; gap: var(--ui-space-3) 1.2rem; }
 .store-reviews-heading h2 { margin: 0; font-size: 1.25rem; }
-.store-review-summary { display:flex; flex-wrap:wrap; align-items:center; gap: .4rem .75rem; }
+.store-review-summary { display:flex; flex-wrap:wrap; align-items:center; gap: var(--ui-space-2) .75rem; }
 .store-review-summary strong { font-size: var(--ui-type-lg); font-variant-numeric:tabular-nums; }
 .store-review-summary > span:last-child { font-size:var(--ui-type-sm); color:var(--ink-soft); }
 .store-rating-stars { display:inline-flex; align-items:center; gap:.05em; color: var(--color-warning-ink); font-size:1rem; letter-spacing:.01em; }
@@ -14,23 +14,23 @@
 .store-review-distribution-row progress::-webkit-progress-bar { background: var(--surface-soft); border-radius: 1rem; }
 .store-review-distribution-row progress::-webkit-progress-value { background: var(--forest); border-radius: 1rem; }
 .store-review-distribution-row progress::-moz-progress-bar { background: var(--forest); border-radius: 1rem; }
-.store-review-list { display:grid; gap:.65rem; }
+.store-review-list { display:grid; gap:var(--ui-space-3); }
 .store-review-row { padding:1rem 0; border-bottom:1px solid var(--line); overflow-wrap:anywhere; }
-.store-review-meta { display:flex; align-items:center; flex-wrap:wrap; gap:.35rem var(--ui-space-3); color:var(--ink-soft); font-size:var(--ui-type-xs); }
+.store-review-meta { display:flex; align-items:center; flex-wrap:wrap; gap:var(--ui-space-1) var(--ui-space-3); color:var(--ink-soft); font-size:var(--ui-type-xs); }
 .store-review-row p { max-width:75ch; margin:.5rem 0 0; white-space:pre-wrap; line-height:1.5; }
 .store-review-pagination { display:flex; align-items:center; justify-content:center; flex-wrap:wrap; gap:.75rem; }
 .store-rating-form { display:grid; gap:1rem; }
-.store-review-picker { border:1px solid var(--line); border-radius:var(--ui-radius-md); display:flex; flex-wrap:wrap; gap:.6rem; padding:.85rem; }
-.store-review-picker legend { padding:.15rem .4rem; font-weight:700; }
-.store-review-picker label { min-height:44px; display:flex; align-items:center; gap:.35rem; padding:var(--ui-space-2); border-radius:var(--ui-radius-sm); font-size:var(--ui-type-sm); cursor:pointer; }
+.store-review-picker { border:1px solid var(--line); border-radius:var(--ui-radius-md); display:flex; flex-wrap:wrap; gap:var(--ui-space-2); padding:var(--ui-space-3); }
+.store-review-picker legend { padding:.15rem var(--ui-space-2); font-weight:700; }
+.store-review-picker label { min-height:44px; display:flex; align-items:center; gap:var(--ui-space-1); padding:var(--ui-space-2); border-radius:var(--ui-radius-sm); font-size:var(--ui-type-sm); cursor:pointer; }
 .store-review-picker label:has(input:checked) { background:var(--surface-soft); border:1px solid var(--forest); }
 .store-review-picker input { width:18px; height:18px; accent-color:var(--forest); }
 .store-transaction-review { display:grid; gap:.75rem; }
 .store-transaction-review h2 { margin:0; }
-.store-review-own-status { display:grid; gap:.4rem; }
+.store-review-own-status { display:grid; gap:var(--ui-space-2); }
 .store-review-own-status p { margin:0; }
 .store-review-admin { display:grid; gap:1rem; }
-.store-review-admin-card { display:grid; gap:.6rem; }
+.store-review-admin-card { display:grid; gap:var(--ui-space-2); }
 .store-review-admin-card h3 { margin:0; font-size:1rem; }
 .store-review-admin-card p { margin:0; overflow-wrap:anywhere; }
 @media(max-width:480px){ .store-review-summary { width:100%; } .store-review-picker { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); } }
@@ -41,7 +41,7 @@
 .store-review-picker {
   align-items: center;
   gap: .25rem;
-  padding: .65rem var(--ui-space-3) var(--ui-space-3);
+  padding: var(--ui-space-3) var(--ui-space-3) var(--ui-space-3);
 }
 .store-review-picker .store-review-star-option {
   position: relative;
@@ -79,7 +79,7 @@
 }
 .store-review-picker-caption {
   flex: 1 0 100%;
-  padding: .35rem .15rem 0;
+  padding: var(--ui-space-1) .15rem 0;
   font-size: var(--ui-type-sm);
   color: var(--ink-soft);
   line-height: 1.4;
@@ -94,7 +94,7 @@
 
 /* Small, task-led empty state: icon and text beside one meaningful action. */
 .store-review-empty {display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:.75rem 1.25rem;padding:clamp(1rem,2vw,1.35rem) clamp(1rem,2vw,1.4rem);border:1px solid var(--line);border-radius:12px;background:var(--paper)}
-.store-review-empty-intro {display:flex;align-items:center;gap:.85rem;min-width:0}
+.store-review-empty-intro {display:flex;align-items:center;gap:var(--ui-space-3);min-width:0}
 .store-review-empty-icon {display:grid;flex:0 0 44px;place-items:center;width:44px;height:44px;border-radius:var(--ui-radius-md);background:var(--surface-soft);color:var(--forest)}
 .store-review-empty-copy {display:grid;gap:var(--ui-space-1);min-width:0}
 .store-review-empty-copy strong {font-size:var(--ui-type-md);line-height:1.35;color:var(--ink)}
@@ -102,7 +102,7 @@
 .store-review-entry {
   display: grid;
   justify-items: start;
-  gap: .85rem;
+  gap: var(--ui-space-3);
   min-width: 0;
 }
 .store-review-write-button {
@@ -115,7 +115,7 @@
 .store-review-entry-notice { margin: 0; font-size: var(--ui-type-sm); line-height: 1.5; }
 .store-review-entry-panel {
   display: grid;
-  gap: .9rem;
+  gap: var(--ui-space-4);
   width: 100%;
   max-width: 650px;
   padding: clamp(1rem, 2vw, 1.3rem);
@@ -143,7 +143,7 @@
 
 /* Expanded review form spans both columns; on mobile, actions stack. */
 .store-review-empty .store-review-entry {display:contents}
-.store-review-empty .store-review-write-button {grid-column:2;grid-row:1;justify-self:end;padding-inline:1.1rem}
+.store-review-empty .store-review-write-button {grid-column:2;grid-row:1;justify-self:end;padding-inline:var(--ui-space-4)}
 .store-review-empty .store-review-entry-panel {grid-column:1/-1;width:100%;max-width:52rem;text-align:left;justify-items:stretch}
 .store-review-empty .store-review-entry-notice {grid-column:1/-1}
 @media(max-width:620px){

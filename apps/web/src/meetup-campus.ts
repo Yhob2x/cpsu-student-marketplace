@@ -1,4 +1,4 @@
-import type { MeetupPoint } from './meetup-location';
+﻿import type { MeetupPoint } from './meetup-location';
 
 // CPSU campus approximate map centers, based on the satellite-campus locations
 // table: https://edcom2.gov.ph/media/2025/01/11_ALMADEN-Economics-of-Satellite-Campuses.pdf
@@ -22,7 +22,7 @@ export const NEGROS_OVERVIEW: MeetupPoint = { lat: 10.12, lng: 122.87 };
 export function campusMapCenter(campusName?: string | null): MeetupPoint | null {
   if (!campusName) return null;
   const normalized = campusName.toLowerCase()
-    .replace(/^(?:central philippines state university|cpsu)\s*[-–]?\s*/, '')
+    .replace(/^(?:central philippines state university|cpsu)\s*[-]?\s*/, '')
     .replace(/\bcampus\b/g, '')
     .replace(/\bcity\b/g, '')
     .replace(/[^a-z0-9]/g, '');

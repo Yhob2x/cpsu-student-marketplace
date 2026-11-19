@@ -1,3 +1,4 @@
+import { LegacyButton } from './components/ui/legacy-button';
 import { Field, Panel } from './components/ui/primitives';
 import { useEffect, useState } from 'react';
 import { api, explain } from './api';
@@ -107,7 +108,7 @@ export function ManagedContentAdmin() {
       </div>
       {guidelinesLoading && <p role="status">Loading guidelines…</p>}
       {guidelinesError && <p className="err" role="alert">{guidelinesError}{' '}
-        <button className="btn ghost" type="button" disabled={guidelinesLoading} onClick={() => void loadGuidelines()}>Retry guidelines</button>
+        <LegacyButton className="ghost" type="button" disabled={guidelinesLoading} onClick={() => void loadGuidelines()}>Retry guidelines</LegacyButton>
       </p>}
       {guidelines && <Field>Draft text <span className="muted">Use # at the start of a line for a section heading. Plain text only.</span>
         <textarea value={draft} onChange={e => setDraft(e.target.value)} maxLength={10000} rows={15}
@@ -115,12 +116,12 @@ export function ManagedContentAdmin() {
       </Field>}
       {guidelines && draft !== guidelines.draftBody && <p className="muted">You have unsaved changes.</p>}
       {guidelines && <div className="row">
-        <button type="button" className="btn ghost"
+        <LegacyButton type="button" className="ghost"
           disabled={guidelinesBusy || guidelinesLoading || Boolean(guidelinesError) || !draft.trim() || draft === guidelines.draftBody}
-          onClick={saveGuidelines}>Save draft</button>
-        <button type="button" className="btn"
+          onClick={saveGuidelines}>Save draft</LegacyButton>
+        <LegacyButton type="button" className=""
           disabled={guidelinesBusy || guidelinesLoading || Boolean(guidelinesError) || !guidelines.draftBody || draft !== guidelines.draftBody || draft === guidelines.publishedBody}
-          onClick={publishGuidelines}>Publish saved draft</button>
+          onClick={publishGuidelines}>Publish saved draft</LegacyButton>
       </div>}
       {guidelinesNotice && <p role="status" className="muted">{guidelinesNotice}</p>}
     </Panel>
@@ -130,15 +131,15 @@ export function ManagedContentAdmin() {
       <p className="muted">Drafts stay private. Archived announcements disappear from student view.</p>
       {announcementsLoading && <p role="status">Loading announcements…</p>}
       {announcementsError && <p className="err" role="alert">{announcementsError}{' '}
-        <button className="btn ghost" type="button" disabled={announcementsLoading}
-          onClick={() => void loadAnnouncements()}>Retry announcements</button>
+        <LegacyButton className="ghost" type="button" disabled={announcementsLoading}
+          onClick={() => void loadAnnouncements()}>Retry announcements</LegacyButton>
       </p>}
       {announcementsNotice && <p role="status" className="muted">{announcementsNotice}</p>}
       {announcementsReady && <div className="admin-content-grid">
         <div className="admin-content-list">
-          <button type="button" className="btn ghost"
+          <LegacyButton type="button" className="ghost"
             disabled={announcementsBusy || announcementsLoading || Boolean(announcementsError)}
-            onClick={() => select(null)}>New announcement</button>
+            onClick={() => select(null)}>New announcement</LegacyButton>
           {announcements.map(a => <button type="button" key={a.id} className="admin-content-item"
             aria-pressed={selectedId === a.id} disabled={announcementsBusy || announcementsLoading || Boolean(announcementsError)}
             onClick={() => select(a)}>
@@ -146,27 +147,27 @@ export function ManagedContentAdmin() {
             <span>{a.status}{a.pendingBody != null ? ' · unpublished edits' : ''}</span>
           </button>)}
         </div>
-        <div className="panel stack">
+        <Panel className="stack">
           <Field>Title<input value={title} onChange={e => setTitle(e.target.value)} maxLength={120}
             disabled={announcementsBusy || announcementsLoading || Boolean(announcementsError) || selected?.status === 'archived'} /></Field>
           <Field>Message<textarea value={body} onChange={e => setBody(e.target.value)} maxLength={2000} rows={7}
             disabled={announcementsBusy || announcementsLoading || Boolean(announcementsError) || selected?.status === 'archived'} /></Field>
           <div className="row">
-            <button className="btn ghost" type="button"
+            <LegacyButton className="ghost" type="button"
               disabled={announcementsBusy || announcementsLoading || Boolean(announcementsError) || selected?.status === 'archived' || !title.trim() || !body.trim()}
-              onClick={saveAnnouncement}>Save draft</button>
+              onClick={saveAnnouncement}>Save draft</LegacyButton>
             {selected && selected.status !== 'archived' && <>
-              <button className="btn" type="button"
+              <LegacyButton className="" type="button"
                 disabled={announcementsBusy || announcementsLoading || Boolean(announcementsError) ||
                   title !== (selected.pendingTitle ?? selected.title) || body !== (selected.pendingBody ?? selected.body) ||
                   (selected.status === 'published' && selected.pendingBody == null)}
-                onClick={() => changeAnnouncement('publish')}>Publish saved version</button>
-              <button className="btn danger" type="button"
+                onClick={() => changeAnnouncement('publish')}>Publish saved version</LegacyButton>
+              <LegacyButton className="danger" type="button"
                 disabled={announcementsBusy || announcementsLoading || Boolean(announcementsError)}
-                onClick={() => changeAnnouncement('archive')}>Archive</button>
+                onClick={() => changeAnnouncement('archive')}>Archive</LegacyButton>
             </>}
           </div>
-        </div>
+        </Panel>
       </div>}
     </section>
   </div>;

@@ -63,7 +63,7 @@
   font-size: var(--ui-type-sm);
   font-weight: var(--ui-weight-bold);
   letter-spacing: 0;
-  margin: var(--ui-space-2) 0 .6rem;
+  margin: var(--ui-space-2) 0 var(--ui-space-2);
 }
 .site-foot--refined .footer-links a {
   display: flex;

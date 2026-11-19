@@ -1,3 +1,4 @@
+import { Field, Panel } from './components/ui/primitives';
 import { useEffect, useRef, useState, type FormEvent, type ReactNode } from 'react';
 import { api, ApiError, explain } from './api';
 import { showActionFeedback } from './action-feedback';
@@ -138,7 +139,7 @@ export function TransactionStoreReview({ transactionId, onSubmitted }: {
         message: explain(e) });
     } finally { setSaving(false); inFlight.current = false; }
   };
-  return <section className="panel store-transaction-review" aria-labelledby="transaction-review-heading">
+  return <Panel as="section" className="store-transaction-review" aria-labelledby="transaction-review-heading">
     <h2 id="transaction-review-heading">Rate this store</h2>
     {loading && <p role="status">Checking review eligibility…</p>}
     {!loading && data && !data.available && <p className="muted">Store ratings are not enabled yet.</p>}
@@ -158,11 +159,11 @@ export function TransactionStoreReview({ transactionId, onSubmitted }: {
         </label>)}
         <span className="store-review-picker-caption" role="status">{rating ? `${rating} of 5 stars selected` : 'Choose 1–5 stars'}</span>
       </fieldset>
-      <label className="field">Written review (optional)
+      <Field>Written review (optional)
         <textarea value={body} maxLength={800} rows={3} disabled={saving}
           placeholder="Describe your experience with this store. Avoid personal contact details."
           onChange={e => setBody(e.target.value)} />
-      </label>
+      </Field>
       <button type="submit" className="btn" disabled={saving || rating < 1}>{saving ? 'Submitting…' : 'Submit store rating'}</button>
     </form>}
     {!loading && data?.available && !data.eligible && !data.review &&
@@ -171,7 +172,7 @@ export function TransactionStoreReview({ transactionId, onSubmitted }: {
         : 'This transaction is not currently eligible for a new review.'}</p>}
     {notice && <p role="status">{notice}</p>}
     {error && <p className="err" role="alert">{error} <button type="button" className="btn ghost" onClick={load}>Retry</button></p>}
-  </section>;
+  </Panel>;
 }
 
 type QueueReview = Review & { store: { storeName: string; campusId: number };
@@ -225,16 +226,16 @@ export function StoreReviewModeration() {
     {error && <p className="err" role="alert">{error} <button type="button" className="btn ghost" onClick={() => void load()}>Retry</button></p>}
     {loading && <p role="status">Loading store ratings…</p>}
     {!loading && !error && items.length === 0 && <p className="muted">No reviews in this category.</p>}
-    {!loading && !error && items.map(item => <article className="panel store-review-admin-card" key={item.id}>
+    {!loading && !error && items.map(item => <Panel as="article" className="store-review-admin-card" key={item.id}>
       <h3>{item.store.storeName} — {item.transaction.listing.title}</h3>
       <RatingStars value={item.rating} />
       <p className="muted">Review #{item.id} · {new Date(item.createdAt).toLocaleDateString('en-PH')}</p>
       <p>{item.body || 'Star rating only — no written review.'}</p>
-      <label className="field">Decision reason (at least 10 characters)
+      <Field>Decision reason (at least 10 characters)
         <textarea value={reasons[item.id] ?? ''} maxLength={500} disabled={busy !== null}
           placeholder="Record why this review is appropriate or violates marketplace rules"
           onChange={event => setReasons(prev => ({ ...prev, [item.id]: event.target.value }))} />
-      </label>
+      </Field>
       <div className="row">{mode === 'pending' ? <>
         <button className="btn" disabled={(reasons[item.id] || '').trim().length < 10 || busy !== null}
           onClick={() => void decide(item.id, 'published')}>Approve review</button>
@@ -242,7 +243,7 @@ export function StoreReviewModeration() {
           onClick={() => void decide(item.id, 'rejected')}>Reject review</button>
       </> : <button className="btn danger" disabled={(reasons[item.id] || '').trim().length < 10 || busy !== null}
         onClick={() => void decide(item.id, 'hidden')}>Hide review</button>}</div>
-    </article>)}
+    </Panel>)}
     {!error && !loading && (page > 1 || hasMore) && <nav className="row" aria-label="Moderated review pages">
       <button type="button" className="btn ghost" disabled={page === 1 || busy !== null} onClick={() => setPage(p => p - 1)}>Previous</button>
       <span>Page {page}</span>

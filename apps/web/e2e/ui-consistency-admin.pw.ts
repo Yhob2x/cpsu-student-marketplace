@@ -53,9 +53,22 @@ for (const [section, heading, navigationLabel] of sections) {
     expect(metrics.overflow, 'Unexpected horizontal overflow').toBeLessThanOrEqual(0);
     expect(metrics.undersized, JSON.stringify(metrics.undersized)).toEqual([]);
 
-    const accessibility = await new AxeBuilder({ page })
-      .withTags(['wcag2a','wcag2aa','wcag21a','wcag21aa','wcag22aa'])
-      .analyze();
+    let accessibility: Awaited<ReturnType<AxeBuilder['analyze']>> | undefined;
+    for (let attempt = 0; attempt < 2; attempt++) {
+      try {
+        accessibility = await new AxeBuilder({ page })
+          .withTags(['wcag2a','wcag2aa','wcag21a','wcag21aa','wcag22aa'])
+          .analyze();
+        break;
+      } catch (error) {
+        // An in-flight session refresh can navigate during the axe scan.
+        // Retry only that transient case and reassert the selected admin section.
+        if (attempt !== 0 || !/execution context was destroyed.*navigation/i.test(String(error))) throw error;
+        await page.waitForLoadState('domcontentloaded');
+        await expect(page.locator('#admin-workspace-main h2').filter({ hasText: heading }).first()).toBeVisible();
+      }
+    }
+    if (!accessibility) throw new Error('Accessibility scan did not complete');
     expect(accessibility.violations.map(v => ({
       id: v.id, targets: v.nodes.map(node => node.target),
     }))).toEqual([]);

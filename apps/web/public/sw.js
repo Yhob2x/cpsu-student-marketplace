@@ -1,10 +1,13 @@
 /* Offline shell only. No API requests, user data, or personalized pages are cached. */
-const CACHE_NAME = 'cpsu-offline-shell-v3';
+const CACHE_NAME = 'cpsu-offline-shell-v4';
 const OFFLINE_URL = '/offline.html';
 const OFFLINE_ASSETS = [OFFLINE_URL, '/icons/icon-192.png', '/icons/icon-512.png', '/icons/icon-maskable-192.png', '/icons/icon-maskable-512.png', '/icons/apple-touch-icon.png'];
 self.addEventListener('install', (event) => {
   event.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.addAll(OFFLINE_ASSETS)));
-  self.skipWaiting();
+  // Updates stay waiting until the student chooses to reload safely.
+});
+self.addEventListener('message', (event) => {
+  if (event.data?.type === 'CPSU_ACTIVATE_UPDATE') self.skipWaiting();
 });
 self.addEventListener('activate', (event) => {
   event.waitUntil((async () => {
@@ -38,6 +41,9 @@ self.addEventListener('push', (event) => {
   event.waitUntil((async () => {
     let detail = {};
     try { detail = event.data ? event.data.json() : {}; } catch { /* Use generic fallback. */ }
+    // A provider may deliver JSON null, arrays, or other primitives. Always
+    // display a generic private alert rather than silently losing the event.
+    if (!detail || typeof detail !== 'object' || Array.isArray(detail)) detail = {};
     const url = pushRoute(detail.url);
     const unread = Number.isSafeInteger(detail.unread) ? Math.max(0, detail.unread) : null;
     const allowedBodies = new Set([
@@ -48,12 +54,27 @@ self.addEventListener('push', (event) => {
       'A student sent you a purchase or service request.',
       'The other student updated your transaction.',
     ]);
-    await self.registration.showNotification('CPSU Market', {
+    // Window discovery must never prevent a legitimate alert from displaying.
+    let windows = [];
+    try { windows = await self.clients.matchAll({ type: 'window', includeUncontrolled: true }); }
+    catch { /* No known foreground clients; display the safe alert normally. */ }
+    // Avoid a lock-screen alert for the exact conversation/listing already in focus.
+    const viewingTarget = windows.some((client) => {
+      try {
+        const current = new URL(client.url);
+        return client.focused && current.origin === self.location.origin && current.pathname === url;
+      } catch { return false; }
+    });
+    if (!viewingTarget) await self.registration.showNotification('CPSU Market', {
       body: allowedBodies.has(detail.body) ? detail.body : 'You have a new marketplace update.',
       icon: '/icons/icon-192.png',
       badge: '/icons/icon-maskable-192.png',
       tag: typeof detail.tag === 'string' && /^cpsu-\d+$/.test(detail.tag) ? detail.tag : 'cpsu-update',
-      data: { url },
+      data: {
+        url,
+        id: Number.isSafeInteger(detail.id) && detail.id > 0 ? detail.id : null,
+        type: typeof detail.type === 'string' && /^[a-z]+\.[a-z_]+$/.test(detail.type) ? detail.type : null,
+      },
       renotify: false,
     });
     if (unread !== null && self.navigator && typeof self.navigator.setAppBadge === 'function') {
@@ -62,8 +83,25 @@ self.addEventListener('push', (event) => {
         else if (typeof self.navigator.clearAppBadge === 'function') await self.navigator.clearAppBadge();
       } catch { /* Badging support varies by OS and launcher. */ }
     }
-    const windows = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
-    for (const client of windows) client.postMessage({ type: 'CPSU_PUSH_RECEIVED' });
+    for (const client of windows) {
+      try { client.postMessage({ type: 'CPSU_PUSH_RECEIVED' }); }
+      catch { /* A navigated/closed tab cannot block other foreground updates. */ }
+    }
+  })());
+});
+
+// Subscription rotation cannot be re-enrolled safely in the worker: there is no
+// authenticated student session here. Notify open pages; require user-initiated
+// re-enrollment from their notification settings.
+self.addEventListener('pushsubscriptionchange', (event) => {
+  event.waitUntil((async () => {
+    let windows = [];
+    try { windows = await self.clients.matchAll({ type: 'window', includeUncontrolled: true }); }
+    catch { return; }
+    for (const client of windows) {
+      try { client.postMessage({ type: 'CPSU_PUSH_SUBSCRIPTION_CHANGED' }); }
+      catch { /* A closed or navigated client must not fail this event. */ }
+    }
   })());
 });
 
@@ -71,14 +109,18 @@ self.addEventListener('notificationclick', (event) => {
   event.notification.close();
   const url = new URL(pushRoute(event.notification.data?.url), self.location.origin).href;
   event.waitUntil((async () => {
-    const windows = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
-    const existing = windows.find(client => new URL(client.url).origin === self.location.origin);
+    // OS/browser client enumeration may fail while resuming from a locked phone.
+    // Fall back to a fresh same-origin window rather than losing the tap.
+    let windows = [];
+    try { windows = await self.clients.matchAll({ type: 'window', includeUncontrolled: true }); }
+    catch { /* Open the validated destination in a new window. */ }
+    // Only focus a window already showing the target. Never navigate an unrelated
+    // open tab: it may contain a draft listing or unsent message.
+    const existing = windows.find((client) => {
+      try { return client.url === url; } catch { return false; }
+    });
     if (existing) {
-      try {
-        const page = typeof existing.navigate === 'function' ? await existing.navigate(url) : existing;
-        await (page ?? existing).focus();
-        return;
-      } catch { /* Open a new tab if navigation of an existing client fails. */ }
+      try { await existing.focus(); return; } catch { /* Open a new window. */ }
     }
     await self.clients.openWindow(url);
   })());

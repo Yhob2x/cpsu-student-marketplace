@@ -31,7 +31,7 @@ main:has(.conversation-page) { padding-top: 0; }
 header.top { background: var(--paper); border-bottom-color: var(--line); }
 .strip { background: var(--color-primary-dark); color: var(--color-neutral-200); font-size: var(--ui-type-xs); }
 .strip .wrap { padding-block: var(--ui-space-1); gap: 1.3rem; }
-.strip svg { color: var(--color-warning-ink); }
+.strip svg { color: var(--color-card); }
 .masthead { min-height: 74px; gap: 1.3rem; }
 .brand { font-family: var(--font-body); font-size: 1rem; line-height: 1.12; letter-spacing: -.035em; }
 .brand b { color: var(--ink); }

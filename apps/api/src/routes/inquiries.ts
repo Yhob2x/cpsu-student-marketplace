@@ -55,8 +55,17 @@ r.get('/', async (req, res) => {
     orderBy: paging?.orderBy ?? { createdAt: 'desc' },
     ...(paging ? { take: paging.take } : {}),
   });
+  // A thread is unread while any incoming message remains unseen, even if the
+  // newest message was sent by the current user. Count in one query per page.
+  const unreadGroups = rows.length ? await prisma.inquiryMessage.groupBy({
+    by: ['threadId'],
+    where: { threadId: { in: rows.map(t => t.id) }, authorUserId: { not: uid }, seenAt: null },
+    _count: { _all: true },
+  }) : [];
+  const unreadByThread = new Map(unreadGroups.map(group => [group.threadId, group._count._all]));
   const items = rows.map(t => ({
     id: t.id, status: t.status, listing: t.listing,
+    unreadCount: unreadByThread.get(t.id) ?? 0,
     // The authorized recipient sees the other participant's display name, never credentials.
     otherStudentName: t.buyerUserId === uid ? t.seller.owner.displayName : t.buyer.displayName,
     lastMessage: t.messages[0] ? {

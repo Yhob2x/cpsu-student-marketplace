@@ -30,7 +30,7 @@ header.top .actions .alerts .nav-badge {
   padding: 0 4px;
   margin: 0;
   border: 2px solid var(--paper);
-  font-size: .68rem;
+  font-size: var(--ui-type-xs);
   line-height: 1.15;
 }
 @media (max-width: 860px) {

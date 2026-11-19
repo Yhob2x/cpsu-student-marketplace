@@ -16,10 +16,10 @@ function mockChat(transaction: Record<string, unknown> | null, handoff: Record<s
       ended = true;
       return Response.json({});
     }
-    if (path.endsWith('/inquiries')) return Response.json([{
+    if (path.endsWith('/inquiries')) return Response.json({ items: [{
       id: 9, otherStudentName: 'Sofia', listing: { title: 'Notebook' },
       status: 'open', lastMessage: null,
-    }]);
+    }], hasMore: false, nextBeforeId: null });
     if (path.endsWith('/inquiries/9/messages')) return Response.json({
       thread: { id: 9, otherStudentName: 'Sofia', listingId: 7, status: ended ? 'closed' : 'open' },
       listing: null, messages: [], handoff, transaction,

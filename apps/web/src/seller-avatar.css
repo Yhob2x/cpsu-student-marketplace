@@ -1,6 +1,6 @@
 .seller-avatar { display: inline-grid; place-items: center; flex: 0 0 auto; overflow: hidden; border-radius: 50%; background: var(--surface-soft); color: var(--forest); vertical-align: middle; font-weight: 750; user-select: none; }
 .seller-avatar img { display: block; width: 100%; height: 100%; object-fit: cover; }
-.seller-avatar--small { width: 24px; height: 24px; font-size: .65rem; }
+.seller-avatar--small { width: 24px; height: 24px; font-size: var(--ui-type-xs); }
 .seller-avatar--medium { width: 44px; height: 44px; font-size: var(--ui-type-sm); }
 .seller-avatar--large { width: 78px; height: 78px; font-size: var(--ui-type-xl); }
 .seller-avatar__initials { line-height: 1; }

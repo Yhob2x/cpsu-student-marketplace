@@ -1,4 +1,5 @@
-import { Field } from './components/ui/primitives';
+import { LegacyButton } from './components/ui/legacy-button';
+import { Field, Panel } from './components/ui/primitives';
 import { useEffect, useState, type FormEvent } from 'react';
 import { api, explain } from './api';
 import { showActionFeedback } from './action-feedback';
@@ -90,13 +91,13 @@ export function CatalogAdmin({ onCampusesChange }: { onCampusesChange: () => voi
     <div className="catalog-admin-heading">
       <div><h2 id="catalog-admin-heading">Campuses &amp; categories</h2>
         <p className="muted">Manage what students can choose when posting and exploring listings.</p></div>
-      <button type="button" className="btn ghost" onClick={() => void load()} disabled={loading || Boolean(busy)}>Refresh</button>
+      <LegacyButton type="button" className="ghost" onClick={() => void load()} disabled={loading || Boolean(busy)}>Refresh</LegacyButton>
     </div>
-    {error && <p role="alert" className="err">Couldn't load the catalog. {error} <button type="button" className="btn ghost" onClick={() => void load()}>Retry</button></p>}
+    {error && <p role="alert" className="err">Couldn't load the catalog. {error} <LegacyButton type="button" className="ghost" onClick={() => void load()}>Retry</LegacyButton></p>}
     {actionError && <p role="alert" className="err">Not saved. {actionError}</p>}
     {loading && !data && <p role="status">Loading campuses and categories…</p>}
     {data && <div className="catalog-admin-grid">
-      <div className="panel catalog-admin-panel">
+      <Panel className="catalog-admin-panel">
         <div className="catalog-admin-title"><div><h3>Campuses</h3>
           <p className="muted">Update names, codes, or availability. Existing records are never deleted.</p></div>
           <span className="catalog-admin-count">{data.campuses.length}</span></div>
@@ -106,7 +107,7 @@ export function CatalogAdmin({ onCampusesChange }: { onCampusesChange: () => voi
             <Field>Code<input required minLength={2} maxLength={24} pattern="[A-Za-z0-9_-]+" value={newCampus.code} placeholder="e.g. MAIN" onChange={event => setNewCampus(current => ({ ...current, code: event.target.value }))} /></Field>
             <Field>Campus name<input required minLength={2} maxLength={100} value={newCampus.name} placeholder="Campus name" onChange={event => setNewCampus(current => ({ ...current, name: event.target.value }))} /></Field>
           </div>
-          <button className="btn" disabled={Boolean(busy) || !newCampus.name.trim() || !newCampus.code.trim()} type="submit">{busy === 'add-campus' ? 'Adding…' : 'Add campus'}</button>
+          <LegacyButton className="" disabled={Boolean(busy) || !newCampus.name.trim() || !newCampus.code.trim()} type="submit">{busy === 'add-campus' ? 'Adding…' : 'Add campus'}</LegacyButton>
         </form>
         <div className="catalog-admin-rows">
           {data.campuses.map(campus => <div className="catalog-admin-item" key={campus.id}>
@@ -115,25 +116,25 @@ export function CatalogAdmin({ onCampusesChange }: { onCampusesChange: () => voi
                 <Field>Code<input required minLength={2} maxLength={24} pattern="[A-Za-z0-9_-]+" value={campusDraft.code} onChange={event => setCampusDraft(prev => ({ ...prev, code: event.target.value }))} /></Field>
                 <Field>Campus name<input required minLength={2} maxLength={100} value={campusDraft.name} onChange={event => setCampusDraft(prev => ({ ...prev, name: event.target.value }))} /></Field>
               </div>
-              <div className="catalog-admin-actions"><button className="btn" type="submit" disabled={Boolean(busy)}>Save</button>
-                <button className="btn ghost" type="button" onClick={() => setEditCampus(null)} disabled={Boolean(busy)}>Cancel</button></div>
+              <div className="catalog-admin-actions"><LegacyButton className="" type="submit" disabled={Boolean(busy)}>Save</LegacyButton>
+                <LegacyButton className="ghost" type="button" onClick={() => setEditCampus(null)} disabled={Boolean(busy)}>Cancel</LegacyButton></div>
             </form> : <>
               <div className="catalog-admin-item-header"><div>
                 <strong>{campus.name}</strong><div className="catalog-admin-meta"><span>{campus.code}</span><span>{campus.active ? 'Active' : 'Inactive'}</span></div>
                 <p className="muted">{campus._count.listings} listings · {campus._count.affiliations} affiliations</p>
               </div></div>
               <div className="catalog-admin-actions">
-                <button type="button" className="btn ghost" disabled={Boolean(busy)}
-                  onClick={() => { setEditCampus(campus.id); setEditCategory(null); setCampusDraft({ code: campus.code, name: campus.name }); }}>Edit</button>
-                <button type="button" className="btn ghost" disabled={Boolean(busy)}
-                  onClick={() => void toggleCampus(campus)}>{busy === 'campus-' + campus.id ? 'Saving…' : campus.active ? 'Deactivate' : 'Reactivate'}</button>
+                <LegacyButton type="button" className="ghost" aria-label={`Edit campus ${campus.name}`} disabled={Boolean(busy)}
+                  onClick={() => { setEditCampus(campus.id); setEditCategory(null); setCampusDraft({ code: campus.code, name: campus.name }); }}>Edit</LegacyButton>
+                <LegacyButton type="button" className="ghost" aria-label={`${campus.active ? 'Deactivate' : 'Reactivate'} campus ${campus.name}`} disabled={Boolean(busy)}
+                  onClick={() => void toggleCampus(campus)}>{busy === 'campus-' + campus.id ? 'Saving…' : campus.active ? 'Deactivate' : 'Reactivate'}</LegacyButton>
               </div>
             </>}
           </div>)}
           {!data.campuses.length && <p className="muted">No campuses yet.</p>}
         </div>
-      </div>
-      <div className="panel catalog-admin-panel">
+      </Panel>
+      <Panel className="catalog-admin-panel">
         <div className="catalog-admin-title"><div><h3>Product &amp; service categories</h3>
           <p className="muted">Choose a listing type, then add or edit its categories.</p></div>
           <span className="catalog-admin-count">{data.categories.length}</span></div>
@@ -155,9 +156,9 @@ export function CatalogAdmin({ onCampusesChange }: { onCampusesChange: () => voi
               value={newCategory[selectedKind]}
               onChange={event => setNewCategory(current => ({ ...current, [selectedKind]: event.target.value }))} />
           </Field>
-          <button className="btn" type="submit" disabled={Boolean(busy) || newCategory[selectedKind].trim().length < 2}>
+          <LegacyButton className="" type="submit" disabled={Boolean(busy) || newCategory[selectedKind].trim().length < 2}>
             {busy === 'add-category' ? 'Adding…' : 'Add ' + categoryLabel.toLowerCase() + ' category'}
-          </button>
+          </LegacyButton>
         </form>
         <div className="catalog-admin-rows">
           <p className="catalog-admin-subtitle">{categoryLabel} categories ({filteredCategories.length})</p>
@@ -165,19 +166,19 @@ export function CatalogAdmin({ onCampusesChange }: { onCampusesChange: () => voi
             {editCategory === category.id ? <form onSubmit={event => { event.preventDefault(); void updateCategory(category); }}>
               <Field>Category name<input required minLength={2} maxLength={80} value={categoryDraft}
                 onChange={event => setCategoryDraft(event.target.value)} /></Field>
-              <div className="catalog-admin-actions"><button type="submit" className="btn" disabled={Boolean(busy) || categoryDraft.trim().length < 2}>Save</button>
-                <button className="btn ghost" type="button" onClick={() => setEditCategory(null)} disabled={Boolean(busy)}>Cancel</button></div>
+              <div className="catalog-admin-actions"><LegacyButton type="submit" className="" disabled={Boolean(busy) || categoryDraft.trim().length < 2}>Save</LegacyButton>
+                <LegacyButton className="ghost" type="button" onClick={() => setEditCategory(null)} disabled={Boolean(busy)}>Cancel</LegacyButton></div>
             </form> : <>
               <div className="catalog-admin-item-header"><div><strong>{category.name}</strong>
                 <p className="muted">{category._count.listings} listings</p></div></div>
-              <div className="catalog-admin-actions"><button type="button" className="btn ghost" disabled={Boolean(busy)}
-                onClick={() => { setEditCategory(category.id); setEditCampus(null); setCategoryDraft(category.name); }}>Edit</button></div>
+              <div className="catalog-admin-actions"><LegacyButton type="button" className="ghost" aria-label={`Edit ${categoryLabel.toLowerCase()} category ${category.name}`} disabled={Boolean(busy)}
+                onClick={() => { setEditCategory(category.id); setEditCampus(null); setCategoryDraft(category.name); }}>Edit</LegacyButton></div>
             </>}
           </div>)}
           {!filteredCategories.length && <p className="muted">No {categoryLabel.toLowerCase()} categories yet.</p>}
         </div>
         <p className="muted catalog-admin-footnote">Renaming a category preserves existing listings. Its product or service type cannot be changed after creation.</p>
-      </div>
+      </Panel>
     </div>}
   </section>;
 }

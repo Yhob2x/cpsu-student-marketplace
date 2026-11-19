@@ -1,3 +1,5 @@
+import { LegacyButton } from './components/ui/legacy-button';
+import { Field, Panel } from './components/ui/primitives';
 import { type CSSProperties, FormEvent, useEffect, useRef, useState } from 'react';
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { ApiError, api, explain, peso } from './api';
@@ -146,7 +148,7 @@ export function Home() {
   // Fresh listings always show the newest public listings, even when one is also popular.
   const { popular: top, fresh, services: serviceRows } = selectHomeListings(feed, popular, services);
   return <>
-    {homeError && <div className="panel" role="alert">Some marketplace content could not load. {homeError} <button type="button" className="btn ghost" onClick={loadHome}>Retry</button></div>}
+    {homeError && <Panel className="" role="alert">Some marketplace content could not load. {homeError} <LegacyButton type="button" className="ghost" onClick={loadHome}>Retry</LegacyButton></Panel>}
     <section className="hero home-hero">
       <div className="hero-copy">
         <span className="hero-eyebrow">{copy.heroEyebrow}</span>
@@ -356,8 +358,8 @@ export function Discover() {
         </div>
         {filterError && <div className="explore-sidebar-error" role="alert">
           <p>{filterError}</p>
-          <button type="button" className="btn ghost" disabled={filtersLoading}
-            onClick={() => void loadFilterOptions()}>{filtersLoading ? 'Retrying…' : 'Retry'}</button>
+          <LegacyButton type="button" className="ghost" disabled={filtersLoading}
+            onClick={() => void loadFilterOptions()}>{filtersLoading ? 'Retrying…' : 'Retry'}</LegacyButton>
         </div>}
         <section className="explore-sidebar-section" aria-labelledby="explore-filter-type-title">
           <h3 id="explore-filter-type-title">Listing type</h3>
@@ -459,11 +461,11 @@ export function Discover() {
     </div>
     </section>
 
-    {!isRefreshing && error && <section className="panel stack explore-listing-error" role="alert" aria-label="Listing loading problem">
+    {!isRefreshing && error && <Panel as="section" className="stack explore-listing-error" role="alert" aria-label="Listing loading problem">
       <h2>Could not load listings</h2>
       <p className="muted">{error}</p>
-      <div className="row"><button type="button" className="btn" onClick={() => setRetryRequest(n => n + 1)}>Retry listings</button></div>
-    </section>}
+      <div className="row"><LegacyButton type="button" className="" onClick={() => setRetryRequest(n => n + 1)}>Retry listings</LegacyButton></div>
+    </Panel>}
     {items === null && !priceError && skel}
     {items !== null && items.length === 0 && !isRefreshing && !error && !priceError && total !== null && <div className="empty">
       <h2>No listings match</h2>
@@ -499,12 +501,12 @@ export function ListingDetail() {
       .catch(e => { if (request === loadRequest.current) setLoadError(e); });
   };
   useEffect(() => { loadListing(); return () => { loadRequest.current++; }; }, [id]);
-  if (loadError && !l) return <section className="panel stack" role="alert">
+  if (loadError && !l) return <Panel as="section" className="stack" role="alert">
     <h1>{isPublicNotFound(loadError) ? 'Listing unavailable' : 'Could not load this listing'}</h1>
     <p>{isPublicNotFound(loadError) ? 'This listing may have been removed or is no longer public.' : publicResourceLoadMessage(loadError)}</p>
-    <div className="row">{!isPublicNotFound(loadError) && <button type="button" className="btn" onClick={loadListing}>Retry listing</button>}
+    <div className="row">{!isPublicNotFound(loadError) && <LegacyButton type="button" className="" onClick={loadListing}>Retry listing</LegacyButton>}
       <Link className="btn ghost" to="/explore">Browse listings</Link></div>
-  </section>;
+  </Panel>;
   if (!l) return <ListingDetailSkeleton />;
   const loginForListing = `/login?next=${encodeURIComponent(`/listings/${l.id}`)}`;
   // Saved state comes from the shell (one fetch at sign-in), shared with the hearts on every card.
@@ -605,20 +607,20 @@ export function ListingDetail() {
                     <strong>{isService ? 'Request this service' : 'Request this item'}</strong>
                     <p>Send the seller a request to review, then discuss the arrangements in chat.</p>
                   </div>
-                  <button type="button" className="btn listing-detail-primary-action" disabled={busy || !canRequest}
-                    onClick={() => void requestTransaction()}>{isService ? 'Request service' : 'Request item'}</button>
+                  <LegacyButton type="button" className="listing-detail-primary-action" disabled={busy || !canRequest}
+                    onClick={() => void requestTransaction()}>{isService ? 'Request service' : 'Request item'}</LegacyButton>
                 </div>
                 {!canRequest && <p className="listing-detail-action-help">Requests require a verified CPSU student account.</p>}
                 <div className="listing-detail-message-block">
                   <h3>Message the seller</h3>
-                  <label className="field listing-detail-message-field">
+                  <Field className="listing-detail-message-field">
                     <span>Your message</span>
                     <textarea value={body} onChange={e => setBody(e.target.value)}
                       maxLength={1000} rows={3} placeholder="Hi! Is this still available?" />
-                  </label>
+                  </Field>
                   <div className="listing-detail-message-actions">
-                    <button type="button" className="btn ghost" disabled={busy || !body.trim()}
-                      onClick={() => void send()}>{busy ? 'Sending…' : 'Send message'}</button>
+                    <LegacyButton type="button" className="ghost" disabled={busy || !body.trim()}
+                      onClick={() => void send()}>{busy ? 'Sending…' : 'Send message'}</LegacyButton>
                     {l.images.length === 0 && (isAvailable || saved) && heart}
                   </div>
                 </div>
@@ -629,15 +631,15 @@ export function ListingDetail() {
               <Icon name="flag" size={16}/> Report this listing
             </button>
             {reporting && <div className="listing-detail-report-form">
-              <label className="field"><span>Reason for reporting</span>
+              <Field className=""><span>Reason for reporting</span>
                 <textarea value={reason} onChange={e => setReason(e.target.value)}
                   maxLength={1000} placeholder="Describe the issue (at least 10 characters)" />
-              </label>
+              </Field>
               <div className="row">
-                <button type="button" className="btn danger" disabled={busy || reason.trim().length < 10}
-                  onClick={() => void report()}>Send report</button>
-                <button type="button" className="btn ghost" disabled={busy}
-                  onClick={() => setReporting(false)}>Cancel</button>
+                <LegacyButton type="button" className="danger" disabled={busy || reason.trim().length < 10}
+                  onClick={() => void report()}>Send report</LegacyButton>
+                <LegacyButton type="button" className="ghost" disabled={busy}
+                  onClick={() => setReporting(false)}>Cancel</LegacyButton>
               </div>
             </div>}
           </div>}
@@ -657,6 +659,9 @@ export function StorePage() {
   const { id, slug } = useParams(); const { me } = useMe(); const navigate = useNavigate();
   const [s, setS] = useState<PublicStorefront | null>(null);
   const [loadError, setLoadError] = useState<unknown>(null);
+  const [moreListingsLoading, setMoreListingsLoading] = useState(false);
+  const [moreListingsError, setMoreListingsError] = useState('');
+  const moreListingsLock = useRef(false);
   const loadRequest = useRef(0);
   const [reporting, setReporting] = useState(false); const [reason, setReason] = useState('');
   const [reportBusy, setReportBusy] = useState(false); const [reportError, setReportError] = useState(''); const [reportNotice, setReportNotice] = useState('');
@@ -669,9 +674,11 @@ export function StorePage() {
   const chatLock = useRef(false);
   const loadStore = () => {
     const request = ++loadRequest.current;
+    moreListingsLock.current = false;
+    setMoreListingsLoading(false); setMoreListingsError('');
     setS(null); setLoadError(null);
     const resource = slug ? `/seller-profiles/by-slug/${encodeURIComponent(slug)}` : `/seller-profiles/${id}`;
-    api<PublicStorefront>(resource).then(row => {
+    api<PublicStorefront>(`${resource}?limit=24`).then(row => {
       if (request !== loadRequest.current) return;
       setS(row);
       if (id || (slug && slug !== row.slug)) navigate(`/store/${encodeURIComponent(row.slug)}`, { replace: true });
@@ -679,12 +686,40 @@ export function StorePage() {
       .catch(e => { if (request === loadRequest.current) setLoadError(e); });
   };
   useEffect(() => { loadStore(); return () => { loadRequest.current++; }; }, [id, slug]);
-  if (loadError && !s) return <section className="panel stack" role="alert">
+  const loadMoreListings = async () => {
+    if (!s?.hasMoreListings || !s.nextListingBeforeId || moreListingsLock.current) return;
+    const storeId = s.id;
+    const request = loadRequest.current;
+    moreListingsLock.current = true;
+    setMoreListingsLoading(true); setMoreListingsError('');
+    try {
+      const page = await api<PublicStorefront>(
+        `/seller-profiles/${storeId}?limit=24&beforeId=${s.nextListingBeforeId}`);
+      if (request !== loadRequest.current) return;
+      setS(current => {
+        if (current?.id !== storeId) return current;
+        const known = new Set(current.listings.map(row => row.id));
+        return { ...current,
+          listings: [...current.listings, ...page.listings.filter(row => !known.has(row.id))],
+          listingCount: page.listingCount,
+          hasMoreListings: page.hasMoreListings,
+          nextListingBeforeId: page.nextListingBeforeId };
+      });
+    } catch (error) {
+      if (request === loadRequest.current) setMoreListingsError(explain(error));
+    } finally {
+      if (request === loadRequest.current) {
+        moreListingsLock.current = false;
+        setMoreListingsLoading(false);
+      }
+    }
+  };
+  if (loadError && !s) return <Panel as="section" className="stack" role="alert">
     <h1>{isPublicNotFound(loadError) ? 'Store not found' : 'Could not load this store'}</h1>
     <p>{isPublicNotFound(loadError) ? 'This store is not available.' : publicResourceLoadMessage(loadError)}</p>
-    <div className="row">{!isPublicNotFound(loadError) && <button type="button" className="btn" onClick={loadStore}>Retry store</button>}
+    <div className="row">{!isPublicNotFound(loadError) && <LegacyButton type="button" className="" onClick={loadStore}>Retry store</LegacyButton>}
       <Link className="btn ghost" to="/explore">Browse listings</Link></div>
-  </section>;
+  </Panel>;
   if (!s) return <StorefrontSkeleton />;
   const staff = me?.roles.some(role => ['campus_reviewer', 'university_admin', 'system_admin', 'establishment'].includes(role.role));
   const isOwner = me?.storeId === s.id;
@@ -758,21 +793,22 @@ export function StorePage() {
     onChatSignIn={() => navigate(`/login?next=${encodeURIComponent(publicStorePath)}`)}
     onChat={(listingId, body) => void startStoreChat(listingId, body)}
     chatBusy={chatBusy} chatError={chatError}
+    onLoadMore={() => void loadMoreListings()} moreLoading={moreListingsLoading} moreError={moreListingsError}
     renderListing={l => <ListingCard key={l.id} l={l} />}
     reportSellerSlot={me && !staff && !isOwner ? <div className="storefront-report stack">
-      <div className="row"><button type="button" className="btn ghost storefront-report-trigger"
+      <div className="row"><LegacyButton type="button" className="ghost storefront-report-trigger"
         aria-expanded={reporting} disabled={reportBusy}
         onClick={() => { setReporting(open => !open); setReportError(''); }}>
-        <Icon name="flag" size={16} /> Report this seller</button></div>
+        <Icon name="flag" size={16} /> Report this seller</LegacyButton></div>
       {reporting && <>
         <p className="muted">Report suspected scams, harassment, or rule violations. Describe what happened; reports go to authorized campus reviewers.</p>
-        <label className="field">Why are you reporting this seller?
+        <Field className="">Why are you reporting this seller?
           <textarea value={reason} onChange={e => setReason(e.target.value)} maxLength={1000}
             placeholder="Describe what happened (at least 10 characters)" disabled={reportBusy} />
-        </label>
-        <div className="row"><button type="button" className="btn danger" disabled={reportBusy || reason.trim().length < 10}
-          onClick={() => void reportSeller()}>{reportBusy ? 'Sending report…' : 'Send report'}</button>
-          <button type="button" className="btn ghost" disabled={reportBusy} onClick={() => setReporting(false)}>Cancel</button></div>
+        </Field>
+        <div className="row"><LegacyButton type="button" className="danger" disabled={reportBusy || reason.trim().length < 10}
+          onClick={() => void reportSeller()}>{reportBusy ? 'Sending report…' : 'Send report'}</LegacyButton>
+          <LegacyButton type="button" className="ghost" disabled={reportBusy} onClick={() => setReporting(false)}>Cancel</LegacyButton></div>
       </>}
       {reportNotice && <p role="status">{reportNotice}</p>}{reportError && <p className="err" role="alert">{reportError}</p>}
     </div> : undefined} />
@@ -835,9 +871,9 @@ export function Guidelines() {
     {error && <div className="guidelines-state guidelines-state-error" role="alert">
       <span className="guidelines-state-icon" aria-hidden="true"><Icon name="refresh" size={22} /></span>
       <div><strong>Guidelines couldn't be loaded</strong><p>{error}</p>
-        <button className="btn ghost" type="button" onClick={() => void load()} disabled={loading}>
+        <LegacyButton className="ghost" type="button" onClick={() => void load()} disabled={loading}>
           <Icon name="refresh" size={17} /> {loading ? 'Trying again…' : 'Try again'}
-        </button>
+        </LegacyButton>
       </div>
     </div>}
 

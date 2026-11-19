@@ -197,7 +197,7 @@ input:focus, select:focus, textarea:focus { border-color: var(--leaf); }
 
 /* Listing-card interaction remains stretched-link + independent accessible heart. */
 .listing-grid { gap: clamp(.8rem, 1.65vw, 1.15rem); }
-.rail { gap: var(--ui-space-4); padding: var(--ui-space-1) .15rem .85rem; }
+.rail { gap: var(--ui-space-4); padding: var(--ui-space-1) .15rem var(--ui-space-3); }
 .rail .product-card { flex-basis: 210px; }
 .product-card { background: transparent; border: 0; box-shadow: none; }
 @media (hover: hover) and (pointer: fine) { .product-card:hover { border: 0; transform: none; box-shadow: none; } }
@@ -212,7 +212,7 @@ input:focus, select:focus, textarea:focus { border-color: var(--leaf); }
 .product-card .product-photo .heart-btn[aria-pressed="true"]::before { background: var(--mango); }
 .product-card:focus-within .product-photo { outline-color: var(--color-focus); }
 .product-card .product-photo .heart-btn:focus-visible { outline-color: var(--color-focus); }
-.product-card .body { padding: .85rem .625rem var(--ui-space-2); gap: var(--ui-space-1); }
+.product-card .body { padding: var(--ui-space-3) var(--ui-space-2) var(--ui-space-2); gap: var(--ui-space-1); }
 .product-card h3 { color: var(--ink); font-weight: var(--ui-weight-bold); line-height: 1.36; }
 .product-card .price { color: var(--forest); font-weight: var(--ui-weight-bold); }
 .product-card .seller, .product-card .product-category, .product-card .card-campus { color: var(--ink-soft); }
@@ -299,7 +299,7 @@ a.notif:focus-visible, .inquiry-row:focus-visible { background: var(--color-card
   .hero-actions .btn { padding: var(--ui-space-3) var(--ui-space-4); font-size: var(--ui-type-sm); }
   .hero-search { margin-top: var(--ui-space-4); }
   .hero-art { min-height: 205px; }
-  .hero-art .hero-sticker { position: absolute; z-index: 4; top: auto; right: .3rem; bottom: .1rem; margin: 0; max-width: 62%; padding: .6rem var(--ui-space-3); }
+  .hero-art .hero-sticker { position: absolute; z-index: 4; top: auto; right: .3rem; bottom: .1rem; margin: 0; max-width: 62%; padding: var(--ui-space-2) var(--ui-space-3); }
   .hero-trust { gap: var(--ui-space-2) 1rem; font-size: var(--ui-type-xs); }
   .cat { width: 120px; min-height: 112px; }
   .rail .product-card { flex-basis: 185px; }

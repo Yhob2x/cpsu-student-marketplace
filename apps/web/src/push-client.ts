@@ -1,4 +1,5 @@
 import { api } from './api';
+import { reconcilePushOwnership } from './push-reconciliation';
 
 export type PushPreferences = {
   messages: boolean;
@@ -59,13 +60,11 @@ export async function isSubscriptionOwnedByCurrentAccount(endpoint: string): Pro
 export async function reconcilePushForActiveAccount(stillCurrent: () => boolean): Promise<void> {
   const subscription = await currentSubscription();
   if (!subscription || !stillCurrent()) return;
-  const owned = await isSubscriptionOwnedByCurrentAccount(subscription.endpoint);
-  if (!owned && stillCurrent()) {
-    // Recheck for a concurrent explicit Enable action; never revoke an enrollment
-    // that was just transferred to this authenticated account.
-    const nowOwned = await isSubscriptionOwnedByCurrentAccount(subscription.endpoint);
-    if (!nowOwned && stillCurrent()) await subscription.unsubscribe();
-  }
+  await reconcilePushOwnership(
+    () => isSubscriptionOwnedByCurrentAccount(subscription.endpoint),
+    () => subscription.unsubscribe(),
+    stillCurrent,
+  );
 }
 
 /** Must be called from an explicit, user-activated enable button. */

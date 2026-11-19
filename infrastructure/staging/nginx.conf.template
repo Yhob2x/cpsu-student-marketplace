@@ -60,6 +60,16 @@ server {
         return 404;
     }
 
+    # Content-hashed Vite build output only; never cache HTML or API responses.
+    location ^~ /assets/ {
+        add_header Cache-Control "public, max-age=31536000, immutable" always;
+        try_files $uri =404;
+    }
+    location = /offline.html {
+        add_header Cache-Control "no-cache" always;
+        try_files $uri =404;
+    }
+
     # All app pages share the one React/Vite PWA; no server-side account-data caching.
     location / {
         try_files $uri $uri/ /index.html;

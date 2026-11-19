@@ -120,7 +120,7 @@
   .storefront-facts > div { align-content: start; }
 }
 @media (max-width: 359px) {
-  .home-category-grid .cat { font-size: .65rem; }
+  .home-category-grid .cat { font-size: var(--ui-type-xs); }
 }
 
 /* Restore the mobile floating message launcher above the four-item tab bar.

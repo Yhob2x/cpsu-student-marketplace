@@ -268,7 +268,7 @@
     scrollbar-width: thin;
   }
   .image-zoom-thumb { flex: 0 0 64px; width: 64px; height: 64px; scroll-snap-align: center; }
-  .image-zoom-help { text-align: center; padding: 2px 14px 10px; font-size: .7rem; }
+  .image-zoom-help { text-align: center; padding: 2px 14px 10px; font-size: var(--ui-type-xs); }
 }
 @media (max-width: 360px) {
   .image-zoom-value { min-width: 40px; }

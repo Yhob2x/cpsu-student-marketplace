@@ -93,7 +93,7 @@ main .home-hero h1 em { color: var(--color-primary-dark); }
   }
 }
 .home-listing-section .product-card .body { padding: 14px 14px 16px; }
-.home-listing-section .product-card .price { color: var(--color-primary-dark); }
+.home-listing-section .product-card .price { color: var(--color-primary); }
 .home-listing-section .product-card-arrow {
   background: var(--color-primary-light);
   border-color: transparent;

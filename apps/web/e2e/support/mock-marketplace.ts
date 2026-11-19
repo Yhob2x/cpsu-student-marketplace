@@ -10,13 +10,14 @@ const categories = [
   { id: 1, parentId: null, name: 'Books', listingType: 'physical_product' },
   { id: 2, parentId: null, name: 'Photography', listingType: 'service' },
 ];
-const book = {
+export const syntheticListing = {
   id: 91, type: 'physical_product', title: 'Synthetic calculus textbook',
   description: 'Good condition calculus textbook for student practice.',
   price: 250, priceBasis: 'per item', availability: 'available', status: 'published',
   condition: 'good', category: { id: 1, name: 'Books' }, campus,
   seller: { id: 30, storeName: 'Synthetic Campus Books', avatarUrl: null }, images: [],
 };
+const book = syntheticListing;
 
 export async function mockMarketplace(page: Page, initialPersona: Persona = 'guest') {
   const state = {
@@ -119,11 +120,12 @@ export async function mockMarketplace(page: Page, initialPersona: Persona = 'gue
     } else if (path === '/notifications') {
       data = [];
     } else if (path === '/inquiries' && method === 'GET') {
-      data = state.messages.length ? [{
+      const items = state.messages.length ? [{
         id: 41, status: state.threadStatus, role: 'buyer',
         listing: { id: 91, title: book.title }, otherStudentName: 'Synthetic Seller',
         lastMessage: state.messages.at(-1),
       }] : [];
+      data = { items, hasMore: false, nextBeforeId: null };
     } else if (path === '/inquiries' && method === 'POST') {
       const input = body();
       state.messages.push({ id: 101, body: input.body, mine: true, createdAt: new Date().toISOString(), receipt: 'sent' });

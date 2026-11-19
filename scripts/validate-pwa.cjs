@@ -8,6 +8,8 @@ const publicDir = path.join(web, 'public');
 const manifest = JSON.parse(fs.readFileSync(path.join(publicDir, 'manifest.webmanifest'), 'utf8'));
 const index = fs.readFileSync(path.join(web, 'index.html'), 'utf8');
 const sw = fs.readFileSync(path.join(publicDir, 'sw.js'), 'utf8');
+const offline = fs.readFileSync(path.join(publicDir, 'offline.html'), 'utf8');
+const updateUi = fs.readFileSync(path.join(web, 'src', 'pwa-status.tsx'), 'utf8');
 
 assert.equal(manifest.id, '/');
 assert.equal(manifest.scope, '/');
@@ -25,6 +27,13 @@ assert.match(index, /<link rel="apple-touch-icon" href="\/icons\/apple-touch-ico
 assert.match(sw, /const OFFLINE_URL = '\/offline\.html'/);
 assert.match(sw, /request\.mode !== 'navigate'/);
 assert.match(sw, /url\.pathname\.startsWith\('\/api\/'\)/);
+
+assert.match(sw, /const CACHE_NAME = 'cpsu-offline-shell-v\d+'/);
+assert.match(sw, /CPSU_ACTIVATE_UPDATE/);
+assert.match(sw, /client\.focused/);
+assert.match(updateUi, /userRequestedReload/);
+assert.match(updateUi, /edited\.current/);
+assert.match(offline, /id="repair"/);
 
 const signature = Buffer.from('89504e470d0a1a0a', 'hex');
 const assertPng = (file, expected) => {
@@ -54,5 +63,5 @@ assertPng('icons/apple-touch-icon.png', 180);
 assert.ok(fs.existsSync(path.join(publicDir, 'offline.html')));
 assert.equal(manifest.shortcuts.length, 3);
 assert.deepEqual(manifest.shortcuts.map(x => x.url), ['/explore', '/dashboard', '/inquiries']);
-console.log('✓ Manifest, Apple metadata, install shortcuts and offline-only service worker contracts');
+console.log('✓ Manifest, Apple metadata, install shortcuts, update safeguards and offline repair contracts');
 console.log('✓ All PWA assets validated');

@@ -718,10 +718,13 @@ export function Inquiries() {
     {error && rows === null && <ErrorState title="Messages could not load" retry={load} retryText="Try again">{error}</ErrorState>}
     {error && rows !== null && <ErrorState title="Could not refresh messages" retry={load} compact>{error}</ErrorState>}
     {rows?.length === 0 && !error && <EmptyState title="No conversations yet" action={<Link className="btn" to="/explore">Explore listings</Link>}>Explore listings and send a seller a question to start a conversation.</EmptyState>}
-    {rows !== null && rows.length > 0 && <div className="inquiry-list">{rows.map(t => <Link key={t.id} to={`/inquiries/${t.id}`} className="inquiry-row">
+    {rows !== null && rows.length > 0 && <div className="inquiry-list">{rows.map(t => <Link key={t.id} to={`/inquiries/${t.id}`}
+      className={`inquiry-row${t.unreadCount ? ' is-unread' : ''}`}>
       <span className="avatar" aria-hidden="true">{initials(t.otherStudentName || 'Student')}</span>
+      {Boolean(t.unreadCount) && <span className="sr-only">{t.unreadCount} unread messages. </span>}
       <span className="inq-main">
         <span className="inq-top"><strong>{t.otherStudentName || 'Student'}</strong>
+          {Boolean(t.unreadCount) && <span className="inquiry-row-unread-dot" aria-hidden="true" />}
           {t.lastMessage && <time dateTime={t.lastMessage.createdAt}>{timeAgo(t.lastMessage.createdAt)}</time>}</span>
         <span className="inq-listing" title={t.listing.title}>About: {t.listing.title}</span>
         <span className="muted inq-preview">{t.lastMessage?.mine ? 'You: ' : ''}{t.lastMessage?.body ?? 'No messages yet.'}</span>

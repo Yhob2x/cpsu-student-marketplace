@@ -15,7 +15,8 @@ type InboxItem = {
   otherStudentName?: string;
   listing: { title: string };
   status: string;
-  lastMessage?: { id: number; mine: boolean; body: string; createdAt: string };
+  unreadCount?: number;
+  lastMessage?: { id: number; mine: boolean; body: string; createdAt: string; receipt?: 'sent' | 'delivered' | 'read' };
 };
 type ChatMessage = {
   id: number; mine: boolean; body: string; createdAt: string; author?: string;
@@ -252,6 +253,7 @@ export function FloatingChatPanel({ onClose, onUnreadChanged, motionState, motio
     }
   };
   const threadName = conversation?.thread.otherStudentName || selectedName;
+  const lastMineId = [...(conversation?.messages ?? [])].reverse().find(message => message.mine)?.id;
   const closed = conversation?.thread.status === 'closed';
   const transaction = conversation?.transaction;
   const shareableTransaction = transaction && ['accepted', 'negotiating', 'for_meetup'].includes(transaction.status);
@@ -301,23 +303,31 @@ export function FloatingChatPanel({ onClose, onUnreadChanged, motionState, motio
           <p>Explore a listing and ask its seller a question to start chatting.</p>
           <Link to="/explore" onClick={() => onClose(true)}>Explore listings</Link>
         </div>}
-        {inbox?.map(item => <button type="button" className="floating-chat-inbox-row" key={item.id}
+        {inbox?.map(item => <button type="button"
+          className={`floating-chat-inbox-row${item.unreadCount ? ' is-unread' : ''}`}
+          key={item.id} aria-label={`${item.otherStudentName || 'Student'}, ${item.listing?.title ?? 'Marketplace listing'}${item.unreadCount ? `, ${item.unreadCount} unread message${item.unreadCount === 1 ? '' : 's'}` : ''}`}
           onClick={event => { setViewMotion(event.detail !== 0); setSelectedName(item.otherStudentName || 'Student'); setThreadId(item.id); latestRef.current = true; }}>
           <span className="floating-chat-avatar" aria-hidden="true">{initials(item.otherStudentName || 'Student')}</span>
           <span className="floating-chat-inbox-copy">
             <span className="floating-chat-inbox-top"><strong>{item.otherStudentName || 'Student'}</strong>
               {item.lastMessage && <time dateTime={item.lastMessage.createdAt}>{timeAgo(item.lastMessage.createdAt)}</time>}</span>
             <span className="floating-chat-item-listing">{item.listing?.title ?? 'Marketplace listing'}</span>
-            <span className="floating-chat-message-preview">{item.lastMessage?.mine ? 'You: ' : ''}{item.lastMessage?.body ?? 'No messages yet.'}</span>
+            <span className="floating-chat-message-preview"><span className="floating-chat-preview-text">{item.lastMessage?.mine ? 'You: ' : ''}{item.lastMessage?.body ?? 'No messages yet.'}</span>
+              {item.lastMessage?.mine && <span className={`floating-chat-preview-receipt${item.lastMessage.receipt === 'read' ? ' is-read' : ''}`}
+                aria-label={item.lastMessage.receipt === 'read' ? 'Read' : item.lastMessage.receipt === 'delivered' ? 'Delivered' : 'Sent'}
+                title={item.lastMessage.receipt === 'read' ? 'Read' : item.lastMessage.receipt === 'delivered' ? 'Delivered' : 'Sent'}>
+                <Icon name={item.lastMessage.receipt === 'sent' || !item.lastMessage.receipt ? 'check' : 'checks'} size={14} />
+              </span>}
+            </span>
           </span>
+          {Boolean(item.unreadCount) && <span className="floating-chat-unread-dot" aria-hidden="true" />}
         </button>)}
       </div>
       <div className="floating-chat-panel-foot"><Link to="/inquiries" onClick={() => onClose(true)}>Open all messages <Icon name="arrow" size={15} /></Link></div>
     </> : <>
-      <div className="floating-chat-thread-context">
-        <span>{conversation?.otherActiveInChat ? '● Active in chat' : closed ? 'Conversation closed' : 'Conversation'}</span>
-        <span>Listing conversation</span>
-      </div>
+      {(conversation?.otherActiveInChat || closed) && <div className="floating-chat-thread-context">
+        <span>{closed ? 'Conversation closed' : '● Active in chat'}</span>
+      </div>}
       {endConfirm && !closed && <div className="floating-chat-end-confirm" role="group" aria-label="End conversation confirmation">
         <strong>End this chat for both students?</strong>
         <p>Messages stay readable. This won't cancel a transaction or block the student elsewhere.</p>
@@ -347,7 +357,15 @@ export function FloatingChatPanel({ onClose, onUnreadChanged, motionState, motio
           className={`floating-chat-message ${message.mine ? 'mine' : 'theirs'}`}
           data-incoming-id={!message.mine && !message.seenAt ? message.id : undefined}>
           <span className="floating-chat-bubble">{message.body}</span>
-          <time dateTime={message.createdAt}>{new Date(message.createdAt).toLocaleTimeString('en-PH', { hour: 'numeric', minute: '2-digit' })}</time>
+          <span className="floating-chat-message-meta">
+            <time dateTime={message.createdAt}>{new Date(message.createdAt).toLocaleTimeString('en-PH', { hour: 'numeric', minute: '2-digit' })}</time>
+            {message.mine && message.id === lastMineId && <span
+              className={`message-receipt${message.receipt === 'read' ? ' is-read' : ''}`}
+              title={message.receipt === 'read' ? 'Read' : message.receipt === 'delivered' ? 'Delivered' : 'Sent'}>
+              <Icon name={message.receipt === 'sent' || !message.receipt ? 'check' : 'checks'} size={14} />
+              <span>{message.receipt === 'read' ? 'Read' : message.receipt === 'delivered' ? 'Delivered' : 'Sent'}</span>
+            </span>}
+          </span>
         </div>)}
       </div>
       {conversation && <div className="floating-chat-meetup-strip">

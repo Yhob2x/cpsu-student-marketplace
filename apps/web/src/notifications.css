@@ -145,7 +145,7 @@
 .notifications-filters button {
   display: inline-flex; align-items: center; gap: var(--ui-space-2);
   min-height: 44px; border: 1px solid transparent; border-radius: var(--ui-radius-sm);
-  padding: var(--ui-space-2) .88rem;
+  padding: var(--ui-space-2) var(--ui-space-4);
   background: transparent; color: var(--ink-soft); cursor: pointer;
   font-size: var(--ui-type-sm); font-weight: var(--ui-weight-bold); white-space: nowrap;
 }
@@ -284,11 +284,11 @@
 .notification-actions {
   display: flex; align-items: center; justify-content: center;
   flex: 0 0 auto; gap: .1rem;
-  padding: var(--ui-space-2) .85rem var(--ui-space-2) .25rem;
+  padding: var(--ui-space-2) var(--ui-space-3) var(--ui-space-2) .25rem;
 }
 .notification-mark-one {
   display: inline-flex; align-items: center; justify-content: center; gap: var(--ui-space-2);
-  min-height: 44px; padding: var(--ui-space-2) .65rem;
+  min-height: 44px; padding: var(--ui-space-2) var(--ui-space-3);
   color: var(--leaf); font-size: var(--ui-type-xs); font-weight: var(--ui-weight-bold);
   white-space: nowrap; text-decoration: none;
   border: 1px solid transparent; border-radius: var(--ui-radius-sm); background: transparent;
@@ -342,7 +342,7 @@
   .notifications-refresh { padding: .5rem var(--ui-space-3); font-size: var(--ui-type-xs); }
   .notifications-summary {
     grid-template-columns: minmax(0, 1fr) 44px;
-    gap: var(--ui-space-3) .65rem; border-radius: var(--ui-radius-md); padding: 1rem;
+    gap: var(--ui-space-3) var(--ui-space-3); border-radius: var(--ui-radius-md); padding: 1rem;
   }
   /* The header already carries a bell on mobile: prioritize readable status text. */
   .notifications-summary-icon { display: none; }

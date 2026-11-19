@@ -1,4 +1,5 @@
-import { Field } from './components/ui/primitives';
+import { LegacyButton } from './components/ui/legacy-button';
+import { Field, Panel } from './components/ui/primitives';
 import { useEffect, useState, type FormEvent } from 'react';
 import { api, explain } from './api';
 
@@ -77,9 +78,9 @@ export function ReviewerAdmin({ active, campuses, campusesError, onRetryCampuses
 
   return <section aria-labelledby="staff-management-heading">
     <div className="sec-head"><div><h2 id="staff-management-heading">Reviewer accounts</h2><p className="muted">Staff use separate accounts. Reviewers see only their assigned campus.</p></div>
-      <button type="button" className="btn" onClick={() => { setShowCreate(previous => !previous); setError(''); setNotice(''); }}>{showCreate ? 'Cancel' : 'Add reviewer'}</button></div>
+      <LegacyButton type="button" className="" onClick={() => { setShowCreate(previous => !previous); setError(''); setNotice(''); }}>{showCreate ? 'Cancel' : 'Add reviewer'}</LegacyButton></div>
     {error && <p className="err" role="alert">{error}</p>}
-    {campusesError && <p className="err" role="alert">Could not load campus choices: {campusesError}. <button className="btn ghost" type="button" onClick={onRetryCampuses}>Retry campuses</button></p>}
+    {campusesError && <p className="err" role="alert">Could not load campus choices: {campusesError}. <LegacyButton className="ghost" type="button" onClick={onRetryCampuses}>Retry campuses</LegacyButton></p>}
     {notice && <p role="status">{notice}</p>}
     {showCreate && <form className="panel stack admin-reviewer-form" onSubmit={createReviewer}>
       <h3>New campus reviewer</h3>
@@ -88,11 +89,11 @@ export function ReviewerAdmin({ active, campuses, campusesError, onRetryCampuses
       <Field>Campus<select required value={create.campusId} onChange={e => setCreate(previous => ({ ...previous, campusId: e.target.value }))}><option value="">Select campus</option>{campuses.map(campus => <option key={campus.id} value={campus.id}>{campus.name}</option>)}</select></Field>
       <Field>Initial password<input required type="password" minLength={12} maxLength={128} autoComplete="new-password" value={create.password} onChange={e => setCreate(previous => ({ ...previous, password: e.target.value }))} /></Field>
       <p className="muted">Use a unique password of at least 12 characters. Share it with the reviewer through a private channel.</p>
-      <button className="btn" disabled={saving || !campuses.length}>{saving ? 'Creating…' : 'Create reviewer'}</button>
+      <LegacyButton className="" disabled={saving || !campuses.length}>{saving ? 'Creating…' : 'Create reviewer'}</LegacyButton>
     </form>}
     <form className="panel admin-student-filters" role="search" aria-label="Search reviewers" onSubmit={e => { e.preventDefault(); void load(query.trim(), 1); }}>
       <Field>Name or email<input type="search" maxLength={80} value={query} onChange={e => setQuery(e.target.value)} placeholder="Search reviewers" /></Field>
-      <button className="btn" disabled={loading}>Search</button>
+      <LegacyButton className="" disabled={loading}>Search</LegacyButton>
     </form>
     {loading && <p role="status" className="muted">Loading reviewers…</p>}
     {!loading && !error && <p role="status" className="muted">{total === 0 ? 'No reviewers found.' : `Showing ${(page - 1) * 25 + 1}–${(page - 1) * 25 + items.length} of ${total} reviewers`}</p>}
@@ -102,7 +103,7 @@ export function ReviewerAdmin({ active, campuses, campusesError, onRetryCampuses
         <span>{item.roles[0]?.campus?.code ?? 'No campus'}</span><span>Campus reviewer</span>
         <span className="status">{item.status === 'active' ? 'Active' : 'Suspended'}</span>
       </button>)}</div>
-      <aside className="panel admin-student-detail" aria-label="Selected reviewer account">
+      <Panel as="aside" className="admin-student-detail" aria-label="Selected reviewer account">
         {!selected && <p className="muted">Select a reviewer to edit their details.</p>}
         {selected && <form className="stack" onSubmit={saveReviewer}>
           <h3>Edit {selected.displayName}</h3>
@@ -113,10 +114,10 @@ export function ReviewerAdmin({ active, campuses, campusesError, onRetryCampuses
           <Field>Account status<select value={edit.status} onChange={e => setEdit(previous => ({ ...previous, status: e.target.value as Editor['status'] }))}><option value="active">Active</option><option value="suspended">Suspended</option></select></Field>
           <Field>New password (optional)<input type="password" minLength={12} maxLength={128} autoComplete="new-password" value={edit.password} onChange={e => setEdit(previous => ({ ...previous, password: e.target.value }))} /></Field>
           <Field>Reason for change<input required minLength={10} maxLength={500} value={edit.reason} onChange={e => setEdit(previous => ({ ...previous, reason: e.target.value }))} /></Field>
-          <button className="btn" disabled={saving || !campuses.length}>{saving ? 'Saving…' : 'Save reviewer'}</button>
+          <LegacyButton className="" disabled={saving || !campuses.length}>{saving ? 'Saving…' : 'Save reviewer'}</LegacyButton>
         </form>}
-      </aside>
+      </Panel>
     </div>}
-    {total > 25 && <nav className="admin-student-pages" aria-label="Reviewer result pages"><button type="button" className="btn ghost" disabled={loading || page <= 1} onClick={() => void load(applied, page - 1)}>Previous</button><span>Page {page} of {Math.ceil(total / 25)}</span><button type="button" className="btn ghost" disabled={loading || page * 25 >= total} onClick={() => void load(applied, page + 1)}>Next</button></nav>}
+    {total > 25 && <nav className="admin-student-pages" aria-label="Reviewer result pages"><LegacyButton type="button" className="ghost" disabled={loading || page <= 1} onClick={() => void load(applied, page - 1)}>Previous</LegacyButton><span>Page {page} of {Math.ceil(total / 25)}</span><LegacyButton type="button" className="ghost" disabled={loading || page * 25 >= total} onClick={() => void load(applied, page + 1)}>Next</LegacyButton></nav>}
   </section>;
 }

@@ -5,6 +5,6 @@
 .store-appreciation-hint button { border: 0; padding: .1rem var(--ui-space-1); background: transparent; color: var(--forest); text-decoration: underline; cursor: pointer; }
 .storefront-owner-actions .store-appreciation-button[aria-pressed="true"] { border: 0; background: var(--surface-soft); color: var(--forest); }
 .store-appreciation-loading { align-self: center; font-size: var(--ui-type-xs); }
-.store-appreciation-error { display: inline-flex; align-items: center; gap: .4rem; max-width: 30ch; font-size: var(--ui-type-xs); }
-.store-appreciation-error button { border: 0; padding: .35rem; background: transparent; color: var(--forest); text-decoration: underline; cursor: pointer; }
+.store-appreciation-error { display: inline-flex; align-items: center; gap: var(--ui-space-2); max-width: 30ch; font-size: var(--ui-type-xs); }
+.store-appreciation-error button { border: 0; padding: var(--ui-space-1); background: transparent; color: var(--forest); text-decoration: underline; cursor: pointer; }
 @media (max-width: 480px) { .storefront-owner-actions .store-appreciation { flex: 0 0 44px; width: 44px; } }

@@ -49,6 +49,19 @@ export function PushSettings() {
     return () => { active = false; };
   }, [me?.id]);
 
+  useEffect(() => {
+    if (!me || !('serviceWorker' in navigator)) return;
+    const onChange = (event: MessageEvent) => {
+      if (event.data?.type !== 'CPSU_PUSH_SUBSCRIPTION_CHANGED') return;
+      // The worker cannot re-enroll with a student's credentials. Require an
+      // explicit Enable action after a browser/OS subscription rotation.
+      setEnabled(false);
+      setFeedback('This device’s notification connection changed. Choose Enable alerts to reconnect it.');
+    };
+    navigator.serviceWorker.addEventListener('message', onChange);
+    return () => navigator.serviceWorker.removeEventListener('message', onChange);
+  }, [me?.id]);
+
   const turnOn = async () => {
     if (!config?.enabled || !config.publicKey || busy) return;
     setBusy(true); setError(''); setFeedback('');

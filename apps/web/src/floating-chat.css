@@ -269,7 +269,7 @@
   box-shadow: none;
 }
 .floating-chat-product .conversation-listing-head { margin-bottom: .25rem; font-size: var(--ui-type-xs); }
-.floating-chat-product .conversation-listing-kind { font-size: .67rem; padding: .1rem .35rem; }
+.floating-chat-product .conversation-listing-kind { font-size: var(--ui-type-xs); padding: .1rem .35rem; }
 .floating-chat-product .conversation-listing-content {
   grid-template-columns: 58px minmax(0, 1fr);
   align-items: center;
@@ -311,7 +311,7 @@
   border-color: var(--leaf);
   border-radius: 16px 16px var(--ui-radius-sm) 16px;
 }
-.floating-chat-message time { color: var(--ink-soft); font-size: .66rem; padding-inline: .25rem; }
+.floating-chat-message time { color: var(--ink-soft); font-size: var(--ui-type-xs); padding-inline: .25rem; }
 .floating-chat-typing, .floating-chat-closed {
   flex: 0 0 auto;
   margin: 0;
@@ -527,3 +527,83 @@
   .floating-chat-meetup-sheet { padding: .5rem; }
   .floating-meetup-card { padding: .65rem; }
 }
+
+/* Inbox state is derived from the recipient's unread count, not a guessed timestamp.
+   Use the same green token on the full inbox and floating inbox. */
+.floating-chat-panel-body .floating-chat-inbox-row:not(.is-unread) { background: var(--color-card); }
+.floating-chat-panel-body .floating-chat-inbox-row.is-unread {
+  background: var(--color-primary-light);
+}
+.floating-chat-panel-body .floating-chat-inbox-row.is-unread .floating-chat-inbox-top strong {
+  color: var(--color-primary-dark);
+}
+.floating-chat-panel-body .floating-chat-inbox-row.is-unread .floating-chat-message-preview {
+  color: var(--color-text);
+  font-weight: 650;
+}
+.floating-chat-unread-dot {
+  flex: 0 0 8px;
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: var(--color-primary);
+}
+.floating-chat-message-preview {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+.floating-chat-preview-text {
+  min-width: 0; flex: 1 1 auto;
+  overflow: hidden; white-space: nowrap; text-overflow: ellipsis;
+}
+.floating-chat-preview-receipt {
+  display: inline-flex; align-items: center;
+  flex: none; color: var(--ink-soft);
+}
+.floating-chat-preview-receipt.is-read { color: var(--color-primary); }
+@media (hover: hover) and (pointer: fine) {
+  .floating-chat-panel-body .floating-chat-inbox-row.is-unread:hover {
+    background: color-mix(in srgb, var(--color-primary-light) 85%, var(--color-primary));
+  }
+  .floating-chat-panel-body .floating-chat-inbox-row:not(.is-unread):hover {
+    background: var(--color-neutral-100);
+  }
+}
+.inquiry-list .inquiry-row.is-unread {
+  background: var(--color-primary-light);
+  border-color: color-mix(in srgb, var(--color-primary) 18%, var(--color-border));
+}
+.inquiry-list .inquiry-row.is-unread .inq-top strong { color: var(--color-primary-dark); }
+.inquiry-list .inquiry-row.is-unread .inq-preview { color: var(--color-text); font-weight: 650; }
+.inquiry-row-unread-dot {
+  width: 8px; height: 8px; flex: none;
+  border-radius: 50%; background: var(--color-primary);
+}
+@media (hover: hover) and (pointer: fine) {
+  .inquiry-list .inquiry-row.is-unread:hover { background: var(--color-primary-light); }
+}
+
+/* A quiet footer and compact listing leave vertical space for messages. */
+.floating-chat-product { max-height: 28%; }
+.floating-chat-product .conversation-listing-card { padding: .5rem .75rem; }
+.floating-chat-product .conversation-listing-head,
+.floating-chat-product .conversation-listing-meta,
+.floating-chat-product .conversation-listing-foot { display: none; }
+.floating-chat-product .conversation-listing-content {
+  grid-template-columns: 44px minmax(0, 1fr);
+  gap: .5rem;
+}
+.floating-chat-product .conversation-listing-photo { width: 44px; }
+.floating-chat-product .conversation-listing-photo-empty small { display: none; }
+.floating-chat-thread-context { min-height: 0; padding: .25rem .75rem; }
+.floating-chat-message-meta {
+  display: inline-flex; align-items: center; gap: .45rem;
+  font-size: var(--ui-type-xs);
+}
+.floating-chat-message-meta .message-receipt { color: var(--ink-soft); }
+.floating-chat-message-meta .message-receipt.is-read { color: var(--color-primary); }
+.floating-chat-thread-actions :is(a, button) { font-weight: 650; }
+
+/* Preserve the listing's availability and any unavailable notice in the compact card. */
+.floating-chat-product .conversation-listing-meta,
+.floating-chat-product .conversation-listing-foot:not(:has(a)) { display: flex; }

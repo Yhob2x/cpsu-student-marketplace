@@ -23,6 +23,24 @@ describe('Web Push security and privacy', () => {
     expect(hash).not.toContain('secret');
   });
 
+  it('keeps every supported push type under lock-screen copy limits', () => {
+    const types = [
+      'inquiry.new', 'inquiry.reply', 'listing.decision', 'listing.suspended',
+      'affiliation.decision', 'store.new_listing', 'transaction.requested',
+      'transaction.accepted', 'transaction.rejected', 'transaction.meetup_confirmed',
+      'transaction.completion_confirmed', 'transaction.cancelled',
+      'transaction.meetup_location_shared', 'transaction.meetup_location_revised',
+    ];
+    for (const type of types) {
+      const value = pushContent(type, { threadId: 1, listingId: 2, transactionId: 3 }, 4, 2);
+      expect(value).not.toBeNull();
+      expect(value!.title.length).toBeLessThanOrEqual(50);
+      expect(value!.body.length).toBeLessThanOrEqual(120);
+      expect(value!.url.startsWith('/')).toBe(true);
+      expect(value!.type).toBe(type);
+    }
+  });
+
   it('uses generic locked-screen copy and internal-only navigation for each event', () => {
     const data = { threadId: 27, listingId: 19, listingTitle: 'Highly personal listing', body: 'PRIVATE MESSAGE', reason: 'PRIVATE REVIEW', name: 'PRIVATE NAME' };
     const events = [
@@ -42,11 +60,13 @@ describe('Web Push security and privacy', () => {
       expect(payload.title).toBe('CPSU Market');
       expect(payload.unread).toBe(4);
       expect(payload.tag).toBe('cpsu-12');
+      expect(payload.id).toBe(12);
+      expect(payload.type).toBe(event);
       expect(JSON.stringify(payload)).not.toMatch(/PRIVATE|Highly personal/);
     }
     expect(pushContent('transaction.requested', { transactionId: 41 }, 20, 2)).toEqual({
       title: 'CPSU Market', body: 'A student sent you a purchase or service request.',
-      url: '/transactions/41', tag: 'cpsu-20', unread: 2,
+      url: '/transactions/41', tag: 'cpsu-20', id: 20, type: 'transaction.requested', unread: 2,
     });
     expect(pushContent('transaction.accepted', { transactionId: 41 }, 21, 2)?.url).toBe('/transactions/41');
     expect(pushContent('transaction.negotiating', { transactionId: 41 }, 22, 2)).toBe(null);
@@ -56,7 +76,7 @@ describe('Web Push security and privacy', () => {
       storeName: 'PRIVATE STORE', listingTitle: 'PRIVATE ITEM' }, 2, 1)).toEqual({
       title: 'CPSU Market',
       body: 'A store you follow has published a new listing.',
-      url: '/notifications', tag: 'cpsu-2', unread: 1,
+      url: '/notifications', tag: 'cpsu-2', id: 2, type: 'store.new_listing', unread: 1,
     });
   });
 });

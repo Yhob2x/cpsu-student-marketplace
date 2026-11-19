@@ -16,6 +16,7 @@ import { popularListingOrderBy } from '../popular-listing-ranking.js';
 import { visibleListingRows } from '../row-access.js';
 import { canonicalStoreSlug, findStoreBySlug } from '../store-slug.js';
 import { visibleStudentStoreWhere } from '../store-visibility.js';
+import { storeListingPageInput, storeListingPageQuery, storeListingPageResult } from '../store-listing-pages.js';
 
 const r = Router();
 export const publicListing = (l: any) => ({
@@ -148,6 +149,8 @@ async function visibleStoreNames() {
 }
 
 async function sendPublicStore(req: Request, res: Response, id: number, stores?: Awaited<ReturnType<typeof visibleStoreNames>>) {
+  const pageRequest = storeListingPageInput.parse(req.query);
+  const paging = pageRequest.limit === undefined ? null : storeListingPageQuery(pageRequest.limit, pageRequest.beforeId);
   const avatarColumnExists = await sellerAvatarColumnExists();
   const s = await prisma.sellerProfile.findFirst({
     where: { id, ...visibleStudentStoreWhere() },
@@ -155,25 +158,34 @@ async function sendPublicStore(req: Request, res: Response, id: number, stores?:
     select: { id: true, storeName: true, description: true, sellerType: true, campusId: true, createdAt: true,
       ...(avatarColumnExists ? { avatarPath: true as const } : {}),
       campus: { select: { code: true, name: true } },
-      listings: { where: { status: 'published', deletedAt: null, availabilityState: 'available' },
-        select: publicListingSelect(avatarColumnExists), orderBy: { createdAt: 'desc' } } },
+      listings: { where: { status: 'published', deletedAt: null, availabilityState: 'available',
+        ...(paging && pageRequest.beforeId !== undefined ? { id: { lt: pageRequest.beforeId } } : {}) },
+        select: publicListingSelect(avatarColumnExists),
+        orderBy: paging?.orderBy ?? { createdAt: 'desc' },
+        ...(paging ? { take: paging.take } : {}) } },
   });
   if (!s) throw new HttpError(404, 'not_found');
   const slug = canonicalStoreSlug(stores ?? await visibleStoreNames(), s);
-  const [follow, publishedListingCount] = await Promise.all([
+  const [follow, publishedListingCount, availableListingCount] = await Promise.all([
     readStoreFollowSummary(prisma, s.id, req.user?.id),
     prisma.listing.count({ where: { sellerProfileId: s.id, status: 'published', deletedAt: null } }),
+    paging ? prisma.listing.count({ where: { sellerProfileId: s.id, status: 'published',
+      deletedAt: null, availabilityState: 'available' } }) : Promise.resolve(s.listings.length),
   ]);
+  const listingPage = paging && pageRequest.limit !== undefined
+    ? storeListingPageResult(s.listings, pageRequest.limit) : null;
   const activity = storeActivityBadge({ publishedListingCount, followerCount: follow.count });
   res.setHeader('Cache-Control', 'private, no-store');
   res.json({ id: s.id, slug, storeName: s.storeName, description: s.description,
     sellerType: s.sellerType, campusId: s.campusId, campus: s.campus, createdAt: s.createdAt,
-    listingCount: s.listings.length,
+    listingCount: availableListingCount,
     follow,
     avatarUrl: sellerAvatarUrl(s.id, s.avatarPath),
     badge: s.sellerType === 'student' ? activity.label : 'Campus establishment',
     badgeReason: s.sellerType === 'student' ? activity.reason : undefined,
-    listings: s.listings.map(publicListing) });
+    listings: (listingPage?.items ?? s.listings).map(publicListing),
+    ...(listingPage ? { hasMoreListings: listingPage.hasMoreListings,
+      nextListingBeforeId: listingPage.nextListingBeforeId } : {}) });
 }
 
 r.get('/seller-profiles/by-slug/:slug', async (req, res) => {

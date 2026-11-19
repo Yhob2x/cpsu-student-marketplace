@@ -42,6 +42,8 @@ describe('shared CPSU Market native wrappers', () => {
       ['pages-admin.tsx', 11, 6],
       ['pages-account.tsx', 26, 5],
       ['pages-profile.tsx', 1, 4],
+      ['pages-public.tsx', 3, 4],
+      ['pages-transactions.tsx', 1, 5],
     ] as const) {
       const source = readFileSync(new URL('../src/' + filename, import.meta.url), 'utf8');
       expect((source.match(/<Field(?:\s|>)/g) ?? []).length).toBe(fields);

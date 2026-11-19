@@ -7,7 +7,7 @@ test('guest browses Explore, filters by category and opens a listing', async ({ 
   await expect(page.getByRole('heading', { name: 'Explore listings' })).toBeVisible();
   const filtersToggle = page.getByRole('button', { name: 'Filters', exact: true });
   if (await filtersToggle.isVisible()) await filtersToggle.click();
-  await page.getByRole('button', { name: 'Books', exact: true }).click();
+  await page.getByRole('radio', { name: 'Books', exact: true }).click();
   await expect(page).toHaveURL(/categoryId=1/);
   await expect(page.getByRole('link', { name: /View Synthetic calculus textbook/i })).toBeVisible();
   await page.getByRole('link', { name: /View Synthetic calculus textbook/i }).click();
@@ -24,7 +24,7 @@ test('guest messaging directs to sign-in and returns to the same listing', async
   await page.getByLabel('Password').fill('test-password-strong');
   await page.locator('.auth-form').getByRole('button', { name: 'Sign in' }).click();
   await expect(page).toHaveURL(/\/listings\/91$/);
-  await expect(page.getByRole('heading', { name: 'Ask the seller' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Message the seller' })).toBeVisible();
 });
 
 test('seller uploads three photos to a private draft, never an unreviewed public listing', async ({ page }) => {
@@ -53,8 +53,8 @@ test('seller uploads three photos to a private draft, never an unreviewed public
 test('buyer starts a conversation and seller sees the inquiry in the inbox', async ({ page }) => {
   const state = await mockMarketplace(page, 'buyer');
   await page.goto('/listings/91');
-  await page.getByLabel('Your message to the seller').fill('Is this available for campus pickup?');
-  await page.getByRole('button', { name: 'Send inquiry' }).click();
+  await page.getByRole('textbox', { name: 'Your message' }).fill('Is this available for campus pickup?');
+  await page.getByRole('button', { name: 'Send message' }).click();
   await expect(page.getByText('Message sent.')).toBeVisible();
   expect(state.messages).toHaveLength(1);
   state.persona = 'seller';
@@ -66,14 +66,14 @@ test('buyer starts a conversation and seller sees the inquiry in the inbox', asy
 test('buyer reports a listing and ends a conversation with confirmation', async ({ page }) => {
   const state = await mockMarketplace(page, 'buyer');
   await page.goto('/listings/91');
-  await page.getByRole('button', { name: 'Report', exact: true }).click();
-  await page.getByLabel('Why are you reporting this listing?').fill('Synthetic test: inaccurate textbook condition');
+  await page.getByRole('button', { name: 'Report this listing', exact: true }).click();
+  await page.getByRole('textbox', { name: 'Reason for reporting' }).fill('Synthetic test: inaccurate textbook condition');
   await page.getByRole('button', { name: 'Send report' }).click();
   await expect(page.getByText('Report sent to a campus reviewer.')).toBeVisible();
   expect(state.reports).toHaveLength(1);
   expect(state.reports[0].listingId).toBe(91);
-  await page.getByLabel('Your message to the seller').fill('Can we discuss this textbook?');
-  await page.getByRole('button', { name: 'Send inquiry' }).click();
+  await page.getByRole('textbox', { name: 'Your message' }).fill('Can we discuss this textbook?');
+  await page.getByRole('button', { name: 'Send message' }).click();
   await page.getByRole('link', { name: 'Open conversation' }).click();
   await page.getByRole('button', { name: 'End conversation' }).click();
   await expect(page.getByText(/End this conversation/i)).toBeVisible();

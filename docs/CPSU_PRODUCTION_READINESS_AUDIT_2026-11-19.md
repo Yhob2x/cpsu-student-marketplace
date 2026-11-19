@@ -1,6 +1,6 @@
 # CPSU Student Marketplace — production-readiness audit
 
-**Date:** 2026-11-19 · **Latest iteration:** 4/5 (iteration 1 preserved below) · **Disposition:** NOT PRODUCTION-CAPACITY-CERTIFIED
+**Date:** 2026-11-19 · **Latest iteration:** 5/5 (iteration 1 preserved below) · **Disposition:** NOT PRODUCTION-CAPACITY-CERTIFIED
 
 ## Scope, evidence, and hard safety boundaries
 
@@ -242,3 +242,62 @@ Reviewed changed code for response contract changes, sensitive logging, spoofed 
 5. Two-instance presence/typing, per-process rate limiting and 10-minute 100-RPS/500-concurrent capacity targets remain entirely **unverified**. Do not add Redis or queues without measurement and operations approval.
 
 **Disposition: iteration 4/5 complete in source and offline regression tests; system still NOT production-capacity-certified. No commit, deploy, shared database operation or staging traffic.**
+
+
+---
+
+## Iteration 5/5 — bounded inbox and public storefront catalog (final code-audit iteration)
+
+**Engineering status:** Iteration 5 implemented, typechecked and unit-tested. **Deployment/capacity status: NOT CERTIFIED.** No approved isolated staging database, seeded performance dataset, SQL query traces, two-instance failover drill, Lighthouse/mobile test, or sustained load measurement was available. This remains the final blocking evidence gap.
+
+### Measured versus unmeasured — G1 to G15
+
+| Goal | Iteration 5 measured/source result | Status |
+|---|---|---|
+| G1 latency p95 | No actual traffic p95 at 100 RPS. The offline log analyzer can compute p95 from an authorized trace; no representative trace exists. | UNVERIFIED |
+| G2 <=5 DB queries/list and no N+1 | Opt-in inbox returns max 30 threads; store returns max 24 listings. Actual Prisma SQL count is untraced. | PARTIAL source bound; query goal UNVERIFIED |
+| G3 hot SQL / full scans | No EXPLAIN, slow query log, or DB plan. Do not claim new indexes are needed or safe. | UNVERIFIED |
+| G4 <=80% DB connections | No peak connection measurements. | UNVERIFIED |
+| G5 >=80% cache hit | No cache or measured hit rate added. | UNVERIFIED |
+| G6 durable queues for slow work | No slow-job traces or durable queue test. | UNVERIFIED |
+| G7 two-instance recovery | Shutdown and loopback readiness unit-tested in prior iterations; cross-instance typing/presence state not shared. | PARTIAL; real failover UNVERIFIED |
+| G8 payload/assets | Opt-in store/inbox JSON rows bounded. Web initial JS main chunk **159.13 kB gzip**; CSS **66.21 kB gzip**; lazy meetup-map chunk **342.56 kB gzip**, not part of initial JS. No real image/API compressed-wire byte measurements. | PARTIAL |
+| G9 rate protection | Existing unit budget/429 tests pass; per-instance stores do not prove shared-IP behavior with multiple instances. | PARTIAL |
+| G10 CDN/Lighthouse | Not enabled or measured on a staging host/device. | UNVERIFIED |
+| G11 logging, monitoring, 5 alerts | Structured request logs and offline analyzer present from prior iterations; no verified 5 alert destinations or uptime monitoring. | PARTIAL |
+| G12 100-RPS/10-minute load/error rate | **0 authorized sustained runs**. | UNVERIFIED |
+| G13 regression tests and builds | **258 API tests passed, 1 intentionally skipped, 0 failed**, 54 API files; **168 web tests passed, 0 failed**, 46 web files. API TypeScript and Bun bundle passed; web TypeScript/Vite production build passed. Full DB/integration/accessibility/device suite not run. | PASS on offline tested scope only |
+| G14 security and no cross-user leakage | Opt-in inbox keeps `rowAccess.inquiryParticipant(uid)` filtering, and store keeps `visibleStudentStoreWhere()`. Cursor validation caps values, response changes additive for opt-in callers. No live multi-user DB probe. | PARTIAL |
+| G15 5 bounded audit/optimization loops | **5/5 iterations complete**; this is a code-review/implementation milestone, **not** production-capacity signoff. | CODE LOOP COMPLETE; READINESS NOT CERTIFIED |
+
+### Before/after code behavior
+
+| ID | Priority | Previous problem | Updated, verified behavior | Remaining limitation |
+|---|---|---|---|---|
+| PR-24 | P1 | `GET /api/v1/inquiries` loaded all of a student's threads on repeated 5-second inbox polling. | New opt-in `?limit=30` takes up to 31 DB rows for lookahead; with `beforeId` it reads older threads by descending ID, always scoped to the signed-in participant. Full inbox has **Load older conversations**, merges incoming previews without duplicates; floating inbox shows 30 newest threads and retains link to full inbox. 3 parser/query tests pass. | Legacy no-param endpoint still returns full list; DB index/query count not measured. |
+| PR-25 | P1 | `GET /api/v1/seller-profiles/:id` and slug form nested every available listing into store response. | New opt-in `?limit=24` nested listing query takes at most 25 rows; `beforeId` pages by descending ID. PWA storefront loads more on demand, preserves follow state, reports real available-listing count via scoped count, and labels filters as **loaded-item filters**. 3 API parser/query tests pass. | Legacy response still unbounded. Slug calculation still traverses all visible store names; cost not measured. |
+| PR-26 | P2 | Floating chat meetup tests mocked the legacy inbox array and timed out when the client switched to a paged `{items,...}` contract. | Fixture now returns the paged contract; four meetup tests that initially failed then passed on rerun. | Real device/browser interaction not exercised. |
+
+### Compatibility and data-safety details
+
+- `GET /api/v1/inquiries` **without** query parameters still returns the original array in its existing chronology, not a truncated list. Opt-in returns `{items,hasMore,nextBeforeId}`; each cursor is validated as a positive bounded integer. The first page is sorted by descending thread ID for stable cursor traversal.
+- `GET /api/v1/seller-profiles/:id` and `/seller-profiles/by-slug/:slug` **without** `limit` still return the legacy full store payload, with the same `listingCount` meaning. Opt-in returns additional `{hasMoreListings,nextListingBeforeId}`, maintains visible-store and publication guards, and counts all available published items rather than only the current page.
+- The store's existing client-side filters now explicitly state they operate on the **loaded** listings; users may load more to discover additional products/services. No claim of global filter completeness is made while later pages remain.
+- Cursor paging uses ID ordering. This approximates newer-created-first browsing for the normal auto-increment insertion path but does not prove custom timestamp ordering equivalence; legacy sort is unchanged.
+- Slug alias stability requires global collision lookup under the current schema. No speculative slug rewrite/index migration was attempted. Its unbounded lookup is a remaining scaling risk.
+- No change to `User`, listing or message schemas; no mutations to user records; no cache, Redis, queue or CDN installed. All tests were run against source or synthetic mocked requests, not real shared database records.
+
+### New or modified files in iteration 5
+
+- `apps/api/src/inbox-pages.ts`, `apps/api/test/inbox-pages.test.ts`; `apps/api/src/routes/inquiries.ts`
+- `apps/api/src/store-listing-pages.ts`, `apps/api/test/store-listing-pages.test.ts`; `apps/api/src/routes/public.ts`
+- `apps/web/src/inbox-pages.ts`, `apps/web/src/pages-account.tsx`, `apps/web/src/floating-chat-panel.tsx`
+- `apps/web/src/pages-public.tsx`, `apps/web/src/pages-storefront.tsx`
+- `apps/web/test/paged-collections.test.ts`, `apps/web/test/floating-chat-meetup.test.tsx`
+- This report.
+
+**Git caution:** While this audit was in progress, the repository HEAD moved independently from `f3237b9` to `d218231`. The latter contains some of the code under review. This assistant did not execute a Git commit, push or deployment. Working-tree status must be checked again before any later commit or cherry-pick; do not overwrite another participant's changes.
+
+### Final readiness decision / continuation gate
+
+**NOT PRODUCTION-CAPACITY-CERTIFIED.** The code fixes reduce avoidable repeated read volume for updated PWA clients, but actual success against 500 concurrent students/100 RPS, 300/500ms p95 latency, <=5 SQL queries, memory and DB saturation, 5 operational alerts, device experience, shared rate limits and 2-instance failover remains unknown. The correct next stage is a **separately approved isolated staging host and synthetic DB**, SQL/pool tracing, then guarded single-user tests followed by explicitly authorized ramp/load and two-instance restart verification. Do not run these tests against the active `cpsu_marketplace` database or a public campus environment.

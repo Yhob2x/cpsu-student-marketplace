@@ -35,7 +35,7 @@
   padding: 0 4px;
   display: grid;
   place-items: center;
-  font-size: .65rem;
+  font-size: var(--ui-type-xs);
   line-height: 1.15;
   font-weight: 800;
   color: var(--on-leaf);

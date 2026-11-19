@@ -231,7 +231,7 @@
   text-align: center;
   color: var(--ink-soft);
 }
-.conversation-listing-photo-empty small { font-size: .64rem; line-height: 1.2; }
+.conversation-listing-photo-empty small { font-size: var(--ui-type-xs); line-height: 1.2; }
 .conversation-listing-info { display: grid; gap: var(--ui-space-1); min-width: 0; }
 .conversation-listing-info > strong {
   display: -webkit-box;

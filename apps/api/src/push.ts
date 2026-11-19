@@ -3,7 +3,7 @@ import * as webPush from 'web-push';
 import { prisma } from './db.js';
 import { env } from './env.js';
 import { evaluatePushPolicy } from './push-policy.js';
-import { sendWithBoundedRetries } from './push-delivery.js';
+import { allSettledBounded, sendWithBoundedRetries } from './push-delivery.js';
 
 export type PushCategory = 'messages' | 'listingReviews' | 'accountUpdates';
 type EventData = Record<string, unknown>;
@@ -12,6 +12,8 @@ export type PushContent = {
   body: string;
   url: string;
   tag: string;
+  id: number;
+  type: string;
   unread: number;
 };
 
@@ -88,7 +90,7 @@ export function pushContent(type: string, data: EventData, notificationId: numbe
     // Do not expose store names, item titles or buyer interests on the lock screen.
     body = 'A store you follow has published a new listing.';
   }
-  return { title: 'CPSU Market', body, url, tag: `cpsu-${notificationId}`, unread: Math.max(0, unread) };
+  return { title: 'CPSU Market', body, url, tag: `cpsu-${notificationId}`, id: notificationId, type, unread: Math.max(0, unread) };
 }
 
 const VAPID = pushReady ? {
@@ -120,7 +122,9 @@ export async function deliverPush(userId: number, type: string, data: EventData,
   const payload = pushContent(type, data, notificationId, unread);
   if (!payload) return;
 
-  const deliveries = await Promise.allSettled(subscriptions.map(async (row) => {
+  // A student may have up to eight enrolled devices. Bound simultaneous relay
+  // calls per notification to reduce burst pressure without changing consent.
+  const deliveries = await allSettledBounded(subscriptions, 4, async (row) => {
     if (!permittedPushEndpoint(row.endpoint)) {
       deliveryStats.expired++;
       await prisma.pushSubscription.deleteMany({ where: { id: row.id, userId } });
@@ -142,7 +146,7 @@ export async function deliverPush(userId: number, type: string, data: EventData,
       // No endpoint, user ID, device ID, or message contents in logs.
       console.warn('Web Push delivery unavailable', { category, status: result.status, attempts: result.attempts });
     }
-  }));
+  });
   const bookkeepingFailures = deliveries.filter(r => r.status === 'rejected').length;
   if (bookkeepingFailures) {
     console.warn('Web Push dispatch bookkeeping failures', { category, count: bookkeepingFailures });

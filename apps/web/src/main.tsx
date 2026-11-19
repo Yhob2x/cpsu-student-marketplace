@@ -8,6 +8,7 @@ import { Icon } from './icons';
 import { ActionFeedbackHost, showActionFeedback } from './action-feedback';
 import { SiteFooter } from './site-footer';
 import { InstallApp } from './install-app';
+import { PwaStatus } from './pwa-status';
 import { FloatingChat } from './floating-chat';
 import { preferredCampusName } from './meetup-campus';
 import { useForegroundRefresh } from './foreground-refresh';
@@ -59,6 +60,7 @@ import './ui-consistency.css';
 import './guidelines-page.css';
 import './home-color-polish.css';
 import './async-feedback.css';
+import './pwa-status.css';
 
 export type Me = { id: number; email: string; displayName: string; roles: { role: string; campusId: number | null }[];
   affiliations: { id: number; campus: { id: number; name: string }; status: string }[]; storeId: number | null };
@@ -97,6 +99,16 @@ function NotFound() {
     <p>The address may have changed, or the page may no longer be available.</p>
     <div className="row"><Link className="btn" to="/">Go home</Link><Link className="btn ghost" to="/explore">Explore listings</Link></div>
   </section>;
+}
+
+// Primary navigation should always bring the page into view, even if the tab is
+// already active. Avoid re-navigating to the same route: it would discard Explore's
+// query-string filters and needlessly re-render the page.
+function scrollNavigationToTop(event: React.MouseEvent<HTMLAnchorElement>) {
+  if (event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+  if (event.currentTarget.pathname === window.location.pathname) event.preventDefault();
+  const reduceMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false;
+  window.scrollTo({ top: 0, left: 0, behavior: reduceMotion ? 'auto' : 'smooth' });
 }
 
 function Shell() {
@@ -233,16 +245,16 @@ function Shell() {
           <span><Icon name="pin" size={14} /> Arrange payment and pickup on campus</span>
         </div></div>
         <div className="wrap masthead">
-          <Link to="/" className="brand" aria-label="CPSU Market — CPSU Student Marketplace home">
+          <Link to="/" className="brand" onClick={scrollNavigationToTop} aria-label="CPSU Market — CPSU Student Marketplace home">
             <span className="brand-symbol" aria-hidden="true"><Icon name="store" size={19} /></span>
             <span className="brand-long">CPSU <b>Student Marketplace</b></span>
             <span className="brand-short" aria-hidden="true">CPSU Market</span></Link>
           <HeaderSearch />
           {me && <nav className="actions" aria-label="Your activity">
-            {!isStaff && <NavLink to="/saved" aria-label="Saved listings" title="Saved listings"><Icon name="heart" size={22} /></NavLink>}
-            <NavLink to="/notifications" className="alerts" aria-label={unread > 0 ? `Notifications, ${unread} unread` : 'Notifications'} title="Notifications">
+            {!isStaff && <NavLink to="/saved" onClick={scrollNavigationToTop} aria-label="Saved listings" title="Saved listings"><Icon name="heart" size={22} /></NavLink>}
+            <NavLink to="/notifications" onClick={scrollNavigationToTop} className="alerts" aria-label={unread > 0 ? `Notifications, ${unread} unread` : 'Notifications'} title="Notifications">
               <Icon name="bell" size={22} /><span className="alerts-copy">{unread > 0 && <span className="nav-badge" aria-hidden="true">{unread}</span>}</span></NavLink>
-            <NavLink to="/profile" aria-label="Profile" title="Profile"><Icon name="user" size={22} /></NavLink>
+            <NavLink to="/profile" onClick={scrollNavigationToTop} aria-label="Profile" title="Profile"><Icon name="user" size={22} /></NavLink>
           </nav>}
           <div className={me ? 'who' : 'who who-guest'}>
             <InstallApp />
@@ -251,13 +263,13 @@ function Shell() {
           </div>
         </div>
         <div className="wrap navrow">
-          <NavLink to="/" end>Home</NavLink>
-          <NavLink to="/explore">Explore</NavLink>
-          {!isStaff && <><NavLink to="/dashboard">Sell</NavLink>
-          <NavLink to="/transactions">Transactions</NavLink></>}
-          <NavLink to="/profile">Profile</NavLink>
-          <NavLink to="/guidelines">Guidelines</NavLink>
-          {isReviewer && <NavLink to="/admin" aria-label={queue > 0 ? `Review ${queue} waiting` : undefined}>Review{queue > 0 && <> <span className="nav-badge">{queue}</span></>}</NavLink>}
+          <NavLink to="/" end onClick={scrollNavigationToTop}>Home</NavLink>
+          <NavLink to="/explore" onClick={scrollNavigationToTop}>Explore</NavLink>
+          {!isStaff && <><NavLink to="/dashboard" onClick={scrollNavigationToTop}>Sell</NavLink>
+          <NavLink to="/transactions" onClick={scrollNavigationToTop}>Transactions</NavLink></>}
+          <NavLink to="/profile" onClick={scrollNavigationToTop}>Profile</NavLink>
+          <NavLink to="/guidelines" onClick={scrollNavigationToTop}>Guidelines</NavLink>
+          {isReviewer && <NavLink to="/admin" onClick={scrollNavigationToTop} aria-label={queue > 0 ? `Review ${queue} waiting` : undefined}>Review{queue > 0 && <> <span className="nav-badge">{queue}</span></>}</NavLink>}
         </div>
       </header>
       {logoutError && <div className="wrap"><p className="err" role="alert">{logoutError}</p></div>}
@@ -277,16 +289,17 @@ function Shell() {
           <Route path="*" element={<NotFound />} />
         </Routes>
       </div></main>
+      <PwaStatus />
       <ActionFeedbackHost />
       <SiteFooter audience={!ready ? 'checking' : !me ? 'guest' : isStaff ? 'staff' : 'student'} canReview={Boolean(isReviewer)} />
       <FloatingChat ready={ready} isStaff={Boolean(isStaff)} signedIn={Boolean(me)} unreadMessages={unreadMessages}
           campusName={preferredCampusName(me?.affiliations)} onUnreadChanged={syncUnread} />
       <nav className="tabbar" aria-label="Primary">
-        <NavLink to="/" end><Icon name="home" size={19} /><span>Home</span></NavLink>
-        <NavLink to="/explore"><Icon name="search" size={19} /><span>Explore</span></NavLink>
-        {!isStaff && <NavLink to="/dashboard"><Icon name="plus" size={20} /><span>Sell</span></NavLink>}
-        {isReviewer && <NavLink to="/admin"><Icon name="shield" size={19} /><span>Review</span></NavLink>}
-        <NavLink to="/profile"><Icon name="user" size={19} /><span>Profile</span></NavLink>
+        <NavLink to="/" end onClick={scrollNavigationToTop}><Icon name="home" size={19} /><span>Home</span></NavLink>
+        <NavLink to="/explore" onClick={scrollNavigationToTop}><Icon name="search" size={19} /><span>Explore</span></NavLink>
+        {!isStaff && <NavLink to="/dashboard" onClick={scrollNavigationToTop}><Icon name="plus" size={20} /><span>Sell</span></NavLink>}
+        {isReviewer && <NavLink to="/admin" onClick={scrollNavigationToTop}><Icon name="shield" size={19} /><span>Review</span></NavLink>}
+        <NavLink to="/profile" onClick={scrollNavigationToTop}><Icon name="user" size={19} /><span>Profile</span></NavLink>
       </nav>
     </Ctx.Provider>
   );
@@ -297,12 +310,4 @@ if (typeof document !== 'undefined') {
   if (root) createRoot(root).render(<React.StrictMode><BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}><Shell /></BrowserRouter></React.StrictMode>);
 }
 
-// Only the production web app installs the offline fallback. API responses and student
-// session data stay network-only; the service worker caches no personalized content.
-if (import.meta.env.PROD && 'serviceWorker' in navigator && window.isSecureContext) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/sw.js').catch(() => {
-      // Marketplace still works online if service worker registration is unavailable.
-    });
-  });
-}
+// PwaStatus owns the sole production service-worker registration and update flow.

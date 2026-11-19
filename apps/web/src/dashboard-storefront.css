@@ -1,14 +1,14 @@
 /* My Store uses the public storefront identity pattern, with owner actions. */
 .my-store { max-width: 1240px; }
-.my-store .store-dashboard-identity { margin: .5rem 0 1.25rem; }
+.my-store .store-dashboard-identity { margin: var(--ui-space-2) 0 var(--ui-space-5); }
 .my-store .store-dashboard-identity .storefront-primary-text h1 {
   color: var(--forest);
   font-size: clamp(1.55rem, 2.8vw, 2.2rem);
 }
 .my-store .store-dashboard-actions .btn {
-  gap: .45rem;
-  min-height: 44px;
-  font-weight: 600;
+  gap: var(--ui-space-2);
+  min-height: var(--ui-touch-target);
+  font-weight: var(--ui-weight-bold);
   text-decoration: none;
 }
 .my-store .store-dashboard-actions .store-new-listing-action {
@@ -28,33 +28,33 @@
 .my-store .store-followers { margin-top: 0; }
 .my-store .store-listings-head {
   align-items: end;
-  margin-top: 1.6rem;
-  padding-bottom: .85rem;
+  margin-top: var(--ui-space-5);
+  padding-bottom: var(--ui-space-3);
 }
 .my-store .store-listings-head h2 { font-size: clamp(1.35rem, 1.1rem + .7vw, 1.7rem); }
 .my-store .store-listing {
   border: 1px solid var(--line);
-  border-radius: 12px;
+  border-radius: var(--ui-radius-md);
   background: var(--paper);
   box-shadow: 0 3px 9px color-mix(in srgb, var(--color-warning-ink) 7%, transparent);
 }
 .my-store .store-listing-photo { aspect-ratio: 4 / 3; }
-.my-store .store-listing-title h3 { font-size: var(--type-card-title); font-weight: 650; line-height: 1.4; }
-.my-store .store-listing-title strong { font-size: 1.0625rem; font-weight: 700; letter-spacing: -.02em; }
+.my-store .store-listing-title h3 { font-size: var(--type-card-title); font-weight: var(--ui-weight-bold); line-height: 1.4; }
+.my-store .store-listing-title strong { font-size: var(--ui-type-lg); font-weight: 700; letter-spacing: -.02em; }
 .my-store .store-listing-actions { background: var(--paper); }
 .my-store .store-dashboard-actions :is(button, a):focus-visible {
   outline: 3px solid var(--color-focus);
   outline-offset: 3px;
 }
 @media (max-width: 700px) {
-  .my-store .store-dashboard-identity { margin-top: .35rem; }
+  .my-store .store-dashboard-identity { margin-top: var(--ui-space-1); }
   .my-store .store-dashboard-actions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .my-store .store-dashboard-actions .store-new-listing-action { grid-column: 1 / -1; }
-  .my-store .store-dashboard-actions .btn { min-width: 0; padding-inline: .45rem; font-size: .8rem; }
+  .my-store .store-dashboard-actions .btn { min-width: 0; padding-inline: var(--ui-space-2); font-size: var(--ui-type-sm); }
   .my-store .store-dashboard-identity .storefront-facts {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: .85rem;
+    gap: var(--ui-space-3);
   }
   .my-store .store-listing-photo { aspect-ratio: auto; }
 }

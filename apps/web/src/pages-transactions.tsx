@@ -1,3 +1,5 @@
+import { LegacyButton } from './components/ui/legacy-button';
+import { Field, Panel } from './components/ui/primitives';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { ArrowRight, Check, CheckCircle2, Clock3, MessageCircle, RefreshCw, X } from 'lucide-react';
@@ -95,10 +97,10 @@ export function Transactions() {
         {option === 'all' ? 'All' : option === 'buying' ? 'Buying' : 'Selling'}
       </button>)}
     </div>
-    {error && <div className="panel transaction-error" role="alert">
+    {error && <Panel className="transaction-error" role="alert">
       <p>Could not load transactions: {error}</p>
-      <button type="button" className="btn ghost" onClick={() => void fetchPage()}>Try again</button>
-    </div>}
+      <LegacyButton type="button" className="ghost" onClick={() => void fetchPage()}>Try again</LegacyButton>
+    </Panel>}
     {loading && <p role="status" className="muted">Loading transactions…</p>}
     {!loading && !error && !items.length && <div className="empty transaction-empty">
       <h2>{filter === 'all' ? 'No transactions yet' : filter === 'buying' ? 'No buying requests yet' : 'No selling requests yet'}</h2>
@@ -107,7 +109,7 @@ export function Transactions() {
         : filter === 'buying' ? 'Requests for items or services you want will appear here.'
           : 'Requests from buyers for your listings will appear here.'}</p>
       {filter !== 'all'
-        ? <button type="button" className="btn ghost" onClick={() => changeFilter('all')}>Show all transactions</button>
+        ? <LegacyButton type="button" className="ghost" onClick={() => changeFilter('all')}>Show all transactions</LegacyButton>
         : <Link to="/explore" className="btn">Explore listings</Link>}
     </div>}
     {!loading && !error && items.length > 0 && <div className="transaction-list">
@@ -142,9 +144,9 @@ export function Transactions() {
       })}
     </div>}
     {!loading && !error && total > 15 && <nav aria-label="Transaction pages" className="transaction-pagination">
-      <button type="button" className="btn ghost" disabled={page === 1} onClick={() => setPage(p => p - 1)}>Previous</button>
+      <LegacyButton type="button" className="ghost" disabled={page === 1} onClick={() => setPage(p => p - 1)}>Previous</LegacyButton>
       <span className="muted" role="status">Page {page} of {Math.ceil(total / 15)}</span>
-      <button type="button" className="btn ghost" disabled={page * 15 >= total} onClick={() => setPage(p => p + 1)}>Next</button>
+      <LegacyButton type="button" className="ghost" disabled={page * 15 >= total} onClick={() => setPage(p => p + 1)}>Next</LegacyButton>
     </nav>}
     <p className="transaction-disclosure">Payment and handoff are arranged directly by students. CPSU Market does not process payments or verify item condition.</p>
   </section>;
@@ -246,7 +248,7 @@ export function TransactionDetail() {
   if (loading && !data) return <p role="status" className="muted">Loading transaction…</p>;
   if (error && !data) return <section className="empty"><h1>Transaction unavailable</h1>
     <p className="err" role="alert">{error}</p>
-    <button type="button" className="btn ghost" onClick={() => void reload()}>Try again</button>
+    <LegacyButton type="button" className="ghost" onClick={() => void reload()}>Try again</LegacyButton>
     <Link to="/transactions">Back to transactions</Link>
   </section>;
   if (!data) return null;
@@ -279,7 +281,7 @@ export function TransactionDetail() {
       </div>
     </header>
 
-    <section className="panel transaction-progress-card" aria-label="Transaction progress">
+    <Panel as="section" className="transaction-progress-card" aria-label="Transaction progress">
       <div className="transaction-section-heading">
         <h2>Progress</h2><span className="transaction-small-label">Updated by students</span>
       </div>
@@ -297,9 +299,9 @@ export function TransactionDetail() {
           })}
         </ol>}
       <p className="transaction-disclosure">Statuses are reported by students, not verified payment or delivery records.</p>
-    </section>
+    </Panel>
 
-    {!terminal && <section className="panel transaction-next-card" aria-label="Your next action" aria-busy={busy}>
+    {!terminal && <Panel as="section" className="transaction-next-card" aria-label="Your next action" aria-busy={busy}>
       <div className="transaction-section-heading">
         <div><span className="transaction-eyebrow">Your next step</span><h2>{nextTitle}</h2></div>
         <Clock3 size={23} aria-hidden="true" className="transaction-next-icon" />
@@ -307,8 +309,8 @@ export function TransactionDetail() {
       {data.status === 'pending' && buyer && <p>The seller needs to accept your request before you agree on a meetup. You can message them in the meantime.</p>}
       {data.status === 'pending' && seller && <>
         <p>Check the listing and discuss any questions before accepting. Accepting a physical product request reserves the item for this buyer.</p>
-        <button type="button" className="btn transaction-main-cta" disabled={busy}
-          onClick={() => void act('decision', { action: 'accept' })}>{busy ? 'Updating…' : 'Accept request'}</button>
+        <LegacyButton type="button" className="transaction-main-cta" disabled={busy}
+          onClick={() => void act('decision', { action: 'accept' })}>{busy ? 'Updating…' : 'Accept request'}</LegacyButton>
       </>}
       {data.status === 'accepted' && <div className="transaction-soft-actions">
         <p>Agree on the time and place in chat. You can share a meetup pin below, then each student confirms the arrangement.</p>
@@ -322,8 +324,8 @@ export function TransactionDetail() {
           <span className={otherMeetupConfirmed ? 'is-confirmed' : ''}>{otherMeetupConfirmed ? <CheckCircle2 size={18} /> : <Clock3 size={18} />} Other student: {otherMeetupConfirmed ? 'Confirmed' : 'Not yet'}</span>
         </div>
         {myMeetupConfirmed ? <p className="transaction-wait-note">Your confirmation is saved. Waiting for the other student.</p>
-          : <button type="button" className="btn transaction-main-cta" disabled={busy}
-            onClick={() => void act('confirm-meetup')}>{busy ? 'Updating…' : 'Confirm meetup arrangement'}</button>}
+          : <LegacyButton type="button" className="transaction-main-cta" disabled={busy}
+            onClick={() => void act('confirm-meetup')}>{busy ? 'Updating…' : 'Confirm meetup arrangement'}</LegacyButton>}
       </>}
       {canComplete && <>
         <p>{buyer
@@ -335,8 +337,8 @@ export function TransactionDetail() {
           <span className={otherCompletionConfirmed ? 'is-confirmed' : ''}>{otherCompletionConfirmed ? <CheckCircle2 size={18} /> : <Clock3 size={18} />} Other student: {otherCompletionConfirmed ? 'Confirmed' : 'Not yet'}</span>
         </div>
         {myCompletionConfirmed ? <p className="transaction-wait-note">Your confirmation is saved. Waiting for the other student.</p>
-          : <button type="button" className="btn transaction-main-cta" disabled={busy}
-            onClick={() => void act('confirm-completion')}>{busy ? 'Updating…' : 'Confirm my part is complete'}</button>}
+          : <LegacyButton type="button" className="transaction-main-cta" disabled={busy}
+            onClick={() => void act('confirm-completion')}>{busy ? 'Updating…' : 'Confirm my part is complete'}</LegacyButton>}
       </>}
       <div className="transaction-next-links">
         <Link to={'/inquiries/' + data.inquiryThreadId} className="transaction-text-link"><MessageCircle size={18} aria-hidden="true" /> Chat with student</Link>
@@ -348,23 +350,23 @@ export function TransactionDetail() {
           : <div className="transaction-close-form">
             <h3>{closeLabel}</h3>
             <p>This closes the request and notifies the other student. It cannot be undone.</p>
-            <label className="field" htmlFor="transaction-cancellation-reason">
+            <Field className="" htmlFor="transaction-cancellation-reason">
               <span>Reason (10–500 characters)</span>
               <textarea id="transaction-cancellation-reason" value={reason} maxLength={500} minLength={10}
                 placeholder="Briefly explain why you cannot proceed" onChange={e => setReason(e.target.value)} />
-            </label>
+            </Field>
             <div className="transaction-close-actions">
-              <button type="button" className="btn danger" disabled={busy || reason.trim().length < 10}
+              <LegacyButton type="button" className="danger" disabled={busy || reason.trim().length < 10}
                 onClick={() => void act(data.status === 'pending' && seller ? 'decision' : 'cancel',
                   data.status === 'pending' && seller ? { action: 'reject', reason: reason.trim() } : { reason: reason.trim() })}>
-                {busy ? 'Closing…' : 'Confirm ' + closeLabel.toLowerCase()}</button>
-              <button type="button" className="btn ghost" disabled={busy}
-                onClick={() => { setClosing(false); setReason(''); setActionError(''); }}>Keep transaction</button>
+                {busy ? 'Closing…' : 'Confirm ' + closeLabel.toLowerCase()}</LegacyButton>
+              <LegacyButton type="button" className="ghost" disabled={busy}
+                onClick={() => { setClosing(false); setReason(''); setActionError(''); }}>Keep transaction</LegacyButton>
             </div>
           </div>}
       </div>
       {actionError && <p role="alert" className="err">{actionError}</p>}
-    </section>}
+    </Panel>}
 
     {data.status !== 'pending' && (!terminal || data.handoff) && <MeetupLocationCard key={data.id}
       transactionId={data.id} handoff={data.handoff}
@@ -375,15 +377,15 @@ export function TransactionDetail() {
         : 'Meetup location cannot be changed after completion starts.'}
       onSaved={reload} />}
 
-    {terminal && <section className="panel transaction-result" role="status">
+    {terminal && <Panel as="section" className="transaction-result" role="status">
       {data.status === 'completed'
         ? <><CheckCircle2 size={24} aria-hidden="true" /><div><h2>Both students confirmed completion</h2>
           <p>This is a mutual self-report, not independent verification of the exchange.</p></div></>
         : <><X size={24} aria-hidden="true" /><div><h2>Transaction closed</h2>
           <p>Neither student can make further changes. You can still view the activity history.</p></div></>}
-    </section>}
+    </Panel>}
     {buyer && data.status === 'completed' && <TransactionStoreReview transactionId={data.id} />}
-    <section className="panel transaction-tools" aria-label="Transaction options">
+    <Panel as="section" className="transaction-tools" aria-label="Transaction options">
       <div className="transaction-section-heading"><h2>Other options</h2></div>
       <p>Arrange payment and handoff directly with the other student. CPSU Market does not handle money.</p>
       <div className="transaction-tool-links">
@@ -400,7 +402,7 @@ export function TransactionDetail() {
         <Check size={15} aria-hidden="true" /> {refreshNotice}
       </p>}
       {error && <p className="err" role="alert">Could not check for updates: {error}</p>}
-    </section>
+    </Panel>
     <details className="panel transaction-history" >
       <summary>Activity history <span>{data.history.length} updates</span></summary>
       <ol>

@@ -1,0 +1,24 @@
+/* PWA-only connection and update state, using the existing design tokens. */
+.pwa-connection {
+  display: flex; align-items: center; justify-content: center; gap: .55rem;
+  padding: .65rem 1rem; background: var(--mango-soft, #fff3cb);
+  color: var(--ink, #111827); font-size: .86rem; font-weight: 600;
+}
+.pwa-update {
+  position: fixed; z-index: 190; bottom: calc(1rem + env(safe-area-inset-bottom));
+  left: max(1rem, env(safe-area-inset-left)); right: max(1rem, env(safe-area-inset-right));
+  margin-left: auto; max-width: 34rem; display: flex; align-items: flex-start;
+  gap: .7rem; padding: .95rem; background: var(--paper, #fff);
+  color: var(--ink, #111827); border: 1px solid var(--line, #e2e8f0);
+  border-radius: .8rem; box-shadow: 0 10px 36px #11182720;
+}
+.pwa-update__icon { display: grid; place-items: center; flex: 0 0 34px; height: 34px; color: var(--forest, #0b6b3a); }
+.pwa-update__copy { display: flex; flex: 1; flex-direction: column; gap: .25rem; min-width: 0; font-size: .85rem; line-height: 1.45; }
+.pwa-update__copy strong { font-size: .95rem; }
+.pwa-update__actions { display: flex; gap: .4rem; flex-wrap: wrap; }
+.pwa-update__actions .btn { min-height: 42px; }
+@media (max-width: 600px) {
+  .pwa-update { bottom: calc(4.9rem + env(safe-area-inset-bottom)); flex-wrap: wrap; }
+  .pwa-update__actions { margin-left: 41px; width: calc(100% - 41px); }
+}
+@media (prefers-reduced-motion: reduce) { .pwa-update { scroll-behavior: auto; } }

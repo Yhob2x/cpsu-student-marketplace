@@ -62,14 +62,14 @@ describe('admin product and service category editing', () => {
     expect(actions.some(a => a.url.endsWith('/admin/catalog/categories') && a.method === 'POST' &&
       a.body.listingType === 'service' && a.body.name === 'Tutoring')).toBe(true);
 
-    fireEvent.click(screen.getAllByRole('button', { name: 'Edit' })[1]);
+    fireEvent.click(screen.getByRole('button', { name: 'Edit service category Photography' }));
     fireEvent.change(screen.getByDisplayValue('Photography'), { target: { value: 'Event photography' } });
     fireEvent.click(screen.getByRole('button', { name: 'Save' }));
     await waitFor(() => expect(screen.getByText('Event photography')).toBeTruthy());
     expect(actions.some(a => a.url.endsWith('/admin/catalog/categories/9') && a.method === 'PATCH' &&
       a.body.name === 'Event photography' && a.body.listingType === undefined)).toBe(true);
 
-    fireEvent.click(screen.getAllByRole('button', { name: 'Edit' })[0]);
+    fireEvent.click(screen.getByRole('button', { name: 'Edit campus Main Campus' }));
     fireEvent.change(screen.getByDisplayValue('Main Campus'), { target: { value: 'CPSU Main Campus' } });
     fireEvent.click(screen.getByRole('button', { name: 'Save' }));
     await waitFor(() => expect(refreshed).toBe(1));
@@ -87,7 +87,7 @@ describe('admin product and service category editing', () => {
     window.confirm = () => false;
     try {
       render(<CatalogAdmin onCampusesChange={() => {}} />);
-      fireEvent.click(await screen.findByRole('button', { name: 'Deactivate' }));
+      fireEvent.click(await screen.findByRole('button', { name: 'Deactivate campus Main Campus' }));
       expect(updated).toBe(false);
     } finally { window.confirm = originalConfirm; }
   });

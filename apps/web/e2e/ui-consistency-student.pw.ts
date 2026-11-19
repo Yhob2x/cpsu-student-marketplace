@@ -42,9 +42,22 @@ for (const screen of screens) {
     expect(metrics.horizontalOverflow).toBeLessThanOrEqual(0);
     expect(metrics.undersized).toEqual([]);
 
-    const results = await new AxeBuilder({ page })
-      .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'])
-      .analyze();
+    let results: Awaited<ReturnType<AxeBuilder['analyze']>> | undefined;
+    for (let attempt = 0; attempt < 2; attempt++) {
+      try {
+        results = await new AxeBuilder({ page })
+          .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'])
+          .analyze();
+        break;
+      } catch (error) {
+        // Session refresh can navigate while axe is scanning. Retry only that
+        // specific transient case, and verify the intended screen still exists.
+        if (attempt !== 0 || !/execution context was destroyed.*navigation/i.test(String(error))) throw error;
+        await page.waitForLoadState('domcontentloaded');
+        await expect(page.locator('main')).toBeVisible();
+      }
+    }
+    if (!results) throw new Error('Accessibility scan did not complete');
     expect(results.violations.map(v => ({
       id: v.id, targets: v.nodes.map(node => node.target),
     }))).toEqual([]);

@@ -1,3 +1,4 @@
+import { Field } from './components/ui/primitives';
 import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { api, explain } from './api';
@@ -91,7 +92,7 @@ export function StoreReviewEntry({ storeId, signedIn, onSignIn }: {
         </div>}
       {!loading && !error && data?.available && data.items.length > 0 && <>
         <p className="muted store-review-entry-hint">Choose a completed purchase. Each transaction can be reviewed once.</p>
-        {data.items.length > 1 ? <label className="field" htmlFor={`review-transaction-${storeId}`}>
+        {data.items.length > 1 ? <Field htmlFor={`review-transaction-${storeId}`}>
           Completed purchase
           <select id={`review-transaction-${storeId}`} value={selection ?? ''}
             onChange={event => setSelection(Number(event.target.value))}>
@@ -99,7 +100,7 @@ export function StoreReviewEntry({ storeId, signedIn, onSignIn }: {
               {row.listing.title} · {displayDate(row.createdAt)}
             </option>)}
           </select>
-        </label> : selected && <p className="store-review-entry-purchase">
+        </Field> : selected && <p className="store-review-entry-purchase">
           <strong>{selected.listing.title}</strong> <span>{displayDate(selected.createdAt)}</span>
         </p>}
         {(page > 1 || data.hasMore) && <nav className="store-review-entry-pagination" aria-label="Eligible purchases">

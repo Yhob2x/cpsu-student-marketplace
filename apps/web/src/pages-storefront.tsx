@@ -1,3 +1,4 @@
+import { LegacyButton } from './components/ui/legacy-button';
 import { Fragment, useMemo, useState, type ReactNode } from 'react';
 import { Link } from 'react-router-dom';
 import { Icon } from './icons';
@@ -20,6 +21,8 @@ export type PublicStorefront = {
   avatarUrl?: string | null;
   createdAt: string;
   listingCount: number;
+  hasMoreListings?: boolean;
+  nextListingBeforeId?: number | null;
   follow?: { count: number | null; isFollowing: boolean; available: boolean };
   campus?: { code: string; name: string };
   listings: Listing[];
@@ -32,7 +35,8 @@ const OPTIONS: { id: StoreFilter; name: string }[] = [
 ];
 
 export function StorefrontView({ store, isOwner, canFollow, onFollow, followBusy, followMessage,
-  canChat, signedIn, onChatSignIn, onChat, chatBusy, chatError, renderListing, reportSellerSlot }: {
+  canChat, signedIn, onChatSignIn, onChat, chatBusy, chatError, renderListing, reportSellerSlot,
+  onLoadMore, moreLoading, moreError }: {
   store: PublicStorefront;
   isOwner: boolean;
   canFollow: boolean;
@@ -47,6 +51,9 @@ export function StorefrontView({ store, isOwner, canFollow, onFollow, followBusy
   chatError: string;
   renderListing: (listing: Listing) => ReactNode;
   reportSellerSlot?: ReactNode;
+  onLoadMore?: () => void;
+  moreLoading?: boolean;
+  moreError?: string;
 }) {
   const [filter, setFilter] = useState<StoreFilter>('all');
   const [query, setQuery] = useState('');
@@ -74,16 +81,16 @@ export function StorefrontView({ store, isOwner, canFollow, onFollow, followBusy
               <h1 id="storefront-name">{store.storeName}</h1>
               <div className="storefront-owner-actions">
           {isOwner && <Link className="btn storefront-edit-action" to="/profile#store-profile">Edit my store</Link>}
-          {!isOwner && canFollow && <button type="button"
-            className="btn storefront-follow-action storefront-icon-action"
+          {!isOwner && canFollow && <LegacyButton type="button"
+            className="storefront-follow-action storefront-icon-action"
             aria-pressed={Boolean(store.follow?.isFollowing)}
             aria-label={followBusy ? 'Updating follow' : store.follow?.isFollowing ? 'Following' : 'Follow'}
             title={store.follow?.isFollowing ? 'Unfollow this store' : 'Follow this store'}
             disabled={followBusy || !store.follow?.available}
             onClick={onFollow}>
             <Icon name={store.follow?.isFollowing ? 'userCheck' : 'userPlus'} size={21} />
-          </button>}
-          {canChat && <button type="button" className="btn ghost storefront-icon-action"
+          </LegacyButton>}
+          {canChat && <LegacyButton type="button" className="ghost storefront-icon-action"
             aria-label="Chat with seller"
             title={chatOpen && signedIn ? 'Close seller chat' : 'Chat with seller'}
             aria-expanded={signedIn && chatOpen}
@@ -94,7 +101,7 @@ export function StorefrontView({ store, isOwner, canFollow, onFollow, followBusy
               setChatOpen(open => !open);
             }}>
             <Icon name="chat" size={21} />
-          </button>}
+          </LegacyButton>}
           {!isOwner && canFollow && <StoreAppreciation storeId={store.id} signedIn={signedIn} onSignIn={onChatSignIn} />}
               </div>
             </div>
@@ -128,11 +135,11 @@ export function StorefrontView({ store, isOwner, canFollow, onFollow, followBusy
             onChange={event => setChatBody(event.target.value)} maxLength={1000}
             rows={3} disabled={chatBusy} required />
           <div className="storefront-chat-actions">
-            <button className="btn" type="submit" disabled={!chatBody.trim() || chatBusy}>
+            <LegacyButton className="" type="submit" disabled={!chatBody.trim() || chatBusy}>
               <Icon name="chat" size={17} /> {chatBusy ? 'Sending…' : 'Send message'}
-            </button>
-            <button className="btn ghost" type="button" disabled={chatBusy}
-              onClick={() => setChatOpen(false)}>Cancel</button>
+            </LegacyButton>
+            <LegacyButton className="ghost" type="button" disabled={chatBusy}
+              onClick={() => setChatOpen(false)}>Cancel</LegacyButton>
           </div>
           {chatError && <p className="err" role="alert">{chatError}</p>}
         </form>}
@@ -155,7 +162,7 @@ export function StorefrontView({ store, isOwner, canFollow, onFollow, followBusy
       <div className="storefront-products-heading">
         <div><h2 id="storefront-listings" tabIndex={-1}>Listings</h2></div>
         <div className="storefront-results-group">
-          <span className="storefront-results" role="status" aria-live="polite">{visible.length} {visible.length === 1 ? 'result' : 'results'}</span>
+          <span className="storefront-results" role="status" aria-live="polite">{visible.length} {visible.length === 1 ? 'result' : 'results'}{store.hasMoreListings ? ' in loaded listings' : ''}</span>
           {visible.length > 0 && (filter !== 'all' || category !== 'all' || query.trim() !== '') &&
             <button type="button" className="storefront-clear-filters" aria-label="Clear store filters" title="Clear store filters"
               onClick={() => { setFilter('all'); setCategory('all'); setQuery(''); }}><Icon name="refresh" size={18} /></button>}
@@ -191,9 +198,15 @@ export function StorefrontView({ store, isOwner, canFollow, onFollow, followBusy
           <Icon name="search" size={24} />
           <h3>{store.listings.length ? 'No listings match these filters' : 'No available listings yet'}</h3>
           <p className="muted">{store.listings.length ? 'Try another search or category.' : 'Approved items and services will appear here once available.'}</p>
-          {store.listings.length > 0 && <button type="button" className="btn ghost"
-            onClick={() => { setFilter('all'); setQuery(''); setCategory('all'); }}>Clear filters</button>}
+          {store.listings.length > 0 && <LegacyButton type="button" className="ghost"
+            onClick={() => { setFilter('all'); setQuery(''); setCategory('all'); }}>Clear filters</LegacyButton>}
         </div>}
+      {store.hasMoreListings && <div className="storefront-load-more" style={{ textAlign: 'center', padding: '16px 12px' }}>
+        <p className="muted">Showing {store.listings.length} of {store.listingCount} available listings. Filters search the loaded items.</p>
+        {onLoadMore && <LegacyButton className="ghost" type="button" disabled={moreLoading}
+          onClick={onLoadMore}>{moreLoading ? 'Loading listings…' : 'Load more listings'}</LegacyButton>}
+      </div>}
+      {moreError && <p className="err" role="alert">Could not load more listings: {moreError}</p>}
     </section>
     <StoreRatingsAndReviews storeId={store.id}
       reviewAction={!isOwner && canFollow ? <StoreReviewEntry storeId={store.id}

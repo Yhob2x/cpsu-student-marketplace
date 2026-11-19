@@ -68,9 +68,9 @@
 .store-follow-tabs button {
   display: inline-flex;
   align-items: center;
-  gap: .4rem;
+  gap: var(--ui-space-2);
   min-height: 48px;
-  padding: .65rem var(--ui-space-3);
+  padding: var(--ui-space-3) var(--ui-space-3);
   border: 0;
   border-bottom: 2px solid transparent;
   background: transparent;
@@ -82,7 +82,7 @@
 .store-follow-tabs button span { color: var(--ink-soft); font-size: var(--ui-type-xs); font-variant-numeric: tabular-nums; }
 .store-follow-dialog-content { flex: 1 1 auto; min-height: 0; overflow-y: auto; overscroll-behavior: contain; }
 .store-follow-list { margin: 0; padding: 0 1.5rem; list-style: none; }
-.store-follow-row { display: flex; align-items: center; gap: .9rem; min-width: 0; min-height: 78px; padding: .9rem 0; border-bottom: 1px solid var(--line); }
+.store-follow-row { display: flex; align-items: center; gap: var(--ui-space-4); min-width: 0; min-height: 78px; padding: var(--ui-space-4) 0; border-bottom: 1px solid var(--line); }
 .store-follow-row:last-child { border-bottom: 0; }
 .store-follow-avatar { display: grid; place-items: center; flex: 0 0 46px; width: 46px; height: 46px; border-radius: 50%; background: var(--surface-soft); color: var(--forest); font: 650 .86rem/1 var(--font-body); }
 .store-follow-detail { display: grid; gap: var(--ui-space-1); min-width: 0; }
@@ -102,7 +102,7 @@
   .store-follow-dialog-header { padding: 1rem 1rem .5rem; }
   .store-follow-dialog-header h2 { font-size: var(--ui-type-lg); }
   .store-follow-tabs { padding-inline: .5rem; }
-  .store-follow-tabs button { flex: 1 1 0; justify-content: center; padding-inline: .4rem; }
+  .store-follow-tabs button { flex: 1 1 0; justify-content: center; padding-inline: var(--ui-space-2); }
   .store-follow-list { padding-inline: 1rem; }
   .store-follow-row { min-height: 72px; }
   .store-follow-feedback { padding: 1.5rem 1rem; }

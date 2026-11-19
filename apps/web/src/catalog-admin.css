@@ -1,17 +1,17 @@
 .catalog-admin { min-width: 0; }
 .catalog-admin-heading { display: flex; justify-content: space-between; align-items: start; gap: 1rem; margin-bottom: 1.15rem; }
-.catalog-admin-heading h2 { margin: 0 0 .35rem; }
+.catalog-admin-heading h2 { margin: 0 0 var(--ui-space-1); }
 .catalog-admin-heading p { margin: 0; }
 .catalog-admin-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; align-items: start; }
 .catalog-admin-panel { min-width: 0; display: grid; gap: 1.2rem; padding: clamp(1rem, 2vw, 1.35rem); }
 .catalog-admin-title { display: flex; align-items: start; justify-content: space-between; gap: 1rem; }
-.catalog-admin-title h3 { margin: 0 0 .4rem; }
+.catalog-admin-title h3 { margin: 0 0 var(--ui-space-2); }
 .catalog-admin-title p { margin: 0; line-height: 1.5; }
 .catalog-admin-count { display: inline-flex; align-items: center; justify-content: center; min-width: 2rem; min-height: 2rem; border-radius: 9px; background: var(--surface-soft); font-weight: 700; color: var(--forest); }
 .catalog-admin-add { display: grid; gap: var(--ui-space-3); padding: 1rem; border: 1px solid var(--line); border-radius: 12px; background: var(--surface-soft); }
 .catalog-admin-add > .btn { justify-self: start; }
 .catalog-admin-fields { display: grid; grid-template-columns: minmax(95px, .65fr) minmax(0, 1.35fr); gap: var(--ui-space-3); }
-.catalog-admin .field { min-width: 0; display: grid; gap: .35rem; }
+.catalog-admin .field { min-width: 0; display: grid; gap: var(--ui-space-1); }
 .catalog-admin input { width: 100%; min-width: 0; min-height: 44px; box-sizing: border-box; }
 .catalog-admin-rows { display: grid; gap: 0; }
 .catalog-admin-item { display: grid; gap: var(--ui-space-3); min-width: 0; padding: 1rem 0; border-top: 1px solid var(--line); }
@@ -26,10 +26,10 @@
 .catalog-admin-actions .btn { min-height: 40px; }
 .catalog-admin-footnote { margin: 0; font-size: var(--ui-type-xs); line-height: 1.6; }
 @media (max-width: 1180px) { .catalog-admin-grid { grid-template-columns: minmax(0, 1fr); } }
-@media (max-width: 560px) { .catalog-admin-heading { align-items: center; } .catalog-admin-fields { grid-template-columns: minmax(0, 1fr); } .catalog-admin-panel { padding: .9rem; } .catalog-admin-add { padding: .85rem; } }
+@media (max-width: 560px) { .catalog-admin-heading { align-items: center; } .catalog-admin-fields { grid-template-columns: minmax(0, 1fr); } .catalog-admin-panel { padding: var(--ui-space-4); } .catalog-admin-add { padding: var(--ui-space-3); } }
 
 .catalog-admin-kind { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--ui-space-1); padding: .25rem; border-radius: var(--ui-radius-md); background: var(--surface-soft); }
-.catalog-admin-kind button { min-height: 44px; border: 1px solid transparent; border-radius: var(--ui-radius-sm); background: transparent; color: var(--ink-soft); font: inherit; font-size: var(--ui-type-sm); font-weight: 650; cursor: pointer; }
+.catalog-admin-kind button { min-height: 44px; border: 1px solid transparent; border-radius: var(--ui-radius-sm); background: transparent; color: var(--ink-soft); font: inherit; font-size: var(--ui-type-sm); font-weight: var(--ui-weight-bold); cursor: pointer; }
 .catalog-admin-kind button.catalog-admin-kind-active { color: var(--forest); background: var(--paper); border-color: var(--line); box-shadow: 0 1px 3px color-mix(in srgb, var(--color-text) 5%, transparent); }
 .catalog-admin-kind button:focus-visible { outline: 3px solid var(--color-focus); outline-offset: 2px; }
 .catalog-admin-kind button:disabled { cursor: wait; }

@@ -52,8 +52,10 @@ export function createApp() {
   app.use(rateLimit({ windowMs: 60_000, limit: 900,
     skip: req => req.method !== 'GET' || req.path === '/health',
   }));
-  app.use(authenticate);
+  // Liveness must not invoke JWT validation or query user/roles even when a
+  // monitoring request accidentally includes an Authorization header.
   app.get('/health', (_req, res) => res.json({ ok: true }));
+  app.use(authenticate);
   const v1 = express.Router();
   v1.use('/auth', rateLimit({ windowMs: 15 * 60_000, limit: env.NODE_ENV === 'production' ? 30 : 300 }), authRoutes);
   v1.use(publicRoutes);

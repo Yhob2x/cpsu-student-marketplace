@@ -30,7 +30,18 @@ const pause = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
     await pause(180);
     checks.zoomOpens = Boolean(document.querySelector('.image-zoom-overlay[role="dialog"][aria-modal="true"]'));
     checks.bodyLocked = document.body.style.overflow === 'hidden';
-    checks.viewerFitsViewport = (document.querySelector('.image-zoom-overlay') as HTMLElement).scrollWidth <= window.innerWidth;
+    const overlay = document.querySelector('.image-zoom-overlay') as HTMLElement;
+    const stage = document.querySelector('.image-zoom-view') as HTMLElement;
+    const thumbnails = document.querySelector('.image-zoom-filmstrip') as HTMLElement;
+    const image = document.querySelector('.image-zoom-surface img') as HTMLImageElement;
+    checks.viewerFitsViewport = overlay.scrollWidth <= window.innerWidth;
+    checks.viewerFitsHeight = overlay.scrollHeight <= window.innerHeight + 2;
+    checks.photoFullyVisible = getComputedStyle(image).objectFit === 'contain';
+    const stageBox = stage.getBoundingClientRect();
+    const thumbsBox = thumbnails.getBoundingClientRect();
+    checks.responsiveThumbnailPosition = window.innerWidth > 760
+      ? thumbsBox.left >= stageBox.right - 3 && stageBox.width > thumbsBox.width
+      : thumbsBox.top >= stageBox.bottom - 3;
     (document.querySelector('button[aria-label="Zoom in"]') as HTMLButtonElement).click();
     await pause(120);
     checks.zoomChangesScale = document.querySelector('.image-zoom-value')?.textContent === '150%';
@@ -56,8 +67,19 @@ const pause = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
     pointer('pointermove', 3, 188, 250);
     await pause(70);
     const endX = Number(zoomedImage?.style.transform.match(/translate3d\(([-\d.]+)px/)?.[1] ?? 0);
-    checks.dragMovesZoomedImage = Math.abs(endX - startX) > 20;
     pointer('pointerup', 3, 188, 250);
+    // If the zoom anchor already reached the pan boundary, dragging farther in that
+    // direction is correctly clamped. Verify the image can move back into view.
+    if (Math.abs(endX - startX) <= 20) {
+      pointer('pointerdown', 6, 188, 250);
+      pointer('pointermove', 6, 140, 250);
+      await pause(70);
+      const reverseX = Number(zoomedImage?.style.transform.match(/translate3d\(([-\d.]+)px/)?.[1] ?? 0);
+      checks.dragMovesZoomedImage = Math.abs(reverseX - endX) > 20;
+      pointer('pointerup', 6, 140, 250);
+    } else {
+      checks.dragMovesZoomedImage = true;
+    }
     (document.querySelector('.image-zoom-reset') as HTMLButtonElement).click();
     await pause(60);
     pointer('pointerdown', 4, 160, 240); pointer('pointerup', 4, 160, 240);

@@ -1,6 +1,7 @@
 import { lazy, Suspense, useEffect, useState, type FormEvent } from 'react';
 import { api, explain } from './api';
 import { showActionFeedback } from './action-feedback';
+import { campusMapCenter } from './meetup-campus';
 import './meetup-map.css';
 import {
   decodeMeetupLocation, encodeMeetupLocation, validMeetupPoint, type MeetupPoint,
@@ -20,12 +21,13 @@ type Props = {
   requiresReconfirmation?: boolean;
   unavailableReason?: string;
   compact?: boolean;
+  campusName?: string | null;
   onSaved: () => Promise<void>;
 };
 
 export function MeetupLocationCard({
   transactionId, inquiryThreadId, handoff, editable,
-  requiresReconfirmation = false, unavailableReason, compact = false, onSaved,
+  requiresReconfirmation = false, unavailableReason, compact = false, campusName, onSaved,
 }: Props) {
   const saved = decodeMeetupLocation(handoff?.generalLocation ?? '');
   const [editing, setEditing] = useState(false);
@@ -108,7 +110,7 @@ export function MeetupLocationCard({
       </button>}
     </div>
     {saved.point && mapOpen && !editing && <Suspense fallback={<p role="status" className="muted">Loading map…</p>}>
-      <MeetupMap point={saved.point} />
+      <MeetupMap point={saved.point} campusName={campusName} />
     </Suspense>}
     {editing && <form onSubmit={event => void save(event)}>
       <div className="meetup-fields">
@@ -121,10 +123,13 @@ export function MeetupLocationCard({
             placeholder="e.g. Friday, 2:00 PM" onChange={event => setTimeWindow(event.target.value)} />
         </label>
       </div>
-      <p className="muted meetup-map-guide">Move the map, then tap your meeting point to drop a pin.
-        You can also use the “Pin map center” button.</p>
+      <p className="muted meetup-map-guide">
+        {!point && campusMapCenter(campusName) ? `Starting near ${campusName}. ` : ''}
+        Move the map, then tap your meeting point to drop a pin.
+        You can also use the “Pin map center” button.
+      </p>
       <Suspense fallback={<p role="status" className="muted">Loading map…</p>}>
-        <MeetupMap point={point} onSelect={setPoint} />
+        <MeetupMap point={point} campusName={campusName} onSelect={setPoint} />
       </Suspense>
       <p className="muted meetup-pin-info" role="status">
         {point ? `Pin selected: ${point.lat.toFixed(5)}, ${point.lng.toFixed(5)}`

@@ -152,3 +152,61 @@ The scan's file denominator changed from 91 to 93 CSS/TSX source files as other 
 - Temporary browser probe, visual diff, audit data, source backups and mock fixture scripts are under ignored `.tmp/ux-*` and remain available on this PC. No original code was deleted.
 
 **Follow-on exit decision:** Source consistency and browser/PWA simulation have materially improved, but **strict global zero off-scale values, full component consolidation, Lighthouse score and physical/screen-reader acceptance remain open**. Do not mark a release gate as approved on these automated checks alone.
+
+---
+
+## Continuation pass — additional consolidation, responsive admin tests, Lighthouse (19 Nov 2026)
+
+This section is the **latest checkpoint** and supersedes older measurements where the source denominator changed. No Codex CLI, automatic commit, production login, business logic edits, API route edits, or database operations were performed in this UI scope.
+
+### Additional implementation
+- Normalized **210 near-scale CSS tokens** in seven more stylesheets: `floating-chat.css`, `profile-refinements.css`, `guidelines-page.css`, `transactions-polish.css`, `home-color-polish.css`, `async-feedback.css`, and `install-app.css`. Values were converted to existing spacing/type/radius variables. Stored original copies under ignored `.tmp/ux-css-originals`.
+- Normalized **95 non-editorial font-weight declarations** across 18 CSS files to the shared roles `--ui-weight-regular: 400`, `--ui-weight-medium: 500`, and `--ui-weight-bold: 700`. Preserve the editorial hero's approved font and weights.
+- Created native, presentational `Panel` and `Field` components. Migrated **20 label wrappers** across managed content, catalog and reviewer forms and one guidelines section panel. Markup, focus association, submit handlers, fields, validation, native section landmarks and legacy CSS classes remain intact.
+- Added `apps/web/test/ui-consistency-primitives.test.tsx` with 3 wrapper tests; the web unit suite now runs **169 passing tests, 0 failures**.
+- Extended **test-only synthetic mock personas** to university administrators, plus explicit admin editor, catalog, reviewer, transaction and store-rating GET fixtures.
+- Added durable `ui-consistency-admin.pw.ts`: 11 admin subviews × desktop and mobile Chrome = **22 passing browser tests**. Each checks visibility, horizontal overflow, 44px controls, and axe WCAG A/AA.
+- Added `ui-consistency-student.pw.ts`: six student/seller routes × desktop and mobile Chrome = **12 passing browser tests** with console error, overflow, hit-target and axe checks. Total added browser regression coverage: **34/34 passing**.
+- Added a standards-compliant `apps/web/public/robots.txt` allowing public discovery while requesting crawlers avoid account, admin, transactions, messages, API and login paths. This is advisory for crawlers, not authorization.
+
+### Latest scale and verification scoreboard
+| Measure | Latest |
+|---|---|
+| CSS/TSX files scanned | 96 files (56 CSS + 40 TSX), denominator changes with concurrent work |
+| Off-scale literal CSS declarations | **828** (593 spacing; 165 type; 70 radius), **NOT ZERO** |
+| CSS token replacements across all five batches | 850 + 265 + 108 + 389 + 210 = **1,822** |
+| Additional non-editorial font-weight rules normalized | 95 |
+| Shared Field wrappers migrated | 20 |
+| Web unit/component tests | **169 passed / 0 failed** |
+| Chrome Playwright, new administrator tests | **22 passed / 0 failed** |
+| Chrome Playwright, new student/seller tests | **12 passed / 0 failed** |
+| Production build / TypeScript | **PASS**; existing >500KB JavaScript chunk warning remains |
+| PWA manifest / icons / offline-shell validator | **PASS** |
+| Lighthouse local production-preview homepage, mobile-mode | **Performance 97 / Accessibility 100 / Best Practices 100 / SEO 100** |
+| Default Lighthouse agentic-browsing category | 50; experimental/extra category, outside UI target |
+| Actual physical iPhone/Android and VoiceOver/TalkBack/Narrator sessions | **NOT VERIFIED** |
+
+### Visual-regression evidence and caveats
+- Captured 12 public route-width screenshots (360px/768px/1280px) before and after the seven-file batch and font-weight pass. No horizontal document overflow, no undersized mobile targets, and no JavaScript page errors were detected in these samples.
+- Batch-five pixel comparison on the 12 snapshots showed a maximum of ~5% pixels changing beyond an average channel threshold of 12, on Guidelines at 360px. Manual comparison showed small spacing/line-wrap changes but no clipped controls.
+- The weight-normalization snapshot comparison was below 2% changed pixels at that threshold for all 12 public views (maximum observed Guidelines 360px ~1.61%). This is a sampling regression check, **not a guarantee that all signed-in modes or physical devices are visually identical**.
+- Before robots.txt, the first local Lighthouse run showed 97/100/96/92 and intermittent HTTP 500s on several image/media URLs. A later run scored 97/100/100/100 with no console errors. **Do not infer intermittent backend media failures are fixed:** those API errors are a separate backend concern and are out of this visual-only task.
+- The strict 'zero off-scale CSS' exit condition remains open. The remaining declarations include fluid/negative geometry, layered responsive rules, and some intentional exceptions; separately inspect each rather than mechanically changing values.
+
+### Unverified gates (still open)
+- Actual student/admin login, real role permissions, real-data loading and errors end-to-end (the tests above use synthetic fixtures only).
+- Physical-device PWA install and push permission/delivery; iOS Safari/VoiceOver, Android Chrome/TalkBack, and hands-on Narrator/NVDA; magnification/200% text.
+- Fully consolidated old `.btn`, `.panel`, badge and modal internals (only targeted shared wrappers migrated; wholesale markup replacement would risk regressions).
+- Lighthouse score consistency on authenticated routes and additional physical/mobile devices; the measured scores are from one local homepage audit.
+- Fixing pre-existing Vite large-chunk warning and intermittent image/media HTTP 500s, outside the current presentation-only scope.
+
+**Latest disposition:** Public and synthetic authenticated UI checks pass, and the measured homepage Lighthouse goals are met. Production release approval is **NOT** granted until the remaining real-device, authenticated and zero-scale gates are verified.
+
+### Final verification refresh (working tree changed concurrently)
+- Latest shared-source scan: **845** potential off-scale declarations (**606 spacing, 166 type, 73 radius**) across 96 CSS/TSX files. The scan was 828 shortly before, but independent frontend files changed afterward; this is a rolling denominator, not a new regression attributable to the UI-normalization batch.
+- Full web unit suite after the added `robots.txt` regression test: **170 passed / 0 failed**.
+- Both new browser suites rerun together against current frontend: **34 passed / 0 failed** (Chrome desktop and mobile emulation).
+- Final measured mobile Lighthouse homepage scores remain **Performance 97, Accessibility 100, Best Practices 100, SEO 100**. The additional agentic-browsing category scores 50 and is not part of the requested UI/a11y gate.
+- `bun run build`, `bun run pwa:check` and `git diff --check` all passed; Vite >500kB chunk warning persists.
+- Independent work changed repository HEAD during the audit (`f3237b9` observed after an earlier `bc43113`); **the UI audit did not create any commit**. Preserve others' in-progress API, production-readiness, transaction and hero changes.
+- Physical phones, actual screen readers, live login/permission flows and the remaining strict zero-offscale condition are **still not verified**, and production release approval must remain open.

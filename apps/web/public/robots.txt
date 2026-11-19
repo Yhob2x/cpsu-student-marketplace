@@ -1,0 +1,11 @@
+User-agent: *
+Allow: /
+Disallow: /api/
+Disallow: /admin
+Disallow: /dashboard
+Disallow: /inquiries
+Disallow: /notifications
+Disallow: /profile
+Disallow: /saved
+Disallow: /transactions
+Disallow: /login

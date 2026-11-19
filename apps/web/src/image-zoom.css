@@ -1,16 +1,15 @@
-/* Fullscreen product photo zoom; isolated from listing rails and page columns. */
+/* Product photo lightbox: large, contained photo with a dedicated thumbnail rail. */
 .image-zoom-overlay {
   position: fixed;
   inset: 0;
   z-index: 5000;
-  display: flex;
-  flex-direction: column;
-  width: 100vw;
+  display: grid;
+  place-items: center;
+  width: 100%;
   height: 100dvh;
   min-height: 100svh;
-  padding: env(safe-area-inset-top, 0px) env(safe-area-inset-right, 0px) env(safe-area-inset-bottom, 0px) env(safe-area-inset-left, 0px);
-  background: var(--color-primary-dark);
-  color: var(--color-card);
+  padding: 20px;
+  background: color-mix(in srgb, var(--color-primary-dark) 72%, transparent);
   overscroll-behavior: contain;
   opacity: 1;
   transition: opacity 200ms cubic-bezier(.23, 1, .32, 1);
@@ -21,74 +20,138 @@
   transition-duration: 140ms;
   pointer-events: none;
 }
-.image-zoom-toolbar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--ui-space-3);
-  padding: .85rem 1rem;
-  flex-wrap: wrap;
-  background: color-mix(in srgb, var(--color-card) 4%, transparent);
-  flex: 0 0 auto;
+.image-zoom-dialog {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) clamp(260px, 27vw, 320px);
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  grid-template-areas:
+    "view toolbar"
+    "view filmstrip"
+    "view help";
+  width: min(1190px, 100%);
+  height: min(790px, 100%);
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+  border: 1px solid var(--surface-stroke);
+  border-radius: 14px;
+  background: var(--color-card);
+  color: var(--forest);
+  box-shadow: 0 24px 80px color-mix(in srgb, var(--color-primary-dark) 35%, transparent);
 }
-.image-zoom-heading { display: grid; gap: 0; font-size: var(--ui-type-md); min-width: 0; max-width: min(45vw, 26rem); }
-.image-zoom-heading > strong { font-weight: 650; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.image-zoom-heading > span { font-size: .75rem; color: var(--color-primary-light); font-variant-numeric: tabular-nums; }
-.image-zoom-actions { display: flex; flex-wrap: nowrap; gap: .25rem; align-items: center; }
+.image-zoom-toolbar {
+  grid-area: toolbar;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  flex: 0 0 auto;
+  gap: 16px;
+  min-width: 0;
+  padding: 24px 18px 14px;
+}
+.image-zoom-heading {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+  padding-right: 35px;
+}
+.image-zoom-heading > strong {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  font-size: 1rem;
+  font-weight: 650;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+.image-zoom-heading > span {
+  font-size: .78rem;
+  line-height: 1.3;
+  color: var(--ink-soft);
+  font-variant-numeric: tabular-nums;
+}
+.image-zoom-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
 .image-zoom-actions button,
 .image-zoom-view > button {
   display: grid;
   place-items: center;
   flex: 0 0 auto;
-  min-width: 44px;
-  height: 44px;
-  padding: 0 .4rem;
-  border: 1px solid color-mix(in srgb, var(--color-card) 22%, transparent);
+  min-width: 42px;
+  min-height: 42px;
+  padding: 0 9px;
+  border: 1px solid var(--surface-stroke);
   border-radius: 9px;
-  background: color-mix(in srgb, var(--color-card) 9%, transparent);
-  color: var(--color-card);
-  font: 600 1.3rem/1 var(--font-body);
+  background: var(--color-card);
+  color: var(--forest);
+  font: 600 .85rem/1.2 var(--font-body);
   cursor: pointer;
   touch-action: manipulation;
 }
 .image-zoom-actions button:disabled,
-.image-zoom-view > button:disabled { opacity: .25; cursor: not-allowed; }
+.image-zoom-view > button:disabled { opacity: .35; cursor: not-allowed; }
 .image-zoom-actions button:focus-visible,
-.image-zoom-view > button:focus-visible { outline: 3px solid var(--color-primary-light); outline-offset: 2px; }
-.image-zoom-value { min-width: 3.75rem; text-align: center; font-size: var(--ui-type-xs); font-variant-numeric: tabular-nums; }
-.image-zoom-actions .image-zoom-reset { font-size: var(--ui-type-xs); min-width: 50px; }
-.image-zoom-actions .image-zoom-close { font-size: 1.75rem; background: color-mix(in srgb, var(--color-card) 15%, transparent); margin-left: .25rem; }
+.image-zoom-view > button:focus-visible,
+.image-zoom-thumb:focus-visible {
+  outline: 3px solid var(--color-focus);
+  outline-offset: 2px;
+}
+.image-zoom-value {
+  min-width: 48px;
+  text-align: center;
+  font-size: .82rem;
+  font-variant-numeric: tabular-nums;
+}
+.image-zoom-actions .image-zoom-reset { min-width: 58px; }
+.image-zoom-actions .image-zoom-close {
+  position: absolute;
+  top: 16px;
+  right: 14px;
+  min-width: 38px;
+  min-height: 38px;
+  padding: 0;
+  border-color: transparent;
+  background: transparent;
+}
 .image-zoom-view {
+  grid-area: view;
   position: relative;
   display: flex;
-  flex: 1 1 auto;
-  align-items: stretch;
-  justify-content: stretch;
   min-height: 0;
   min-width: 0;
-  width: 100%;
-  padding: .35rem .5rem;
+  height: 100%;
+  padding: 18px;
+  border-right: 1px solid var(--surface-stroke);
+  background: var(--surface-neutral);
 }
 .image-zoom-view > button {
   position: absolute;
   z-index: 2;
   top: 50%;
   transform: translateY(-50%);
-  font-size: 2rem;
+  width: 46px;
+  height: 46px;
   border-radius: 50%;
+  box-shadow: 0 4px 16px var(--shadow-card);
 }
-.image-zoom-prev { left: 1rem; }
-.image-zoom-next { right: 1rem; }
+.image-zoom-prev { left: 14px; }
+.image-zoom-next { right: 14px; }
 .image-zoom-view > button:disabled { opacity: 0; pointer-events: none; }
 .image-zoom-surface {
   position: relative;
-  flex: 1 1 auto;
-  min-height: 0;
-  min-width: 0;
-  height: 100%;
   display: flex;
+  flex: 1 1 auto;
   align-items: center;
   justify-content: center;
+  min-width: 0;
+  min-height: 0;
+  height: 100%;
   overflow: hidden;
   touch-action: none;
   cursor: zoom-in;
@@ -97,7 +160,6 @@
 .image-zoom-surface[data-zoomed="true"]:active { cursor: grabbing; }
 .image-zoom-surface > img {
   display: block;
-  /* The unzoomed photo always fits completely; JS bounds use its contained size. */
   width: 100%;
   height: 100%;
   max-width: 100%;
@@ -109,61 +171,120 @@
   user-select: none;
   pointer-events: none;
 }
-.image-zoom-unavailable { display: grid; place-items: center; gap: .5rem; color: var(--color-neutral-400); }
+.image-zoom-unavailable {
+  display: grid;
+  place-items: center;
+  gap: 8px;
+  color: var(--ink-soft);
+}
 .image-zoom-filmstrip {
-  display: flex;
-  justify-content: safe center;
-  gap: var(--ui-space-2);
-  flex: 0 0 auto;
-  overflow-x: auto;
-  overscroll-behavior-x: contain;
-  scroll-snap-type: x proximity;
+  grid-area: filmstrip;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-auto-rows: max-content;
+  align-content: start;
+  gap: 10px;
+  min-width: 0;
+  min-height: 0;
+  padding: 14px 18px 12px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
   scrollbar-width: thin;
-  scrollbar-color: var(--color-primary) transparent;
-  padding: .4rem var(--ui-space-3);
+  scrollbar-color: var(--surface-stroke) transparent;
 }
 .image-zoom-thumb {
-  flex: 0 0 54px;
-  width: 54px;
-  height: 54px;
-  padding: 2px;
-  border: 2px solid transparent;
-  border-radius: var(--ui-radius-sm);
-  background: transparent;
+  display: block;
+  width: 100%;
+  min-width: 0;
+  aspect-ratio: 1;
+  height: auto;
+  padding: 4px;
+  border: 2px solid var(--surface-stroke);
+  border-radius: 9px;
+  background: var(--color-card);
   cursor: pointer;
-  scroll-snap-align: center;
-  transition: border-color 160ms cubic-bezier(.23, 1, .32, 1);
+  transition: border-color 160ms ease, background-color 160ms ease;
 }
-.image-zoom-thumb[aria-pressed="true"] { border-color: var(--color-primary-light); }
-.image-zoom-thumb img, .image-zoom-thumb-failed {
+.image-zoom-thumb[aria-pressed="true"] {
+  border-color: var(--color-primary);
+  background: var(--color-primary-light);
+}
+.image-zoom-thumb img,
+.image-zoom-thumb-failed {
   display: grid;
   place-items: center;
   width: 100%;
   height: 100%;
-  border-radius: var(--ui-radius-sm);
-  object-fit: cover;
-  background: var(--color-primary-dark);
-  color: var(--color-primary-light);
+  object-fit: contain;
+  border-radius: 5px;
+  color: var(--ink-soft);
 }
-.image-zoom-thumb:focus-visible { outline: 3px solid var(--color-primary-light); outline-offset: 2px; }
-.image-zoom-help { flex: 0 0 auto; margin: 0; padding: var(--ui-space-2) var(--ui-space-3) var(--ui-space-4); text-align: center; color: var(--color-primary-light); font-size: .75rem; line-height: 1.45; }
-@media (max-width: 560px) {
-  .image-zoom-toolbar { padding: .65rem var(--ui-space-3); gap: .35rem; }
-  .image-zoom-heading > strong { font-size: var(--ui-type-xs); }
-  .image-zoom-view { padding: .25rem .1rem; gap: 0; }
-  .image-zoom-view > button { position: absolute; top: 52%; z-index: 1; background: color-mix(in srgb, var(--color-primary-dark) 75%, transparent); }
-  .image-zoom-prev { left: .25rem; }
-  .image-zoom-next { right: .25rem; }
-  .image-zoom-help { padding-inline: .5rem; font-size: var(--ui-type-xs); }
+.image-zoom-help {
+  grid-area: help;
+  min-width: 0;
+  margin: 0;
+  padding: 10px 18px 20px;
+  color: var(--ink-soft);
+  font-size: .75rem;
+  line-height: 1.5;
+}
+@media (hover: hover) and (pointer: fine) {
+  .image-zoom-actions button:not(:disabled):hover,
+  .image-zoom-view > button:not(:disabled):hover { border-color: var(--color-primary); background: var(--color-primary-light); }
+  .image-zoom-actions .image-zoom-close:hover { background: var(--surface-neutral); }
+  .image-zoom-thumb:not([aria-pressed="true"]):hover { border-color: var(--color-primary); }
+}
+@media (max-width: 760px) {
+  .image-zoom-overlay { padding: 0; background: var(--color-card); }
+  .image-zoom-dialog {
+    width: 100%;
+    height: 100%;
+    border: none;
+    border-radius: 0;
+    box-shadow: none;
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto minmax(0, 1fr) auto auto;
+    grid-template-areas: "toolbar" "view" "filmstrip" "help";
+  }
+  .image-zoom-toolbar { padding: 12px 14px 10px; gap: 8px; }
+  .image-zoom-heading { min-height: 35px; gap: 2px; padding-right: 46px; }
+  .image-zoom-heading > strong { -webkit-line-clamp: 1; font-size: .92rem; }
+  .image-zoom-actions { gap: 4px; }
+  .image-zoom-actions button { min-width: 40px; min-height: 40px; }
+  .image-zoom-actions .image-zoom-close { top: 8px; right: 10px; }
+  .image-zoom-view { padding: 8px; border-right: 0; }
+  .image-zoom-view > button { width: 42px; height: 44px; }
+  .image-zoom-prev { left: 6px; }
+  .image-zoom-next { right: 6px; }
+  .image-zoom-filmstrip {
+    display: flex;
+    gap: 8px;
+    padding: 10px 14px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    scroll-snap-type: x proximity;
+    scrollbar-width: thin;
+  }
+  .image-zoom-thumb { flex: 0 0 64px; width: 64px; height: 64px; scroll-snap-align: center; }
+  .image-zoom-help { text-align: center; padding: 2px 14px 10px; font-size: .7rem; }
 }
 @media (max-width: 360px) {
-  .image-zoom-actions { gap: 0; }
-  .image-zoom-actions button { min-width: 38px; height: 44px; }
-  .image-zoom-actions .image-zoom-reset { min-width: 44px; }
-  .image-zoom-value { min-width: 3rem; }
+  .image-zoom-value { min-width: 40px; }
+  .image-zoom-actions .image-zoom-reset { min-width: 50px; }
+  .image-zoom-actions button { padding: 0 6px; }
+}
+@media (max-height: 500px) and (max-width: 760px) {
+  .image-zoom-toolbar { flex-direction: row; align-items: center; padding-block: 4px; }
+  .image-zoom-heading { flex: 1 1 auto; }
+  .image-zoom-actions { padding-right: 30px; }
+  .image-zoom-help { display: none; }
+  .image-zoom-thumb { flex-basis: 48px; width: 48px; height: 48px; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .image-zoom-overlay, .image-zoom-overlay[data-motion-phase] { transition: none; opacity: 1; }
-  .image-zoom-thumb { transition-duration: 100ms; }
+  .image-zoom-overlay,
+  .image-zoom-overlay[data-motion-phase] { transition: none; opacity: 1; }
+  .image-zoom-thumb { transition: none; }
   .image-zoom-surface > img { will-change: auto; }
 }

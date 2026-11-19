@@ -14,7 +14,7 @@
   margin-bottom: var(--ui-space-1);
   color: var(--forest);
   font-size: var(--ui-type-xs);
-  font-weight: 800;
+  font-weight: var(--ui-weight-bold);
   letter-spacing: .09em;
 }
 .my-store .listing-composer-intro p {
@@ -33,7 +33,7 @@
   padding: 0;
   color: var(--forest);
   font-size: var(--ui-type-md);
-  font-weight: 750;
+  font-weight: var(--ui-weight-bold);
 }
 .my-store .listing-kind-hint {
   margin: var(--ui-space-1) 0 var(--ui-space-3);
@@ -73,7 +73,7 @@
 .my-store .listing-kind-option strong {
   color: var(--forest);
   font-size: var(--ui-type-md);
-  font-weight: 750;
+  font-weight: var(--ui-weight-bold);
   line-height: 1.25;
 }
 .my-store .listing-kind-option small {
@@ -105,11 +105,11 @@
 .my-store .listing-composer .field {
   color: var(--forest);
   font-size: var(--ui-type-sm);
-  font-weight: 650;
+  font-weight: var(--ui-weight-bold);
   gap: var(--ui-space-2);
 }
 .my-store .listing-composer .field :is(input:not([type="radio"]), textarea, select) {
-  font-weight: 450;
+  font-weight: var(--ui-weight-regular);
   color: var(--ink);
 }
 .my-store .listing-composer textarea { min-height: 112px; resize: vertical; }

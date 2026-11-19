@@ -1,3 +1,4 @@
+import { Field, Panel } from './components/ui/primitives';
 import { FormEvent, useEffect, useRef, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { api, explain, timeAgo } from './api';
@@ -129,7 +130,7 @@ export function Profile() {
     </div>
 
     <div className={`profile-grid ${staff ? "profile-grid--staff" : me.storeId ? "profile-grid--seller" : "profile-grid--student"}`}>
-      <section className="panel profile-account">
+      <Panel as="section" className="profile-account">
         <h2>Your account</h2>
         <div className="profile-identity">
           <span className="profile-avatar" aria-hidden="true">{initials}</span>
@@ -142,7 +143,7 @@ export function Profile() {
           <div><dt>Email address</dt><dd>{me.email}</dd></div>
         </dl>
         <p className="muted profile-privacy-note"><Icon name="shield" size={15} /> Your email is not displayed publicly.</p>
-      </section>
+      </Panel>
 
       {!staff && <section className={'panel profile-affiliation profile-affiliation--' + status.state}>
         <h2>CPSU affiliation</h2>
@@ -165,18 +166,18 @@ export function Profile() {
         {status.state === 'rejected' && <Link className="profile-status-secondary" to="/guidelines">Read marketplace guidelines</Link>}
       </section>}
 
-      {!staff && <section className="panel profile-registration" aria-labelledby="profile-registration-heading">
+      {!staff && <Panel as="section" className="profile-registration" aria-labelledby="profile-registration-heading">
         <h2 id="profile-registration-heading">Registration information</h2>
         <dl className="profile-registration-list">
           <div><dt>Campus on record</dt><dd><strong>{registeredCampuses || 'No campus on record'}</strong></dd></div>
         </dl>
         <p className="profile-registration-note">Automated CISS checks of student ID, full name and enrollment are not active. Your current affiliation status appears above.</p>
-      </section>}
+      </Panel>}
 
-      <section className="panel profile-settings" aria-labelledby="account-settings-heading">
+      <Panel as="section" className="profile-settings" aria-labelledby="account-settings-heading">
         <h2 id="account-settings-heading">Account settings</h2>
         <form className="stack" onSubmit={save}>
-          <label className="field" htmlFor="profile-display-name">Display name</label>
+          <Field className="" htmlFor="profile-display-name">Display name</Field>
           <input id="profile-display-name" value={name} disabled={busy} onChange={e => {
             setName(e.target.value);
             setOk('');
@@ -189,9 +190,9 @@ export function Profile() {
           {ok && <p className="profile-save-success" role="status"><Icon name="check" size={16} />{ok}</p>}
           {err && <p className="err" role="alert">{err}</p>}
         </form>
-      </section>
+      </Panel>
 
-      <section className="panel profile-shortcuts-panel">
+      <Panel as="section" className="profile-shortcuts-panel">
         <h2>Quick links</h2>
         <nav aria-label="Profile shortcuts">
           <ul className="profile-shortcuts">
@@ -210,7 +211,7 @@ export function Profile() {
             </li>)}
           </ul>
         </nav>
-      </section>
+      </Panel>
 
       <div className="profile-actions-row">
         {!staff && me.storeId && <details id="store-profile" className="profile-store-disclosure" ref={storeProfileRef}>

@@ -111,7 +111,7 @@
 .storefront .storefront-facts strong,
 .storefront .storefront-facts .storefront-follow-count {
   font-size: var(--ui-type-md);
-  font-weight: 750;
+  font-weight: var(--ui-weight-bold);
   line-height: 1.45;
 }
 .storefront .storefront-facts .storefront-follow-count {
@@ -143,7 +143,7 @@
   background: var(--surface-soft);
   color: var(--ink-soft);
   font-size: var(--ui-type-xs);
-  font-weight: 650;
+  font-weight: var(--ui-weight-bold);
   white-space: nowrap;
 }
 .storefront .storefront-navigation {
@@ -207,7 +207,7 @@
 .storefront .storefront-category-label {
   color: var(--ink-soft);
   font-size: var(--ui-type-xs);
-  font-weight: 650;
+  font-weight: var(--ui-weight-bold);
 }
 .storefront .storefront-category-tabs {
   display: flex;
@@ -230,7 +230,7 @@
   background: var(--surface-soft);
   color: var(--forest);
   font-size: var(--ui-type-xs);
-  font-weight: 650;
+  font-weight: var(--ui-weight-bold);
   line-height: 1.25;
   white-space: nowrap;
 }

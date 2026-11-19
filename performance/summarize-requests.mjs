@@ -27,6 +27,8 @@ export function createRequestSummary() {
   let failures = 0;
   let limited = 0;
   let other4xx = 0;
+  let knownResponseSizes = 0;
+  let maxResponseBytes = null;
   let earliest = Infinity;
   let latest = -Infinity;
 
@@ -54,9 +56,23 @@ export function createRequestSummary() {
     else if (record.status === 429) limited++;
     else if (record.status >= 400) other4xx++;
 
+    // Optional Content-Length: not necessarily gzip or transferred bytes.
+    const size = Number.isSafeInteger(record.responseBytes) && record.responseBytes >= 0
+      ? record.responseBytes : null;
+    if (size !== null) {
+      knownResponseSizes++;
+      maxResponseBytes = Math.max(maxResponseBytes ?? 0, size);
+    }
     const key = `${record.method} ${record.route}`;
     let route = byRoute.get(key);
-    if (!route) { route = { requests: 0, serverErrors: 0, limited: 0, timings: [] }; byRoute.set(key, route); }
+    if (!route) {
+      route = { requests: 0, serverErrors: 0, limited: 0, timings: [], knownResponseSizes: 0, maxResponseBytes: null };
+      byRoute.set(key, route);
+    }
+    if (size !== null) {
+      route.knownResponseSizes++;
+      route.maxResponseBytes = Math.max(route.maxResponseBytes ?? 0, size);
+    }
     route.requests++;
     if (record.status >= 500) route.serverErrors++;
     if (record.status === 429) route.limited++;
@@ -77,6 +93,7 @@ export function createRequestSummary() {
     const routes = [...byRoute.entries()].map(([route, stats]) => ({
       route, requests: stats.requests, p95Ms: percentile(stats.timings),
       serverErrors: stats.serverErrors, limited: stats.limited,
+      knownResponseSizes: stats.knownResponseSizes, maxResponseBytes: stats.maxResponseBytes,
     })).sort((a, b) => b.requests - a.requests || a.route.localeCompare(b.route));
     return {
       source: 'observed_http_request_logs_only',
@@ -86,6 +103,8 @@ export function createRequestSummary() {
       serverErrors: failures,
       serverErrorRatePct: accepted ? Math.round(failures / accepted * 10000) / 100 : null,
       limited429: limited, other4xx,
+      // Content-Length is an upstream header value, not the gzipped wire payload.
+      knownResponseSizes, maxResponseBytes,
       readP95Ms: percentile(okReads), writeP95Ms: percentile(okWrites),
       allReadP95Ms: percentile(allReads), allWriteP95Ms: percentile(allWrites),
       successfulReadCount: okReads.length, successfulWriteCount: okWrites.length,

@@ -1,5 +1,8 @@
 import type { Page } from '@playwright/test';
-import { DEFAULT_HOME_PAGE } from '../../src/home-page-content';
+import { readFileSync } from 'node:fs';
+// Keep the synthetic editor shape aligned with the shipped copy without importing JSON through Playwright.
+const shippedCopy = JSON.parse(readFileSync(new URL('../../../shared/home-page-defaults.json', import.meta.url), 'utf8')).copy;
+const DEFAULT_HOME_PAGE = { copy: shippedCopy, images: { hero: null, steps: null, cta: null } };
 
 export type Persona = 'guest' | 'buyer' | 'seller' | 'reviewer' | 'admin';
 const campus = { id: 1, code: 'MAIN', name: 'CPSU Main Campus' };
@@ -109,6 +112,8 @@ export async function mockMarketplace(page: Page, initialPersona: Persona = 'gue
       status = 201; data = { id: photoId };
     } else if (path === '/saved') {
       data = [];
+    } else if (path === '/transactions' && method === 'GET') {
+      data = { items: [], total: 0, page: 1 };
     } else if (path === '/notifications/unread-count') {
       data = { total: 0, messages: 0 };
     } else if (path === '/notifications') {

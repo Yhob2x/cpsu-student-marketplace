@@ -94,7 +94,7 @@
 .explore-results-toolbar .explore-results-count {
   color: var(--ink-soft);
   font-size: 14px;
-  font-weight: 600;
+  font-weight: var(--ui-weight-bold);
   line-height: 1.4;
 }
 .explore-results-toolbar .explore-sort-control {
@@ -110,7 +110,7 @@
   flex: 0 0 auto;
   color: var(--ink-soft);
   font-size: var(--ui-type-xs);
-  font-weight: 650;
+  font-weight: var(--ui-weight-bold);
   white-space: nowrap;
 }
 .explore-sort-options {

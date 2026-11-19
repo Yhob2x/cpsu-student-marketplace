@@ -112,8 +112,15 @@ export function ImageZoomDialog({ photos, title, initialIndex, onClose, instantE
     const strip = filmstripRef.current;
     const selected = strip?.children[index] as HTMLElement | undefined;
     if (!strip || !selected) return;
-    const left = selected.offsetLeft - strip.offsetLeft - (strip.clientWidth - selected.clientWidth) / 2;
-    strip.scrollTo({ left, behavior: window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth' });
+    const isSidePanel = window.matchMedia('(min-width: 761px)').matches;
+    const behavior = window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth';
+    if (isSidePanel) {
+      const top = selected.offsetTop - strip.offsetTop - (strip.clientHeight - selected.clientHeight) / 2;
+      strip.scrollTo({ top, behavior });
+    } else {
+      const left = selected.offsetLeft - strip.offsetLeft - (strip.clientWidth - selected.clientWidth) / 2;
+      strip.scrollTo({ left, behavior });
+    }
   }, [index]);
 
   const updateZoom = (nextScale: number, nextOffset: Offset = offsetRef.current) => {
@@ -274,9 +281,11 @@ export function ImageZoomDialog({ photos, title, initialIndex, onClose, instantE
   return createPortal(
     <div className="image-zoom-overlay" ref={dialogRef} role="dialog" aria-modal="true"
       aria-labelledby={headingId} onKeyDown={onKeyDown} data-motion-phase={motionPhase}
+      onMouseDown={event => { if (event.target === event.currentTarget) requestClose(); }}
       onTransitionEnd={event => {
         if (event.target === event.currentTarget && event.propertyName === 'opacity' && motionPhase === 'exiting') onClose(index);
       }}>
+      <div className="image-zoom-dialog">
       <div className="image-zoom-toolbar">
         <div className="image-zoom-heading">
           <strong id={headingId}>{title}</strong>
@@ -315,7 +324,8 @@ export function ImageZoomDialog({ photos, title, initialIndex, onClose, instantE
                 onError={() => setFailed(values => values.includes(photoIndex) ? values : [...values, photoIndex])} />}
         </button>)}
       </div>}
-      <p className="image-zoom-help">Scroll, pinch, or double-tap to zoom · Drag the enlarged photo to explore · Swipe to change photos at 100%</p>
+      <p className="image-zoom-help">Scroll, pinch or double-tap to zoom. Drag to explore; swipe to change photos.</p>
+      </div>
     </div>, document.body
   );
 }

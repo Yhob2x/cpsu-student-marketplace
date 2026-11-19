@@ -27,7 +27,7 @@ header.top .brand {
   letter-spacing: -.01em;
   white-space: nowrap;
 }
-header.top .brand b { color: var(--ink); font-weight: 600; }
+header.top .brand b { color: var(--ink); font-weight: var(--ui-weight-bold); }
 header.top .brand-symbol { width: 36px; height: 36px; flex: 0 0 36px; }
 header.top .head-search {
   display: flex;
@@ -106,7 +106,7 @@ header.top .who .signup-action {
   padding: var(--ui-space-2) var(--ui-space-3);
   white-space: nowrap;
   text-decoration: none;
-  font-weight: 600;
+  font-weight: var(--ui-weight-bold);
 }
 header.top .navrow {
   align-items: center;
@@ -359,7 +359,7 @@ main .category-section { margin-top: 16px; }
     display: block;
     min-height: 0;
     font-size: inherit;
-    font-weight: 650;
+    font-weight: var(--ui-weight-bold);
     overflow-wrap: normal;
     word-break: normal;
     line-height: 1.22;

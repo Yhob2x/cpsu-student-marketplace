@@ -11,6 +11,8 @@ export type HttpRequestRecord = {
   route: string;
   status: number;
   durationMs: number;
+  // Response Content-Length when known; this is pre-proxy, not gzip wire size.
+  responseBytes: number | null;
 };
 
 export function requestDiagnostics(log?: (record: HttpRequestRecord) => void): RequestHandler {
@@ -27,6 +29,11 @@ export function requestDiagnostics(log?: (record: HttpRequestRecord) => void): R
         const safePrefix = /^(?:\/api\/v1(?:\/[a-z][a-z-]*){0,4})?$/.test(prefix);
         const route = safePrefix && typeof template === 'string'
           ? `${prefix}${prefix && template === '/' ? '' : template}` : '[unmatched]';
+        const lengthHeader = res.getHeader('content-length');
+        const lengthText = typeof lengthHeader === 'string' || typeof lengthHeader === 'number'
+          ? String(lengthHeader) : '';
+        const responseBytes = /^\d+$/.test(lengthText) && Number.isSafeInteger(Number(lengthText))
+          ? Number(lengthText) : null;
         log({
           event: 'http_request',
           requestId,
@@ -35,6 +42,7 @@ export function requestDiagnostics(log?: (record: HttpRequestRecord) => void): R
           route,
           status: res.statusCode,
           durationMs: Math.round((performance.now() - start) * 100) / 100,
+          responseBytes,
         });
       });
     }

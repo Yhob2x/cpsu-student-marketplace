@@ -79,7 +79,7 @@ The planned isolated datasets should model 1,000, 5,000 and 15,000 synthetic stu
 
 ## Iteration 2: offline request-log summary (no traffic generated)
 
-API responses now include a generated `X-Request-ID`. Structured `http_request` JSON log lines are enabled by default when `NODE_ENV=production`; use `HTTP_ACCESS_LOG_ENABLED=true` to opt in on an approved isolated test API, or `false` to opt out. Each record includes an ISO UTC timestamp, HTTP method, **route template** (never the request URL), response status and total request duration in milliseconds. No query strings, URL IDs, request/response bodies, auth tokens or student identifiers are logged.
+API responses now include a generated `X-Request-ID`. Structured `http_request` JSON log lines are enabled by default when `NODE_ENV=production`; use `HTTP_ACCESS_LOG_ENABLED=true` to opt in on an approved isolated test API, or `false` to opt out. Each record includes an ISO UTC timestamp, HTTP method, **route template** (never the request URL), response status, total request duration in milliseconds, and `responseBytes` when the API's `Content-Length` header is available. This byte count is the application response size before any reverse-proxy compression; it is **not gzipped transfer bytes**. The offline analyzer reports known-size counts and maximum declared sizes separately; missing sizes remain unknown. No query strings, URL IDs, request/response bodies, auth tokens or student identifiers are logged.
 
 Capture **only the isolated staging instance's** JSONL console logs into an operator-owned, access-controlled local file. With a verified private file, analyze it offline using Bun:
 

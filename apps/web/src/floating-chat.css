@@ -38,7 +38,7 @@
   color: var(--paper);
   background: var(--color-primary-dark);
   font-size: var(--ui-type-xs);
-  font-weight: 750;
+  font-weight: var(--ui-weight-bold);
   line-height: 1;
   font-variant-numeric: tabular-nums;
   pointer-events: none;
@@ -169,7 +169,7 @@
   background: var(--mango-soft);
   color: var(--forest);
   font-size: var(--ui-type-sm);
-  font-weight: 800;
+  font-weight: var(--ui-weight-bold);
 }
 .floating-chat-inbox-copy { display: grid; gap: var(--ui-space-1); min-width: 0; flex: 1; }
 .floating-chat-inbox-top { display: flex; justify-content: space-between; gap: .5rem; min-width: 0; }
@@ -182,7 +182,7 @@
   font-size: var(--ui-type-xs);
   line-height: 1.4;
 }
-.floating-chat-item-listing { color: var(--leaf); font-weight: 650; }
+.floating-chat-item-listing { color: var(--leaf); font-weight: var(--ui-weight-bold); }
 .floating-chat-message-preview { color: var(--ink-soft); }
 .floating-chat-panel-foot {
   display: flex;
@@ -465,7 +465,7 @@
   min-width: 0;
   color: var(--ink);
   font-size: var(--ui-type-xs);
-  font-weight: 650;
+  font-weight: var(--ui-weight-bold);
 }
 .floating-chat-meetup-label > span {
   overflow: hidden;

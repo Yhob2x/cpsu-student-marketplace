@@ -61,7 +61,7 @@
 .site-foot--refined .footer-links h2 {
   color: var(--color-card);
   font-size: var(--ui-type-sm);
-  font-weight: 750;
+  font-weight: var(--ui-weight-bold);
   letter-spacing: 0;
   margin: var(--ui-space-2) 0 .6rem;
 }
@@ -154,7 +154,7 @@
     padding: var(--ui-space-2) var(--ui-space-1);
     border-radius: var(--ui-radius-sm);
     font-size: var(--ui-type-xs);
-    font-weight: 600;
+    font-weight: var(--ui-weight-bold);
     line-height: 1.2;
     color: var(--color-card);
     text-underline-offset: .2rem;
@@ -173,4 +173,17 @@
 }
 @media (prefers-reduced-motion: reduce) {
   .site-foot--refined a { transition: none; }
+}
+
+/* In Windows high-contrast mode, use the reader's system palette explicitly. */
+@media (forced-colors: active) {
+  .site-foot.site-foot--refined {
+    background: Canvas;
+    color: CanvasText;
+  }
+  .site-foot--refined .footer-about .footer-safety,
+  .site-foot--refined .footer-base {
+    color: CanvasText;
+  }
+  .site-foot--refined a:focus-visible { outline-color: Highlight; }
 }

@@ -126,7 +126,7 @@
   font-size: var(--ui-type-xl);
   line-height: 1.25;
 }
-.my-store .store-listing-count { font-weight: 600; }
+.my-store .store-listing-count { font-weight: var(--ui-weight-bold); }
 .my-store .store-listing-filters { gap: 12px; }
 .my-store .store-listing-filters .field { font-size: var(--ui-type-sm); }
 .my-store .store-listing-filters :is(input, select) {
@@ -399,7 +399,7 @@
   background: var(--paper);
 }
 .my-store .store-followers-dialog .store-followers-pages > span {
-  font-weight: 600;
+  font-weight: var(--ui-weight-bold);
   font-variant-numeric: tabular-nums;
 }
 @media (max-width: 620px) {

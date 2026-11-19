@@ -7,6 +7,8 @@ import { requireStudent } from '../auth.js';
 import { notify } from '../audit.js';
 import { inquiryAllowsMessage, appendMessageToOpenThread } from '../inquiry-safety.js';
 import { rowAccess } from '../row-access.js';
+import { messagePageInput, messagePageQuery, pageFromNewestFirst } from '../message-pages.js';
+import { inboxPageInput, inboxPageQuery, inboxPageResult } from '../inbox-pages.js';
 
 const r = Router();
 r.use(requireStudent);
@@ -39,17 +41,21 @@ async function participantThread(userId: number, id: number) {
 
 r.get('/', async (req, res) => {
   const uid = req.user!.id;
+  const page = inboxPageInput.parse(req.query);
+  const paging = page.limit === undefined ? null : inboxPageQuery(page.limit, page.beforeId);
   const rows = await prisma.inquiryThread.findMany({
-    where: rowAccess.inquiryParticipant(uid),
+    where: { ...rowAccess.inquiryParticipant(uid), ...(paging && page.beforeId !== undefined
+      ? { id: { lt: page.beforeId } } : {}) },
     include: {
       listing: { select: { id: true, title: true } },
       buyer: { select: { displayName: true } },
       seller: { include: { owner: { select: { displayName: true, status: true } } } },
       messages: { orderBy: { createdAt: 'desc' }, take: 1 },
     },
-    orderBy: { createdAt: 'desc' },
+    orderBy: paging?.orderBy ?? { createdAt: 'desc' },
+    ...(paging ? { take: paging.take } : {}),
   });
-  res.json(rows.map(t => ({
+  const items = rows.map(t => ({
     id: t.id, status: t.status, listing: t.listing,
     // The authorized recipient sees the other participant's display name, never credentials.
     otherStudentName: t.buyerUserId === uid ? t.seller.owner.displayName : t.buyer.displayName,
@@ -57,7 +63,11 @@ r.get('/', async (req, res) => {
       ...t.messages[0], mine: t.messages[0].authorUserId === uid, receipt: receipt(t.messages[0]),
     } : null,
     role: t.buyerUserId === uid ? 'buyer' : 'seller',
-  })));
+  }));
+  if (!paging || page.limit === undefined) return res.json(items);
+  const result = inboxPageResult(rows, page.limit);
+  res.json({ items: items.slice(0, page.limit), hasMore: result.hasMore,
+    nextBeforeId: result.nextBeforeId });
 });
 
 r.post('/', async (req, res) => {
@@ -84,13 +94,38 @@ r.post('/', async (req, res) => {
 });
 
 r.get('/:id/messages', async (req, res) => {
-  const t = await participantThread(req.user!.id, Number(req.params.id));
-  // Delivered = the recipient's client fetched this conversation. Never mark the sender's own messages.
-  await prisma.inquiryMessage.updateMany({
-    where: { threadId: t.id, authorUserId: { not: req.user!.id }, deliveredAt: null },
-    data: { deliveredAt: new Date() },
+  // Reject invalid IDs and pagination controls before touching the database.
+  const threadId = z.coerce.number().int().positive().max(2_147_483_647).parse(req.params.id);
+  const pageRequest = messagePageInput.parse(req.query);
+  const t = await participantThread(req.user!.id, threadId);
+  // New PWA clients request 50 recent messages, then request older pages by ID.
+  // The no-limit legacy response is deliberately preserved for old clients.
+  const page = pageRequest.limit === undefined ? null : pageFromNewestFirst(
+    await prisma.inquiryMessage.findMany(messagePageQuery(t.id, pageRequest.limit, pageRequest.beforeId)),
+    pageRequest.limit,
+  );
+  const deliveredAt = new Date();
+  // A delivery receipt is recorded only for messages actually fetched by the
+  // paginated client. The old non-paginated path preserves existing semantics.
+  if (page) {
+    const ids = page.messages.filter(m => m.authorUserId !== req.user!.id && !m.deliveredAt).map(m => m.id);
+    if (ids.length) {
+      await prisma.inquiryMessage.updateMany({
+        where: { threadId: t.id, id: { in: ids }, authorUserId: { not: req.user!.id }, deliveredAt: null },
+        data: { deliveredAt },
+      });
+      page.messages.forEach(m => { if (ids.includes(m.id) && !m.deliveredAt) m.deliveredAt = deliveredAt; });
+    }
+  } else {
+    await prisma.inquiryMessage.updateMany({
+      where: { threadId: t.id, authorUserId: { not: req.user!.id }, deliveredAt: null },
+      data: { deliveredAt },
+    });
+  }
+  const messages = page?.messages ?? await prisma.inquiryMessage.findMany({
+    where: { threadId: t.id }, orderBy: { createdAt: 'asc' },
+    include: { author: { select: { displayName: true } } },
   });
-  const messages = await prisma.inquiryMessage.findMany({ where: { threadId: t.id }, orderBy: { createdAt: 'asc' }, include: { author: { select: { displayName: true } } } });
   const handoff = await prisma.handoff.findUnique({ where: { inquiryThreadId: t.id } });
   const transaction = await prisma.transaction.findFirst({
     where: { inquiryThreadId: t.id, ...rowAccess.transactionParticipant(req.user!.id) },
@@ -115,6 +150,7 @@ r.get('/:id/messages', async (req, res) => {
   }, messages: messages.map(m => ({
     id: m.id, body: m.body, createdAt: m.createdAt, mine: m.authorUserId === req.user!.id,
     author: m.author.displayName, receipt: receipt(m), seenAt: m.seenAt })), handoff, transaction,
+    ...(page ? { hasEarlier: page.hasEarlier } : {}),
     // Never disclose stale heartbeats for a closed thread, even if a heartbeat races closure.
     typing: inquiryAllowsMessage(t.status) && (typing.get(`${t.id}:${other}`) ?? 0) > Date.now(),
     otherActiveInChat: inquiryAllowsMessage(t.status) && (presence.get(`${t.id}:${other}`) ?? 0) > Date.now() });

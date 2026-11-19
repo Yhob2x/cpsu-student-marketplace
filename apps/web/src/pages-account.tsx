@@ -1,3 +1,4 @@
+import { Field, Panel } from './components/ui/primitives';
 import { FormEvent, useEffect, useRef, useState } from 'react';
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { api, explain, peso, setToken, timeAgo } from './api';
@@ -24,6 +25,8 @@ import { runExclusive } from './auth-submit';
 import { safeLoginReturn } from './auth-return';
 import { authFieldForError, type AuthField } from './auth-field-error';
 import { hasNewIncomingMessage, messageReceiveSoundEnabled, playMessageReceiveSound, prepareMessageReceiveSound, setMessageReceiveSoundEnabled, unlockMessageReceiveSound } from './message-receive-sound';
+import { mergeMessageHistory } from './message-history';
+import { mergeInboxPages, type InboxPage } from './inbox-pages';
 
 function HandoffPlace({ location }: { location: string }) {
   const { place, point } = decodeMeetupLocation(location);
@@ -59,19 +62,19 @@ export function Login() {
     });
   };
   return <form className="stack auth-form" aria-busy={busy} onSubmit={go}><h1>Sign in</h1>
-    <label className="field">Email
+    <Field className="">Email
       <input ref={emailRef} name="email" type="email" placeholder="Your email address" autoComplete="email" required
         aria-invalid={Boolean(fieldErrors.email)} aria-describedby={fieldErrors.email ? 'login-email-error' : undefined}
         onInvalid={() => setFieldErrors(previous => ({ ...previous, email: 'Enter a valid email address.' }))}
         onChange={() => clearField('email')} />
-    </label>
+    </Field>
     {fieldErrors.email && <p className="field-error" id="login-email-error" role="alert">{fieldErrors.email}</p>}
-    <label className="field">Password
+    <Field className="">Password
       <input ref={passwordRef} name="password" type="password" autoComplete="current-password" required
         aria-invalid={Boolean(fieldErrors.password)} aria-describedby={fieldErrors.password ? 'login-password-error' : undefined}
         onInvalid={() => setFieldErrors(previous => ({ ...previous, password: 'Enter your password.' }))}
         onChange={() => clearField('password')} />
-    </label>
+    </Field>
     {fieldErrors.password && <p className="field-error" id="login-password-error" role="alert">{fieldErrors.password}</p>}
     {err && <p className="err" role="alert">{err}</p>}<button className="btn" disabled={busy}>{busy ? 'Signing in…' : 'Sign in'}</button>
     <p className="muted">New here? <Link to={next === '/' ? '/register' : `/register?next=${encodeURIComponent(next)}`}>Create an account</Link></p></form>;
@@ -136,33 +139,33 @@ export function Register() {
     });
   };
   return <form className="stack auth-form" aria-busy={busy} onSubmit={go}><h1>Create your account</h1>
-    <label className="field">Display name
+    <Field className="">Display name
       <input name="displayName" placeholder="Name shown to others" required minLength={2} maxLength={80}
         aria-invalid={Boolean(fieldErrors.displayName)} aria-describedby={fieldErrors.displayName ? 'register-name-error' : undefined}
         onInvalid={() => setFieldErrors(previous => ({ ...previous, displayName: 'Enter a name with at least 2 characters.' }))}
         onChange={() => clearField('displayName')} />
-    </label>
+    </Field>
     {fieldErrors.displayName && <p className="field-error" id="register-name-error" role="alert">{fieldErrors.displayName}</p>}
-    <label className="field">Email
+    <Field className="">Email
       <input ref={emailRef} name="email" type="email" autoComplete="email" required
         aria-invalid={Boolean(fieldErrors.email)} aria-describedby={fieldErrors.email ? 'register-email-error' : undefined}
         onInvalid={() => setFieldErrors(previous => ({ ...previous, email: 'Enter a valid email address.' }))}
         onChange={() => clearField('email')} />
-    </label>
+    </Field>
     {fieldErrors.email && <p className="field-error" id="register-email-error" role="alert">{fieldErrors.email}</p>}
-    <label className="field">Password (10 or more characters)
+    <Field className="">Password (10 or more characters)
       <input ref={passwordRef} name="password" type="password" autoComplete="new-password" required minLength={10} maxLength={128}
         aria-invalid={Boolean(fieldErrors.password)} aria-describedby={fieldErrors.password ? 'register-password-error' : undefined}
         onInvalid={() => setFieldErrors(previous => ({ ...previous, password: 'Use 10 to 128 characters.' }))}
         onChange={() => clearField('password')} />
-    </label>
+    </Field>
     {fieldErrors.password && <p className="field-error" id="register-password-error" role="alert">{fieldErrors.password}</p>}
-    <label className="field">Campus
+    <Field className="">Campus
       <select ref={campusRef} name="campusId" required defaultValue="" disabled={campusStatus !== 'ready'}
         aria-invalid={Boolean(fieldErrors.campusId)} aria-describedby={fieldErrors.campusId ? 'register-campus-error' : undefined}
         onInvalid={() => setFieldErrors(previous => ({ ...previous, campusId: 'Choose your campus.' }))}
         onChange={() => clearField('campusId')}><option value="" disabled>Select a campus</option>{campuses.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}</select>
-    </label>
+    </Field>
     {fieldErrors.campusId && <p className="field-error" id="register-campus-error" role="alert">{fieldErrors.campusId}</p>}
     {campusStatus === 'loading' && <p className="muted" role="status">Loading campuses…</p>}
     {campusStatus === 'error' && <div className="stack" role="alert"><p className="err">Campus options could not load. {campusError}</p>
@@ -170,22 +173,22 @@ export function Register() {
     {identityStatus === 'active' && <fieldset className="register-identity-fields" aria-describedby="register-private-identity-info">
       <legend>Private student verification details</legend>
       <p className="muted" id="register-private-identity-info">These details are kept private and do not automatically verify your CPSU affiliation.</p>
-      <label className="field">Full name
+      <Field className="">Full name
         <input ref={fullNameRef} name="fullName" autoComplete="name" placeholder="Your full name for campus verification"
           required minLength={2} maxLength={120} aria-invalid={Boolean(fieldErrors.fullName)}
           aria-describedby={fieldErrors.fullName ? 'register-full-name-error register-private-identity-info' : 'register-private-identity-info'}
           onInvalid={() => setFieldErrors(previous => ({ ...previous, fullName: 'Enter your full name.' }))}
           onChange={() => clearField('fullName')} />
-      </label>
+      </Field>
       {fieldErrors.fullName && <p className="field-error" id="register-full-name-error" role="alert">{fieldErrors.fullName}</p>}
-      <label className="field">Student ID number
+      <Field className="">Student ID number
         <input ref={idNumberRef} name="studentIdNumber" type="text" inputMode="text" autoComplete="off"
           placeholder="Enter your CPSU student ID number" required minLength={3} maxLength={48}
           aria-invalid={Boolean(fieldErrors.studentIdNumber)}
           aria-describedby={fieldErrors.studentIdNumber ? 'register-student-id-error register-private-identity-info' : 'register-private-identity-info'}
           onInvalid={() => setFieldErrors(previous => ({ ...previous, studentIdNumber: 'Enter your student ID number as printed by CPSU.' }))}
           onChange={() => clearField('studentIdNumber')} />
-      </label>
+      </Field>
       {fieldErrors.studentIdNumber && <p className="field-error" id="register-student-id-error" role="alert">{fieldErrors.studentIdNumber}</p>}
     </fieldset>}
     {identityStatus === 'error' && <div className="stack" role="alert"><p className="err">Could not check registration requirements.</p>
@@ -473,15 +476,15 @@ export function Dashboard() {
         <p className="muted">Manage listings and see who follows your store.</p>
       </div>
     </div>}
-    {!me.storeId && <div className="panel store-affiliation">
+    {!me.storeId && <Panel className="store-affiliation">
       <h2 className="panel-heading-small">CPSU affiliation</h2>
       {me.affiliations.map(a => <p key={a.id}>{a.campus.name} <span className={`status ${a.status}`}>{a.status}</span></p>)}
       {!verified && <p className="muted">A campus reviewer must verify you before you can sell.</p>}
-    </div>}
+    </Panel>}
     {err && <p className="err" role="alert">{err}</p>}{ok && <p role="status">{ok}</p>}
     {verified && !me.storeId && <form className="panel stack" onSubmit={createStore}><h2>Open your store</h2>
-      <label className="field">Store name<input name="storeName" placeholder="Name students will see" required minLength={2} maxLength={80} /></label>
-      <label className="field">Store description<textarea name="description" placeholder="What do you make or offer?" required minLength={10} maxLength={1000} /></label>
+      <Field className="">Store name<input name="storeName" placeholder="Name students will see" required minLength={2} maxLength={80} /></Field>
+      <Field className="">Store description<textarea name="description" placeholder="What do you make or offer?" required minLength={10} maxLength={1000} /></Field>
       <button className="btn">Open store</button></form>}
     {me.storeId && <>
       <details className="panel store-create" ref={createDetails}><summary><span>{repeatListing ? 'Sell again' : 'New listing'}</span><span className="store-create-hint">Save a draft</span></summary>
@@ -504,22 +507,22 @@ export function Dashboard() {
             </label>
           </div>
         </fieldset>
-        <label className="field">Title<input ref={createTitle} name="title" placeholder={newListingKind === 'service' ? 'e.g. Portrait photography for graduation' : 'e.g. Used Calculus textbook, 2nd edition'} defaultValue={repeatListing?.title ?? ''} required minLength={3} maxLength={120} /></label>
+        <Field className="">Title<input ref={createTitle} name="title" placeholder={newListingKind === 'service' ? 'e.g. Portrait photography for graduation' : 'e.g. Used Calculus textbook, 2nd edition'} defaultValue={repeatListing?.title ?? ''} required minLength={3} maxLength={120} /></Field>
         <p className="muted listing-editor-guidance">Write the actual item or service name, not just “Product” or “Service”. Avoid placeholder text or repeated letters; include useful details to help students decide.</p>
-        <label className="field">Category
+        <Field className="">Category
           <select name="categoryId" required disabled={!newListingKind || categoriesLoading || Boolean(categoriesError) || creatingListing} value={newCategoryId} onChange={e => setNewCategoryId(e.target.value)}>
             <option value="" disabled>{!newListingKind ? 'Choose Product or Service first' : `Select a ${newListingKind === 'service' ? 'service' : 'product'} category`}</option>
             {categoriesForKind(cats, newListingKind).map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
           </select>
-        </label>
+        </Field>
         {newListingKind && !categoriesLoading && !categoriesError && categoriesForKind(cats, newListingKind).length === 0 && <p className="err" role="alert">No {newListingKind === 'service' ? 'service' : 'product'} categories are available. Try reloading categories.</p>}
-        {newListingKind === 'physical_product' && <label className="field">Product condition<select name="condition" defaultValue={repeatListing?.condition ?? ''} required disabled={creatingListing}><option value="" disabled>Select condition</option><option value="new">New</option><option value="like_new">Like new</option><option value="good">Good</option><option value="fair">Fair</option></select></label>}
-        <label className="field">Description<textarea name="description" placeholder={newListingKind === 'service' ? 'Explain what you offer, what is included and when you are available' : 'Describe the item, its condition, size and what is included'} defaultValue={repeatListing?.description ?? ''} required minLength={10} maxLength={3000} rows={4} /></label>
+        {newListingKind === 'physical_product' && <Field className="">Product condition<select name="condition" defaultValue={repeatListing?.condition ?? ''} required disabled={creatingListing}><option value="" disabled>Select condition</option><option value="new">New</option><option value="like_new">Like new</option><option value="good">Good</option><option value="fair">Fair</option></select></Field>}
+        <Field className="">Description<textarea name="description" placeholder={newListingKind === 'service' ? 'Explain what you offer, what is included and when you are available' : 'Describe the item, its condition, size and what is included'} defaultValue={repeatListing?.description ?? ''} required minLength={10} maxLength={3000} rows={4} /></Field>
         <div className="row">
-          <label className="field">Price (PHP)<input name="price" type="number" min="1" max="1000000" step="1" defaultValue={repeatListing ? Number(repeatListing.price) : ''} required /></label>
-          <label className="field">Price basis (optional)<input name="priceBasis" placeholder={newListingKind === 'service' ? 'e.g. Per hour or per project' : 'e.g. Per item or per set'} defaultValue={repeatListing?.priceBasis ?? ''} maxLength={40} /></label>
+          <Field className="">Price (PHP)<input name="price" type="number" min="1" max="1000000" step="1" defaultValue={repeatListing ? Number(repeatListing.price) : ''} required /></Field>
+          <Field className="">Price basis (optional)<input name="priceBasis" placeholder={newListingKind === 'service' ? 'e.g. Per hour or per project' : 'e.g. Per item or per set'} defaultValue={repeatListing?.priceBasis ?? ''} maxLength={40} /></Field>
         </div>
-        <label className="field">Photos (select up to {MAX_LISTING_PHOTOS}, JPEG, PNG or WebP, 3 MB each) <input name="image" type="file" multiple accept="image/jpeg,image/png,image/webp" disabled={creatingListing} aria-describedby="new-photo-policy" onChange={e => { const photos = Array.from(e.currentTarget.files ?? []); setNewFiles(photos); setNewCoverIndex(0); setNewSelectionError(selectedPhotosError(photos)); }} /></label>
+        <Field className="">Photos (select up to {MAX_LISTING_PHOTOS}, JPEG, PNG or WebP, 3 MB each) <input name="image" type="file" multiple accept="image/jpeg,image/png,image/webp" disabled={creatingListing} aria-describedby="new-photo-policy" onChange={e => { const photos = Array.from(e.currentTarget.files ?? []); setNewFiles(photos); setNewCoverIndex(0); setNewSelectionError(selectedPhotosError(photos)); }} /></Field>
         <p className="muted" role="status">{newFiles.length} of {MAX_LISTING_PHOTOS} photos selected</p>{newSelectionError && <p className="err" role="alert">{newSelectionError}</p>}
         {!newSelectionError && <SelectedPhotoPreviews files={newFiles} coverIndex={newCoverIndex} onCoverChange={setNewCoverIndex} disabled={creatingListing} />}
         {creatingListing && <OperationProgress stage={saveStage} progress={photoProgress} />}
@@ -531,54 +534,54 @@ export function Dashboard() {
       <div className="store-listings-head"><div><h2 ref={listingsHeading} tabIndex={-1}>Your listings</h2></div>{!listingsLoading && !listingLoadError && <span className="store-listing-count">{visibleListings.length} {visibleListings.length === 1 ? 'listing' : 'listings'}</span>}</div>
       {listingsLoading && <ListingCardsSkeleton />}
       {listingLoadError && <p className="err" role="alert">Could not load your listings: {listingLoadError} <button type="button" className="btn ghost" onClick={() => { void load(); }}>Retry</button></p>}
-      {!listingsLoading && !listingLoadError && visibleListings.length === 0 && <div className="panel store-empty"><h3>No listings yet</h3><p className="muted">Create a draft, then submit it for campus review.</p></div>}
+      {!listingsLoading && !listingLoadError && visibleListings.length === 0 && <Panel className="store-empty"><h3>No listings yet</h3><p className="muted">Create a draft, then submit it for campus review.</p></Panel>}
       {!listingsLoading && !listingLoadError && visibleListings.length > 0 && <>
         <div className="store-listing-filters">
-          <label className="field">Find a listing<input type="search" value={listingQuery} onChange={e => { setListingQuery(e.target.value); setListingPage(1); }} placeholder="Search by title" /></label>
-          <label className="field">Status<select value={listingStatus} onChange={e => { setListingStatus(e.target.value); setListingPage(1); }}><option value="all">All statuses</option><option value="draft">Draft</option><option value="changes_requested">Changes requested</option><option value="pending_review">Pending review</option><option value="published">Published</option><option value="rejected">Rejected</option><option value="suspended">Suspended</option></select></label>
+          <Field className="">Find a listing<input type="search" value={listingQuery} onChange={e => { setListingQuery(e.target.value); setListingPage(1); }} placeholder="Search by title" /></Field>
+          <Field className="">Status<select value={listingStatus} onChange={e => { setListingStatus(e.target.value); setListingPage(1); }}><option value="all">All statuses</option><option value="draft">Draft</option><option value="changes_requested">Changes requested</option><option value="pending_review">Pending review</option><option value="published">Published</option><option value="rejected">Rejected</option><option value="suspended">Suspended</option></select></Field>
         </div>
-        {matchingListings.length === 0 ? <div className="panel store-empty"><h3>No matching listings</h3><p className="muted">Try another title or status to find your listing.</p><button type="button" className="btn ghost" onClick={() => { setListingQuery(''); setListingStatus('all'); setListingPage(1); }}>Clear filters</button></div> : <p className="store-listing-range" role="status">Showing {(currentPage - 1) * pageSize + 1}–{Math.min(currentPage * pageSize, matchingListings.length)} of {matchingListings.length} {matchingListings.length === 1 ? 'listing' : 'listings'}</p>}
+        {matchingListings.length === 0 ? <Panel className="store-empty"><h3>No matching listings</h3><p className="muted">Try another title or status to find your listing.</p><button type="button" className="btn ghost" onClick={() => { setListingQuery(''); setListingStatus('all'); setListingPage(1); }}>Clear filters</button></Panel> : <p className="store-listing-range" role="status">Showing {(currentPage - 1) * pageSize + 1}–{Math.min(currentPage * pageSize, matchingListings.length)} of {matchingListings.length} {matchingListings.length === 1 ? 'listing' : 'listings'}</p>}
       </>}
       {!listingsLoading && !listingLoadError && pageListings.length > 0 && <div className="store-card-grid">{pageListings.map(l => editing?.id === l.id
         ? <form key={l.id} className="panel stack store-edit-form" onChange={() => setEditDirty(true)} onSubmit={saveEdit}><h2>Edit listing</h2>
             {categoriesError && <p className="err" role="alert">Could not load categories: {categoriesError} <button type="button" className="btn ghost" onClick={() => { void loadCategories(); }}>Retry categories</button></p>}
-            <label className="field">Title<input name="title" defaultValue={l.title} required minLength={3} maxLength={120} /></label>
+            <Field className="">Title<input name="title" defaultValue={l.title} required minLength={3} maxLength={120} /></Field>
             {assessListingReadability(l.title, l.description).length > 0 && <div className="listing-editor-guidance" role="note">
               <strong>Improve this listing before resubmitting:</strong>
               <ul>{assessListingReadability(l.title, l.description).map(issue => <li key={issue}>{issue}</li>)}</ul>
             </div>}
-            <label className="field">Category
+            <Field className="">Category
               <select name="categoryId" required disabled={categoriesLoading || Boolean(categoriesError)} value={editCategoryId} onChange={e => setEditCategoryId(e.target.value)}>{cats.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}</select>
-            </label>
-            {cats.find(c => c.id === Number((editCategoryId || l.categoryId)))?.listingType === 'physical_product' && <label className="field">Product condition<select name="condition" defaultValue={l.condition ?? ''} required><option value="" disabled>Select condition</option><option value="new">New</option><option value="like_new">Like new</option><option value="good">Good</option><option value="fair">Fair</option></select></label>}
-            <label className="field">Description<textarea name="description" defaultValue={l.description} required minLength={10} maxLength={3000} /></label>
+            </Field>
+            {cats.find(c => c.id === Number((editCategoryId || l.categoryId)))?.listingType === 'physical_product' && <Field className="">Product condition<select name="condition" defaultValue={l.condition ?? ''} required><option value="" disabled>Select condition</option><option value="new">New</option><option value="like_new">Like new</option><option value="good">Good</option><option value="fair">Fair</option></select></Field>}
+            <Field className="">Description<textarea name="description" defaultValue={l.description} required minLength={10} maxLength={3000} /></Field>
             <div className="row">
-              <label className="field">Price (PHP)<input name="price" type="number" min="1" max="1000000" step="1" defaultValue={Number(l.price)} required /></label>
-              <label className="field">Price basis (optional)<input name="priceBasis" defaultValue={l.priceBasis} maxLength={40} /></label>
+              <Field className="">Price (PHP)<input name="price" type="number" min="1" max="1000000" step="1" defaultValue={Number(l.price)} required /></Field>
+              <Field className="">Price basis (optional)<input name="priceBasis" defaultValue={l.priceBasis} maxLength={40} /></Field>
             </div>
             <p className="muted">{l.media.length} {l.media.length === 1 ? 'photo' : 'photos'} · {MAX_LISTING_PHOTOS} maximum{l.media.length >= MAX_LISTING_PHOTOS && ' (limit reached)'}</p>
             <ExistingPhotoChoices media={l.media} coverMediaId={editCover?.source === 'existing' ? editCover.id : null}
               onCoverChange={id => { setEditCover({ source: 'existing', id }); setEditDirty(true); }} disabled={savingEdit} />
-            <label className="field">Add photos (JPEG, PNG or WebP, 3 MB each) <input name="image" type="file" multiple accept="image/jpeg,image/png,image/webp" disabled={savingEdit || l.media.length >= MAX_LISTING_PHOTOS} aria-describedby="edit-photo-policy" onChange={e => {
+            <Field className="">Add photos (JPEG, PNG or WebP, 3 MB each) <input name="image" type="file" multiple accept="image/jpeg,image/png,image/webp" disabled={savingEdit || l.media.length >= MAX_LISTING_PHOTOS} aria-describedby="edit-photo-policy" onChange={e => {
               const photos = Array.from(e.currentTarget.files ?? []);
               setEditFiles(photos); setEditSelectionError(selectedPhotosError(photos, l.media.length));
               setEditCover(previous => previous?.source === 'existing' ? previous : l.media.length
                 ? { source: 'existing', id: l.media.slice().sort((a: any, b: any) => a.position - b.position || a.id - b.id)[0].id }
                 : photos.length ? { source: 'new', index: 0 } : null);
-            }} /></label>
+            }} /></Field>
              <p className="muted" role="status">{editFiles.length} new {editFiles.length === 1 ? 'photo' : 'photos'} selected · {Math.max(0, MAX_LISTING_PHOTOS - l.media.length)} remaining</p>{editSelectionError && <p className="err" role="alert">{editSelectionError}</p>}
             {!editSelectionError && <SelectedPhotoPreviews files={editFiles} coverIndex={editCover?.source === 'new' ? editCover.index : -1}
               onCoverChange={index => { setEditCover({ source: 'new', index }); setEditDirty(true); }} disabled={savingEdit} />}
             {savingEdit && <OperationProgress stage={saveStage} progress={photoProgress} />}
             <p className="muted" id="edit-photo-policy">Choose a cover from existing or new photos. Explicit or harmful images are prohibited. Adding photos to a published listing sends it back for review.</p>
             <div className="row"><button className="btn" disabled={savingEdit || categoriesLoading || Boolean(categoriesError)}>{savingEdit ? 'Saving…' : 'Save changes'}</button><button type="button" className="btn ghost" disabled={savingEdit} onClick={() => closeEditor()}>Cancel</button></div></form>
-        : <article key={l.id} id={`store-listing-${l.id}`} tabIndex={-1} className="panel store-listing"><StoreListingPhoto media={l.media} title={l.title} type={l.type} /><div className="store-listing-main"><div className="store-listing-title"><h3>{l.title}</h3><strong>{peso(Number(l.price))}</strong></div><p className="store-listing-category">{l.category?.name}</p><div className="store-listing-meta"><span className={`status ${l.status}`}>{l.status.replace('_', ' ')}</span>{l.status === 'published' && <span className="status">{l.availabilityState || 'available'}</span>}</div>
+        : <Panel as="article" key={l.id} id={`store-listing-${l.id}`} tabIndex={-1} className="store-listing"><StoreListingPhoto media={l.media} title={l.title} type={l.type} /><div className="store-listing-main"><div className="store-listing-title"><h3>{l.title}</h3><strong>{peso(Number(l.price))}</strong></div><p className="store-listing-category">{l.category?.name}</p><div className="store-listing-meta"><span className={`status ${l.status}`}>{l.status.replace('_', ' ')}</span>{l.status === 'published' && <span className="status">{l.availabilityState || 'available'}</span>}</div>
             <p className="muted store-listing-help">{l.status === 'draft' ? 'Draft only · submit for campus review when ready.' : l.status === 'changes_requested' ? 'Changes requested · edit and resubmit for review.' : l.status === 'pending_review' ? 'Waiting for a campus reviewer.' : l.status === 'published' ? l.availabilityState === 'sold' ? 'Sold · use Sell again to make a new draft.' : 'Published · manage availability below.' : l.status === 'rejected' ? 'Not approved for publication.' : l.status === 'suspended' ? 'Removed from public browsing by a reviewer.' : 'Check this listing’s review status.'}</p>{l.status === 'published' && <Link className="store-listing-view" to={`/listings/${l.id}`}>View listing <Icon name="arrow" size={15} /></Link>}</div>
             <div className="store-listing-actions">{!['pending_review', 'suspended', 'rejected'].includes(l.status) && l.availabilityState !== 'sold' && <IconAction className="store-edit-action" icon="edit" label={`Edit ${l.title}`} onClick={() => openEditor(l)} />}
             {['draft', 'changes_requested'].includes(l.status) && <button type="button" className="btn" disabled={pending === l.id} onClick={() => submit(l.id)}>{pending === l.id ? 'Submitting…' : 'Submit for review'}</button>}
             {l.status === 'published' && l.availabilityState !== 'sold' && <select aria-label={`Availability for ${l.title}`} value={l.availabilityState || 'available'} disabled={pending === l.id} onChange={async e => { const next = e.target.value as 'available' | 'reserved' | 'sold'; if (!(await changeAvailability(l.id, next))) e.target.value = l.availabilityState || 'available'; }}><option value="available">Available</option><option value="reserved">Reserved</option><option value="sold">Sold (final)</option></select>}
             {l.status === 'published' && l.availabilityState === 'sold' && <button type="button" className="btn" aria-label={`Sell ${l.title} again`} disabled={creatingListing} onClick={() => sellAgain(l)}>Sell again</button>}
-            <button type="button" className="btn ghost store-remove" disabled={pending === l.id} onClick={() => removeListing(l.id)}>Remove</button></div></article>)}</div>}
+            <button type="button" className="btn ghost store-remove" disabled={pending === l.id} onClick={() => removeListing(l.id)}>Remove</button></div></Panel>)}</div>}
       {!listingsLoading && !listingLoadError && pageCount > 1 && <nav className="store-pagination" aria-label="Your listings pages"><IconAction className="page-nav-button" icon="chevronLeft" label="Previous listings page" disabled={currentPage === 1} onClick={() => changeListingPage(currentPage - 1)} /><span>Page {currentPage} of {pageCount}</span><IconAction className="page-nav-button" icon="chevronRight" label="Next listings page" disabled={currentPage === pageCount} onClick={() => changeListingPage(currentPage + 1)} /></nav>}
     </>}
   </div>;
@@ -610,19 +613,31 @@ function messageDayLabel(iso: string) {
 export function Inquiries() {
   const [rows, setRows] = useState<any[] | null>(null);
   const [error, setError] = useState('');
+  const [olderError, setOlderError] = useState('');
+  const [loadingOlder, setLoadingOlder] = useState(false);
+  const olderLock = useRef(false);
+  const nextCursor = useRef<number | null | undefined>(undefined);
+  const [hasOlder, setHasOlder] = useState(false);
   const [receiveSoundOn, setReceiveSoundOn] = useState(messageReceiveSoundEnabled);
   const knownMessageIdsRef = useRef<Set<number>>(new Set());
   const inboxLoadedRef = useRef(false);
   const foregroundRef = useRef(false);
   const requestRef = useRef(0);
   const { me } = useMe();
+  const currentUserIdRef = useRef(me?.id);
+  currentUserIdRef.current = me?.id;
   // Poll only while this inbox is mounted. Do not sound on first history load,
   // own messages, repeated results, or the first catch-up after backgrounding.
   const load = async () => {
     const request = ++requestRef.current;
     try {
-      const next = await api<any[]>('/inquiries');
+      const page = await api<InboxPage<any>>('/inquiries?limit=30');
+      const next = page.items;
       if (request !== requestRef.current) return;
+      if (nextCursor.current === undefined) {
+        nextCursor.current = page.nextBeforeId;
+        setHasOlder(page.hasMore);
+      }
       const focused = document.visibilityState === 'visible' && document.hasFocus();
       const latest = next.flatMap(t => t.lastMessage ? [{ id: t.lastMessage.id, mine: t.lastMessage.mine }] : []);
       if (hasNewIncomingMessage(latest, knownMessageIdsRef.current,
@@ -630,7 +645,7 @@ export function Inquiries() {
       for (const message of latest) knownMessageIdsRef.current.add(message.id);
       inboxLoadedRef.current = true;
       foregroundRef.current = focused;
-      setRows(next); setError('');
+      setRows(previous => mergeInboxPages(previous, next)); setError('');
     } catch (e) {
       if (request === requestRef.current) setError(explain(e));
     }
@@ -638,6 +653,12 @@ export function Inquiries() {
   useEffect(() => {
     if (!me) return;
     knownMessageIdsRef.current.clear();
+    nextCursor.current = undefined;
+    olderLock.current = false;
+    setRows(null);
+    setHasOlder(false);
+    setOlderError('');
+    setLoadingOlder(false);
     inboxLoadedRef.current = false;
     foregroundRef.current = document.visibilityState === 'visible' && document.hasFocus();
     prepareMessageReceiveSound();
@@ -654,6 +675,25 @@ export function Inquiries() {
       document.removeEventListener('visibilitychange', onVisibility);
     };
   }, [me?.id]);
+  const loadOlder = async () => {
+    const beforeId = nextCursor.current;
+    if (!beforeId || olderLock.current) return;
+    olderLock.current = true;
+    setLoadingOlder(true); setOlderError('');
+    const userId = me?.id;
+    try {
+      const page = await api<InboxPage<any>>(`/inquiries?limit=30&beforeId=${beforeId}`);
+      if (currentUserIdRef.current !== userId) return;
+      setRows(previous => mergeInboxPages(previous, page.items));
+      nextCursor.current = page.nextBeforeId;
+      setHasOlder(page.hasMore);
+    } catch (error) {
+      if (currentUserIdRef.current === userId) setOlderError(explain(error));
+    } finally {
+      olderLock.current = false;
+      if (currentUserIdRef.current === userId) setLoadingOlder(false);
+    }
+  };
   return <section className="messages-page"
     onPointerDownCapture={() => unlockMessageReceiveSound()}
     onKeyDownCapture={e => { if (e.key === 'Enter' || e.key === ' ') unlockMessageReceiveSound(); }}>
@@ -691,6 +731,11 @@ export function Inquiries() {
       </span>
       <span className="inq-open" aria-hidden="true"><Icon name="arrow" size={18} /></span>
     </Link>)}</div>}
+    {hasOlder && rows !== null && <div className="row" style={{ justifyContent: 'center', padding: '12px' }}>
+      <button type="button" className="btn ghost" disabled={loadingOlder}
+        onClick={() => void loadOlder()}>{loadingOlder ? 'Loading conversations…' : 'Load older conversations'}</button>
+    </div>}
+    {olderError && <p className="err" role="alert">Could not load older conversations: {olderError}</p>}
   </section>;
 }
 
@@ -699,6 +744,8 @@ const initials = (name: string) => name.trim().split(/\s+/).slice(0, 2).map(w =>
 
 export function Thread() {
   const { id } = useParams();
+  const activeRouteRef = useRef(id);
+  activeRouteRef.current = id;
   const { syncUnread } = useMe();
   const [d, setD] = useState<any>(null);
   const messageIdsRef = useRef<Set<number>>(new Set());
@@ -708,6 +755,10 @@ export function Thread() {
   const seenPendingRef = useRef(0);
   const [body, setBody] = useState('');
   const [loadError, setLoadError] = useState('');
+  const [earlierError, setEarlierError] = useState('');
+  const [loadingEarlier, setLoadingEarlier] = useState(false);
+  const earlierPendingRef = useRef(false);
+  const prependAnchorRef = useRef<{ height: number; top: number } | null>(null);
   const [sendError, setSendError] = useState('');
   const [busy, setBusy] = useState(false);
   const [closeConfirm, setCloseConfirm] = useState(false);
@@ -775,12 +826,15 @@ export function Thread() {
     newlyArrivedRef.current.clear();
     seenConfirmedRef.current = 0;
     seenPendingRef.current = 0;
-    setD(null); setLoadError(''); setSendError(''); setBody('');
+    setD(null); setLoadError(''); setEarlierError(''); setLoadingEarlier(false);
+    earlierPendingRef.current = false;
+    prependAnchorRef.current = null;
+    setSendError(''); setBody('');
     setCloseConfirm(false); setSafetyError(''); setSafetyNotice('');
     const refresh = async () => {
       const request = ++newestRequest;
       try {
-        const next = await api(`/inquiries/${id}/messages`);
+        const next = await api(`/inquiries/${id}/messages?limit=50`);
         if (active && request === newestRequest) {
           // Only NEW incoming messages ring: never the first history load,
           // outgoing sends, repeated polls, or background/refocus catch-up.
@@ -794,7 +848,12 @@ export function Thread() {
             messageIdsRef.current.add(message.id);
           }
           firstFetchRef.current = true;
-          setD(next);
+          setD((prev: any) => prev?.thread?.id === next.thread.id ? {
+            ...next,
+            messages: mergeMessageHistory(prev.messages, next.messages),
+            // A periodic recent-window poll must not hide previously loaded pages.
+            hasEarlier: prev.hasEarlier,
+          } : next);
           setLoadError('');
         }
       } catch (e) {
@@ -840,7 +899,14 @@ export function Thread() {
   // the latest end of the chat; never pull them away from older messages.
   useEffect(() => {
     const log = logRef.current;
-    if (log && followLatest.current) log.scrollTop = log.scrollHeight;
+    if (!log) return;
+    if (prependAnchorRef.current) {
+      const { height, top } = prependAnchorRef.current;
+      log.scrollTop = log.scrollHeight - height + top;
+      prependAnchorRef.current = null;
+    } else if (followLatest.current) {
+      log.scrollTop = log.scrollHeight;
+    }
   }, [d?.thread?.id, d?.messages?.length, d?.typing]);
 
   // Keyboard, browser chrome and device rotation can change the log height
@@ -903,6 +969,37 @@ export function Thread() {
       window.removeEventListener('focus', checkVisible);
     };
   }, [id, d?.messages]);
+
+  const loadEarlier = async () => {
+    const oldestId = d?.messages?.[0]?.id;
+    const threadId = d?.thread?.id;
+    const routeAtStart = activeRouteRef.current;
+    if (!d?.hasEarlier || !oldestId || !threadId || earlierPendingRef.current) return;
+    earlierPendingRef.current = true;
+    setLoadingEarlier(true);
+    setEarlierError('');
+    try {
+      const page = await api(`/inquiries/${threadId}/messages?limit=50&beforeId=${oldestId}`);
+      if (activeRouteRef.current !== routeAtStart) return;
+      if (page.messages.length) {
+        const log = logRef.current;
+        if (log) prependAnchorRef.current = { height: log.scrollHeight, top: log.scrollTop };
+        followLatest.current = false;
+      }
+      setD((prev: any) => prev?.thread?.id === threadId ? {
+        ...prev,
+        messages: mergeMessageHistory(page.messages, prev.messages),
+        hasEarlier: page.hasEarlier,
+      } : prev);
+    } catch (error) {
+      if (activeRouteRef.current === routeAtStart) setEarlierError(explain(error));
+    } finally {
+      if (activeRouteRef.current === routeAtStart) {
+        earlierPendingRef.current = false;
+        setLoadingEarlier(false);
+      }
+    }
+  };
 
   const closeConversation = async () => {
     if (closeLock.current || busy || !d || d.thread.status === 'closed') return;
@@ -978,18 +1075,25 @@ export function Thread() {
         <Link className="btn ghost" to={`/listings/${d.thread.listingId}`}>View listing <Icon name="arrow" size={16} /></Link>
       </div>
     </div>
-    {closeConfirm && !closed && <div className="panel stack" role="group" aria-label="End conversation confirmation">
+    {closeConfirm && !closed && <Panel className="stack" role="group" aria-label="End conversation confirmation">
       <h2>End this conversation for both students?</h2>
       <p className="muted">Neither of you can send more messages in this listing's conversation. Previous messages stay readable. This does not block the student on other listings or cancel any transaction.</p>
       <div className="row"><button type="button" className="btn danger" disabled={closing || busy}
         onClick={() => void closeConversation()}>{closing ? 'Ending…' : 'Yes, end conversation'}</button>
         <button type="button" className="btn ghost" disabled={closing} onClick={() => setCloseConfirm(false)}>Keep chatting</button></div>
-    </div>}
+    </Panel>}
     {safetyError && <p className="err" role="alert">Could not end conversation: {safetyError}</p>}
     {safetyNotice && <p role="status">{safetyNotice}</p>}
     {loadError && <p className="err" role="alert">Could not refresh messages: {loadError}</p>}
     <div className="thread-scroll conversation-log" ref={logRef} role="log" tabIndex={0} aria-label="Conversation messages" aria-live="polite"
       onScroll={e => { const el = e.currentTarget; followLatest.current = el.scrollHeight - el.scrollTop - el.clientHeight < 80; }}>
+      {d.hasEarlier && <div className="row" style={{ justifyContent: 'center', padding: '8px 12px' }}>
+        <button type="button" className="btn ghost" disabled={loadingEarlier}
+          onClick={() => void loadEarlier()} aria-label="Load earlier conversation messages">
+          {loadingEarlier ? 'Loading earlier messages…' : 'Load earlier messages'}
+        </button>
+      </div>}
+      {earlierError && <p role="alert" className="err">Could not load earlier messages: {earlierError}</p>}
       {d.messages.length > 0 && <div className="message-day-divider"><span>{messageDayLabel(d.messages[0].createdAt)}</span></div>}
       {d.listing && <ConversationListingCard key={d.listing.id} listing={d.listing} />}
       {d.messages.length === 0 && <p className="muted">No messages yet. Start by asking a question about the listing.</p>}

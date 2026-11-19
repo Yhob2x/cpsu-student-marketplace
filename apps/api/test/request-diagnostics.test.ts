@@ -25,6 +25,7 @@ describe('request diagnostics', () => {
       status: 200,
     });
     expect(records[0].durationMs).toBeGreaterThanOrEqual(0);
+    expect(records[0].responseBytes).toBe(Buffer.byteLength(JSON.stringify({ ok: true })));
     expect(JSON.stringify(records)).not.toContain('do-not-log');
   });
 

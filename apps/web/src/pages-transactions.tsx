@@ -7,6 +7,7 @@ import { showActionFeedback } from './action-feedback';
 import { TransactionStoreReview } from './store-review-widgets';
 import { useForegroundRefresh } from './foreground-refresh';
 import { MeetupLocationCard, type MeetupHandoff } from './meetup-location-card';
+import { preferredCampusName } from './meetup-campus';
 import {
   statusLabels, transactionNextStep, transactionPhase, type TransactionSnapshot, type TransactionStatus,
 } from './transaction-flow';
@@ -367,6 +368,7 @@ export function TransactionDetail() {
 
     {data.status !== 'pending' && (!terminal || data.handoff) && <MeetupLocationCard key={data.id}
       transactionId={data.id} handoff={data.handoff}
+      campusName={preferredCampusName(me?.affiliations)}
       editable={(canMeetup || data.status === 'for_meetup') && !myCompletionConfirmed && !otherCompletionConfirmed}
       requiresReconfirmation={data.status === 'for_meetup' || myMeetupConfirmed || otherMeetupConfirmed}
       unavailableReason={terminal ? 'This transaction is closed. The meetup pin is read-only.'

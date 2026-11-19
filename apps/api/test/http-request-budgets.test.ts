@@ -1,8 +1,15 @@
 import { describe, expect, test } from 'bun:test';
 import request from 'supertest';
 import { createApp } from '../src/app';
+import { signAccess } from '../src/auth.js';
 
 describe('shared HTTP request limits', () => {
+  test('liveness responds with the same public contract even if a caller sends a valid JWT', async () => {
+    const response = await request(createApp()).get('/health')
+      .set('Authorization', 'Bearer ' + signAccess(987654));
+    expect(response.status).toBe(200);
+    expect(response.body).toEqual({ ok: true });
+  });
   test('health checks cannot exhaust the auth and write budget', async () => {
     const app = createApp();
     const responses = await Promise.all(Array.from({ length: 305 }, () => request(app).get('/health')));

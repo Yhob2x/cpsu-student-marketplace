@@ -172,7 +172,7 @@
     background: var(--mango-soft);
     color: var(--forest);
     font-size: var(--ui-type-xs);
-    font-weight: 750;
+    font-weight: var(--ui-weight-bold);
     white-space: nowrap;
   }
   .filters.filter-panel[data-mobile-open="false"] { display: none; }
@@ -259,7 +259,7 @@
     border-radius: var(--ui-radius-md);
     font-size: clamp(.72rem, 2.45vw, .79rem);
     line-height: 1.2;
-    font-weight: 650;
+    font-weight: var(--ui-weight-bold);
   }
   .tabbar a svg { width: 21px; height: 21px; }
   /* Never split Messages across two lines on 320px iPhones. */
@@ -570,7 +570,7 @@
     max-width: 100%;
     margin: 0;
     font-size: var(--ui-type-md);
-    font-weight: 750;
+    font-weight: var(--ui-weight-bold);
     line-height: 1.4;
     white-space: nowrap;
     overflow: hidden;
@@ -705,7 +705,7 @@
   .mobile-browse-hint {
     font-size: var(--ui-type-xs);
     line-height: 1.4;
-    font-weight: 600;
+    font-weight: var(--ui-weight-bold);
   }
   .mobile-browse-buttons {
     display: flex;
@@ -775,7 +775,7 @@
     margin: var(--ui-space-1) 0 1rem;
     color: var(--ink-soft);
   }
-  .mobile-browse-hint { font-size: var(--ui-type-xs); line-height: 1.4; font-weight: 600; }
+  .mobile-browse-hint { font-size: var(--ui-type-xs); line-height: 1.4; font-weight: var(--ui-weight-bold); }
   .mobile-browse-buttons { display: flex; gap: .5rem; flex: 0 0 auto; }
   .mobile-browse-arrow {
     display: inline-flex;

@@ -4,13 +4,14 @@ import { maplibreGL } from '@maplibre/maplibre-gl-leaflet';
 import { setWorkerUrl } from 'maplibre-gl';
 import workerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url';
 import type { MeetupPoint } from './meetup-location';
+import { campusMapCenter, NEGROS_OVERVIEW } from './meetup-campus';
 import 'leaflet/dist/leaflet.css';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import './meetup-map.css';
 
-type Props = { point: MeetupPoint | null; onSelect?: (point: MeetupPoint) => void };
+type Props = { point: MeetupPoint | null; campusName?: string | null; onSelect?: (point: MeetupPoint) => void };
 
-export default function MeetupMap({ point, onSelect }: Props) {
+export default function MeetupMap({ point, campusName, onSelect }: Props) {
   const element = useRef<HTMLDivElement>(null);
   const map = useRef<L.Map | null>(null);
   const pin = useRef<L.CircleMarker | null>(null);
@@ -19,10 +20,12 @@ export default function MeetupMap({ point, onSelect }: Props) {
 
   useEffect(() => {
     if (!element.current) return;
-    const initial: L.LatLngExpression = point ? [point.lat, point.lng] : [10.12, 122.87];
+    const campus = campusMapCenter(campusName);
+    const start = point ?? campus ?? NEGROS_OVERVIEW;
+    const initial: L.LatLngExpression = [start.lat, start.lng];
     const instance = L.map(element.current, {
       zoomControl: false, scrollWheelZoom: false, minZoom: 2, maxZoom: 19,
-    }).setView(initial, point ? 16 : 8);
+    }).setView(initial, point || campus ? 16 : 9);
     map.current = instance;
     L.control.zoom({ position: 'bottomright' }).addTo(instance);
     // Vector map uses MapLibre on the Leaflet map; older devices fall back to

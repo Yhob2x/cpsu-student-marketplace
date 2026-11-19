@@ -47,6 +47,18 @@ describe('offline request log summary', () => {
     expect(summary.result().readP95Ms).toBeNull();
   });
 
+  test('reports known response Content-Length without pretending it is gzip bytes', () => {
+    const summary = createRequestSummary();
+    summary.accept(record({ responseBytes: 42000 }));
+    summary.accept(record({ responseBytes: null, timestamp: '2026-11-19T05:00:01.000Z' }));
+    summary.accept(record({ responseBytes: 110, timestamp: '2026-11-19T05:00:02.000Z' }));
+    const result = summary.result();
+    expect(result.knownResponseSizes).toBe(2);
+    expect(result.maxResponseBytes).toBe(42000);
+    expect(result.routes[0].maxResponseBytes).toBe(42000);
+    expect(result.routes[0].knownResponseSizes).toBe(2);
+  });
+
   test('nearest-rank latency percentile works for empty and simple samples', () => {
     expect(percentile([])).toBeNull();
     expect(percentile([1, 2, 3, 4, 5, 6, 7, 8, 9, 10], 95)).toBe(10);

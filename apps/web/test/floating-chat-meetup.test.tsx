@@ -10,7 +10,8 @@ afterEach(() => { cleanup(); globalThis.fetch = originalFetch; });
 function mockChat(transaction: Record<string, unknown> | null, handoff: Record<string, unknown> | null) {
   let ended = false;
   globalThis.fetch = (async (url: string | URL | Request) => {
-    const path = String(url);
+    // The live conversation requests a paged history; the fixture matches its endpoint.
+    const path = String(url).split('?')[0];
     if (path.endsWith('/inquiries/9/close')) {
       ended = true;
       return Response.json({});

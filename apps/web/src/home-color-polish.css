@@ -1,4 +1,4 @@
-/* Homepage: restrained CPSU green and small golden accents.
+/* Homepage: one CPSU green accent family with neutral surfaces.
    All content, publishing, routes and listing interactions remain unchanged. */
 .home-hero {
   margin-block: 20px 32px;
@@ -22,7 +22,7 @@
   height: 7px;
   flex: 0 0 7px;
   border-radius: 50%;
-  background: var(--color-accent);
+  background: var(--color-primary);
 }
 main .home-hero h1 { color: var(--color-text); }
 main .home-hero h1 .hero-line-connect,
@@ -37,7 +37,7 @@ main .home-hero h1 em { color: var(--color-primary-dark); }
   left: 4%;
   width: 35%;
   height: 30%;
-  background: color-mix(in srgb, var(--color-accent) 43%, var(--color-card));
+  background: color-mix(in srgb, var(--color-primary-light) 84%, var(--color-card));
 }
 .home-hero > .hero-art::after {
   left: 5%;
@@ -70,9 +70,6 @@ main .home-hero h1 em { color: var(--color-primary-dark); }
   border-radius: 12px;
   background: var(--color-primary-light);
   color: var(--color-primary-dark);
-}
-.home-category-grid .cat:nth-child(3n + 2) .cat-ico {
-  background: color-mix(in srgb, var(--color-accent) 17%, var(--color-card));
 }
 @media (hover: hover) and (pointer: fine) {
   .home-category-grid .cat:hover {
@@ -123,7 +120,7 @@ main .home-hero h1 em { color: var(--color-primary-dark); }
   color: var(--color-primary-dark);
   font-style: normal;
   text-decoration: underline;
-  text-decoration-color: var(--color-accent);
+  text-decoration-color: var(--color-primary);
   text-decoration-thickness: 3px;
   text-underline-offset: 6px;
 }
@@ -207,7 +204,7 @@ main .home-hero h1::after {
   height: 4px;
   margin-block: 24px 0;
   border-radius: 3px;
-  background: var(--color-accent);
+  background: var(--color-primary);
 }
 .home-hero .hero-copy > p {
   max-width: 38ch;
@@ -244,8 +241,8 @@ main .home-hero h1::after {
   width: 37px;
   height: 37px;
   border-radius: var(--ui-radius-sm);
-  background: var(--color-accent);
-  color: var(--color-text);
+  background: var(--color-primary-light);
+  color: var(--color-primary-dark);
 }
 .home-hero-guide {
   display: inline-flex;

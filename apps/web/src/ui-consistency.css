@@ -16,6 +16,9 @@
   --ui-type-xl: 20px;
   --ui-type-2xl: 24px;
   --ui-type-3xl: 30px;
+  --ui-weight-regular: 400;
+  --ui-weight-medium: 500;
+  --ui-weight-bold: 700;
   --ui-radius-sm: 6px;
   --ui-radius-md: 12px;
   --ui-radius-full: 9999px;

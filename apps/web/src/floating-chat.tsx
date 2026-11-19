@@ -12,11 +12,12 @@ export function showFloatingChat(pathname: string, ready: boolean, isStaff: bool
 
 type MotionState = 'closed' | 'entering' | 'open' | 'exiting';
 
-export function FloatingChat({ ready, isStaff, signedIn, unreadMessages, onUnreadChanged }: {
+export function FloatingChat({ ready, isStaff, signedIn, unreadMessages, campusName, onUnreadChanged }: {
   ready: boolean;
   isStaff: boolean;
   signedIn: boolean;
   unreadMessages: number;
+  campusName?: string | null;
   onUnreadChanged?: () => Promise<void>;
 }) {
   const { pathname } = useLocation();
@@ -93,6 +94,7 @@ export function FloatingChat({ ready, isStaff, signedIn, unreadMessages, onUnrea
       {contents}
     </button>
     {rendered && <FloatingChatPanel
+      campusName={campusName}
       motionState={motionState}
       motionEnabled={motionEnabled}
       onExitComplete={() => setMotionState(current => current === 'exiting' ? 'closed' : current)}

@@ -1,6 +1,6 @@
 # CPSU Student Marketplace — production-readiness audit
 
-**Date:** 2026-11-19 · **Latest iteration:** 2/5 (iteration 1 preserved below) · **Disposition:** NOT PRODUCTION-CAPACITY-CERTIFIED
+**Date:** 2026-11-19 · **Latest iteration:** 4/5 (iteration 1 preserved below) · **Disposition:** NOT PRODUCTION-CAPACITY-CERTIFIED
 
 ## Scope, evidence, and hard safety boundaries
 
@@ -143,3 +143,102 @@ Reviewed changed code for response contract changes, sensitive logging, spoofed 
 - No commit/deploy, real load, k6, production data access, migrations or new paid services occurred. The web working tree was preserved.
 
 **Iteration 2 exit:** Correctness tests pass, observability tooling and internal readiness improved. Actual sustained 100-RPS/500-user capacity, two-instance behavior, query counts and five alert rules remain **unverified**. Before further tuning, approve a separate synthetic staging database/host with realistic data, instrument per-request SQL/pool measurements, then run a guarded and approved one-user smoke followed by progressively authorized stages.
+
+
+---
+
+## Iteration 3/5 — remove unnecessary auth data, ensure bounded exit, measure response Content-Length
+
+**Scope:** Code-only, no schema, no new service and no change to existing API JSON contracts or business logic. This iteration fixes confirmed source-level issues; there are still no approved sustained staging measurements.
+
+### Scoreboard (iteration 3)
+
+| Goal(s) | Evidence / after change | Result |
+|---|---|---|
+| G1, G2, G3 | Real p95, query-count-per-request, N+1 and EXPLAIN are still unavailable without isolated realistic DB and traffic. | UNMEASURED |
+| G4, G5, G6 | Pool utilization, cache hit rates and slow background work still lack staging measurements. No speculative pool/cache/queue added. | UNMEASURED |
+| G7 | Shutdown now has one deadline across HTTP drain **and** DB disconnect; synthetic hanging-disconnect test reproduced old timeout failure and now passes. Two-instance behavior is still untested. | PARTIAL |
+| G8 | New opt-in response `Content-Length` telemetry and offline analyzer report known size counts and maximum per route. This is *not* gzip wire size. Latest web build: main JS **157.35 KB gzip**, lazy map JS **342.59 KB gzip** and main CSS **66.10 KB gzip**; device/payload target not verified. | PARTIAL |
+| G9, G10 | No change to rate budgets, shared-store guarantees, CDN, Lighthouse or LCP. | UNVERIFIED |
+| G11 | Existing structured request logs now include `responseBytes` when available; analyzer unit test confirms aggregation and unknown-size handling. External monitoring/alert destinations still unverified. | PARTIAL |
+| G12 | 0 approved 10-minute staging load tests, error rate under load unknown. | UNVERIFIED |
+| G13 | **249 pass, 1 intentional skip, 0 fail**, across 51 safe top-level API unit files; **10/10** offline performance tests; standalone API TypeScript and Bun bundle pass; web production build pass. No full integration/DB/e2e/migration tests run. | PASS in tested scope only |
+| G14 | Authentication `findUnique` now explicitly selects **id, email, displayName, status, role and campusId**; it never fetches the password hash for JWT authorization. Existing live status/roles checks preserved. | FIXED specific overfetch; broader security UNVERIFIED |
+| G15 | Iteration **3/5**. | Partial exit; do not claim G1-G14 passed |
+
+### Findings register (iteration 3)
+
+| ID | Priority | Evidence before | Change and verification | Status |
+|---|---|---|---|---|
+| PR-20 | P1 security/data minimization | Every bearer-authenticated request called `user.findUnique({ include: { roles: true } })`, retrieving unused `User` scalars including `passwordHash`. | Use typed minimal `select` for used fields/roles; synthetic projection test and API typecheck passed. No query-time improvement was measured. | FIXED |
+| PR-21 | P1 restart reliability | Graceful-shutdown watchdog was cleared when HTTP closed, even if `prisma.$disconnect()` hung indefinitely. A regression test failed under the previous implementation. | One 15s total deadline; force-close lingering connections and exit nonzero if drain/disconnect does not finish; 2 synthetic tests pass. Runtime shutdown drill still needed. | FIXED IN CODE |
+| PR-22 | P2 liveness | `/health` was registered after `authenticate`; a valid bearer could trigger an unnecessary user/roles lookup on a liveness request. | Route now registered before authentication, with unchanged public JSON. Existing high-volume health/budget tests and valid-JWT liveness response test pass. | FIXED IN CODE |
+| PR-23 | P2 payload visibility | HTTP diagnostic log had no response size; G8 was not measurable from it. | Add optional application-side `Content-Length` bytes and offline per-route size summary; tests pass, compressed wire payload remains unmeasured. | FIXED IN CODE (measurement ready) |
+
+**No optimization claims without measurements:** Row/byte reduction in auth is established by the source-level projection, not a timed SQL baseline. The 100 RPS, 500 VU, query-index/connection/queue, 2-instance and cache/CDN objectives remain explicitly **unverified**.
+
+### Files changed in this iteration
+
+- `apps/api/src/auth.ts`, `apps/api/test/auth-query-projection.test.ts` — minimal authorized-user projection and test.
+- `apps/api/src/graceful-shutdown.ts`, `apps/api/test/graceful-shutdown.test.ts` — end-to-end deadline across HTTP and DB disconnect.
+- `apps/api/src/app.ts`, `apps/api/test/http-request-budgets.test.ts` — liveness route registered before authentication with contract tests.
+- `apps/api/src/request-diagnostics.ts`, `apps/api/test/request-diagnostics.test.ts` — optional response `Content-Length` log and test.
+- `performance/summarize-requests.mjs`, `performance/summarize-requests.test.js`, `performance/README.md` — size counts and explicit pre-gzip limitations.
+- `docs/CPSU_PRODUCTION_READINESS_AUDIT_2026-11-19.md` — updated scoreboard and evidence.
+
+### Self-review and pending gates
+
+- No new cache keys or background jobs. Existing user data remains uncached. No route response field/status was changed; new log fields are internal diagnostic records.
+- No raw URLs, tokens, credentials, user IDs or SQL are exposed by access logs. `Content-Length` is numeric only and nullable when not known; no source log lines are printed by the analyzer.
+- A test originally using a Prisma delegate spy could not reliably prove zero DB reads because Prisma delegates are proxied; it was replaced by a direct liveness contract test, and the route ordering itself now statically ensures authentication is skipped. Avoid claiming this is a live DB outage test.
+- Shutdown code now force-exits after a bounded timeout to permit a supervisor restart; the timeout/real SIGTERM killover requires verification on an isolated staging host.
+- The remaining priority blockers are PR-03 through PR-15 as applicable: multi-instance chat state, unbounded conversation/store-detail reads, rate-limit shared storage, query/index/pool measurements, alerts and capacity testing. Follow `performance/README.md` and obtain explicit host/traffic/data authorization before proceeding.
+
+**Exit: Iteration 3 completed with safe code fixes and passing offline regressions; full production readiness remains unverified. No migrations, deployments, commits, or shared-database changes.**
+
+
+---
+
+## Iteration 4/5 — bounded PWA message polling and cursor-based chat history
+
+**Goal addressed:** Stop both PWA chat readers from repeatedly downloading an entire growing conversation every three seconds, without hiding history or breaking existing clients. No database, schema, index, production traffic, deployment or external service was modified.
+
+### Before / after (source and test evidence)
+
+| Dimension | Before | After | Evidence / remaining scope |
+|---|---|---|---|
+| Full-page chat 3-second polling | `GET /inquiries/:id/messages` returned every message in the thread | `GET /inquiries/:id/messages?limit=50` | The Prisma query uses `take: 51` solely to identify whether an earlier page exists; at most 50 messages are returned. Source/test verified; no live SQL timed. |
+| Floating chat 3-second polling | Same unbounded history | Same 50-message recent window; link to full chat for earlier history | PWA code and focused tests verified. |
+| Access to older history | Complete history returned on every poll | Full conversation provides explicit “Load earlier messages”; `beforeId` retrieves earlier IDs without offset scan | Older pages are deduplicated and merged by ID, preserving already loaded receipts and the reader's scroll anchor. |
+| Delivery receipt semantics | Recipient GET marked all other-participant messages delivered | Paged GET marks only fetched recipient messages delivered, with no update if none are pending | Legacy unpaged GET keeps old delivery semantics. Real DB race testing pending. |
+| Authorization | `participantThread` guard before message read | Same participant guard plus bounded input validation before DB lookup | Static and unit tests pass; real auth+DB integration remains pending. |
+| Legacy HTTP clients | Original unpaged JSON response | Original unpaged JSON response retained, including whole-history behavior | **Still unbounded for legacy requests**; deliberate temporary compatibility, not full eradication of this risk. |
+
+### Verification
+
+- API safe top-level suite: **252 passed, 1 intentionally skipped, 0 failed** across 52 files, 899 assertions.
+- Web safe suite: **162 passed, 0 failed** across 44 test files, 633 assertions.
+- API TypeScript and Bun bundling: passed.
+- Web TypeScript and Vite production build: passed; main JS **157.94 kB gzip**, lazy meetup-map JS **342.61 kB gzip**. These are build sizes, not mobile device/Lighthouse measurements.
+- New API `test/message-pages.test.ts`: pagination sorting, `take: limit+1`, `beforeId` filter, stable chronology and rejection of bad/too-large cursor values.
+- New web `test/message-history.test.ts`: deduplicated merge, refreshed read receipts, bounded chat-view requests and explicit older-page controls.
+- No query plan, DB connection-pool traces, seeded DB, multi-instance chat, browser accessibility trial, or approved k6 traffic was run. Hence **no claim of measured p95 speedup or 100-RPS capacity**.
+
+### Source changes
+
+- `apps/api/src/routes/inquiries.ts` — optional `limit`/`beforeId` paged messages, participant-first protection, receipt update scoped to returned IDs, `hasEarlier` metadata only for paginated requests; legacy unchanged.
+- `apps/api/src/message-pages.ts` — standalone parser, query builder, page transformation.
+- `apps/api/test/message-pages.test.ts` — bounded query/cursor validation tests.
+- `apps/web/src/pages-account.tsx` — page on demand, merge history during polling, preserve scroll position, visible loading/error feedback.
+- `apps/web/src/floating-chat-panel.tsx` — bounded quick-view messages and “View earlier messages in full chat” link.
+- `apps/web/src/message-history.ts`, `apps/web/test/message-history.test.ts` — pure stable merge with tests.
+
+### Remaining priority risks / iteration 5 candidates
+
+1. `GET /inquiries` still reads all conversation threads; add opt-in or coordinated default pagination with consumer support.
+2. Public store detail still fetches every published listing in the nested store query, and slug resolution loads all visible store names. Measure and add paged catalog data without breaking store routing or slug uniqueness.
+3. Legacy unpaged `/inquiries/:id/messages` is still an unbounded compatibility path. Once deployed PWA clients are migrated, plan a versioned change or backwards-compatible limit policy; **do not silently truncate chat history** for clients that lack an older-message control.
+4. Validate actual query plans for `(threadId, id)`, transaction/receipt updates and store-related queries on a separately authorized isolated staging DB before designing indexes; no migration authorized yet.
+5. Two-instance presence/typing, per-process rate limiting and 10-minute 100-RPS/500-concurrent capacity targets remain entirely **unverified**. Do not add Redis or queues without measurement and operations approval.
+
+**Disposition: iteration 4/5 complete in source and offline regression tests; system still NOT production-capacity-certified. No commit, deploy, shared database operation or staging traffic.**

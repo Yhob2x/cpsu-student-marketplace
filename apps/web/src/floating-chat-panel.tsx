@@ -8,6 +8,7 @@ import { ConversationListingCard, type ConversationListing } from './conversatio
 import { hasNewIncomingMessage, messageReceiveSoundEnabled, playMessageReceiveSound, prepareMessageReceiveSound, setMessageReceiveSoundEnabled, unlockMessageReceiveSound } from './message-receive-sound';
 import { MeetupLocationCard, type MeetupHandoff } from './meetup-location-card';
 import { decodeMeetupLocation } from './meetup-location';
+import type { InboxPage } from './inbox-pages';
 
 type InboxItem = {
   id: number;
@@ -24,6 +25,7 @@ type Conversation = {
   thread: { id: number; otherStudentName?: string; listingId: number; status: string };
   listing: ConversationListing;
   messages: ChatMessage[];
+  hasEarlier?: boolean;
   handoff?: MeetupHandoff | null;
   transaction?: {
     id: number;
@@ -41,6 +43,7 @@ type Props = {
   onUnreadChanged: () => Promise<void>;
   motionState: 'entering' | 'open' | 'exiting';
   motionEnabled: boolean;
+  campusName?: string | null;
   onExitComplete: () => void;
 };
 
@@ -49,7 +52,7 @@ function initials(name: string) {
 }
 
 /** A non-modal quick view. Full-page conversations retain their existing advanced controls. */
-export function FloatingChatPanel({ onClose, onUnreadChanged, motionState, motionEnabled, onExitComplete }: Props) {
+export function FloatingChatPanel({ onClose, onUnreadChanged, motionState, motionEnabled, campusName, onExitComplete }: Props) {
   const [threadId, setThreadId] = useState<number | null>(null);
   const [meetupOpen, setMeetupOpen] = useState(false);
   const [viewMotion, setViewMotion] = useState(false); // The panel itself supplies the initial entrance.
@@ -116,7 +119,8 @@ export function FloatingChatPanel({ onClose, onUnreadChanged, motionState, motio
       const request = ++issued;
       try {
         if (threadId === null) {
-          const rows = await api<InboxItem[]>('/inquiries');
+          const page = await api<InboxPage<InboxItem>>('/inquiries?limit=30');
+          const rows = page.items;
           if (!active || request !== issued) return;
           const foreground = document.visibilityState === 'visible' && document.hasFocus();
           const latest = rows.flatMap(item => item.lastMessage
@@ -128,7 +132,7 @@ export function FloatingChatPanel({ onClose, onUnreadChanged, motionState, motio
           wasForegroundRef.current = foreground;
           setInbox(rows);
         } else {
-          const next = await api<Conversation>(`/inquiries/${threadId}/messages`);
+          const next = await api<Conversation>(`/inquiries/${threadId}/messages?limit=50`);
           if (!active || request !== issued) return;
           const foreground = document.visibilityState === 'visible' && document.hasFocus();
           if (hasNewIncomingMessage(next.messages, knownIdsRef.current,
@@ -336,6 +340,8 @@ export function FloatingChatPanel({ onClose, onUnreadChanged, motionState, motio
         {!conversation && !loadError && <p role="status" className="muted">Loading messages…</p>}
         {loadError && <div className="floating-chat-feedback" role="alert"><p>{loadError}</p>
           <button type="button" className="btn ghost" onClick={() => void refreshRef.current()}>Retry</button></div>}
+        {conversation?.hasEarlier && <Link className="btn ghost" to={`/inquiries/${threadId}`}
+          onClick={() => onClose(true)}>View earlier messages in full chat</Link>}
         {conversation?.messages.length === 0 && <p className="muted">No messages yet. Say hello.</p>}
         {conversation?.messages.map(message => <div key={message.id}
           className={`floating-chat-message ${message.mine ? 'mine' : 'theirs'}`}
@@ -382,6 +388,7 @@ export function FloatingChatPanel({ onClose, onUnreadChanged, motionState, motio
           inquiryThreadId={conversation.thread.id}
           transactionId={transaction?.id}
           handoff={conversation.handoff ?? null}
+          campusName={campusName}
           editable={locationEditable}
           requiresReconfirmation={requiresReconfirmation}
           unavailableReason={closed ? 'This conversation has ended. The meetup is read-only.'

@@ -11,7 +11,7 @@
 .storefront .storefront-primary-text { padding-top: 10px; }
 .storefront .storefront-primary h1 { font-size: clamp(1.6rem, 2.1vw, 2.05rem); line-height: 1.16; }
 .storefront .storefront-campus { gap: var(--ui-space-2); margin-bottom: 6px; }
-.storefront .storefront-affiliation { gap: var(--ui-space-2); font-weight: 650; }
+.storefront .storefront-affiliation { gap: var(--ui-space-2); font-weight: var(--ui-weight-bold); }
 
 /* Three equal, icon-only targets with no permanent strokes or outlines.
    Active and hover surfaces convey state without changing button geometry. */
@@ -104,7 +104,7 @@
   border-radius: var(--ui-radius-sm);
   min-height: 42px;
   padding-inline: var(--ui-space-4);
-  font-weight: 650;
+  font-weight: var(--ui-weight-bold);
 }
 .storefront .storefront-tabs button[aria-pressed="true"] {
   background: var(--forest);
@@ -119,7 +119,7 @@
 .storefront .storefront-category-tabs button {
   min-height: 40px;
   padding: 8px var(--ui-space-3);
-  font-weight: 600;
+  font-weight: var(--ui-weight-bold);
   background: transparent;
 }
 .storefront .storefront-category-tabs button[aria-pressed="true"] {
@@ -236,7 +236,7 @@
 .storefront .storefront-opened {
   color: var(--ink-soft);
   font-size: .75rem;
-  font-weight: 450;
+  font-weight: var(--ui-weight-regular);
   line-height: 1.45;
 }
 .storefront .storefront-facts {
@@ -256,13 +256,13 @@
   color: var(--ink-soft);
   font-size: var(--ui-type-xs);
   line-height: 1.3;
-  font-weight: 450;
+  font-weight: var(--ui-weight-regular);
 }
 .storefront .storefront-facts strong,
 .storefront .storefront-facts .storefront-follow-count {
   color: var(--ink);
   font-size: var(--ui-type-md);
-  font-weight: 720;
+  font-weight: var(--ui-weight-bold);
   line-height: 1.25;
   font-variant-numeric: tabular-nums;
 }
@@ -345,7 +345,7 @@
   box-shadow: none;
   color: var(--ink-soft);
   font-size: var(--ui-type-sm);
-  font-weight: 650;
+  font-weight: var(--ui-weight-bold);
 }
 .storefront .storefront-report .storefront-report-trigger.btn.ghost:hover:not(:disabled) {
   border: 0;

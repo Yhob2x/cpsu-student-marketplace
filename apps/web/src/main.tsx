@@ -9,6 +9,7 @@ import { ActionFeedbackHost, showActionFeedback } from './action-feedback';
 import { SiteFooter } from './site-footer';
 import { InstallApp } from './install-app';
 import { FloatingChat } from './floating-chat';
+import { preferredCampusName } from './meetup-campus';
 import { useForegroundRefresh } from './foreground-refresh';
 import { withSavedListing } from './saved-state';
 import { Login, Dashboard, Inquiries, Thread, Saved } from './pages-account';
@@ -278,7 +279,8 @@ function Shell() {
       </div></main>
       <ActionFeedbackHost />
       <SiteFooter audience={!ready ? 'checking' : !me ? 'guest' : isStaff ? 'staff' : 'student'} canReview={Boolean(isReviewer)} />
-      <FloatingChat ready={ready} isStaff={Boolean(isStaff)} signedIn={Boolean(me)} unreadMessages={unreadMessages} onUnreadChanged={syncUnread} />
+      <FloatingChat ready={ready} isStaff={Boolean(isStaff)} signedIn={Boolean(me)} unreadMessages={unreadMessages}
+          campusName={preferredCampusName(me?.affiliations)} onUnreadChanged={syncUnread} />
       <nav className="tabbar" aria-label="Primary">
         <NavLink to="/" end><Icon name="home" size={19} /><span>Home</span></NavLink>
         <NavLink to="/explore"><Icon name="search" size={19} /><span>Explore</span></NavLink>

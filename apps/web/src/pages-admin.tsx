@@ -1,3 +1,4 @@
+import { Field, Panel } from './components/ui/primitives';
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { api, explain, peso } from './api';
@@ -194,10 +195,10 @@ export function Admin() {
       showActionFeedback({ kind: 'success', title: 'Affiliation decision recorded', message: 'The verification decision has been saved.' });
       load(); } catch (e) { setErr(explain(e)); } finally { setPending(''); setPendingAction(''); }
   };
-  const field = (k: string, ph: string, min = 5) => <label className="field moderation-reason">
+  const field = (k: string, ph: string, min = 5) => <Field className="moderation-reason">
     {k.startsWith('a') ? 'Verification reason' : 'Decision reason'}
     <input placeholder={ph} value={reasons[k] ?? ''} onChange={e => setReasons({ ...reasons, [k]: e.target.value })} required minLength={min} maxLength={k.startsWith('a') ? 500 : 1000} />
-  </label>;
+  </Field>;
   const reasonOk = (k: string, min = 5) => (reasons[k] ?? '').trim().length >= min;
   const selectedStudent = students?.find(student => student.id === selectedStudentId);
   const selectedListing = q?.listings.find((listing: any) => listing.id === selectedListingId) ?? q?.listings[0];
@@ -229,12 +230,12 @@ export function Admin() {
       <p className="muted">{accountAdmin ? 'Manage students, reviews and campus activity.' : 'Review listings, affiliations and reports for your campus.'}</p></div>
       <Link className="btn ghost admin-marketplace-search" to="/explore" aria-label="Search marketplace listings"><Icon name="search" size={17} /> Search marketplace</Link></div>
     {notice && <p className="admin-action-notice" role="status">{notice}</p>}
-    <label className="admin-workspace-mobile-nav field">Workspace section
+    <Field className="admin-workspace-mobile-nav">Workspace section
       <select value={activeSection} onChange={event => changeSection(event.target.value)}>
         {navGroups.map(group => <optgroup label={group.title} key={group.title}>{group.items.map(item =>
           <option key={item.id} value={item.id}>{item.label}{item.count !== undefined ? ` (${item.count})` : ''}</option>)}</optgroup>)}
       </select>
-    </label>
+    </Field>
     <div className="admin-workspace-layout">
       <nav className="admin-workspace-nav" aria-label="Administration sections">
         {navGroups.map(group => <div className="admin-workspace-nav-group" key={group.title}>
@@ -251,7 +252,7 @@ export function Admin() {
     {err && <p className="err" role="alert">{err} <button type="button" className="btn ghost" onClick={load}>Retry</button></p>}
     {q === null && !err && <p role="status" className="muted">Loading review queue…</p>}
     <h2 id="admin-affiliations">Affiliations to verify</h2><p className="muted">This queue does not contain proof of enrollment. Confirm affiliation using authorized campus records before deciding.</p>{q?.affiliations.length === 0 && <p className="muted">All caught up.</p>}
-    {q?.affiliations.map((a: any) => <div key={a.id} className="panel row"><div style={{ flex: 1 }}><h3>{a.user.displayName}</h3><span className="muted">{a.campus} · {a.user.email} · Affiliation #{a.id}</span></div>
+    {q?.affiliations.map((a: any) => <Panel key={a.id} className="row"><div style={{ flex: 1 }}><h3>{a.user.displayName}</h3><span className="muted">{a.campus} · {a.user.email} · Affiliation #{a.id}</span></div>
       {field(`a${a.id}`, 'Reason (5+ characters)')}
       <div className="admin-inline-actions">
         <button type="button" className="btn" disabled={Boolean(pending) || !reasonOk(`a${a.id}`)}
@@ -264,18 +265,18 @@ export function Admin() {
           aria-label={`Reject affiliation for ${a.user.displayName}`} onClick={() => verify(a.id, 'rejected')}>
           {pending === `a${a.id}` && pendingAction === 'rejected' ? 'Rejecting…' : 'Reject'}
         </button>
-      </div></div>)}
+      </div></Panel>)}
     </div>
     <div hidden={activeSection !== 'listings'}>
     {err && <p className="err" role="alert">{err} <button type="button" className="btn ghost" onClick={load}>Retry</button></p>}
     {q === null && !err && <p role="status" className="muted">Loading review queue…</p>}
     <h2 id="admin-listings">Listings to review</h2>{q?.listings.length === 0 && <p className="muted">No listings waiting.</p>}
     {q?.listings.length > 0 && <div className="admin-review-layout">
-      <label className="field admin-review-mobile-picker">Choose a listing to review
+      <Field className="admin-review-mobile-picker">Choose a listing to review
         <select value={selectedListing?.id ?? ''} onChange={event => setSelectedListingId(Number(event.target.value))}>
           {q.listings.map((listing: any) => <option value={listing.id} key={listing.id}>{listing.title} · {listing.campus}</option>)}
         </select>
-      </label>
+      </Field>
       <section className="admin-review-queue" aria-label="Pending listing queue">
         <p className="muted">Select a listing to review.</p>
         {q.listings.map((listing: any) => <button type="button" key={listing.id}
@@ -287,7 +288,7 @@ export function Admin() {
         </button>)}
       </section>
       <div className="admin-review-detail">
-        {q.listings.filter((listing: any) => listing.id === selectedListing?.id).map((l: any) => <article key={l.id} className="panel stack review-listing">
+        {q.listings.filter((listing: any) => listing.id === selectedListing?.id).map((l: any) => <Panel as="article" key={l.id} className="stack review-listing">
       <div className="review-listing-heading"><div><h3>{l.title}</h3><p className="muted">{l.store} · {l.campus} · {l.category}</p></div><span className="tag">{peso(l.price)}</span></div>
       <p className="review-description">{l.description}</p>
       {assessListingReadability(l.title, l.description).length > 0 && <aside className="review-listing-clarity" aria-label="Listing clarity guidance">
@@ -319,7 +320,7 @@ export function Admin() {
             aria-busy={pending === `l${l.id}` && pendingAction === 'rejected'} onClick={() => decide(l.id, 'rejected')}>
             {pending === `l${l.id}` && pendingAction === 'rejected' ? 'Rejecting…' : 'Reject'}
           </button>
-        </div></div></article>)}
+        </div></div></Panel>)}
       </div>
     </div>}
     </div>
@@ -327,16 +328,16 @@ export function Admin() {
     <h2 id="admin-reports">Reports from students</h2><p className="muted">Review the report and record your findings. Closing it does not suspend the subject.</p>{reportsError && <p className="err" role="alert">Reports could not load: {reportsError} <button type="button" className="btn ghost" onClick={load}>Retry</button></p>}{reportActionError && <p className="err" role="alert">Could not save the report decision: {reportActionError}. Your findings are retained; check and retry the decision.</p>}
     {reports === null && !reportsError && <p className="muted" role="status">Loading reports…</p>}
     {reports?.length === 0 && !reportsError && <p className="muted">No open reports.</p>}
-    {!reportsError && reports?.map(rep => <div key={rep.id} className="panel row"><div style={{ flex: 1, minWidth: 0 }}>
+    {!reportsError && reports?.map(rep => <Panel key={rep.id} className="row"><div style={{ flex: 1, minWidth: 0 }}>
       <p style={{ maxWidth: '65ch', margin: 0 }}>{rep.reason}</p>
       <p className="muted" style={{ margin: '.15rem 0 0' }}>
         {rep.listingId && <><Link to={`/listings/${rep.listingId}`}>View listing</Link> · </>}
         {rep.sellerProfileId && <><Link to={`/stores/${rep.sellerProfileId}`}>View store</Link> · </>}
         {new Date(rep.createdAt).toLocaleString()}
       </p></div>
-      <label className="field moderation-reason">Investigation findings for report #{rep.id}
+      <Field className="moderation-reason">Investigation findings for report #{rep.id}
         <textarea rows={2} minLength={10} maxLength={1000} value={reportReasons[rep.id] ?? ''} onChange={e => setReportReasons(previous => ({ ...previous, [rep.id]: e.target.value }))} placeholder="Record what you checked and why this decision is appropriate" />
-      </label>
+      </Field>
       <div className="admin-inline-actions">
         <button type="button" className="btn" disabled={Boolean(pending) || (reportReasons[rep.id] ?? '').trim().length < 10}
           aria-busy={pending === `r${rep.id}` && pendingAction === 'resolved'}
@@ -348,7 +349,7 @@ export function Admin() {
           aria-label={`Dismiss report ${rep.id}`} onClick={() => resolveReport(rep.id, 'dismissed')}>
           {pending === `r${rep.id}` && pendingAction === 'dismissed' ? 'Dismissing…' : 'Dismiss'}
         </button>
-      </div></div>)}
+      </div></Panel>)}
     </div>
     {activeSection === 'store-reviews' && <StoreReviewModeration />}
     <section hidden={activeSection !== 'transactions'} aria-labelledby="admin-transactions-heading">
@@ -356,7 +357,7 @@ export function Admin() {
       <p className="muted">Read-only campus records. Completed means both students confirmed; payments are unverified. Private messages are hidden.</p>
       {transactionError && <p role="alert" className="err">Transactions could not load: {transactionError} <button type="button" className="btn ghost" onClick={() => void loadTransactions(transactionPage)}>Retry</button></p>}
       {!transactionLoading && !transactionError && monitoredTransactions.length === 0 && <p className="muted">No transactions to monitor.</p>}
-      <div className="stack admin-transaction-list">{monitoredTransactions.map(t => <article className="panel admin-transaction-row" key={t.id}>
+      <div className="stack admin-transaction-list">{monitoredTransactions.map(t => <Panel as="article" className="admin-transaction-row" key={t.id}>
         <div><strong>{t.listing.title}</strong>
           <p className="muted">#{t.id} · {t.listing.campus.code} · {t.listing.type === 'service' ? 'Service' : 'Product'}</p>
           <time className="muted" dateTime={t.createdAt}>{new Date(t.createdAt).toLocaleString('en-PH', { dateStyle: 'medium', timeStyle: 'short' })}</time>
@@ -364,7 +365,7 @@ export function Admin() {
         <span className={'transaction-status transaction-status--' + t.status}>
           {statusLabels[t.status as TransactionStatus] ?? String(t.status).replaceAll('_', ' ')}
         </span>
-      </article>)}</div>
+      </Panel>)}</div>
       {transactionLoading && <p role="status" className="muted">Loading transaction records…</p>}
       {!transactionLoading && !transactionError && monitoredTransactions.length < transactionCount && <button type="button" className="btn ghost" onClick={() => void loadTransactions(transactionPage + 1)}>Load more transactions</button>}
     </section>
@@ -372,10 +373,10 @@ export function Admin() {
       <h2 id="student-management-heading">Student accounts</h2>
       <p className="muted">Suspending a student signs them out and hides their public listings.</p>
       <form className="panel admin-student-filters" role="search" aria-label="Search student accounts" onSubmit={e => { e.preventDefault(); void searchStudents({ q: studentQuery, status: studentStatus, verification: studentVerification, campusId: studentCampusId }); }}>
-        <label className="field">Name or email<input type="search" value={studentQuery} onChange={e => setStudentQuery(e.target.value)} maxLength={80} placeholder="Search students" /></label>
-        <label className="field">Campus<select value={studentCampusId} onChange={e => setStudentCampusId(e.target.value)}><option value="">All campuses</option>{campuses.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}</select></label>
-        <label className="field">Account<select value={studentStatus} onChange={e => setStudentStatus(e.target.value)}><option value="">Any status</option><option value="active">Active</option><option value="suspended">Suspended</option></select></label>
-        <label className="field">Verification<select value={studentVerification} onChange={e => setStudentVerification(e.target.value)}><option value="">Any status</option><option value="unverified">Unverified</option><option value="pending">Pending</option><option value="verified">Verified</option><option value="rejected">Rejected</option><option value="suspended">Suspended</option></select></label>
+        <Field className="">Name or email<input type="search" value={studentQuery} onChange={e => setStudentQuery(e.target.value)} maxLength={80} placeholder="Search students" /></Field>
+        <Field className="">Campus<select value={studentCampusId} onChange={e => setStudentCampusId(e.target.value)}><option value="">All campuses</option>{campuses.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}</select></Field>
+        <Field className="">Account<select value={studentStatus} onChange={e => setStudentStatus(e.target.value)}><option value="">Any status</option><option value="active">Active</option><option value="suspended">Suspended</option></select></Field>
+        <Field className="">Verification<select value={studentVerification} onChange={e => setStudentVerification(e.target.value)}><option value="">Any status</option><option value="unverified">Unverified</option><option value="pending">Pending</option><option value="verified">Verified</option><option value="rejected">Rejected</option><option value="suspended">Suspended</option></select></Field>
         <button className="btn" disabled={studentsLoading} type="submit">Apply filters</button>
       </form>
       {studentsError && <p className="err" role="alert">Students could not load: {studentsError} <button className="btn ghost" type="button" onClick={() => void searchStudents(studentApplied, studentPage)}>Retry</button></p>}
@@ -388,22 +389,22 @@ export function Admin() {
           <span>{student.affiliations.some((a: any) => a.verificationStatus === 'verified') ? 'Verified' : 'Unverified'}</span>
           <span className="status">{student.status === 'active' ? 'Active' : 'Suspended'}</span>
         </button>)}</div>
-        <aside className="panel admin-student-detail" aria-label="Selected student account">
+        <Panel as="aside" className="admin-student-detail" aria-label="Selected student account">
           {!selectedStudent && <p className="muted">Select a student to view account actions.</p>}
           {selectedStudent && <><h3>{selectedStudent.displayName}</h3><p className="muted">{selectedStudent.email}</p><p>Account: {selectedStudent.status}</p><p>Campus: {selectedStudent.affiliations.map((a: any) => `${a.campus.code} (${a.verificationStatus})`).join(', ') || 'None'}</p>
-            {selectedStudent.roles.some((role: any) => ['campus_reviewer', 'university_admin', 'system_admin'].includes(role.role)) ? <p className="muted">Protected staff account — changes require a separate administrative review.</p> : selectedStudent.id !== me?.id && <div className="stack"><label className="field">Reason for account decision<input value={reasons[`u${selectedStudent.id}`] ?? ''} onChange={e => setReasons(previous => ({ ...previous, [`u${selectedStudent.id}`]: e.target.value }))} placeholder="Required reason (10+ characters)" maxLength={500} minLength={10} /></label><button className={selectedStudent.status === 'active' ? 'btn danger' : 'btn'} type="button" disabled={pending === `u${selectedStudent.id}` || (reasons[`u${selectedStudent.id}`] ?? '').trim().length < 10} onClick={() => void changeAccountStatus(selectedStudent.id, selectedStudent.status === 'active' ? 'suspended' : 'active')}>{selectedStudent.status === 'active' ? 'Suspend student' : 'Reactivate student'}</button></div>}
+            {selectedStudent.roles.some((role: any) => ['campus_reviewer', 'university_admin', 'system_admin'].includes(role.role)) ? <p className="muted">Protected staff account — changes require a separate administrative review.</p> : selectedStudent.id !== me?.id && <div className="stack"><Field className="">Reason for account decision<input value={reasons[`u${selectedStudent.id}`] ?? ''} onChange={e => setReasons(previous => ({ ...previous, [`u${selectedStudent.id}`]: e.target.value }))} placeholder="Required reason (10+ characters)" maxLength={500} minLength={10} /></Field><button className={selectedStudent.status === 'active' ? 'btn danger' : 'btn'} type="button" disabled={pending === `u${selectedStudent.id}` || (reasons[`u${selectedStudent.id}`] ?? '').trim().length < 10} onClick={() => void changeAccountStatus(selectedStudent.id, selectedStudent.status === 'active' ? 'suspended' : 'active')}>{selectedStudent.status === 'active' ? 'Suspend student' : 'Reactivate student'}</button></div>}
             {selectedStudent.status === 'active' && selectedStudent.roles.length === 0 && selectedStudent.id !== me?.id && <div className="stack">
               <h4>Assign campus reviewer</h4>
               <p className="muted">Only students with an active, verified campus affiliation are eligible. Assigning changes their access to staff and signs them out.</p>
-              <label className="field">Review campus<select value={reviewerCampusId} onChange={e => setReviewerCampusId(e.target.value)}>
+              <Field className="">Review campus<select value={reviewerCampusId} onChange={e => setReviewerCampusId(e.target.value)}>
                 <option value="">Choose a verified campus</option>
                 {campuses.filter(c => selectedStudent.affiliations.some((a: any) => a.campus.id === c.id && a.verificationStatus === 'verified' && (!a.expirationAt || new Date(a.expirationAt) > new Date()))).map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-              </select></label>
-              <label className="field">Reason for assignment<input value={reviewerReason} onChange={e => setReviewerReason(e.target.value)} minLength={10} maxLength={500} placeholder="Required reason (10+ characters)" /></label>
+              </select></Field>
+              <Field className="">Reason for assignment<input value={reviewerReason} onChange={e => setReviewerReason(e.target.value)} minLength={10} maxLength={500} placeholder="Required reason (10+ characters)" /></Field>
               <button className="btn" type="button" disabled={pending === `reviewer-${selectedStudent.id}` || !reviewerCampusId || reviewerReason.trim().length < 10} onClick={() => void assignStudentReviewer(selectedStudent.id)}>Assign as reviewer</button>
             </div>}
           </>}
-        </aside>
+        </Panel>
       </div>}
       {!studentsError && studentTotal > 25 && <nav className="admin-student-pages" aria-label="Student result pages"><button className="btn ghost" type="button" disabled={studentsLoading || studentPage <= 1} onClick={() => void searchStudents(studentApplied, studentPage - 1)}>Previous</button><span>Page {studentPage} of {Math.ceil(studentTotal / 25)}</span><button className="btn ghost" type="button" disabled={studentsLoading || studentPage * 25 >= studentTotal} onClick={() => void searchStudents(studentApplied, studentPage + 1)}>Next</button></nav>}
     </section>}
@@ -439,8 +440,8 @@ export function Admin() {
     {statsError && <p className="err" role="alert">Campus overview could not load: {statsError} <button type="button" className="btn ghost" onClick={load}>Retry</button></p>}
     {!stats && !statsError && <p className="muted" role="status">Loading campus overview…</p>}
     {stats && !statsError && <><p className="muted">{stats.note}</p>
-      <div className="grid">{stats.campuses.map((c: any) => <div key={c.campus} className="panel"><h3>{c.campus}</h3>
-        <p>Storefronts: {c.activeStorefronts}<br />Published listings: {c.publishedListings}<br />Services: {c.serviceListings}<br />Pending review: {c.pendingReview}<br />Inquiries: {c.inquiries}</p></div>)}</div></>}
+      <div className="grid">{stats.campuses.map((c: any) => <Panel key={c.campus} className=""><h3>{c.campus}</h3>
+        <p>Storefronts: {c.activeStorefronts}<br />Published listings: {c.publishedListings}<br />Services: {c.serviceListings}<br />Pending review: {c.pendingReview}<br />Inquiries: {c.inquiries}</p></Panel>)}</div></>}
     </div>
       </div>
     </div>

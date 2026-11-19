@@ -251,6 +251,8 @@ export function Discover() {
   const [items, setItems] = useState<Listing[] | null>(null); const [total, setTotal] = useState<number | null>(null);
   const [error, setError] = useState('');
   const [retryRequest, setRetryRequest] = useState(0);
+  const [resolvedRequestKey, setResolvedRequestKey] = useState<string | null>(null);
+  const [loadedSearch, setLoadedSearch] = useState('');
   const currentPage = Math.max(1, Number(sp.get('page')) || 1);
   const pageCount = Math.ceil((total ?? 0) / 20);
   const availableCats = categoriesForExplore(cats, f.type);
@@ -285,6 +287,8 @@ export function Discover() {
   }, [cats, filtersLoading, sp, setSp]);
   // URL parameters remain the single source of truth for filters and browser history.
   const query = cleanExploreQuery(sp, cats).toString();
+  const requestKey = `${query}:${retryRequest}`;
+  const isRefreshing = resolvedRequestKey !== requestKey;
   useEffect(() => {
     if (total === null || total === 0 || currentPage <= pageCount) return;
     const next = new URLSearchParams(sp);
@@ -293,15 +297,24 @@ export function Discover() {
   }, [currentPage, pageCount, total, sp, setSp]);
   useEffect(() => {
     let active = true;
-    setItems(null); setTotal(null); setError('');
-    if (priceError) { setItems([]); return () => { active = false; }; }
+    setError('');
+    // Keep previously rendered cards (and their <img> elements) mounted while
+    // filters or sorting refresh. The media endpoint intentionally disallows caching.
+    if (priceError) {
+      setItems([]); setTotal(null); setResolvedRequestKey(requestKey);
+      return () => { active = false; };
+    }
     const t = setTimeout(() => api(`/listings?${query}`)
-      .then(r => { if (active) { setItems(r.items); setTotal(r.total); setError(''); } })
+      .then(r => { if (active) {
+        setItems(r.items); setTotal(r.total); setError('');
+        setLoadedSearch(new URLSearchParams(query).get('q') ?? '');
+        setResolvedRequestKey(requestKey);
+      } })
       .catch(e => { if (active) {
         setError(e instanceof ApiError && e.status === 429
           ? 'Too many requests. Wait a few minutes before retrying.'
           : 'Listings are temporarily unavailable. Check your connection and try again.');
-        setItems([]); setTotal(null);
+        setItems([]); setTotal(null); setResolvedRequestKey(requestKey);
       } }), 250);
     return () => { active = false; clearTimeout(t); };
   }, [query, retryRequest, priceError]);
@@ -420,9 +433,8 @@ export function Discover() {
         <section className="explore-control-header" aria-label="Explore results controls">
     <div className="results explore-results-toolbar">
       <p className="muted explore-results-count" role="status" aria-live="polite">
-        {priceError ? 'Check the price range' : error ? 'Could not load listings' : total === null ? 'Searching…' : total === 0 ? 'No listings match' : `${total} listing${total === 1 ? '' : 's'}`}
+        {priceError ? 'Check the price range' : isRefreshing ? (items === null ? 'Searching…' : 'Updating listings…') : error ? 'Could not load listings' : total === null ? 'Searching…' : total === 0 ? 'No listings match' : `${total} listing${total === 1 ? '' : 's'}`}
       </p>
-      {dirty && <button type="button" className="clear-inline" onClick={reset}>Clear filters</button>}
       <div className="explore-sort-control" role="group" aria-label="Sort listings by">
         <span className="explore-sort-label" aria-hidden="true">Sort by</span>
         <div className="explore-sort-options">
@@ -438,20 +450,19 @@ export function Discover() {
     </div>
     </section>
 
-    {error && <section className="panel stack explore-listing-error" role="alert" aria-label="Listing loading problem">
+    {!isRefreshing && error && <section className="panel stack explore-listing-error" role="alert" aria-label="Listing loading problem">
       <h2>Could not load listings</h2>
       <p className="muted">{error}</p>
       <div className="row"><button type="button" className="btn" onClick={() => setRetryRequest(n => n + 1)}>Retry listings</button></div>
     </section>}
     {items === null && !priceError && skel}
-    {items !== null && items.length === 0 && !error && !priceError && total !== null && <div className="empty">
+    {items !== null && items.length === 0 && !isRefreshing && !error && !priceError && total !== null && <div className="empty">
       <h2>No listings match</h2>
       <p className="muted">{dirty ? 'Try fewer filters or another campus.' : 'New listings will appear after review.'}</p>
-      {dirty && <button className="btn ghost" onClick={reset}>Clear filters</button>}
     </div>}
-    {items !== null && !error && !priceError && <StoresInResults listings={items} query={f.q} />}
+    {items !== null && !error && !priceError && <StoresInResults listings={items} query={loadedSearch} />}
     {items !== null && !priceError && items.length > 0 && <h2 className="sr-only">Listing results</h2>}
-    {items !== null && !priceError && items.length > 0 && currentPage <= pageCount && <div className="grid listing-grid explore-results" role="region" aria-label="Explore listing results">
+    {items !== null && !priceError && items.length > 0 && currentPage <= pageCount && <div className="grid listing-grid explore-results" role="region" aria-label="Explore listing results" aria-busy={isRefreshing}>
       {items.map((l, index) => <ListingCard key={l.id} l={l} priority={index < 2} />)}
     </div>}
     {pageCount > 1 && <nav className="row" aria-label="Listing pages" style={{ justifyContent: 'center', marginTop: '1rem' }}>

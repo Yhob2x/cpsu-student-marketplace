@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type FormEvent } from 'react';
+import { useEffect, useRef, useState, type FormEvent, type ReactNode } from 'react';
 import { api, ApiError, explain } from './api';
 import { showActionFeedback } from './action-feedback';
 import './store-reviews.css';
@@ -14,7 +14,7 @@ function RatingStars({ value, size = 'normal' }: { value: number; size?: 'normal
   </span>;
 }
 
-export function StoreRatingsAndReviews({ storeId }: { storeId: number }) {
+export function StoreRatingsAndReviews({ storeId, reviewAction }: { storeId: number; reviewAction?: ReactNode }) {
   const [page, setPage] = useState(1);
   const [data, setData] = useState<PublicPage | null>(null);
   const [error, setError] = useState('');
@@ -53,11 +53,17 @@ export function StoreRatingsAndReviews({ storeId }: { storeId: number }) {
           <span>{data.summary!.distribution?.[stars] ?? 0}</span>
         </div>)}
       </div>}
-    <p className="muted store-review-disclosure">Only buyers with completed CPSU Market transactions may rate a store. Ratings reflect student opinions and are not CPSU endorsements. Written reviews are checked before publication.</p>
+    <p className="muted store-review-disclosure">Only verified buyers of completed transactions can rate stores. Reviews are student opinions, not CPSU endorsements.</p>
     {loading && <p className="muted" role="status">Loading store reviews…</p>}
     {error && <p className="err" role="alert">Could not load store reviews: {error} <button type="button" className="btn ghost" onClick={load}>Retry</button></p>}
     {!loading && !error && data?.available === false && <p className="muted">Store ratings and reviews are being prepared.</p>}
-    {!loading && !error && data?.available && data.summary?.count === 0 && <p className="muted">No published reviews yet. Ratings will appear after a completed transaction and campus moderation.</p>}
+    {!loading && !error && data?.available && data.summary?.count === 0 &&
+      <div className="store-review-empty">
+        <span className="store-review-empty-stars" aria-hidden="true">☆☆☆☆☆</span>
+        <strong>No reviews yet</strong>
+        <p>Approved buyer reviews will appear here.</p>
+        {reviewAction}
+      </div>}
     {!loading && !error && data?.available && data.items.length > 0 && <div className="store-review-list">
       {data.items.map(review => <article key={review.id} className="store-review-row">
         <div className="store-review-meta"><RatingStars value={review.rating} />
@@ -66,6 +72,7 @@ export function StoreRatingsAndReviews({ storeId }: { storeId: number }) {
         {review.body && <p>{review.body}</p>}
       </article>)}
     </div>}
+    {!loading && !error && data?.available && data.summary?.count !== 0 && reviewAction}
     {!loading && !error && data?.available && pages > 1 && <nav className="store-review-pagination" aria-label="Store review pages">
       <button type="button" className="btn ghost" disabled={page <= 1} onClick={() => setPage(p => p - 1)}>Previous</button>
       <span>Page {page} of {pages}</span>
@@ -74,8 +81,17 @@ export function StoreRatingsAndReviews({ storeId }: { storeId: number }) {
   </section>;
 }
 
-type BuyerReviewState = { available: boolean; eligible: boolean; review: Review | null };
-export function TransactionStoreReview({ transactionId }: { transactionId: number }) {
+type BuyerReviewState = { available: boolean; eligible: boolean; review: Review | null;
+  reason?: string | null };
+const reviewEligibilityMessages: Record<string, string> = {
+  transaction_not_completed: 'Both students must confirm completion before a store review can be submitted.',
+  verified_student_required: 'A current, verified CPSU affiliation is required to review this transaction.',
+  store_not_available: 'This store is no longer eligible for public reviews.',
+  cannot_review_own_store: 'Store owners cannot rate their own stores.',
+};
+export function TransactionStoreReview({ transactionId, onSubmitted }: {
+  transactionId: number; onSubmitted?: () => void;
+}) {
   const [data, setData] = useState<BuyerReviewState | null>(null);
   const [rating, setRating] = useState(0);
   const [body, setBody] = useState('');
@@ -109,9 +125,13 @@ export function TransactionStoreReview({ transactionId }: { transactionId: numbe
       await api(`/transactions/${transactionId}/store-review`, { body: { rating, body: body.trim() || null } });
       setNotice('Review submitted. A campus reviewer will check it before publication.');
       showActionFeedback({ kind: 'success', title: 'Rating submitted', message: 'Your store review is awaiting campus moderation.', presentation: 'center' });
-      await load();
-    } catch (e) { setError(explain(e)); }
-    finally { setSaving(false); inFlight.current = false; }
+      if (onSubmitted) onSubmitted();
+      else await load();
+    } catch (e) {
+      setError(explain(e));
+      showActionFeedback({ kind: 'error', title: 'Review not submitted',
+        message: explain(e) });
+    } finally { setSaving(false); inFlight.current = false; }
   };
   return <section className="panel store-transaction-review" aria-labelledby="transaction-review-heading">
     <h2 id="transaction-review-heading">Rate this store</h2>
@@ -125,11 +145,13 @@ export function TransactionStoreReview({ transactionId }: { transactionId: numbe
     {!loading && data?.available && data.eligible && <form className="store-rating-form" aria-busy={saving} onSubmit={submit}>
       <p className="muted">You can leave one rating for this completed transaction. Payment and delivery are self-reported, not independently verified by CPSU.</p>
       <fieldset className="store-review-picker"><legend>Your rating (required)</legend>
-        {Array.from({ length: 5 }, (_, i) => <label key={i}>
-          <input type="radio" name="rating" value={i + 1} checked={rating === i + 1} disabled={saving}
-            onChange={() => setRating(i + 1)} required />
-          {i + 1} {i + 1 === 1 ? 'star' : 'stars'}
+        {Array.from({ length: 5 }, (_, i) => <label key={i} className="store-review-star-option">
+          <input type="radio" name="rating" value={i + 1} checked={rating === i + 1}
+            aria-label={`${i + 1} ${i + 1 === 1 ? 'star' : 'stars'}`}
+            disabled={saving} onChange={() => setRating(i + 1)} required />
+          <span aria-hidden="true">{i < rating ? '★' : '☆'}</span>
         </label>)}
+        <span className="store-review-picker-caption" role="status">{rating ? `${rating} of 5 stars selected` : 'Choose 1–5 stars'}</span>
       </fieldset>
       <label className="field">Written review (optional)
         <textarea value={body} maxLength={800} rows={3} disabled={saving}
@@ -138,7 +160,10 @@ export function TransactionStoreReview({ transactionId }: { transactionId: numbe
       </label>
       <button type="submit" className="btn" disabled={saving || rating < 1}>{saving ? 'Submitting…' : 'Submit store rating'}</button>
     </form>}
-    {!loading && data?.available && !data.eligible && !data.review && <p className="muted">This transaction is not currently eligible for a new review.</p>}
+    {!loading && data?.available && !data.eligible && !data.review &&
+      <p className="muted">{data.reason && reviewEligibilityMessages[data.reason]
+        ? reviewEligibilityMessages[data.reason]
+        : 'This transaction is not currently eligible for a new review.'}</p>}
     {notice && <p role="status">{notice}</p>}
     {error && <p className="err" role="alert">{error} <button type="button" className="btn ghost" onClick={load}>Retry</button></p>}
   </section>;
@@ -180,8 +205,11 @@ export function StoreReviewModeration() {
       showActionFeedback({ kind: 'success', title: `Review ${action}`, message: 'Your moderation decision was saved.', presentation: 'center' });
       setReasons(prev => ({ ...prev, [id]: '' }));
       await load();
-    } catch (e) { setError(explain(e)); }
-    finally { setBusy(null); }
+    } catch (e) {
+      setError(explain(e));
+      showActionFeedback({ kind: 'error', title: 'Review decision not saved',
+        message: explain(e) });
+    } finally { setBusy(null); }
   };
   return <section className="store-review-admin" aria-labelledby="store-review-admin-heading">
     <h2 id="store-review-admin-heading">Store rating moderation</h2>

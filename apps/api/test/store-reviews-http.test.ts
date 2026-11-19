@@ -5,7 +5,8 @@ import { errorHandler } from '../src/http.js';
 import { makeStoreReviewsRouter } from '../src/store-reviews.js';
 
 type Options = { storeHidden?: boolean; enabled?: boolean; completed?: boolean;
-  affiliation?: boolean; duplicate?: boolean; role?: 'student' | 'reviewer' | 'admin' };
+  affiliation?: boolean; duplicate?: boolean; role?: 'student' | 'reviewer' | 'admin';
+  opportunityCount?: number };
 function fixture(opts: Options = {}) {
   const queries: { op: string; args: any }[] = [];
   const record = (op: string, args: any) => { queries.push({ op, args }); };
@@ -25,6 +26,12 @@ function fixture(opts: Options = {}) {
       record('tx.transaction.findFirst', args);
       return opts.completed === false ? null : { id: 31, sellerUserId: 12,
         status: 'completed', listing: { sellerProfileId: 2 } };
+    }, findMany: async (args: any) => {
+      record('tx.transaction.findMany', args);
+      return Array.from({ length: opts.opportunityCount ?? 1 }, (_, i) => ({
+        id: 31 + i, createdAt: new Date('2026-11-18T02:00:00Z'),
+        listing: { title: 'Synthetic textbook' },
+      })).slice(args.skip, args.skip + args.take);
     } },
     storeReview: model,
     auditLog: { create: async (args: any) => { record('audit', args); return { id: 1 }; } },
@@ -85,6 +92,62 @@ describe('store reviews (synthetic, no database writes)', () => {
     expect(verified.body.eligible).toBe(true);
     expect(unverified.body.eligible).toBe(false);
     expect(unverified.body.available).toBe(true);
+  });
+  test('buyer review eligibility also checks that the store remains publicly eligible', async () => {
+    const hidden = await request(fixture({ storeHidden: true }).app).get('/transactions/31/store-review');
+    expect(hidden.status).toBe(200);
+    expect(hidden.body).toMatchObject({
+      available: true, eligible: false, reason: 'store_not_available', review: null,
+    });
+    const unverified = await request(fixture({ affiliation: false }).app).get('/transactions/31/store-review');
+    expect(unverified.body).toMatchObject({
+      available: true, eligible: false, reason: 'verified_student_required',
+    });
+    const ready = await request(fixture().app).get('/transactions/31/store-review');
+    expect(ready.body).toMatchObject({ available: true, eligible: true, reason: null });
+  });
+  test('store review entry lists only eligible completed transactions from this store', async () => {
+    const h = fixture({ opportunityCount: 12 });
+    const first = await request(h.app).get('/seller-profiles/2/review-opportunities');
+    expect(first.status).toBe(200);
+    expect(first.headers['cache-control']).toBe('private, no-store');
+    expect(first.body).toMatchObject({
+      available: true, page: 1, pageSize: 10, hasMore: true, reason: null,
+    });
+    expect(first.body.items).toHaveLength(10);
+    expect(first.body.items[0]).toHaveProperty('listing.title', 'Synthetic textbook');
+    const q = h.queries.find(row => row.op === 'tx.transaction.findMany')!.args;
+    expect(q.where).toEqual({
+      buyerUserId: 11, sellerUserId: 12, status: 'completed',
+      listing: { sellerProfileId: 2 }, storeReview: { is: null },
+    });
+    expect(q.select).toEqual({ id: true, createdAt: true, listing: { select: { title: true } } });
+    expect(q.take).toBe(11);
+    const second = await request(h.app).get('/seller-profiles/2/review-opportunities?page=2');
+    expect(second.body.items).toHaveLength(2);
+    expect(second.body.hasMore).toBe(false);
+    expect(JSON.stringify(first.body)).not.toContain('buyerUserId');
+  });
+  test('store review entry hides options for unverified buyers and hidden stores', async () => {
+    const unverified = fixture({ affiliation: false });
+    const response = await request(unverified.app).get('/seller-profiles/2/review-opportunities');
+    expect(response.status).toBe(200);
+    expect(response.body).toMatchObject({ available: true, items: [],
+      reason: 'verified_student_required' });
+    expect(unverified.queries.some(row => row.op === 'tx.transaction.findMany')).toBe(false);
+    const hidden = await request(fixture({ storeHidden: true }).app)
+      .get('/seller-profiles/2/review-opportunities');
+    expect(hidden.status).toBe(404);
+    const staff = await request(fixture({ role: 'reviewer' }).app)
+      .get('/seller-profiles/2/review-opportunities');
+    expect(staff.status).toBe(403);
+  });
+  test('unactivated review schema never fabricates eligible opportunities', async () => {
+    const result = await request(fixture({ enabled: false }).app)
+      .get('/seller-profiles/2/review-opportunities');
+    expect(result.status).toBe(200);
+    expect(result.body).toMatchObject({ available: false, items: [],
+      reason: 'store_reviews_not_ready' });
   });
   test('completed buyer review is pending moderation and audit-logged', async () => {
     const h = fixture();

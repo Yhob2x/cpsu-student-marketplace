@@ -30,7 +30,7 @@
 
 .catalog-admin-kind { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .2rem; padding: .25rem; border-radius: 11px; background: var(--surface-soft); }
 .catalog-admin-kind button { min-height: 44px; border: 1px solid transparent; border-radius: 8px; background: transparent; color: var(--ink-soft); font: inherit; font-size: .9rem; font-weight: 650; cursor: pointer; }
-.catalog-admin-kind button.catalog-admin-kind-active { color: var(--forest); background: var(--paper); border-color: var(--line); box-shadow: 0 1px 3px #0000000d; }
-.catalog-admin-kind button:focus-visible { outline: 3px solid var(--focus-green); outline-offset: 2px; }
+.catalog-admin-kind button.catalog-admin-kind-active { color: var(--forest); background: var(--paper); border-color: var(--line); box-shadow: 0 1px 3px color-mix(in srgb, var(--color-text) 5%, transparent); }
+.catalog-admin-kind button:focus-visible { outline: 3px solid var(--color-focus); outline-offset: 2px; }
 .catalog-admin-kind button:disabled { cursor: wait; }
 .catalog-admin-subtitle { margin: 0 0 .7rem; font-size: .85rem; font-weight: 700; color: var(--ink-soft); }

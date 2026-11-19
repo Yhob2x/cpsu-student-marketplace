@@ -36,14 +36,14 @@
   border: 1px solid var(--line);
   border-radius: 12px;
   background: var(--paper);
-  box-shadow: 0 3px 9px rgb(70 45 26 / 7%);
+  box-shadow: 0 3px 9px color-mix(in srgb, var(--color-warning-ink) 7%, transparent);
 }
 .my-store .store-listing-photo { aspect-ratio: 4 / 3; }
 .my-store .store-listing-title h3 { font-size: var(--type-card-title); font-weight: 650; line-height: 1.4; }
 .my-store .store-listing-title strong { font-size: 1.0625rem; font-weight: 700; letter-spacing: -.02em; }
 .my-store .store-listing-actions { background: var(--paper); }
 .my-store .store-dashboard-actions :is(button, a):focus-visible {
-  outline: 3px solid var(--focus-green);
+  outline: 3px solid var(--color-focus);
   outline-offset: 3px;
 }
 @media (max-width: 700px) {

@@ -7,9 +7,9 @@ import { reviewCampusIds } from './permissions.js';
 import { visibleStudentStoreWhere } from './store-visibility.js';
 
 /**
- * Staged feature: StoreReview Prisma schema and additive migration are prepared,
- * but its database table and generated Prisma client must be separately activated.
- * Do not fake zero ratings when its table is missing.
+ * Store reviews are active on the local development database. Remain compatible
+ * with environments where the separately gated review migration is not deployed:
+ * missing models/tables must never produce fabricated public ratings.
  */
 type ModerationStatus = 'pending' | 'published' | 'rejected' | 'hidden';
 type StoreReviewData = {
@@ -82,26 +82,79 @@ export function makeStoreReviewsRouter(db: Db) {
     }
   });
 
+  // Review entry point for a public store. Return only this verified buyer's
+  // completed, not-yet-reviewed transactions for the same visible seller.
+  // No other buyers, contact details or transaction metadata are exposed.
+  router.get('/seller-profiles/:id/review-opportunities', requireStudent, async (req, res) => {
+    const id = z.coerce.number().int().positive().parse(req.params.id);
+    const page = clampPage.parse(req.query.page);
+    const pageSize = 10;
+    const store = await db.sellerProfile.findFirst({
+      where: { id, ...visibleStudentStoreWhere() },
+      select: { id: true, ownerUserId: true },
+    });
+    if (!store) throw new HttpError(404, 'store_not_available');
+    res.setHeader('Cache-Control', 'private, no-store');
+    try {
+      requireModel(db);
+      if (store.ownerUserId === req.user!.id)
+        return res.json({ available: true, items: [], page, pageSize, hasMore: false, reason: 'cannot_review_own_store' });
+      const affiliation = await db.affiliation.findFirst({
+        where: { userId: req.user!.id, verificationStatus: 'verified', campus: { active: true },
+          OR: [{ expirationAt: null }, { expirationAt: { gt: new Date() } }] },
+        select: { id: true },
+      });
+      if (!affiliation)
+        return res.json({ available: true, items: [], page, pageSize, hasMore: false, reason: 'verified_student_required' });
+      const rows = await db.transaction.findMany({
+        where: { buyerUserId: req.user!.id, sellerUserId: store.ownerUserId,
+          status: 'completed', listing: { sellerProfileId: id }, storeReview: { is: null } },
+        select: { id: true, createdAt: true, listing: { select: { title: true } } },
+        orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
+        skip: (page - 1) * pageSize, take: pageSize + 1,
+      });
+      res.json({ available: true, items: rows.slice(0, pageSize), page, pageSize,
+        hasMore: rows.length > pageSize, reason: rows.length ? null : 'no_eligible_completed_transaction' });
+    } catch (error) {
+      if (notReady(error) || error instanceof HttpError && error.status === 503)
+        return res.json({ available: false, items: [], page, pageSize, hasMore: false, reason: 'store_reviews_not_ready' });
+      throw error;
+    }
+  });
+
   // Only the purchasing student may inspect review eligibility or review state.
   router.get('/transactions/:id/store-review', requireStudent, async (req, res) => {
     const id = z.coerce.number().int().positive().parse(req.params.id);
     const transaction = await db.transaction.findFirst({ where: { id, buyerUserId: req.user!.id },
-      select: { id: true, status: true, sellerUserId: true } });
+      select: { id: true, status: true, sellerUserId: true,
+        listing: { select: { sellerProfileId: true } } } });
     if (!transaction) throw new HttpError(404, 'not_found');
     try {
       const reviews = requireModel(db);
       const review = await reviews.findFirst({ where: { transactionId: id, buyerUserId: req.user!.id },
         select: { id: true, rating: true, body: true, status: true, createdAt: true,
           moderationReason: true } });
-      const affiliation = transaction.status === 'completed' && !review ? await db.affiliation.findFirst({
+      const couldReview = transaction.status === 'completed' && transaction.sellerUserId !== req.user!.id && !review;
+      const affiliation = couldReview ? await db.affiliation.findFirst({
         where: { userId: req.user!.id, verificationStatus: 'verified', campus: { active: true },
           OR: [{ expirationAt: null }, { expirationAt: { gt: new Date() } }] },
         select: { id: true },
       }) : null;
+      // Match the POST eligibility check so we never offer a form for a store
+      // that has since become hidden, transferred or ineligible for CPSU Market.
+      const store = affiliation ? await db.sellerProfile.findFirst({
+        where: { id: transaction.listing.sellerProfileId, ownerUserId: transaction.sellerUserId,
+          ...visibleStudentStoreWhere() },
+        select: { id: true },
+      }) : null;
+      const eligible = couldReview && Boolean(affiliation) && Boolean(store);
+      const reason = review ? 'already_reviewed'
+        : transaction.status !== 'completed' ? 'transaction_not_completed'
+        : transaction.sellerUserId === req.user!.id ? 'cannot_review_own_store'
+        : !affiliation ? 'verified_student_required'
+        : !store ? 'store_not_available' : null;
       res.setHeader('Cache-Control', 'private, no-store');
-      res.json({ available: true,
-        eligible: transaction.status === 'completed' && transaction.sellerUserId !== req.user!.id && Boolean(affiliation) && !review,
-        review });
+      res.json({ available: true, eligible, reason, review });
     } catch (error) {
       if (notReady(error) || error instanceof HttpError && error.status === 503) {
         res.setHeader('Cache-Control', 'private, no-store');

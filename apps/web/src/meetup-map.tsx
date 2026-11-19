@@ -50,7 +50,7 @@ export default function MeetupMap({ point, onSelect }: Props) {
     }
     if (point) {
       pin.current = L.circleMarker([point.lat, point.lng], {
-        radius: 9, color: '#fff', weight: 3, fillColor: '#245b43', fillOpacity: 1,
+        radius: 9, color: 'var(--color-card)', weight: 3, fillColor: 'var(--color-primary)', fillOpacity: 1,
       }).addTo(instance);
     }
     if (selectRef.current) {
@@ -75,7 +75,7 @@ export default function MeetupMap({ point, onSelect }: Props) {
     if (!point) { pin.current?.remove(); pin.current = null; return; }
     if (pin.current) pin.current.setLatLng([point.lat, point.lng]);
     else pin.current = L.circleMarker([point.lat, point.lng], {
-      radius: 9, color: '#fff', weight: 3, fillColor: '#245b43', fillOpacity: 1,
+      radius: 9, color: 'var(--color-card)', weight: 3, fillColor: 'var(--color-primary)', fillOpacity: 1,
     }).addTo(map.current);
   }, [point?.lat, point?.lng]);
 

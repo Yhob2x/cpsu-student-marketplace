@@ -10,6 +10,7 @@ import { ManagedContentAdmin } from './pages-managed-content';
 import { ReviewerAdmin } from './pages-reviewers';
 import { CatalogAdmin } from './pages-catalog-admin';
 import { StoreReviewModeration } from './store-review-widgets';
+import { statusLabels, type TransactionStatus } from './transaction-flow';
 import './admin-workspace.css';
 
 const FLAG_TEXT: Record<string, string> = {
@@ -355,12 +356,15 @@ export function Admin() {
       <p className="muted">Read-only campus records. Completed means both students confirmed; payments are unverified. Private messages are hidden.</p>
       {transactionError && <p role="alert" className="err">Transactions could not load: {transactionError} <button type="button" className="btn ghost" onClick={() => void loadTransactions(transactionPage)}>Retry</button></p>}
       {!transactionLoading && !transactionError && monitoredTransactions.length === 0 && <p className="muted">No transactions to monitor.</p>}
-      <div className="stack">{monitoredTransactions.map(t => <div className="panel row" key={t.id} style={{ alignItems: 'flex-start' }}>
-        <div style={{ flex: 1, minWidth: 0 }}><strong>{t.listing.title}</strong>
-          <p className="muted" style={{ margin: '.25rem 0' }}>Transaction #{t.id} · {t.listing.campus.code} · {t.listing.type === 'service' ? 'Service' : 'Product'}</p>
-          <time className="muted" dateTime={t.createdAt}>{new Date(t.createdAt).toLocaleString('en-PH')}</time></div>
-        <span className="tag">{String(t.status).replaceAll('_', ' ')}</span>
-      </div>)}</div>
+      <div className="stack admin-transaction-list">{monitoredTransactions.map(t => <article className="panel admin-transaction-row" key={t.id}>
+        <div><strong>{t.listing.title}</strong>
+          <p className="muted">#{t.id} · {t.listing.campus.code} · {t.listing.type === 'service' ? 'Service' : 'Product'}</p>
+          <time className="muted" dateTime={t.createdAt}>{new Date(t.createdAt).toLocaleString('en-PH', { dateStyle: 'medium', timeStyle: 'short' })}</time>
+        </div>
+        <span className={'transaction-status transaction-status--' + t.status}>
+          {statusLabels[t.status as TransactionStatus] ?? String(t.status).replaceAll('_', ' ')}
+        </span>
+      </article>)}</div>
       {transactionLoading && <p role="status" className="muted">Loading transaction records…</p>}
       {!transactionLoading && !transactionError && monitoredTransactions.length < transactionCount && <button type="button" className="btn ghost" onClick={() => void loadTransactions(transactionPage + 1)}>Load more transactions</button>}
     </section>

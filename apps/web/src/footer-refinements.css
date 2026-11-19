@@ -22,7 +22,7 @@
   gap: .7rem;
   min-height: 48px;
   margin-bottom: .7rem;
-  color: var(--pure-white);
+  color: var(--color-card);
   font: 800 1rem/1.35 var(--font-heading);
   letter-spacing: -.02em;
   text-decoration: none;
@@ -34,7 +34,7 @@
   width: 42px;
   height: 42px;
   border-radius: 12px;
-  background: rgb(255 255 255 / 12%);
+  background: color-mix(in srgb, var(--color-card) 12%, transparent);
   color: var(--mango);
 }
 .site-foot--refined .footer-about > p {
@@ -59,7 +59,7 @@
   align-items: stretch;
 }
 .site-foot--refined .footer-links h2 {
-  color: var(--pure-white);
+  color: var(--color-card);
   font-size: .83rem;
   font-weight: 750;
   letter-spacing: 0;
@@ -105,11 +105,11 @@
 @media (hover: hover) and (pointer: fine) {
   .site-foot--refined .footer-links a:hover,
   .site-foot--refined .footer-mobile-links a:hover {
-    color: var(--pure-white);
-    background: rgb(255 255 255 / 10%);
+    color: var(--color-card);
+    background: color-mix(in srgb, var(--color-card) 10%, transparent);
     text-decoration: none;
   }
-  .site-foot--refined .footer-identity:hover { color: var(--pure-white); }
+  .site-foot--refined .footer-identity:hover { color: var(--color-card); }
 }
 .site-foot--refined a:focus-visible {
   outline: 3px solid var(--mango);
@@ -156,7 +156,7 @@
     font-size: .81rem;
     font-weight: 600;
     line-height: 1.2;
-    color: var(--pure-white);
+    color: var(--color-card);
     text-underline-offset: .2rem;
   }
   .site-foot--refined .footer-base { padding-top: .5rem; gap: 0; flex-direction: column; }

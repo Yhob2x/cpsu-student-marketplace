@@ -33,6 +33,19 @@ describe('public store messaging CTA and real categories',()=>{
     expect(html).toContain('2');
     expect(html).not.toContain('Message Synthetic Campus Store');
   });
+  test('shows a compact statistic row with appreciation beside following and no duplicate campus',()=>{
+    const html = draw();
+    const stats = html.match(/<div class="storefront-facts">([\s\S]*?)<\/section>/)?.[1] ?? '';
+    const labels = ['Listings', 'Followers', 'Following', 'Appreciations'];
+    expect(stats).toContain('store-appreciation-fact');
+    for (let i = 0; i < labels.length; i++) {
+      expect(stats).toContain(labels[i]);
+      if (i > 0) expect(stats.indexOf(labels[i])).toBeGreaterThan(stats.indexOf(labels[i - 1]));
+    }
+    expect(stats).not.toContain('Store opened');
+    expect(stats).not.toContain('>Campus<');
+    expect(html).toContain('Opened Nov 2026');
+  });
   test('empty store prevents initiating a listing-scoped chat without fabricating listings',()=>{
     const html=draw({listings:[],listingCount:0});
     expect(html).toContain('Chat with seller');

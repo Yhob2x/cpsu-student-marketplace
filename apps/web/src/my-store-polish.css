@@ -47,7 +47,7 @@
 .my-store .store-header-actions .store-new-listing-action {
   background: var(--forest);
   border-color: var(--forest);
-  color: var(--pure-white);
+  color: var(--color-card);
 }
 .my-store .store-header-actions .store-new-listing-action:hover {
   background: var(--leaf);
@@ -68,7 +68,7 @@
 }
 .my-store .store-profile-link:hover { text-decoration-color: currentColor; }
 .my-store .store-header-actions :is(button, a):focus-visible {
-  outline: 3px solid var(--focus-green);
+  outline: 3px solid var(--color-focus);
   outline-offset: 3px;
 }
 .my-store .store-affiliation {
@@ -186,7 +186,7 @@
 }
 .my-store .store-followers-more:hover { text-decoration-color: currentColor; }
 .my-store .store-followers-more:focus-visible {
-  outline: 3px solid var(--focus-green);
+  outline: 3px solid var(--color-focus);
   outline-offset: 2px;
 }
 .my-store .store-followers-pages { margin-top: 12px; }
@@ -268,7 +268,7 @@
   width: 44px;
   height: 44px;
   font-size: .83rem;
-  background: #f3eadf;
+  background: var(--color-neutral-300);
 }
 .my-store .store-follower-detail strong {
   font-size: .9rem;
@@ -308,10 +308,10 @@
   border-radius: 16px;
   background: var(--paper);
   color: var(--ink);
-  box-shadow: 0 22px 70px rgb(8 37 25 / 20%);
+  box-shadow: 0 22px 70px color-mix(in srgb, var(--color-primary-dark) 20%, transparent);
   overflow: hidden;
 }
-.my-store .store-followers-dialog::backdrop { background: rgb(14 32 23 / 54%); }
+.my-store .store-followers-dialog::backdrop { background: color-mix(in srgb, var(--color-primary-dark) 54%, transparent); }
 .my-store .store-followers-dialog[open] {
   display: flex;
   flex-direction: column;

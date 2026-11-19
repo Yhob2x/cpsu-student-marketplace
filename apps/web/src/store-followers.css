@@ -15,12 +15,12 @@
   font-variant-numeric: tabular-nums;
   text-align: left;
   text-decoration: underline;
-  text-decoration-color: rgb(15 81 50 / 35%);
+  text-decoration-color: color-mix(in srgb, var(--color-primary-dark) 35%, transparent);
   text-underline-offset: 3px;
   cursor: pointer;
 }
 .storefront-follow-count:hover { background: var(--mango-soft); text-decoration-color: currentColor; }
-.storefront-follow-count:focus-visible { outline: 3px solid var(--focus-green); outline-offset: 2px; }
+.storefront-follow-count:focus-visible { outline: 3px solid var(--color-focus); outline-offset: 2px; }
 
 .store-follow-dialog {
   width: min(760px, calc(100vw - 2rem));
@@ -33,9 +33,9 @@
   border-radius: 16px;
   background: var(--paper);
   color: var(--ink);
-  box-shadow: 0 22px 60px rgb(20 30 24 / 24%);
+  box-shadow: 0 22px 60px color-mix(in srgb, var(--color-primary-dark) 24%, transparent);
 }
-.store-follow-dialog::backdrop { background: rgb(17 28 23 / 65%); }
+.store-follow-dialog::backdrop { background: color-mix(in srgb, var(--color-primary-dark) 65%, transparent); }
 .store-follow-dialog-shell { display: flex; flex-direction: column; max-height: inherit; min-width: 0; }
 .store-follow-dialog-header {
   display: flex;
@@ -95,7 +95,7 @@
 .store-follow-pages { display: flex; justify-content: center; align-items: center; gap: .75rem; padding: .8rem 1rem; border-top: 1px solid var(--line); }
 .store-follow-pages span { color: var(--ink-soft); font-size: .82rem; font-variant-numeric: tabular-nums; }
 .store-follow-pages .btn { min-height: 44px; }
-.store-follow-dialog :is(button, a):focus-visible { outline: 3px solid var(--focus-green); outline-offset: -3px; }
+.store-follow-dialog :is(button, a):focus-visible { outline: 3px solid var(--color-focus); outline-offset: -3px; }
 
 @media (max-width: 600px) {
   .store-follow-dialog { width: calc(100vw - 1rem); max-height: calc(100dvh - 1rem - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px)); border-radius: 14px; }

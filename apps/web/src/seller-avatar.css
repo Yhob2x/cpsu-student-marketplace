@@ -8,7 +8,7 @@
 .seller-byline > span:last-child { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .seller-store-link { position: relative; z-index: 2; color: inherit; text-decoration: underline; text-decoration-color: transparent; text-underline-offset: .14em; }
 .seller-store-link:hover, .seller-store-link:focus-visible { color: var(--forest); text-decoration-color: currentColor; }
-.seller-store-link:focus-visible { outline: 2px solid var(--focus-green); outline-offset: 2px; }
+.seller-store-link:focus-visible { outline: 2px solid var(--color-focus); outline-offset: 2px; }
 .listing-seller.seller-byline > span:last-child { white-space: normal; overflow: visible; }
 .store-profile-heading { display: flex; align-items: center; gap: 1rem; margin: .7rem 0 1rem; }
 .store-profile-heading h1 { margin: 0; overflow-wrap: anywhere; }

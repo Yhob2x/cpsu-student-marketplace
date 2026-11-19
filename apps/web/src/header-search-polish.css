@@ -43,7 +43,7 @@ header.top .head-search {
   gap: 4px;
   border: 1px solid var(--surface-stroke);
   border-radius: 10px;
-  background: #fff;
+  background: var(--color-card);
   box-shadow: none;
 }
 header.top .head-search:focus-within {

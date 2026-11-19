@@ -1,5 +1,6 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
+import { ArrowRight, Check, CheckCircle2, Clock3, MessageCircle, X } from 'lucide-react';
 import { api, explain, peso } from './api';
 import { useMe } from './main';
 import { showActionFeedback } from './action-feedback';
@@ -7,83 +8,145 @@ import { IconAction } from './icon-action';
 import { TransactionStoreReview } from './store-review-widgets';
 import { useForegroundRefresh } from './foreground-refresh';
 import { MeetupLocationCard, type MeetupHandoff } from './meetup-location-card';
+import {
+  statusLabels, transactionNextStep, transactionPhase, type TransactionSnapshot, type TransactionStatus,
+} from './transaction-flow';
+import './transactions-polish.css';
 
-type Status = 'pending' | 'accepted' | 'negotiating' | 'for_meetup' | 'completed' | 'cancelled';
-type TransactionRow = {
+type TransactionRow = TransactionSnapshot & {
   id: number; listingId: number; inquiryThreadId: number;
-  buyerUserId: number; sellerUserId: number; status: Status;
   price: number; currency: string; createdAt: string;
-  buyerMeetupConfirmedAt: string | null; sellerMeetupConfirmedAt: string | null;
-  buyerCompletionConfirmedAt: string | null; sellerCompletionConfirmedAt: string | null;
   listing: { title: string; type: string };
   buyer?: { displayName: string }; seller?: { displayName: string };
 };
-type Event = { id: number; actorUserId: number; event: string; fromStatus: Status | null;
-  toStatus: Status; reason: string | null; createdAt: string };
+type Event = { id: number; actorUserId: number; event: string; fromStatus: TransactionStatus | null;
+  toStatus: TransactionStatus; reason: string | null; createdAt: string };
 type Detail = TransactionRow & { history: Event[]; handoff: MeetupHandoff | null };
+type RoleFilter = 'all' | 'buying' | 'selling';
 
-const names: Record<Status, string> = {
-  pending: 'Pending seller decision',
-  accepted: 'Accepted',
-  negotiating: 'Discussing arrangements',
-  for_meetup: 'Meetup agreed',
-  completed: 'Completed',
-  cancelled: 'Cancelled',
-};
 const eventName: Record<string, string> = {
-  requested: 'Request submitted', accepted: 'Seller accepted', rejected: 'Seller rejected',
-  negotiating: 'Discussion started', meetup_confirmed: 'Meetup confirmed',
-  meetup_location_shared: 'Meetup location shared', meetup_location_revised: 'Meetup location changed; confirmation needed again',
-  completion_confirmed: 'Completion confirmed', cancelled: 'Request cancelled',
+  requested: 'Request sent', accepted: 'Request accepted', rejected: 'Request declined',
+  negotiating: 'Arrangement discussion started', meetup_confirmed: 'Meetup confirmed',
+  meetup_location_shared: 'Meetup location shared',
+  meetup_location_revised: 'Meetup location changed — confirmations reset',
+  completion_confirmed: 'Completion confirmed', cancelled: 'Transaction cancelled',
 };
+const steps = ['Requested', 'Accepted', 'Meetup agreed', 'Completed'];
 const stamp = (value: string) => new Date(value).toLocaleString('en-PH', { dateStyle: 'medium', timeStyle: 'short' });
+
+function StatusPill({ status }: { status: TransactionStatus }) {
+  return <span className={'transaction-status transaction-status--' + status}>{statusLabels[status]}</span>;
+}
 
 export function Transactions() {
   const { me } = useMe();
   const [items, setItems] = useState<TransactionRow[]>([]);
+  const [filter, setFilter] = useState<RoleFilter>('all');
   const [page, setPage] = useState(1);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const requestVersion = useRef(0);
   const fetchPage = useCallback(async (quiet = false) => {
+    const version = ++requestVersion.current;
     if (!quiet) setLoading(true);
     try {
-      const result = await api<{ items: TransactionRow[]; total: number }>(`/transactions?page=${page}&pageSize=15`);
-      setItems(result.items); setTotal(result.total); setError('');
-    } catch (e) { setError(explain(e)); } finally { if (!quiet) setLoading(false); }
-  }, [page]);
-  useEffect(() => { void fetchPage(); }, [fetchPage]);
+      const result = await api<{ items: TransactionRow[]; total: number }>(
+        '/transactions?page=' + page + '&pageSize=15&role=' + filter,
+      );
+      if (version !== requestVersion.current) return;
+      setItems(result.items);
+      setTotal(result.total);
+      setError('');
+    } catch (e) {
+      if (version === requestVersion.current) setError(explain(e));
+    } finally {
+      if (version === requestVersion.current && !quiet) setLoading(false);
+    }
+  }, [page, filter]);
+  useEffect(() => {
+    void fetchPage();
+    return () => { requestVersion.current += 1; };
+  }, [fetchPage]);
   useForegroundRefresh(() => fetchPage(true), 7_000, Boolean(me));
 
-  return <section className="stack" aria-labelledby="transactions-heading">
-    <div className="page-head"><div><h1 id="transactions-heading">My transactions</h1>
-      <p className="muted">Track requests and meetups. Arrange payment directly with the other student.</p>
-    </div></div>
-    {error && <p role="alert" className="err">Transactions could not load: {error} <button type="button" className="btn ghost" onClick={() => void fetchPage()}>Retry</button></p>}
-    {loading && <p role="status" className="muted">Loading transactions…</p>}
-    {!loading && !error && !items.length && <div className="empty">
-      <h2>No transactions yet</h2>
-      <p className="muted">Your requests and requests for your listings appear here.</p>
-      <Link to="/explore" className="btn">Explore listings</Link>
-    </div>}
-    {!error && items.map(t => <article className="panel stack" key={t.id}>
-      <div className="row" style={{ alignItems: 'flex-start', justifyContent: 'space-between' }}>
-        <div><h2 style={{ margin: 0, fontSize: '1.15rem' }}>
-          <Link to={`/transactions/${t.id}`}>{t.listing.title}</Link>
-        </h2><p className="muted" style={{ margin: '.25rem 0 0' }}>
-          {t.buyerUserId === me?.id ? 'Your purchase request' : 'Request from a buyer'} · {stamp(t.createdAt)}
-        </p></div>
-        <span className="tag">{names[t.status]}</span>
+  const changeFilter = (next: RoleFilter) => {
+    if (next === filter) return;
+    setPage(1);
+    setFilter(next);
+    setItems([]);
+    setError('');
+    setLoading(true);
+  };
+
+  return <section className="stack transaction-page" aria-labelledby="transactions-heading">
+    <header className="transaction-page-head">
+      <div>
+        <p className="transaction-eyebrow">CPSU Market</p>
+        <h1 id="transactions-heading">My transactions</h1>
+        <p className="muted">Keep track of requests, meetup plans and completed exchanges.</p>
       </div>
-      <p style={{ margin: 0 }}>{peso(t.price)} <span className="muted">· {t.listing.type === 'service' ? 'Service' : 'Product'}</span></p>
-      <div className="row"><Link className="btn" to={`/transactions/${t.id}`}>View transaction</Link>
-        <Link className="btn ghost" to={`/inquiries/${t.inquiryThreadId}`}>Open conversation</Link></div>
-    </article>)}
-    {!loading && !error && total > 15 && <nav aria-label="Transaction pages" className="row" style={{ justifyContent: 'center' }}>
+      <Link to="/explore" className="btn ghost">Browse listings</Link>
+    </header>
+    <div className="transaction-filters" role="group" aria-label="Show transactions">
+      {(['all', 'buying', 'selling'] as const).map(option => <button
+        key={option} type="button" aria-pressed={filter === option}
+        className="transaction-filter" onClick={() => changeFilter(option)}>
+        {option === 'all' ? 'All' : option === 'buying' ? 'Buying' : 'Selling'}
+      </button>)}
+    </div>
+    {error && <div className="panel transaction-error" role="alert">
+      <p>Could not load transactions: {error}</p>
+      <button type="button" className="btn ghost" onClick={() => void fetchPage()}>Try again</button>
+    </div>}
+    {loading && <p role="status" className="muted">Loading transactions…</p>}
+    {!loading && !error && !items.length && <div className="empty transaction-empty">
+      <h2>{filter === 'all' ? 'No transactions yet' : filter === 'buying' ? 'No buying requests yet' : 'No selling requests yet'}</h2>
+      <p className="muted">{filter === 'all'
+        ? 'Requests you send or receive will appear here.'
+        : filter === 'buying' ? 'Requests for items or services you want will appear here.'
+          : 'Requests from buyers for your listings will appear here.'}</p>
+      {filter !== 'all'
+        ? <button type="button" className="btn ghost" onClick={() => changeFilter('all')}>Show all transactions</button>
+        : <Link to="/explore" className="btn">Explore listings</Link>}
+    </div>}
+    {!loading && !error && items.length > 0 && <div className="transaction-list">
+      {items.map(t => {
+        const buyer = t.buyerUserId === me?.id;
+        const partner = buyer ? t.seller?.displayName : t.buyer?.displayName;
+        return <article className="transaction-item" key={t.id}>
+          <div className="transaction-item-main">
+            <div className="transaction-item-meta">
+              <span>{buyer ? 'Buying' : 'Selling'} · {t.listing.type === 'service' ? 'Service' : 'Product'}</span>
+              <span><time dateTime={t.createdAt}>{stamp(t.createdAt)}</time></span>
+            </div>
+            <div className="transaction-item-title">
+              <h2><Link to={'/transactions/' + t.id}>{t.listing.title}</Link></h2>
+              <StatusPill status={t.status} />
+            </div>
+            <div className="transaction-item-facts">
+              <strong>{peso(t.price)}</strong>
+              <span>{partner ? (buyer ? 'Seller: ' : 'Buyer: ') + partner : buyer ? 'Your request' : 'Buyer request'}</span>
+            </div>
+            <p className="transaction-item-cue">{transactionNextStep(t, me?.id)}</p>
+          </div>
+          <div className="transaction-item-actions">
+            <Link className="btn transaction-open" to={'/transactions/' + t.id}>
+              {t.status === 'completed' && buyer ? 'View & review' : 'View details'} <ArrowRight size={17} aria-hidden="true" />
+            </Link>
+            <Link className="transaction-text-link" to={'/inquiries/' + t.inquiryThreadId}>
+              <MessageCircle size={17} aria-hidden="true" /> Chat
+            </Link>
+          </div>
+        </article>;
+      })}
+    </div>}
+    {!loading && !error && total > 15 && <nav aria-label="Transaction pages" className="transaction-pagination">
       <button type="button" className="btn ghost" disabled={page === 1} onClick={() => setPage(p => p - 1)}>Previous</button>
       <span className="muted" role="status">Page {page} of {Math.ceil(total / 15)}</span>
       <button type="button" className="btn ghost" disabled={page * 15 >= total} onClick={() => setPage(p => p + 1)}>Next</button>
     </nav>}
+    <p className="transaction-disclosure">Payment and handoff are arranged directly by students. CPSU Market does not process payments or verify item condition.</p>
   </section>;
 }
 
@@ -95,20 +158,30 @@ export function TransactionDetail() {
   const [error, setError] = useState('');
   const [actionError, setActionError] = useState('');
   const [reason, setReason] = useState('');
+  const [closing, setClosing] = useState(false);
   const [busy, setBusy] = useState(false);
   const [refreshingStatus, setRefreshingStatus] = useState(false);
-  const [notice, setNotice] = useState('');
+  const requestVersion = useRef(0);
 
   const reload = useCallback(async () => {
+    const version = ++requestVersion.current;
     try {
-      const next = await api<Detail>(`/transactions/${id}`);
-      setData(next); setError('');
-    } catch (e) { setError(explain(e)); }
-    finally { setLoading(false); }
+      const next = await api<Detail>('/transactions/' + id);
+      if (version === requestVersion.current) {
+        setData(next);
+        setError('');
+      }
+    } catch (e) {
+      if (version === requestVersion.current) setError(explain(e));
+    } finally {
+      if (version === requestVersion.current) setLoading(false);
+    }
   }, [id]);
-  useEffect(() => { setData(null); setLoading(true); setError(''); void reload(); }, [reload]);
-  // When the other student confirms, refresh status without requiring a full page reload.
-  // Foreground-only polling never caches the participant's private transaction data.
+  useEffect(() => {
+    setData(null); setLoading(true); setError(''); setActionError(''); setClosing(false);
+    void reload();
+    return () => { requestVersion.current += 1; };
+  }, [reload]);
   useForegroundRefresh(() => reload(), 5_000,
     Boolean(me && data && data.status !== 'completed' && data.status !== 'cancelled'));
 
@@ -120,20 +193,40 @@ export function TransactionDetail() {
 
   const act = async (suffix: string, body: unknown = {}) => {
     if (busy) return;
-    setBusy(true); setActionError(''); setNotice('');
+    setBusy(true); setActionError('');
     try {
-      await api(`/transactions/${id}/${suffix}`, { body });
+      const updated = await api<{ status: TransactionStatus }>('/transactions/' + id + '/' + suffix, { body });
       setReason('');
+      setClosing(false);
       await reload();
       void syncUnread();
-      setNotice('Transaction updated. The other student has been notified.');
-      showActionFeedback({ kind: 'success', title: 'Transaction updated', message: 'The new status has been recorded and the other student notified.', presentation: 'center' });
-    } catch (e) { setActionError(explain(e)); showActionFeedback({ kind: 'error', title: 'Transaction not updated', message: explain(e) }); await reload(); }
-    finally { setBusy(false); }
+      const message = suffix === 'confirm-meetup'
+        ? updated.status === 'for_meetup' ? 'Both students have agreed to the meetup.' : 'Your meetup confirmation is saved. Waiting for the other student.'
+        : suffix === 'confirm-completion'
+          ? updated.status === 'completed' ? 'Both students confirmed the exchange is complete.' : 'Your confirmation is saved. Waiting for the other student.'
+          : suffix === 'decision' && (body as { action?: string }).action === 'accept'
+            ? 'The buyer has been notified. You can now arrange the meetup.'
+            : updated.status === 'cancelled'
+              ? 'This request is now closed. The other student has been notified.'
+              : 'The updated status is visible to both students.';
+      showActionFeedback({
+        kind: 'success', title: updated.status === 'completed' ? 'Transaction completed' :
+          updated.status === 'cancelled' ? 'Request closed' : 'Status updated',
+        message, presentation: updated.status === 'completed' || updated.status === 'cancelled' ? 'center' : 'toast',
+      });
+    } catch (e) {
+      setActionError(explain(e));
+      showActionFeedback({ kind: 'error', title: 'Could not update transaction', message: explain(e) });
+      await reload();
+    } finally { setBusy(false); }
   };
+
   if (loading && !data) return <p role="status" className="muted">Loading transaction…</p>;
   if (error && !data) return <section className="empty"><h1>Transaction unavailable</h1>
-    <p className="err" role="alert">{error}</p><Link to="/transactions">Back to my transactions</Link></section>;
+    <p className="err" role="alert">{error}</p>
+    <button type="button" className="btn ghost" onClick={() => void reload()}>Try again</button>
+    <Link to="/transactions">Back to transactions</Link>
+  </section>;
   if (!data) return null;
 
   const buyer = data.buyerUserId === me?.id;
@@ -143,95 +236,151 @@ export function TransactionDetail() {
   const otherMeetupConfirmed = Boolean(buyer ? data.sellerMeetupConfirmedAt : data.buyerMeetupConfirmedAt);
   const myCompletionConfirmed = Boolean(buyer ? data.buyerCompletionConfirmedAt : data.sellerCompletionConfirmedAt);
   const otherCompletionConfirmed = Boolean(buyer ? data.sellerCompletionConfirmedAt : data.buyerCompletionConfirmedAt);
-  const canMeetup = ['accepted', 'negotiating'].includes(data.status);
+  const canMeetup = data.status === 'accepted' || data.status === 'negotiating';
   const canComplete = data.status === 'for_meetup';
+  const closeLabel = data.status === 'pending' && seller ? 'Decline request'
+    : data.status === 'pending' && buyer ? 'Withdraw request' : 'Cancel transaction';
+  const nextTitle = data.status === 'pending' && seller ? 'Review this request'
+    : data.status === 'pending' ? 'Waiting for a response'
+      : canMeetup ? 'Arrange your meetup' : canComplete ? 'Confirm the exchange' : 'Next step';
 
-  return <article className="stack" aria-labelledby="transaction-heading">
+  return <article className="stack transaction-page transaction-detail-page" aria-labelledby="transaction-heading">
     <Link className="listing-back" to="/transactions">← My transactions</Link>
-    <div className="page-head"><div>
-      <h1 id="transaction-heading">{data.listing.title}</h1>
-      <p className="muted">Transaction #{data.id} · {buyer ? 'You are the buyer' : seller ? 'You are the seller' : 'Transaction'}
-        · {peso(data.price)} (price when requested)</p>
-    </div></div>
-    <section className="panel stack" aria-label="Transaction status">
-      <div className="row"><h2 style={{ margin: 0 }}>Current status</h2><span className="tag">{names[data.status]}</span></div>
-      <p className="muted" style={{ margin: 0 }}>Students report this status. Payment, handoff and item condition are unverified.</p>
+    <header className="transaction-detail-head">
+      <div className="transaction-head-main">
+        <span className="transaction-eyebrow">{buyer ? 'Buying' : seller ? 'Selling' : 'Transaction'} · #{data.id}</span>
+        <h1 id="transaction-heading">{data.listing.title}</h1>
+        <p className="muted">{data.listing.type === 'service' ? 'Service' : 'Product'} · Price when requested</p>
+      </div>
+      <div className="transaction-price-summary">
+        <strong>{peso(data.price)}</strong><StatusPill status={data.status} />
+      </div>
+    </header>
+
+    <section className="panel transaction-progress-card" aria-label="Transaction progress">
+      <div className="transaction-section-heading">
+        <h2>Progress</h2><span className="transaction-small-label">Updated by students</span>
+      </div>
+      {data.status === 'cancelled'
+        ? <p className="transaction-closed"><X size={18} aria-hidden="true" /> This request is closed. No further action is needed.</p>
+        : <ol className="transaction-progress">
+          {steps.map((step, index) => {
+            const phase = transactionPhase(data.status);
+            const complete = index < phase || data.status === 'completed';
+            return <li key={step} className={complete ? 'is-done' : index === phase ? 'is-current' : 'is-future'}
+              aria-current={index === phase && data.status !== 'completed' ? 'step' : undefined}>
+              <span className="transaction-step-mark">{complete ? <Check size={16} aria-hidden="true" /> : index + 1}</span>
+              <span>{step}</span>
+            </li>;
+          })}
+        </ol>}
+      <p className="transaction-disclosure">Statuses are reported by students, not verified payment or delivery records.</p>
     </section>
-    {!terminal && <section className="panel stack" aria-label="Update this transaction">
-      <h2>Next action</h2>
-      {data.status === 'pending' && buyer && <p className="muted">Waiting for the seller. You can withdraw with a reason.</p>}
-      {data.status === 'pending' && seller && <div className="stack">
-        <p className="muted">Review the request before accepting. For a physical product, accepting reserves the item for this buyer.</p>
-        <button className="btn" disabled={busy} onClick={() => void act('decision', { action: 'accept' })}>Accept request</button>
-        <p className="muted">To reject, explain why below.</p>
+
+    {!terminal && <section className="panel transaction-next-card" aria-label="Your next action">
+      <div className="transaction-section-heading">
+        <div><span className="transaction-eyebrow">Your next step</span><h2>{nextTitle}</h2></div>
+        <Clock3 size={23} aria-hidden="true" className="transaction-next-icon" />
+      </div>
+      {data.status === 'pending' && buyer && <p>The seller needs to accept your request before you agree on a meetup. You can message them in the meantime.</p>}
+      {data.status === 'pending' && seller && <>
+        <p>Check the listing and discuss any questions before accepting. Accepting a physical product request reserves the item for this buyer.</p>
+        <button type="button" className="btn transaction-main-cta" disabled={busy}
+          onClick={() => void act('decision', { action: 'accept' })}>{busy ? 'Updating…' : 'Accept request'}</button>
+      </>}
+      {data.status === 'accepted' && <div className="transaction-soft-actions">
+        <p>Agree on the time and place in chat. You can share a meetup pin below, then each student confirms the arrangement.</p>
+        <button className="transaction-inline-action" type="button" disabled={busy}
+          onClick={() => void act('negotiating')}>Mark as discussing details</button>
       </div>}
-      {data.status === 'accepted' && <button className="btn ghost" disabled={busy}
-        onClick={() => void act('negotiating')}>Mark as discussing terms</button>}
-      {canMeetup && <div className="stack">
-        <p className="muted">Both students must confirm the meetup.</p>
-        <p role="status" className="muted">Your confirmation: {myMeetupConfirmed ? 'Confirmed' : 'Not yet'} · Other student: {otherMeetupConfirmed ? 'Confirmed' : 'Not yet'}</p>
-        <button className="btn" disabled={busy || myMeetupConfirmed} onClick={() => void act('confirm-meetup')}>
-          {myMeetupConfirmed ? 'Waiting for the other student' : 'Confirm meetup arrangement'}
-        </button>
-      </div>}
-      {canComplete && <div className="stack">
-        <p className="muted">Confirm only after fulfilling your part. Both students must confirm.</p>
-        <p role="status" className="muted">Your completion: {myCompletionConfirmed ? 'Confirmed' : 'Not yet'} · Other student: {otherCompletionConfirmed ? 'Confirmed' : 'Not yet'}</p>
-        <button className="btn" disabled={busy || myCompletionConfirmed} onClick={() => void act('confirm-completion')}>
-          {myCompletionConfirmed ? 'Waiting for the other student' : 'Confirm transaction completed'}
-        </button>
-      </div>}
-      <div className="stack">
-        <label className="field" htmlFor="transaction-cancellation-reason">Reason for rejection or cancellation (required, 10–500 characters)
-          <textarea id="transaction-cancellation-reason" value={reason} maxLength={500} minLength={10}
-            placeholder="Briefly explain what changed or why you cannot proceed"
-            onChange={e => setReason(e.target.value)} />
-        </label>
-        <div className="row">
-          {data.status === 'pending' && seller && <button type="button" className="btn ghost"
-            disabled={busy || reason.trim().length < 10}
-            onClick={() => void act('decision', { action: 'reject', reason })}>Reject request</button>}
-          <button type="button" className="btn danger" disabled={busy || reason.trim().length < 10}
-            onClick={() => void act('cancel', { reason })}>Cancel transaction</button>
+      {data.status === 'negotiating' && <p>Once you agree on the meetup details, each student must confirm. A shared map pin is optional.</p>}
+      {canMeetup && <>
+        <div className="transaction-confirm-grid" role="status" aria-label="Meetup confirmations">
+          <span className={myMeetupConfirmed ? 'is-confirmed' : ''}>{myMeetupConfirmed ? <CheckCircle2 size={18} /> : <Clock3 size={18} />} You: {myMeetupConfirmed ? 'Confirmed' : 'Not yet'}</span>
+          <span className={otherMeetupConfirmed ? 'is-confirmed' : ''}>{otherMeetupConfirmed ? <CheckCircle2 size={18} /> : <Clock3 size={18} />} Other student: {otherMeetupConfirmed ? 'Confirmed' : 'Not yet'}</span>
         </div>
+        {myMeetupConfirmed ? <p className="transaction-wait-note">Your confirmation is saved. Waiting for the other student.</p>
+          : <button type="button" className="btn transaction-main-cta" disabled={busy}
+            onClick={() => void act('confirm-meetup')}>{busy ? 'Updating…' : 'Confirm meetup arrangement'}</button>}
+      </>}
+      {canComplete && <>
+        <p>{buyer
+          ? 'Confirm only after you receive the item or the service is finished and your arrangements are settled.'
+          : 'Confirm only after you hand over the item or finish the service and your arrangements are settled.'}
+          {' '}Both students must confirm to close the transaction.</p>
+        <div className="transaction-confirm-grid" role="status" aria-label="Completion confirmations">
+          <span className={myCompletionConfirmed ? 'is-confirmed' : ''}>{myCompletionConfirmed ? <CheckCircle2 size={18} /> : <Clock3 size={18} />} You: {myCompletionConfirmed ? 'Confirmed' : 'Not yet'}</span>
+          <span className={otherCompletionConfirmed ? 'is-confirmed' : ''}>{otherCompletionConfirmed ? <CheckCircle2 size={18} /> : <Clock3 size={18} />} Other student: {otherCompletionConfirmed ? 'Confirmed' : 'Not yet'}</span>
+        </div>
+        {myCompletionConfirmed ? <p className="transaction-wait-note">Your confirmation is saved. Waiting for the other student.</p>
+          : <button type="button" className="btn transaction-main-cta" disabled={busy}
+            onClick={() => void act('confirm-completion')}>{busy ? 'Updating…' : 'Confirm my part is complete'}</button>}
+      </>}
+      <div className="transaction-next-links">
+        <Link to={'/inquiries/' + data.inquiryThreadId} className="transaction-text-link"><MessageCircle size={18} aria-hidden="true" /> Chat with student</Link>
+      </div>
+      <div className="transaction-close">
+        {!closing
+          ? <button type="button" className="transaction-close-toggle" disabled={busy} aria-expanded={false}
+              onClick={() => { setClosing(true); setActionError(''); }}>{closeLabel}</button>
+          : <div className="transaction-close-form">
+            <h3>{closeLabel}</h3>
+            <p>This closes the request and notifies the other student. It cannot be undone.</p>
+            <label className="field" htmlFor="transaction-cancellation-reason">
+              <span>Reason (10–500 characters)</span>
+              <textarea id="transaction-cancellation-reason" value={reason} maxLength={500} minLength={10}
+                placeholder="Briefly explain why you cannot proceed" onChange={e => setReason(e.target.value)} />
+            </label>
+            <div className="transaction-close-actions">
+              <button type="button" className="btn danger" disabled={busy || reason.trim().length < 10}
+                onClick={() => void act(data.status === 'pending' && seller ? 'decision' : 'cancel',
+                  data.status === 'pending' && seller ? { action: 'reject', reason: reason.trim() } : { reason: reason.trim() })}>
+                {busy ? 'Closing…' : 'Confirm ' + closeLabel.toLowerCase()}</button>
+              <button type="button" className="btn ghost" disabled={busy}
+                onClick={() => { setClosing(false); setReason(''); setActionError(''); }}>Keep transaction</button>
+            </div>
+          </div>}
       </div>
       {actionError && <p role="alert" className="err">{actionError}</p>}
-      {notice && <p role="status">{notice}</p>}
     </section>}
+
     {data.status !== 'pending' && (!terminal || data.handoff) && <MeetupLocationCard key={data.id}
       transactionId={data.id} handoff={data.handoff}
-      editable={(canMeetup || data.status === 'for_meetup')
-        && !myCompletionConfirmed && !otherCompletionConfirmed}
-      requiresReconfirmation={data.status === 'for_meetup'
-        || myMeetupConfirmed || otherMeetupConfirmed}
+      editable={(canMeetup || data.status === 'for_meetup') && !myCompletionConfirmed && !otherCompletionConfirmed}
+      requiresReconfirmation={data.status === 'for_meetup' || myMeetupConfirmed || otherMeetupConfirmed}
       unavailableReason={terminal ? 'This transaction is closed. The meetup pin is read-only.'
         : 'Meetup location cannot be changed after completion starts.'}
       onSaved={reload} />}
-    {terminal && <p role="status">{data.status === 'completed'
-      ? 'Both students confirmed completion. This is a mutual self-report, not an independently verified sale.'
-      : 'This transaction is closed. The history below remains available to both students.'}</p>}
+
+    {terminal && <section className="panel transaction-result" role="status">
+      {data.status === 'completed'
+        ? <><CheckCircle2 size={24} aria-hidden="true" /><div><h2>Both students confirmed completion</h2>
+          <p>This is a mutual self-report, not independent verification of the exchange.</p></div></>
+        : <><X size={24} aria-hidden="true" /><div><h2>Transaction closed</h2>
+          <p>Neither student can make further changes. You can still view the activity history.</p></div></>}
+    </section>}
     {buyer && data.status === 'completed' && <TransactionStoreReview transactionId={data.id} />}
-    <section className="panel stack" aria-label="Transaction options">
-      <h2 style={{ margin: 0 }}>More options</h2>
-      <p className="muted" style={{ margin: 0 }}>Payment and handoff are arranged directly between students.</p>
-      <div className="row">
-        <Link to={`/inquiries/${data.inquiryThreadId}`} className="btn ghost">Discuss arrangements</Link>
+    <section className="panel transaction-tools" aria-label="Transaction options">
+      <div className="transaction-section-heading"><h2>Details & conversation</h2></div>
+      <p>Arrange payment and handoff directly with the other student. CPSU Market does not handle money.</p>
+      <div className="transaction-tool-links">
+        <Link to={'/inquiries/' + data.inquiryThreadId} className="btn ghost"><MessageCircle size={17} aria-hidden="true" /> Open chat</Link>
+        <Link to={'/listings/' + data.listingId} className="transaction-text-link">View listing <ArrowRight size={16} aria-hidden="true" /></Link>
         <IconAction className="btn ghost" icon="refresh" label="Refresh transaction status"
           disabled={busy} busy={refreshingStatus} onClick={() => void refreshStatus()} />
-        <Link to={`/listings/${data.listingId}`} className="btn ghost">View listing</Link>
       </div>
+      {error && <p className="err" role="alert">Could not refresh the latest details: {error}</p>}
     </section>
-    <section className="panel stack" aria-labelledby="transaction-history-heading">
-      <h2 id="transaction-history-heading">Activity history</h2>
-      <ol className="stack" style={{ paddingInlineStart: '1.25rem' }}>
+    <details className="panel transaction-history" >
+      <summary>Activity history <span>{data.history.length} updates</span></summary>
+      <ol>
         {data.history.map(event => <li key={event.id}>
           <strong>{eventName[event.event] ?? event.event}</strong>
           <span className="muted"> · {event.actorUserId === me?.id ? 'You' : 'Other student'}</span>
-          <p className="muted" style={{ margin: '.15rem 0' }}><time dateTime={event.createdAt}>{stamp(event.createdAt)}</time>
-            {' · '}{names[event.toStatus]}</p>
-          {event.reason && <p style={{ overflowWrap: 'anywhere' }}>Reason: {event.reason}</p>}
+          <time dateTime={event.createdAt}>{stamp(event.createdAt)} · {statusLabels[event.toStatus]}</time>
+          {event.reason && <p>Reason: {event.reason}</p>}
         </li>)}
       </ol>
-    </section>
+    </details>
   </article>;
 }

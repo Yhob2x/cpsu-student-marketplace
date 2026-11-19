@@ -2,12 +2,12 @@
 .profile-page {
   min-width: 0;
   /* Page-scoped accessible form colors; the sitewide brand tokens remain unchanged. */
-  --profile-control-border: #718878;
-  --profile-control-background: #f8fbf9;
-  --profile-help-ink: #3d5b49;
-  --profile-focus-ink: #0f6847;
-  --profile-disabled-background: #e2ebe5;
-  --profile-disabled-ink: #405a4b;
+  --profile-control-border: var(--color-primary);
+  --profile-control-background: var(--color-card);
+  --profile-help-ink: var(--color-primary);
+  --profile-focus-ink: var(--color-primary);
+  --profile-disabled-background: var(--color-primary-light);
+  --profile-disabled-ink: var(--color-primary);
 }
 /* Explicit control boundaries (3.67:1 on the input surface) and dark text. */
 .profile-page :is(input, select, textarea) {
@@ -23,7 +23,7 @@
   outline: 2px solid var(--profile-focus-ink);
   outline-offset: 2px;
 }
-.profile-page input[aria-invalid="true"] { border-color: var(--danger); background: #fff9f8; }
+.profile-page input[aria-invalid="true"] { border-color: var(--danger); background: var(--color-card); }
 .profile-page :is(input, select, textarea):disabled {
   opacity: 1;
   background: var(--profile-disabled-background);
@@ -45,12 +45,12 @@
 .profile-page .seller-avatar-editor__form form p { font-size: .875rem; }
 .profile-page .seller-avatar-editor__photos small { font-size: .8125rem; }
 .profile-page .profile-store-editors > .panel {
-  border-color: #b7c9bb;
-  box-shadow: 0 1px 3px rgb(7 59 42 / 5%);
+  border-color: var(--color-primary-light);
+  box-shadow: 0 1px 3px color-mix(in srgb, var(--color-primary-dark) 5%, transparent);
 }
 .profile-page .profile-store-editors h2 { color: var(--forest); }
 .profile-page .profile-store-disclosure > summary {
-  border-color: #b7c9bb;
+  border-color: var(--color-primary-light);
   background: var(--profile-control-background);
 }
 .profile-page .profile-store-disclosure summary small { color: var(--profile-help-ink); }
@@ -71,20 +71,20 @@
   padding: .4rem .75rem;
   border: 1px solid var(--profile-control-border);
   border-radius: 7px;
-  background: #e6f2e9;
+  background: var(--color-primary-light);
   color: var(--forest);
   font-weight: 700;
 }
 @media (hover: hover) and (pointer: fine) {
   .profile-page input[type="file"]:not(:disabled)::file-selector-button:hover {
-    background: #d5e8da;
+    background: var(--color-primary-light);
   }
 }
 /* Preserve legible disabled actions instead of reducing opacity to .55. */
 .profile-page .btn:disabled {
   opacity: 1;
   background: var(--profile-disabled-background);
-  border: 1px solid #b3c7b8;
+  border: 1px solid var(--color-primary-light);
   color: var(--profile-disabled-ink);
   cursor: not-allowed;
 }
@@ -173,8 +173,8 @@
   background: var(--mango-soft);
   color: var(--forest);
 }
-.profile-review-symbol--pending { background: #fff0c8; }
-.profile-review-symbol--rejected { background: #fff0ed; color: var(--danger); }
+.profile-review-symbol--pending { background: var(--color-neutral-300); }
+.profile-review-symbol--rejected { background: var(--color-neutral-100); color: var(--danger); }
 .profile-review-symbol--missing { background: var(--mango-soft); }
 .profile-campus-list { margin: 0; padding: 0; list-style: none; display: grid; gap: .5rem; }
 .profile-campus-list li { display: flex; gap: .5rem; flex-wrap: wrap; align-items: center; justify-content: space-between; overflow-wrap: anywhere; }

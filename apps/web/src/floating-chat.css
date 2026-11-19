@@ -36,7 +36,7 @@
   border: 2px solid var(--paper);
   border-radius: 999px;
   color: var(--paper);
-  background: var(--danger);
+  background: var(--color-primary-dark);
   font-size: .7rem;
   font-weight: 750;
   line-height: 1;
@@ -91,7 +91,7 @@
   color: var(--ink);
   border: 1px solid var(--line);
   border-radius: 16px;
-  box-shadow: 0 14px 48px rgb(7 59 42 / 20%);
+  box-shadow: 0 14px 48px color-mix(in srgb, var(--color-primary-dark) 20%, transparent);
 }
 .floating-chat-panel-head {
   display: flex;
@@ -259,7 +259,7 @@
   border-top: 0;
 }
 .floating-chat-product .conversation-listing-foot a { min-height: 40px; }
-.floating-chat-message-log { display: flex; flex-direction: column; gap: .48rem; padding: .85rem .75rem; background: #f6f8f6; }
+.floating-chat-message-log { display: flex; flex-direction: column; gap: .48rem; padding: .85rem .75rem; background: var(--color-neutral-100); }
 .floating-chat-message { display: flex; flex-direction: column; align-items: flex-start; gap: .18rem; max-width: 85%; flex: 0 0 auto; }
 .floating-chat-message.mine { align-self: flex-end; align-items: flex-end; }
 .floating-chat-bubble {
@@ -328,13 +328,13 @@
 .floating-chat-send:disabled { opacity: .45; cursor: not-allowed; }
 .floating-chat-compose-error { margin: 0; padding: .35rem .7rem; font-size: .79rem; color: var(--danger); }
 .floating-chat-panel :is(button,a,textarea):focus-visible {
-  outline: 3px solid var(--focus-green);
+  outline: 3px solid var(--color-focus);
   outline-offset: 2px;
 }
 .floating-chat-panel-head button:focus-visible { outline-color: var(--mango); }
 @media (hover: hover) and (pointer: fine) {
   .floating-chat-inbox-row:hover { background: var(--mango-soft); }
-  .floating-chat-icon-button:hover { background: rgb(255 255 255 / 15%); }
+  .floating-chat-icon-button:hover { background: color-mix(in srgb, var(--color-card) 15%, transparent); }
   .floating-chat-send:hover:not(:disabled) { background: var(--leaf); }
 }
 @media (max-width: 860px) {

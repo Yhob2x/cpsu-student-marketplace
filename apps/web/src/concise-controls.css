@@ -13,7 +13,7 @@ header.top .actions a {
   border-radius: 10px;
 }
 header.top .actions a:focus-visible {
-  outline: 3px solid var(--focus-green);
+  outline: 3px solid var(--color-focus);
   outline-offset: 2px;
 }
 header.top .actions .alerts .alerts-copy {
@@ -87,6 +87,6 @@ header.top .actions .alerts .nav-badge {
 .store-edit-action:focus-visible,
 .page-nav-button:focus-visible,
 .storefront .storefront-clear-filters:focus-visible {
-  outline: 3px solid var(--focus-green);
+  outline: 3px solid var(--color-focus);
   outline-offset: 2px;
 }

@@ -9,7 +9,7 @@
 .admin-workspace-nav-item:hover { background: var(--surface-soft); }
 .admin-workspace-nav-item[aria-current="page"] { background: var(--mango-soft); border-color: var(--surface-stroke); color: var(--forest); font-weight: 750; }
 .admin-workspace-count { display: inline-flex; min-width: 1.6rem; min-height: 1.6rem; padding: .1rem .32rem; align-items: center; justify-content: center; border-radius: 7px; background: var(--paper); color: var(--forest); font-size: .77rem; font-variant-numeric: tabular-nums; }
-.admin-workspace-nav-item:focus-visible, .admin-review-queue-item:focus-visible, .admin-overview-shortcuts button:focus-visible { outline: 3px solid var(--focus-green); outline-offset: 2px; }
+.admin-workspace-nav-item:focus-visible, .admin-review-queue-item:focus-visible, .admin-overview-shortcuts button:focus-visible { outline: 3px solid var(--color-focus); outline-offset: 2px; }
 .admin-workspace-mobile-nav { display: none !important; }
 .admin-action-notice { margin: 0 0 1rem; padding: .8rem 1rem; border-radius: 10px; background: var(--mango-soft); color: var(--forest); font-weight: 600; }
 .admin-review-layout { display: grid; grid-template-columns: minmax(180px, 235px) minmax(0, 1fr); align-items: start; gap: 1rem; }
@@ -34,11 +34,11 @@
 }
 @media (hover: hover) and (pointer: fine) {
   .admin-workspace .btn.danger-outline:not(:disabled):hover {
-    color: var(--danger); background: #fff4f2;
+    color: var(--danger); background: var(--color-neutral-100);
   }
 }
-.admin-workspace .btn.danger-outline:active:not(:disabled) { background: #fce8e5; }
-.admin-workspace .btn.danger-outline:focus-visible { outline: 3px solid var(--focus-green); outline-offset: 2px; }
+.admin-workspace .btn.danger-outline:active:not(:disabled) { background: var(--color-neutral-200); }
+.admin-workspace .btn.danger-outline:focus-visible { outline: 3px solid var(--color-focus); outline-offset: 2px; }
 .admin-overview-shortcuts { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .75rem; margin: .85rem 0 1.3rem; }
 .admin-overview-shortcuts button { display: grid; gap: .2rem; padding: .85rem; min-height: 82px; border: 1px solid var(--line); border-radius: 11px; background: var(--paper); color: var(--ink); text-align: left; cursor: pointer; }
 .admin-overview-shortcuts button:hover { border-color: var(--forest); background: var(--surface-soft); }

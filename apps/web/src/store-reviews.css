@@ -4,7 +4,7 @@
 .store-review-summary { display:flex; flex-wrap:wrap; align-items:center; gap: .4rem .75rem; }
 .store-review-summary strong { font-size: 1.12rem; font-variant-numeric:tabular-nums; }
 .store-review-summary > span:last-child { font-size:.83rem; color:var(--ink-soft); }
-.store-rating-stars { display:inline-flex; align-items:center; gap:.05em; color: #a35410; font-size:1rem; letter-spacing:.01em; }
+.store-rating-stars { display:inline-flex; align-items:center; gap:.05em; color: var(--color-warning-ink); font-size:1rem; letter-spacing:.01em; }
 .store-rating-large { font-size:1.2rem; }
 .store-review-disclosure { margin:0; max-width:76ch; font-size:.82rem; line-height:1.55; }
 .store-review-distribution { display: grid; gap: .3rem; width: min(100%, 21rem); }
@@ -35,3 +35,135 @@
 .store-review-admin-card p { margin:0; overflow-wrap:anywhere; }
 @media(max-width:480px){ .store-review-summary { width:100%; } .store-review-picker { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); } }
 @media(prefers-reduced-motion:no-preference){ .store-review-pagination button, .store-review-picker label { transition:background-color 160ms ease-out, border-color 160ms ease-out; } }
+
+/* Review interaction: recognizable stars, keyboard-operable radios, and a clear
+   selected state. The parent fieldset preserves native radio-group semantics. */
+.store-review-picker {
+  align-items: center;
+  gap: .25rem;
+  padding: .65rem .7rem .8rem;
+}
+.store-review-picker .store-review-star-option {
+  position: relative;
+  display: inline-grid;
+  place-items: center;
+  flex: 0 0 44px;
+  width: 44px;
+  min-width: 44px;
+  min-height: 44px;
+  padding: 0;
+  border: 0;
+  border-radius: 9px;
+  cursor: pointer;
+}
+.store-review-picker .store-review-star-option:has(input:checked) {
+  border: 0;
+  background: var(--surface-soft);
+}
+.store-review-star-option input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: 0;
+  padding: 0;
+  opacity: 0;
+}
+.store-review-star-option span {
+  font-size: 1.65rem;
+  line-height: 1;
+  color: var(--forest);
+}
+.store-review-star-option:focus-within {
+  outline: 3px solid var(--focus-green);
+  outline-offset: 2px;
+}
+.store-review-picker-caption {
+  flex: 1 0 100%;
+  padding: .35rem .15rem 0;
+  font-size: .82rem;
+  color: var(--ink-soft);
+  line-height: 1.4;
+}
+@media (max-width: 480px) {
+  .store-review-picker {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .25rem;
+  }
+}
+
+/* Public review entry: a quiet, compact empty state and one discoverable action. */
+.store-review-empty {
+  display: grid;
+  justify-items: center;
+  gap: .35rem;
+  padding: clamp(1.35rem, 3vw, 2rem) 1rem;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  text-align: center;
+}
+.store-review-empty-stars {
+  color: var(--forest);
+  font-size: 1.4rem;
+  line-height: 1.25;
+  letter-spacing: .14em;
+}
+.store-review-empty strong { font-size: 1rem; line-height: 1.4; }
+.store-review-empty p {
+  margin: 0;
+  color: var(--ink-soft);
+  font-size: .84rem;
+  line-height: 1.5;
+}
+.store-review-entry {
+  display: grid;
+  justify-items: start;
+  gap: .85rem;
+  min-width: 0;
+}
+.store-review-write-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: .45rem;
+  min-height: 44px;
+}
+.store-review-entry-notice { margin: 0; font-size: .86rem; line-height: 1.5; }
+.store-review-entry-panel {
+  display: grid;
+  gap: .9rem;
+  width: 100%;
+  max-width: 650px;
+  padding: clamp(1rem, 2vw, 1.3rem);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--paper);
+}
+.store-review-entry-panel h3 { margin: 0; font-size: 1.04rem; line-height: 1.35; }
+.store-review-entry-panel .store-transaction-review { box-shadow: none; }
+.store-review-entry-panel .store-review-entry-hint,
+.store-review-entry-panel .store-review-entry-empty p { margin: 0; font-size: .83rem; line-height: 1.5; }
+.store-review-entry-empty { display: grid; justify-items: start; gap: .7rem; }
+.store-review-entry-purchase {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: .5rem;
+  margin: 0;
+  font-size: .86rem;
+}
+.store-review-entry-purchase span { color: var(--ink-soft); }
+.store-review-entry-pagination { display: flex; align-items: center; gap: .7rem; font-size: .83rem; }
+.store-review-entry-pagination .btn { min-height: 44px; }
+.store-review-entry .field select { min-height: 44px; }
+
+.store-review-empty .store-review-entry {
+  justify-items: center;
+  width: 100%;
+  margin-top: .65rem;
+}
+.store-review-empty .store-review-entry-panel {
+  text-align: left;
+  justify-items: stretch;
+}
+.store-review-empty .store-review-entry-panel h3 { text-align: left; }

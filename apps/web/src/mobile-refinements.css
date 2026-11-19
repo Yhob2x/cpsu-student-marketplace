@@ -271,7 +271,7 @@
   }
   .tabbar a.active { background: var(--mango-soft); color: var(--forest); }
   .tabbar a:focus-visible {
-    outline: 3px solid var(--focus-green, var(--mango));
+    outline: 3px solid var(--color-focus, var(--mango));
     outline-offset: -2px;
   }
   /* Keep content and call-to-action controls above the iPhone home indicator. */
@@ -323,7 +323,7 @@
   }
   .explore-type-chips button:focus-visible,
   .mobile-filter-toggle:focus-visible {
-    outline: 3px solid var(--focus-green, var(--mango));
+    outline: 3px solid var(--color-focus, var(--mango));
     outline-offset: 2px;
   }
   .mobile-filter-toggle {
@@ -729,7 +729,7 @@
   .mobile-browse-arrow:not(:disabled):active { background: var(--mango-soft); }
   .mobile-browse-arrow:disabled { opacity: .32; cursor: not-allowed; }
   .mobile-browse-arrow:focus-visible {
-    outline: 3px solid var(--focus-green);
+    outline: 3px solid var(--color-focus);
     outline-offset: 2px;
   }
   .mobile-browse-prev svg { transform: rotate(180deg); }
@@ -793,7 +793,7 @@
   .mobile-browse-arrow:disabled { opacity: .32; cursor: not-allowed; }
   .mobile-browse-arrow:not(:disabled):hover { background: var(--mango-soft); }
   .mobile-browse-arrow:focus-visible {
-    outline: 3px solid var(--focus-green);
+    outline: 3px solid var(--color-focus);
     outline-offset: 2px;
   }
   .mobile-browse-prev svg { transform: rotate(180deg); }

@@ -29,7 +29,7 @@
     scroll-padding-inline: 3px;
     padding: 3px 3px 12px;
     scrollbar-width: thin;
-    scrollbar-color: rgb(15 81 50 / 32%) transparent;
+    scrollbar-color: color-mix(in srgb, var(--color-primary-dark) 32%, transparent) transparent;
   }
   .home-category-grid .cat {
     flex: 0 0 124px;

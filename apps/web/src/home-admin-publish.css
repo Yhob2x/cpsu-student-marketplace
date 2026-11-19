@@ -1,6 +1,6 @@
 .home-admin-status.is-draft {
-  background: #fff0ce;
-  color: #754309;
+  background: var(--color-neutral-300);
+  color: var(--color-warning-ink);
 }
 .home-admin-draft-save {
   justify-content: flex-end;
@@ -9,9 +9,9 @@
   justify-content: space-between;
   gap: 1rem;
   padding: 1rem;
-  border: 1px solid #decab0;
+  border: 1px solid var(--color-neutral-400);
   border-radius: 12px;
-  background: #f8f0e5;
+  background: var(--color-neutral-200);
 }
 .home-admin-publish-summary {
   display: grid;
@@ -42,7 +42,7 @@
 .home-admin-image-heading .home-admin-status { flex: 0 0 auto; }
 .home-admin-photo-draft-note {
   margin: 0;
-  color: #754309;
+  color: var(--color-warning-ink);
   font: 650 12px/1.45 var(--font-body);
 }
 .home-admin-images .home-admin-publish-actions {

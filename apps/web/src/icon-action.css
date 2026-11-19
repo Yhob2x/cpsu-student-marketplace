@@ -15,7 +15,7 @@
   touch-action: manipulation;
 }
 .icon-action svg { display: block; flex: none; }
-.icon-action:focus-visible { outline: 3px solid var(--focus-green); outline-offset: 2px; }
+.icon-action:focus-visible { outline: 3px solid var(--color-focus); outline-offset: 2px; }
 .icon-action:disabled { opacity: .55; cursor: not-allowed; }
 @media (hover: hover) and (pointer: fine) {
   .icon-action:not(:disabled):hover { border-color: var(--leaf); }

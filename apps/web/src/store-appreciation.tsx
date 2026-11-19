@@ -35,6 +35,23 @@ export function StoreAppreciation({ storeId, signedIn = false, onSignIn, readOnl
     return () => { request.current++; };
   }, [storeId, signedIn]);
 
+  // Both public actions and the facts row read the same real server count.
+  // Sync the displayed statistic immediately after this viewer updates it.
+  useEffect(() => {
+    if (!readOnly) return;
+    const sync = (event: Event) => {
+      const detail = (event as CustomEvent<{ storeId: number; summary: Appreciation }>).detail;
+      if (detail?.storeId !== storeId) return;
+      request.current++; // Ignore an older summary request arriving after the new total.
+      setData(detail.summary);
+      setError('');
+      setRouteMissing(false);
+      setLoading(false);
+    };
+    window.addEventListener('store-appreciation-changed', sync);
+    return () => window.removeEventListener('store-appreciation-changed', sync);
+  }, [readOnly, storeId]);
+
   const toggle = async () => {
     if (inFlight.current || busy || loading) return;
     if (!data?.available || error) {
@@ -54,6 +71,9 @@ export function StoreAppreciation({ storeId, signedIn = false, onSignIn, readOnl
       });
       if (!result.available) throw new Error('Appreciations are not available right now.');
       setData(result);
+      window.dispatchEvent(new CustomEvent('store-appreciation-changed', {
+        detail: { storeId, summary: result },
+      }));
       showActionFeedback({
         kind: 'success',
         title: removing ? 'Appreciation removed' : 'Appreciation sent',
@@ -66,7 +86,9 @@ export function StoreAppreciation({ storeId, signedIn = false, onSignIn, readOnl
   };
 
   if (readOnly) return <div className="store-appreciation-fact" title="Appreciations are thank-yous, not verified reviews">
-    <span>Appreciations</span><strong>{data?.available && !error ? data.count?.toLocaleString('en-PH') : '—'}</strong>
+    <span>Appreciations</span>
+    <strong role="status" aria-live="polite">{data?.available && !error && typeof data.count === 'number'
+      ? data.count.toLocaleString('en-PH') : '—'}</strong>
   </div>;
 
   // Keep the action discoverable even when the API route or approved migration is not active.
@@ -88,7 +110,6 @@ export function StoreAppreciation({ storeId, signedIn = false, onSignIn, readOnl
       disabled={busy || loading}
       onClick={() => void toggle()}>
       <Icon name={available && data!.isAppreciated ? 'heartSolid' : 'heart'} size={21} />
-      {available && data!.count !== null && <span className="store-appreciation-count" aria-hidden="true">{data!.count.toLocaleString('en-PH')}</span>}
     </button>
     {hint && <span className="sr-only" role={error ? 'alert' : 'status'}>{hint}</span>}
   </span>;

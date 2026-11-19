@@ -39,9 +39,9 @@
  * Gold means "primary action / currently selected"; ordinary cards stay neutral.
  */
 :root {
-  --campus-cream: #fbf7eb;
-  --campus-warm-selected: #fff0c8;
-  --campus-warm-border: #e9d7a7;
+  --campus-cream: var(--color-neutral-100);
+  --campus-warm-selected: var(--color-neutral-300);
+  --campus-warm-border: var(--color-neutral-400);
   --campus-motion-out: cubic-bezier(.23, 1, .32, 1);
 }
 

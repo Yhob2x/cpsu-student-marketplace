@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { Icon } from './icons';
 import { SellerAvatar } from './seller-avatar';
 import { StoreRatingsAndReviews } from './store-review-widgets';
+import { StoreReviewEntry } from './store-review-entry';
 import { StoreAppreciation } from './store-appreciation';
 import { StoreFollowers } from './store-followers';
 import { filterStoreListings, type StoreFilter } from './storefront-filter';
@@ -97,7 +98,10 @@ export function StorefrontView({ store, isOwner, canFollow, onFollow, followBusy
               </div>
             </div>
             <p className="storefront-campus"><Icon name="pin" size={16} /> {store.campus?.name ?? store.campus?.code ?? 'CPSU campus'}</p>
-            <span className="storefront-affiliation" title={store.badgeReason}><Icon name="store" size={14} /> {store.badge}</span>
+            <div className="storefront-meta">
+              <span className="storefront-affiliation" title={store.badgeReason}><Icon name="store" size={14} /> {store.badge}</span>
+              {joined && <span className="storefront-opened">Opened {joined}</span>}
+            </div>
           </div>
         </div>
         {canChat && store.listings.length === 0 &&
@@ -141,10 +145,9 @@ export function StorefrontView({ store, isOwner, canFollow, onFollow, followBusy
           <p className="storefront-follow-feedback muted">New approved listings appear in Notifications. Turn on push for phone alerts.</p>}
       </div>}
       <div className="storefront-facts">
-        <div><span>Available listings</span><strong>{store.listingCount ?? store.listings.length}</strong></div>
+        <div><span>Listings</span><strong>{store.listingCount ?? store.listings.length}</strong></div>
         {store.follow?.available && <StoreFollowers key={`${store.id}-${store.follow.count}`} storeId={store.id} publicView />}
-        <div><span>Campus</span><strong>{store.campus?.code ?? 'CPSU'}</strong></div>
-        {joined && <div><span>Store opened</span><strong>{joined}</strong></div>}
+        <StoreAppreciation storeId={store.id} readOnly />
       </div>
     </section>
     <section className="storefront-products" aria-labelledby="storefront-listings">
@@ -191,7 +194,9 @@ export function StorefrontView({ store, isOwner, canFollow, onFollow, followBusy
             onClick={() => { setFilter('all'); setQuery(''); setCategory('all'); }}>Clear filters</button>}
         </div>}
     </section>
-    <StoreRatingsAndReviews storeId={store.id} />
+    <StoreRatingsAndReviews storeId={store.id}
+      reviewAction={!isOwner && canFollow ? <StoreReviewEntry storeId={store.id}
+        signedIn={signedIn} onSignIn={onChatSignIn} /> : undefined} />
     <section className="storefront-about" aria-label="About this store">
       <h2>About the store</h2>
       <p>{store.description}</p>

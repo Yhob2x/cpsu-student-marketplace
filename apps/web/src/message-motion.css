@@ -3,7 +3,7 @@
  * authenticated API, not from animation state or arbitrary elapsed time.
  */
 .conversation-log {
-  background: #f6f8f6;
+  background: var(--color-neutral-100);
   border: 1px solid var(--line);
   border-radius: 16px;
   padding: clamp(.75rem, 2vw, 1.15rem);
@@ -35,23 +35,23 @@
 .conversation-log .msg-row.mine .message-stack { align-items: flex-end; }
 .conversation-log .message-stack .msg {
   max-width: 100%; min-width: 0; padding: .68rem .85rem;
-  background: #fff; color: var(--ink); border: 1px solid #dee8e1;
+  background: var(--color-card); color: var(--ink); border: 1px solid var(--color-primary-light);
   border-radius: 14px 14px 14px 5px; line-height: 1.5;
-  box-shadow: 0 1px 2px rgb(7 59 42 / 3%);
+  box-shadow: 0 1px 2px color-mix(in srgb, var(--color-primary-dark) 3%, transparent);
 }
 .conversation-log .message-stack .msg.mine {
-  background: var(--forest); color: #fff; border-color: var(--forest);
+  background: var(--forest); color: var(--color-card); border-color: var(--forest);
   border-radius: 14px 14px 5px 14px; box-shadow: none;
 }
 .conversation-log .message-time {
   display: block; margin-top: .32rem; font-size: .68rem;
   line-height: 1.2; color: var(--ink-soft); text-align: right;
 }
-.conversation-log .msg.mine .message-time { color: #d2e7da; }
+.conversation-log .msg.mine .message-time { color: var(--color-primary-light); }
 .conversation-log .message-text { white-space: pre-wrap; overflow-wrap: anywhere; }
 .message-receipt {
   display: inline-flex; align-items: center; gap: .24rem;
-  color: #62756a; font-size: .7rem; font-weight: 650; line-height: 1.25;
+  color: var(--color-primary); font-size: .7rem; font-weight: 650; line-height: 1.25;
   white-space: nowrap;
 }
 .message-receipt svg { flex: none; }
@@ -68,7 +68,7 @@
   display: inline-flex; align-items: center; justify-content: center;
   gap: .24rem; height: 29px; padding: .45rem .65rem;
   border-radius: 14px 14px 14px 5px;
-  background: #fff; border: 1px solid var(--line);
+  background: var(--color-card); border: 1px solid var(--line);
 }
 .typing-dots span {
   display: block; width: 5px; height: 5px; border-radius: 50%;
@@ -88,12 +88,12 @@
   from { opacity: 0; transform: translateY(12px); }
   to { opacity: 1; transform: translateY(0); }
 }
-.conversation-composer { background: #fff; border-color: var(--line); }
+.conversation-composer { background: var(--color-card); border-color: var(--line); }
 .conversation-composer .chat-send {
-  background: var(--forest); color: #fff; flex: 0 0 44px;
+  background: var(--forest); color: var(--color-card); flex: 0 0 44px;
 }
 @media (hover: hover) and (pointer: fine) { .conversation-composer .chat-send:hover:not(:disabled) { background: var(--leaf); } }
-.conversation-composer textarea:focus-visible { outline-color: var(--focus-green); }
+.conversation-composer textarea:focus-visible { outline-color: var(--color-focus); }
 @media (max-width: 640px) {
   .conversation-log .msg-row { gap: .42rem; }
   .conversation-log .message-stack { max-width: min(86%, 39ch); }
@@ -118,9 +118,9 @@
   display: inline-flex; align-items: center; gap: .43rem; margin: 0;
   color: var(--ink-soft); font: 650 .78rem/1.4 var(--font-body); min-height: 22px;
 }
-.conversation-presence .presence-dot { width: 8px; height: 8px; background: #8a9b91; border-radius: 50%; flex: none; }
+.conversation-presence .presence-dot { width: 8px; height: 8px; background: var(--color-primary); border-radius: 50%; flex: none; }
 .conversation-heading .conversation-presence.is-online { color: var(--leaf); }
-.conversation-presence.is-online .presence-dot { background: var(--leaf); box-shadow: 0 0 0 3px #e5f1e9; }
+.conversation-presence.is-online .presence-dot { background: var(--leaf); box-shadow: 0 0 0 3px var(--color-primary-light); }
 .conversation-log .msg-row { margin: 18px 0 0; gap: 0; justify-content: flex-start; align-items: flex-end; }
 .conversation-log .msg-row.mine { flex-direction: row-reverse; }
 .conversation-log .msg-row.is-grouped { margin-top: 4px; }
@@ -128,16 +128,16 @@
 .conversation-log .message-stack { max-width: min(84%, 52ch); gap: 5px; }
 .conversation-log .message-stack .msg { border-radius: 20px 20px 20px 8px; padding: .75rem 1rem; }
 .conversation-log .message-stack .msg.mine {
-  background: var(--leaf); border-color: var(--leaf); color: #fff;
+  background: var(--leaf); border-color: var(--leaf); color: var(--color-card);
   border-radius: 20px 20px 8px 20px;
 }
-.conversation-log .msg.mine .message-time { color: #eef8f0; }
+.conversation-log .msg.mine .message-time { color: var(--color-primary-light); }
 .conversation-log .msg-row.mine .message-receipt { animation: cpsu-receipt-update 240ms ease-out both; }
 @keyframes cpsu-receipt-update {
   from { opacity: .4; transform: translateY(3px); }
   to { opacity: 1; transform: translateY(0); }
 }
-.conversation-composer .chat-send { background: var(--leaf); color: #fff; }
+.conversation-composer .chat-send { background: var(--leaf); color: var(--color-card); }
 .conversation-composer .chat-send:hover:not(:disabled) { background: var(--forest); }
 @media (max-width: 640px) {
   .conversation-heading-info { gap: .2rem; }
@@ -177,7 +177,7 @@
   border: 1px solid var(--line);
   border-radius: 13px;
   color: var(--ink);
-  box-shadow: 0 1px 3px rgb(7 59 42 / 4%);
+  box-shadow: 0 1px 3px color-mix(in srgb, var(--color-primary-dark) 4%, transparent);
 }
 .conversation-listing-head {
   display: flex;
@@ -194,8 +194,8 @@
   align-items: center;
   border-radius: 6px;
   padding: .2rem .55rem;
-  color: var(--leaf);
-  background: var(--mango-soft);
+  color: var(--color-primary-dark);
+  background: var(--color-primary-light);
   font-size: .72rem;
   white-space: nowrap;
   flex: 0 0 auto;

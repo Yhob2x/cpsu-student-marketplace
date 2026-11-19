@@ -78,7 +78,7 @@
   margin: 0;
   padding: 1.15rem 1.3rem;
   border-radius: 16px;
-  box-shadow: 0 7px 20px rgb(78 45 22 / 8%);
+  box-shadow: 0 7px 20px color-mix(in srgb, var(--color-warning-ink) 8%, transparent);
 }
 .hero-search-heading {
   max-width: 17ch;
@@ -199,7 +199,7 @@
   width: 45%;
   height: 39%;
   border-radius: 63% 37% 55% 45% / 60% 45% 55% 40%;
-  background: #e7ad20;
+  background: var(--color-accent);
   transform: rotate(-16deg);
 }
 .hero > .hero-art::after {
@@ -208,7 +208,7 @@
   width: 48%;
   height: 27%;
   border-radius: 58% 42% 55% 45% / 58% 48% 52% 42%;
-  background: #a94527;
+  background: var(--color-primary);
   transform: rotate(-11deg);
 }
 .hero > .hero-art .home-custom-hero {

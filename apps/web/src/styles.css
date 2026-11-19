@@ -1,21 +1,22 @@
+@import "../../shared/theme.css";
 /* Hallmark · checked: 2026-11-11 · genre: modern-minimal (inferred)
  * built: the existing CPSU project · redesign: polish · v2.0.0 */
 /* Storefront-inspired white, pale neutral and deep forest-green palette; gold retained for accessible focus and prices. */
 /* Single light storefront theme: white surfaces, soft gray-green panels and deep green accents.
    The previous light/dark switch and OS-based dark overrides have been retired. */
 :root {
-  --forest: #073b2a; --pine: #10543a; --sage: #527866; --gold: #e0bb46; --mint: #d5e8da;
-  --on-forest: #f6fbf8; --on-forest-muted: #d5e9dd; --on-forest-soft: #bbdcc8; --on-forest-bright: #f4fff7;
-  --pure-white: #fff; --promo-ink: #254c39;
-  --shadow-shot: rgb(6 43 26 / 10%); --shadow-sticker: rgb(4 33 19 / 14%);
-  --shadow-card: rgb(8 53 31 / 9%); --shadow-tabbar: rgb(8 53 31 / 8%);
-  --veil-light: rgb(255 255 255 / .96); --veil-dark: rgb(255 255 255 / .14);
-  --veil-dark-light: rgb(255 255 255 / .1); --border-over-dark: rgb(255 255 255 / .18);
-  --ghost-border: rgb(255 255 255 / .45); --skeleton-light: rgb(127 127 127 / 15%);
-  --ink: #122a1f; --ink-soft: #4b6356; --chalk: #fff; --paper: #fff;
-  --leaf: #10543a; --leaf-dark: #073b2a; --on-leaf: #fff;
-  --mango: #e0bb46; --on-mango: #073b2a; --mango-soft: #edf4ef;
-  --line: #dce6de; --danger: #a12a1c;
+  --forest: var(--color-primary); --pine: var(--color-primary); --sage: var(--color-text-muted); --gold: var(--color-accent); --mint: var(--color-primary-light);
+  --on-forest: var(--color-on-primary); --on-forest-muted: var(--color-neutral-200); --on-forest-soft: var(--color-neutral-200); --on-forest-bright: var(--color-on-primary);
+  --pure-white: var(--color-card); --promo-ink: var(--color-primary-dark);
+  --shadow-shot: color-mix(in srgb, var(--color-text) 10%, transparent); --shadow-sticker: color-mix(in srgb, var(--color-text) 14%, transparent);
+  --shadow-card: color-mix(in srgb, var(--color-text) 9%, transparent); --shadow-tabbar: color-mix(in srgb, var(--color-text) 8%, transparent);
+  --veil-light: color-mix(in srgb, var(--color-card) 96%, transparent); --veil-dark: color-mix(in srgb, var(--color-card) 14%, transparent);
+  --veil-dark-light: color-mix(in srgb, var(--color-card) 10%, transparent); --border-over-dark: color-mix(in srgb, var(--color-card) 18%, transparent);
+  --ghost-border: color-mix(in srgb, var(--color-card) 45%, transparent); --skeleton-light: color-mix(in srgb, var(--color-text) 15%, transparent);
+  --ink: var(--color-text); --ink-soft: var(--color-text-muted); --chalk: var(--color-background); --paper: var(--color-card);
+  --leaf: var(--color-primary); --leaf-dark: var(--color-primary-dark); --on-leaf: var(--color-on-primary);
+  --mango: var(--color-accent); --on-mango: var(--color-on-accent); --mango-soft: var(--color-primary-light);
+  --line: var(--color-border); --danger: var(--color-danger);
   --font-heading: 'Plus Jakarta Sans', system-ui, sans-serif; --font-body: 'Inter', system-ui, sans-serif;
   /* Shared spacing scale for navigation, headings, controls, and content surfaces. */
   --space-1: 4px; --space-2: 8px; --space-3: 12px; --space-4: 16px;
@@ -38,7 +39,7 @@ a { color: var(--leaf); } :focus-visible { outline: 3px solid var(--mango); outl
 .btn:active:not(:disabled), .tabbar a:active { transform: translateY(1px); }
 .btn:active:not(:disabled) { filter: brightness(.92); }
 .tabbar a:active, .actions a:active, .chip:active, .cat:active { background: var(--mango-soft); }
-.site-foot nav a:active { color: var(--pure-white); background: var(--veil-dark-light); }
+.site-foot nav a:active { color: var(--color-card); background: var(--veil-dark-light); }
 .wrap { max-width: 1100px; margin: 0 auto; padding: 0 1rem; padding-inline: max(1rem, env(safe-area-inset-left, 0px)) max(1rem, env(safe-area-inset-right, 0px)); min-width: 0; }
 h1, h2, h3, .brand { overflow-wrap: break-word; min-width: 0; }
 h1, h2 { text-wrap: balance; }
@@ -130,7 +131,7 @@ textarea { width: 100%; min-height: 96px; }
 .admin-section-nav button { display: inline-flex; align-items: center; gap: .45rem; min-height: 44px; padding: .45rem .75rem; border: 1px solid transparent; border-radius: 8px; background: var(--surface-soft); color: var(--leaf); font-weight: 650; cursor: pointer; }
 .admin-section-nav button:hover { background: var(--mango-soft); }
 .admin-section-nav button[aria-pressed="true"] { background: var(--forest); color: var(--paper); }
-.admin-section-nav button:focus-visible { outline: 3px solid var(--focus-green); outline-offset: 2px; }
+.admin-section-nav button:focus-visible { outline: 3px solid var(--color-focus); outline-offset: 2px; }
 .admin-section-nav span { min-width: 1.5rem; padding: .1rem .35rem; border-radius: 99px; background: var(--paper); color: var(--ink); text-align: center; font-size: .8rem; }
 #admin-affiliations, #admin-listings, #admin-reports, #admin-transactions-heading, #student-management-heading, #audit-history-heading, #admin-overview { scroll-margin-top: 1rem; }
 .review-listing { max-width: none; gap: .9rem; }
@@ -142,7 +143,7 @@ textarea { width: 100%; min-height: 96px; }
 .review-description { max-width: 65ch; margin: 0; line-height: 1.55; white-space: pre-wrap; overflow-wrap: anywhere; }
 .review-photos { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(140px, 100%), 1fr)); gap: .65rem; }
 .review-photos a { display: block; min-width: 0; border-radius: 8px; }
-.review-photos a:focus-visible { outline: 3px solid var(--focus-green); outline-offset: 2px; }
+.review-photos a:focus-visible { outline: 3px solid var(--color-focus); outline-offset: 2px; }
 .review-photos img { display: block; width: 100%; aspect-ratio: 4 / 3; object-fit: cover; border-radius: 8px; background: var(--surface-neutral); }
 .review-confirmation { display: flex; align-items: flex-start; gap: .7rem; line-height: 1.5; cursor: pointer; }
 .review-confirmation input { flex: none; width: 20px; height: 20px; min-height: 20px; margin: .15rem 0 0; accent-color: var(--leaf); }
@@ -158,7 +159,7 @@ textarea { width: 100%; min-height: 96px; }
 .admin-student-row { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 1fr) minmax(0, 1fr) auto; align-items: center; gap: .75rem; width: 100%; min-height: 64px; padding: .7rem .85rem; border: 0; border-bottom: 1px solid var(--line); background: var(--paper); color: var(--ink); text-align: left; cursor: pointer; }
 .admin-student-row:last-child { border-bottom: 0; }
 .admin-student-row:hover, .admin-student-row[aria-pressed="true"] { background: var(--mango-soft); }
-.admin-student-row:focus-visible { outline: 3px solid var(--focus-green); outline-offset: -3px; }
+.admin-student-row:focus-visible { outline: 3px solid var(--color-focus); outline-offset: -3px; }
 .admin-student-row > span { min-width: 0; overflow-wrap: anywhere; }
 .admin-student-name { font-weight: 700; }
 .admin-student-name small { display: block; margin-top: .2rem; color: var(--ink-soft); font-size: .8rem; font-weight: 400; }
@@ -184,7 +185,7 @@ textarea { width: 100%; min-height: 96px; }
 .admin-content-item { display: grid; gap: .25rem; width: 100%; padding: .75rem; border: 1px solid var(--line); border-radius: 8px; background: var(--paper); color: var(--ink); text-align: left; cursor: pointer; }
 .admin-content-item[aria-pressed="true"] { border-color: var(--leaf); background: var(--mango-soft); }
 .admin-content-item span { color: var(--ink-soft); font-size: .8rem; text-transform: capitalize; }
-.admin-content-item:focus-visible { outline: 3px solid var(--focus-green); outline-offset: 2px; }
+.admin-content-item:focus-visible { outline: 3px solid var(--color-focus); outline-offset: 2px; }
 .guidelines-content { max-width: 70ch; }
 .guidelines-content h2 { margin-top: 1.75rem; margin-bottom: .4rem; }
 .guidelines-content p { line-height: 1.65; overflow-wrap: anywhere; }
@@ -348,7 +349,7 @@ header.top .theme { min-height: 44px; padding: .3rem .6rem; font-size: .85rem; }
 .steps b { font-family: var(--font-heading); }
 .steps p { margin: 0; color: var(--ink-soft); font-size: .88rem; }
 .cta-band { display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; background: var(--forest); color: var(--on-forest); border-radius: 16px; padding: 1.25rem 1.5rem; margin: 2.5rem 0; }
-.cta-band h2 { margin: 0; font-size: 1.2rem; color: var(--pure-white); }
+.cta-band h2 { margin: 0; font-size: 1.2rem; color: var(--color-card); }
 .cta-band p { margin: .25rem 0 0; color: var(--on-forest-muted); font-size: .9rem; }
 .cta-band .btn { margin-left: auto; }
 .btn.gold { background: var(--mango); color: var(--on-mango); }
@@ -359,12 +360,12 @@ header.top .theme { min-height: 44px; padding: .3rem .6rem; font-size: .85rem; }
 .site-foot { background: var(--forest); color: var(--on-forest-muted); margin-top: 3rem; padding-bottom: calc(4.5rem + env(safe-area-inset-bottom, 0)); }
 .site-foot .foot-grid { display: grid; grid-template-columns: 1.6fr repeat(3, 1fr); gap: 2rem; padding: 2.5rem 1rem 1.5rem; }
 .site-foot .brand-mark { background: var(--veil-dark-light); color: var(--mango); margin-bottom: .6rem; }
-.site-foot strong { display: block; font: 800 1rem var(--font-heading); color: var(--pure-white); margin-bottom: .4rem; }
+.site-foot strong { display: block; font: 800 1rem var(--font-heading); color: var(--color-card); margin-bottom: .4rem; }
 .site-foot p { margin: 0; font-size: .85rem; max-width: 36ch; }
 .site-foot h2 { font-size: .78rem; color: var(--on-forest-soft); margin: 0 0 .6rem; }
 .site-foot nav { display: grid; gap: .15rem; align-content: start; }
 .site-foot nav a { display: flex; align-items: center; min-height: 44px; padding: .45rem .5rem; margin-inline: -.5rem; border-radius: 8px; color: var(--on-forest-muted); text-decoration: none; font-size: .88rem; }
-@media (hover: hover) and (pointer: fine) { .site-foot nav a:hover { color: var(--pure-white); text-decoration: underline; } }
+@media (hover: hover) and (pointer: fine) { .site-foot nav a:hover { color: var(--color-card); text-decoration: underline; } }
 .foot-base { display: flex; justify-content: space-between; gap: 1rem; flex-wrap: wrap; border-top: 1px solid var(--border-over-dark); padding: .9rem 1rem 0; font-size: .78rem; }
 .foot-base p { margin: 0; }
 @media (max-width: 900px) {
@@ -706,7 +707,7 @@ label.field input, label.field select, label.field textarea { width: 100%; }
   overflow: hidden;
 }
 .explore-results .product-card:focus-within {
-  outline: 3px solid var(--focus-green);
+  outline: 3px solid var(--color-focus);
   outline-offset: 2px;
 }
 .explore-results .product-card .product-photo {

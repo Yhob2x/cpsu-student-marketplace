@@ -40,7 +40,7 @@
   font-weight: 750;
 }
 .storefront-owner-actions .storefront-browse-action:hover { background: var(--leaf); color: var(--paper); }
-.storefront-owner-actions .storefront-browse-action:focus-visible { outline: 3px solid var(--focus-green); outline-offset: 3px; }
+.storefront-owner-actions .storefront-browse-action:focus-visible { outline: 3px solid var(--color-focus); outline-offset: 3px; }
 .storefront-products-heading h2 { scroll-margin-top: 1.25rem; }
 
 /* Desktop Explore: show the filters students use most, reveal the others
@@ -78,7 +78,7 @@
   .desktop-filter-toggle > svg:last-child { margin-left: auto; }
   .desktop-filter-toggle span { font-size: .78rem; font-weight: 650; color: var(--ink-soft); }
   .desktop-filter-toggle:hover { background: var(--surface-soft); border-color: var(--line); }
-  .desktop-filter-toggle:focus-visible { outline: 3px solid var(--focus-green); outline-offset: 2px; }
+  .desktop-filter-toggle:focus-visible { outline: 3px solid var(--color-focus); outline-offset: 2px; }
   .explore-control-header .results { margin-block: .35rem .6rem; }
 }
 

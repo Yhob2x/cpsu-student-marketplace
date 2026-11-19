@@ -8,7 +8,7 @@
   padding: clamp(2rem, 4vw, 3.5rem) clamp(2rem, 4vw, 3.5rem) 7rem;
   overflow: visible;
   border-radius: 0;
-  background: #fbf3ea;
+  background: var(--color-neutral-200);
 }
 .hero::before {
   content: '';
@@ -20,7 +20,7 @@
   bottom: 75px;
   border-radius: 45% 56% 20% 0;
   transform: rotate(-16deg);
-  background: #075039;
+  background: var(--color-primary-dark);
 }
 .hero::after {
   content: '';
@@ -32,27 +32,27 @@
   top: 100px;
   border-radius: 65% 65% 15% 15%;
   transform: rotate(21deg);
-  background: #e9a619;
+  background: var(--color-accent);
 }
 .hero-copy { position: relative; z-index: 2; max-width: min(50%, 530px); }
-.hero .hero-eyebrow { margin-bottom: 1rem; color: #6c3b16; font-size: .7rem; font-weight: 750; letter-spacing: .22em; }
-.hero h1 { max-width: none; margin-bottom: 1.25rem; font-size: clamp(3.65rem, 5.8vw, 5.6rem); line-height: .92; color: #14221d; }
+.hero .hero-eyebrow { margin-bottom: 1rem; color: var(--color-primary-dark); font-size: .7rem; font-weight: 750; letter-spacing: .22em; }
+.hero h1 { max-width: none; margin-bottom: 1.25rem; font-size: clamp(3.65rem, 5.8vw, 5.6rem); line-height: .92; color: var(--color-primary-dark); }
 .hero h1 .hero-line, .hero h1 em { display: block; overflow-wrap: anywhere; }
 .hero h1 .hero-line-connect { margin-left: -.18em; }
-.hero h1 em { padding-left: .34em; color: #523021; }
-.hero h1 .hero-amp { color: #e1a01b; font-style: italic; font-size: 1.23em; line-height: .55; vertical-align: -.08em; }
-.hero p { max-width: 38ch; margin: 1.1rem 0 0; color: #222b27; line-height: 1.48; font-size: .95rem; }
+.hero h1 em { padding-left: .34em; color: var(--color-warning-ink); }
+.hero h1 .hero-amp { color: var(--color-warning-ink); font-style: italic; font-size: 1.23em; line-height: .55; vertical-align: -.08em; }
+.hero p { max-width: 38ch; margin: 1.1rem 0 0; color: var(--color-primary-dark); line-height: 1.48; font-size: .95rem; }
 .hero-actions { display: flex; flex-wrap: wrap; gap: .75rem; margin-top: 1.45rem; }
 .hero-actions .btn { min-height: 45px; padding-inline: 1.3rem; font-size: .84rem; }
-.hero .hero-actions .btn:not(.ghost) { background: var(--forest); color: #fff; border-color: var(--forest); box-shadow: 0 4px 10px rgb(7 65 42 / 16%); }
-.hero .hero-actions .btn.ghost { border-color: var(--forest); color: var(--leaf-dark); background: #fffaf4; }
+.hero .hero-actions .btn:not(.ghost) { background: var(--forest); color: var(--color-card); border-color: var(--forest); box-shadow: 0 4px 10px color-mix(in srgb, var(--color-primary-dark) 16%, transparent); }
+.hero .hero-actions .btn.ghost { border-color: var(--forest); color: var(--leaf-dark); background: var(--color-neutral-100); }
 .hero-assurances { display: flex; flex-wrap: wrap; gap: clamp(.9rem, 2.2vw, 2rem); margin: 1.2rem 0 0; padding: 0; list-style: none; }
-.hero-assurances li { display: flex; align-items: center; gap: .45rem; color: #142a21; font-size: .68rem; font-weight: 650; line-height: 1.2; }
+.hero-assurances li { display: flex; align-items: center; gap: .45rem; color: var(--color-primary-dark); font-size: .68rem; font-weight: 650; line-height: 1.2; }
 .hero-assurances svg { flex: 0 0 auto; color: var(--leaf-dark); }
 .hero-art { position: absolute; z-index: 1; top: 0; right: 0; bottom: 0; width: 54%; min-height: 0; margin: 0; }
-.hero-art::before { content: ''; position: absolute; z-index: 2; left: -4%; bottom: 18%; width: 43%; height: 26%; border-radius: 0 100% 0 100%; transform: rotate(-11deg); background: #ad4621; }
-.hero-art::after { content: ''; position: absolute; z-index: 2; left: 25%; bottom: -1%; width: 55%; height: 21%; border-radius: 100% 100% 0 0; transform: rotate(-16deg); background: #e7a81b; }
-.hero-art .shot { border: 0; box-shadow: none; background: #e8d9c4; }
+.hero-art::before { content: ''; position: absolute; z-index: 2; left: -4%; bottom: 18%; width: 43%; height: 26%; border-radius: 0 100% 0 100%; transform: rotate(-11deg); background: var(--color-primary); }
+.hero-art::after { content: ''; position: absolute; z-index: 2; left: 25%; bottom: -1%; width: 55%; height: 21%; border-radius: 100% 100% 0 0; transform: rotate(-16deg); background: var(--color-accent); }
+.hero-art .shot { border: 0; box-shadow: none; background: var(--color-neutral-300); }
 .hero-art .home-custom-hero { inset: 0; z-index: 1; border-radius: 54% 0 0 38% / 54% 0 0 30%; }
 .hero-art .home-custom-hero img { object-position: center; }
 .hero-search {
@@ -69,17 +69,17 @@
   min-height: 105px;
   margin: 0;
   padding: 1.2rem 1.5rem;
-  border: 1px solid #ecddcd;
+  border: 1px solid var(--color-neutral-300);
   border-radius: 22px;
-  background: #fffcf8;
-  box-shadow: 0 14px 30px rgb(78 45 22 / 13%);
+  background: var(--color-card);
+  box-shadow: 0 14px 30px color-mix(in srgb, var(--color-warning-ink) 13%, transparent);
 }
-.hero-search-heading { display: block; max-width: 13ch; color: #14221d; font: 400 clamp(1.35rem, 2.2vw, 2rem)/1.05 var(--font-heading); letter-spacing: -.025em; }
-.hero-search-controls { display: flex; gap: .5rem; min-width: 0; padding: .32rem; border: 1px solid #ddd3c8; border-radius: 10px; background: #fff; }
+.hero-search-heading { display: block; max-width: 13ch; color: var(--color-primary-dark); font: 400 clamp(1.35rem, 2.2vw, 2rem)/1.05 var(--font-heading); letter-spacing: -.025em; }
+.hero-search-controls { display: flex; gap: .5rem; min-width: 0; padding: .32rem; border: 1px solid var(--color-neutral-300); border-radius: 10px; background: var(--color-card); }
 .hero-search input { flex: 1 1 0; width: 0; min-width: 0; min-height: 43px; padding-inline: .7rem; border: 0; background: transparent; }
 .hero-search input:focus { outline: 2px solid var(--forest); outline-offset: -2px; }
-.hero-search .btn { min-height: 43px; border-radius: 7px; background: #aa4321; }
-.hero-search .btn:hover { background: #873318; }
+.hero-search .btn { min-height: 43px; border-radius: 7px; background: var(--color-primary); }
+.hero-search .btn:hover { background: var(--color-primary-dark); }
 @media (max-width: 980px) {
   .hero { min-height: 535px; }
   .hero-copy { max-width: 53%; }

@@ -143,11 +143,15 @@ r.post('/', async (req, res) => {
 
 r.get('/', async (req, res) => {
   await eligibleStudent(req.user!.id);
-  const { page, pageSize } = z.object({
+  const { page, pageSize, role } = z.object({
     page: z.coerce.number().int().min(1).max(1000).default(1),
     pageSize: z.coerce.number().int().min(1).max(30).default(20),
+    role: z.enum(['all', 'buying', 'selling']).default('all'),
   }).strict().parse(req.query);
-  const where = rowAccess.transactionParticipant(req.user!.id);
+  // Role filters retain participant-only access and filter before pagination.
+  const where = role === 'buying' ? { buyerUserId: req.user!.id }
+    : role === 'selling' ? { sellerUserId: req.user!.id }
+      : rowAccess.transactionParticipant(req.user!.id);
   const [items, total] = await prisma.$transaction([
     prisma.transaction.findMany({ where, orderBy: { createdAt: 'desc' },
       include: { listing: { select: { title: true, type: true } },

@@ -1,3 +1,4 @@
+import { LegacyButton } from './components/ui/legacy-button';
 import { FormEvent, useEffect, useLayoutEffect, useRef, useState, type CSSProperties } from 'react';
 import { Link } from 'react-router-dom';
 import { Bell, BellOff } from 'lucide-react';
@@ -297,7 +298,7 @@ export function FloatingChatPanel({ onClose, onUnreadChanged, motionState, motio
       <div className="floating-chat-panel-body" aria-label="Conversation list">
         {inbox === null && !loadError && <p className="muted" role="status">Loading conversations…</p>}
         {loadError && <div className="floating-chat-feedback" role="alert"><p>{loadError}</p>
-          <button type="button" className="btn ghost" onClick={() => void refreshRef.current()}>Retry</button></div>}
+          <LegacyButton type="button" className="ghost" onClick={() => void refreshRef.current()}>Retry</LegacyButton></div>}
         {inbox?.length === 0 && !loadError && <div className="floating-chat-empty">
           <Icon name="chat" size={27} /><strong>No conversations yet</strong>
           <p>Explore a listing and ask its seller a question to start chatting.</p>
@@ -332,10 +333,10 @@ export function FloatingChatPanel({ onClose, onUnreadChanged, motionState, motio
         <strong>End this chat for both students?</strong>
         <p>Messages stay readable. This won't cancel a transaction or block the student elsewhere.</p>
         <div className="floating-chat-end-actions">
-          <button className="btn danger" type="button" disabled={ending || sending}
-            onClick={() => void endConversation()}>{ending ? 'Ending…' : 'Yes, end chat'}</button>
-          <button className="btn ghost" type="button" disabled={ending}
-            onClick={() => { setEndConfirm(false); setEndError(''); }}>Keep chatting</button>
+          <LegacyButton className="danger" type="button" disabled={ending || sending}
+            onClick={() => void endConversation()}>{ending ? 'Ending…' : 'Yes, end chat'}</LegacyButton>
+          <LegacyButton className="ghost" type="button" disabled={ending}
+            onClick={() => { setEndConfirm(false); setEndError(''); }}>Keep chatting</LegacyButton>
         </div>
         {endError && <p className="err" role="alert">Couldn't end chat: {endError}</p>}
       </div>}
@@ -349,7 +350,7 @@ export function FloatingChatPanel({ onClose, onUnreadChanged, motionState, motio
         }}>
         {!conversation && !loadError && <p role="status" className="muted">Loading messages…</p>}
         {loadError && <div className="floating-chat-feedback" role="alert"><p>{loadError}</p>
-          <button type="button" className="btn ghost" onClick={() => void refreshRef.current()}>Retry</button></div>}
+          <LegacyButton type="button" className="ghost" onClick={() => void refreshRef.current()}>Retry</LegacyButton></div>}
         {conversation?.hasEarlier && <Link className="btn ghost" to={`/inquiries/${threadId}`}
           onClick={() => onClose(true)}>View earlier messages in full chat</Link>}
         {conversation?.messages.length === 0 && <p className="muted">No messages yet. Say hello.</p>}
@@ -399,8 +400,8 @@ export function FloatingChatPanel({ onClose, onUnreadChanged, motionState, motio
       {conversation && meetupOpen && <div className="floating-chat-meetup-sheet" id="floating-chat-meetup-sheet">
         <div className="floating-chat-meetup-sheet-head">
           <strong>Meetup map</strong>
-          <button type="button" className="btn ghost" onClick={() => setMeetupOpen(false)}
-            aria-label="Close meetup map">Close</button>
+          <LegacyButton type="button" className="ghost" onClick={() => setMeetupOpen(false)}
+            aria-label="Close meetup map">Close</LegacyButton>
         </div>
         <MeetupLocationCard key={conversation.thread.id}
           inquiryThreadId={conversation.thread.id}

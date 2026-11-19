@@ -6,6 +6,7 @@ import { HttpError } from '../http.js';
 import { requireAuth, requireReviewer, canReview, reviewCampusIds } from '../auth.js';
 import { audit, notify } from '../audit.js';
 import { deliverPush } from '../push.js';
+import { pushOutboxWritesActivated, stagePushOutbox } from '../push-outbox.js';
 import {
   createFollowerPublicationNotices, deliverFollowerPublicationPush,
 } from '../store-publication-notifications.js';
@@ -87,6 +88,7 @@ r.post('/listings/:id/decision', async (req, res) => {
     const ownerNotice = await tx.notification.create({ data: {
       userId: l.seller.ownerUserId, type: 'listing.decision', payload: decisionPayload,
     }, select: { id: true } });
+    await stagePushOutbox(tx, { id: ownerNotice.id, userId: l.seller.ownerUserId, type: 'listing.decision' });
     const followerNotices = b.decision === 'approved' && !approvedBefore
       && l.availabilityState === 'available' && l.seller.approvalStatus === 'approved'
       && l.seller.owner.status === 'active'
@@ -98,7 +100,7 @@ r.post('/listings/:id/decision', async (req, res) => {
     return { ownerNoticeId: ownerNotice.id, decisionPayload, followerNotices };
   }, { isolationLevel: Prisma.TransactionIsolationLevel.Serializable, timeout: 20_000 });
   // Push is optional and never blocks the committed in-app notifications.
-  void deliverPush(l.seller.ownerUserId, 'listing.decision',
+  if (!pushOutboxWritesActivated) void deliverPush(l.seller.ownerUserId, 'listing.decision',
     recorded.decisionPayload, recorded.ownerNoticeId).catch(() =>
       console.warn('Review decision push delivery skipped'));
   deliverFollowerPublicationPush(recorded.followerNotices);

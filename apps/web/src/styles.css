@@ -89,7 +89,7 @@ main { padding: 1.5rem 0 7rem; } /* extra bottom padding clears the fixed tab ba
 .shot-2 { inset: 34% 0 10% 46%; }
 .shot-3 { inset: 64% 56% 0 10%; }
 .empty-art { display: grid; place-items: center; color: var(--leaf); background: var(--paper); }
-.hero-sticker { position: absolute; right: 0; top: 0; background: var(--forest); color: var(--mint); border-radius: var(--ui-radius-md); padding: var(--ui-space-3) .9rem; text-align: center; box-shadow: 0 10px 24px var(--shadow-sticker); max-width: 46%; }
+.hero-sticker { position: absolute; right: 0; top: 0; background: var(--forest); color: var(--mint); border-radius: var(--ui-radius-md); padding: var(--ui-space-3) var(--ui-space-4); text-align: center; box-shadow: 0 10px 24px var(--shadow-sticker); max-width: 46%; }
 .hero-sticker b { display: block; font: 800 1.05rem var(--font-heading); color: var(--mango); }
 .hero-sticker small { font-size: var(--ui-type-xs); line-height: 1.25; display: block; }
 .search { display: flex; gap: .5rem; margin-top: 1rem; max-width: 34rem; } .search input { flex: 1; min-width: 0; }
@@ -97,7 +97,7 @@ main { padding: 1.5rem 0 7rem; } /* extra bottom padding clears the fixed tab ba
 .rail { display: flex; gap: 1rem; overflow-x: auto; scroll-snap-type: x proximity; padding-bottom: .25rem; }
 .rail .card { flex: 0 0 230px; scroll-snap-align: start; }
 .chips { display: flex; flex-wrap: wrap; gap: .5rem; }
-.chip { background: var(--paper); border: 1px solid var(--line); border-radius: var(--ui-radius-full); padding: var(--ui-space-2) .9rem; text-decoration: none; color: var(--ink); font-weight: 500; }
+.chip { background: var(--paper); border: 1px solid var(--line); border-radius: var(--ui-radius-full); padding: var(--ui-space-2) var(--ui-space-4); text-decoration: none; color: var(--ink); font-weight: 500; }
 @media (hover: hover) and (pointer: fine) { .chip:hover { border-color: var(--leaf); color: var(--leaf); } }
 /* Five primary destinations (Home, Explore, Sell, Messages, Profile) must fit a 360px phone. */
 .tabbar { position: fixed; left: 0; right: 0; bottom: 0; background: var(--paper); border-top: 1px solid var(--line); display: flex; justify-content: space-around; gap: clamp(.15rem, 1.5vw, 1rem); padding: .35rem .25rem calc(.35rem + env(safe-area-inset-bottom, 0)); z-index: 10; }
@@ -120,7 +120,7 @@ textarea { width: 100%; min-height: 96px; }
 .card .img img { width: 100%; height: 100%; object-fit: cover; }
 .card .body { padding: .75rem; flex: 1; display: flex; flex-direction: column; } .card p { margin: var(--ui-space-1) 0 0; color: var(--ink-soft); font-size: var(--ui-type-sm); }
 /* The price tag is the one distinctive element: a notched label like those clipped onto market stalls. */
-.tag { display: inline-block; background: var(--mango); color: var(--on-mango); font: 800 1rem var(--font-heading); padding: var(--ui-space-1) var(--ui-space-3) var(--ui-space-1) 1.1rem; clip-path: polygon(.6rem 0, 100% 0, 100% 100%, .6rem 100%, 0 50%); margin-top: var(--ui-space-2); }
+.tag { display: inline-block; background: var(--mango); color: var(--on-mango); font: 800 1rem var(--font-heading); padding: var(--ui-space-1) var(--ui-space-3) var(--ui-space-1) var(--ui-space-4); clip-path: polygon(.6rem 0, 100% 0, 100% 100%, .6rem 100%, 0 50%); margin-top: var(--ui-space-2); }
 .panel { background: var(--paper); color: var(--ink); border: 1px solid var(--line); border-radius: var(--ui-radius-md); padding: var(--panel-space); margin-bottom: var(--space-4); }
 .row { display: flex; gap: .75rem; flex-wrap: wrap; align-items: center; min-width: 0; } .stack { display: grid; gap: .75rem; max-width: 34rem; }
 .row > .field { flex: 1 1 150px; min-width: 0; }
@@ -156,7 +156,7 @@ textarea { width: 100%; min-height: 96px; }
 .admin-student-filters input, .admin-student-filters select { width: 100%; }
 .admin-student-layout { display: grid; grid-template-columns: minmax(0, 1fr) minmax(230px, 320px); gap: 1rem; align-items: start; }
 .admin-student-list { min-width: 0; border: 1px solid var(--line); border-radius: 12px; overflow: hidden; }
-.admin-student-row { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 1fr) minmax(0, 1fr) auto; align-items: center; gap: .75rem; width: 100%; min-height: 64px; padding: var(--ui-space-3) .85rem; border: 0; border-bottom: 1px solid var(--line); background: var(--paper); color: var(--ink); text-align: left; cursor: pointer; }
+.admin-student-row { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 1fr) minmax(0, 1fr) auto; align-items: center; gap: .75rem; width: 100%; min-height: 64px; padding: var(--ui-space-3) var(--ui-space-3); border: 0; border-bottom: 1px solid var(--line); background: var(--paper); color: var(--ink); text-align: left; cursor: pointer; }
 .admin-student-row:last-child { border-bottom: 0; }
 .admin-student-row:hover, .admin-student-row[aria-pressed="true"] { background: var(--mango-soft); }
 .admin-student-row:focus-visible { outline: 3px solid var(--color-focus); outline-offset: -3px; }
@@ -225,7 +225,7 @@ label.field { display: grid; gap: var(--ui-space-2); font-weight: 600; font-size
 .not-found-page h1 { margin: 0 0 var(--ui-space-2); font-size: clamp(1.7rem, 4vw, 2.4rem); }
 .not-found-page p { margin: 0 0 1.25rem; color: var(--ink-soft); line-height: 1.55; }
 .not-found-page .row { gap: var(--ui-space-3); flex-wrap: wrap; }
-input[type="file"] { max-width: 100%; min-width: 0; padding: .4rem var(--ui-space-2); font-size: 1rem; }
+input[type="file"] { max-width: 100%; min-width: 0; padding: var(--ui-space-2) var(--ui-space-2); font-size: 1rem; }
 input[type="file"]::file-selector-button { min-height: 34px; margin-right: var(--ui-space-3); padding: var(--ui-space-1) .75rem; font: inherit; font-weight: 600; border: 1px solid var(--line); border-radius: var(--ui-radius-sm); background: var(--mango-soft); color: var(--ink); cursor: pointer; }
 /* Notification rows: one tinted dot marks unread, so the badge count and the list agree. */
 .notif { display: flex; gap: .75rem; align-items: flex-start; padding: .75rem 1rem; background: var(--paper); border: 1px solid var(--line); border-radius: var(--ui-radius-md); text-decoration: none; color: inherit; }
@@ -256,7 +256,7 @@ input[type="file"]::file-selector-button { min-height: 34px; margin-right: var(-
 .chat-bar input { flex: 1; min-width: 0; border-radius: var(--ui-radius-full); }
 .btn.chat-send { border-radius: 50%; padding: 0; width: 44px; display: grid; place-items: center; flex: 0 0 auto; }
 /* Inbox rows on /inquiries: same avatar language as the thread page. */
-.inquiry-row { display: flex; gap: var(--ui-space-3); align-items: center; padding: var(--ui-space-3) .9rem; background: var(--paper); border: 1px solid var(--line); border-radius: var(--ui-radius-md); margin: 0 0 .5rem; text-decoration: none; color: inherit; }
+.inquiry-row { display: flex; gap: var(--ui-space-3); align-items: center; padding: var(--ui-space-3) var(--ui-space-4); background: var(--paper); border: 1px solid var(--line); border-radius: var(--ui-radius-md); margin: 0 0 .5rem; text-decoration: none; color: inherit; }
 @media (hover: hover) and (pointer: fine) { .inquiry-row:hover { border-color: var(--leaf); } }
 .inq-main { flex: 1; min-width: 0; }
 .inq-top { display: flex; justify-content: space-between; gap: var(--ui-space-2); align-items: baseline; }
@@ -300,7 +300,7 @@ header.top .btn.ghost { color: inherit; border-color: var(--ghost-border); }
 /* A filled button inside the bar must label itself from its own surface, not from the bar's link colour: in dark mode
    --leaf is mint, so inheriting the light bar text left the label at 1.4:1. */
 header.top .btn:not(.ghost) { color: var(--on-leaf); }
-header.top .theme { min-height: 44px; padding: var(--ui-space-1) .6rem; font-size: var(--ui-type-sm); }
+header.top .theme { min-height: 44px; padding: var(--ui-space-1) var(--ui-space-2); font-size: var(--ui-type-sm); }
 /* Phones: the tab bar already owns Home, Explore, Sell, Messages and Profile, so the header keeps only the brand,
    alerts and the account action instead of wrapping six links onto three lines. */
 @media (max-width: 700px) { header.top .sec { display: none; } }
@@ -415,7 +415,7 @@ main:focus { outline: none; }
 .card-link:focus-visible { outline: 3px solid var(--mango); outline-offset: -3px; border-radius: inherit; }
 .card .img .heart-btn { background: var(--paper); color: var(--leaf); box-shadow: 0 2px 10px var(--shadow-card); }
 .card .img .heart-btn[aria-pressed="true"] { color: var(--forest); background: var(--mango); }
-.card .cat-badge { min-height: 30px; padding: var(--ui-space-1) .6rem; }
+.card .cat-badge { min-height: 30px; padding: var(--ui-space-1) var(--ui-space-2); }
 .explore-toolbar { margin: 1.25rem 0 .75rem; }
 .explore-search { display: grid; gap: var(--ui-space-2); max-width: none; min-width: 0; }
 .input-icon { position: relative; display: flex; align-items: center; }
@@ -452,7 +452,7 @@ label.field input, label.field select, label.field textarea { width: 100%; }
   .brand { font-size: var(--ui-type-sm); }
   .who .signin { font-size: var(--ui-type-xs); }
   .who .btn:not(.theme) { font-size: var(--ui-type-xs); padding: .5rem var(--ui-space-2); }
-  .who .theme { font-size: var(--ui-type-xs); padding: var(--ui-space-1) .4rem; }
+  .who .theme { font-size: var(--ui-type-xs); padding: var(--ui-space-1) var(--ui-space-2); }
   .tabbar a { font-size: var(--ui-type-xs); padding: var(--ui-space-2) .05rem; }
   .tabbar a svg { width: 18px; height: 18px; }
   .hero { margin-top: var(--ui-space-2); }
@@ -583,7 +583,7 @@ label.field input, label.field select, label.field textarea { width: 100%; }
   min-width: 0;
   min-height: 172px;
   flex: 1 1 auto;
-  padding: .85rem .625rem var(--ui-space-2);
+  padding: var(--ui-space-3) var(--ui-space-2) var(--ui-space-2);
   gap: var(--ui-space-1);
 }
 .product-card h3 {
@@ -646,7 +646,7 @@ label.field input, label.field select, label.field textarea { width: 100%; }
   align-items: baseline;
   flex-wrap: wrap;
   justify-content: flex-start;
-  gap: var(--ui-space-1) .4rem;
+  gap: var(--ui-space-1) var(--ui-space-2);
 }
 .product-card .price {
   flex: 0 0 auto;
@@ -825,7 +825,7 @@ label.field input, label.field select, label.field textarea { width: 100%; }
   padding: 1rem; scrollbar-gutter: stable; overscroll-behavior-y: contain;
 }
 .conversation-log .msg-row { margin: .75rem 0; gap: var(--ui-space-3); min-width: 0; }
-.conversation-log .msg { max-width: min(80%, 52ch); padding: var(--ui-space-3) .9rem; line-height: 1.45; overflow-wrap: anywhere; }
+.conversation-log .msg { max-width: min(80%, 52ch); padding: var(--ui-space-3) var(--ui-space-4); line-height: 1.45; overflow-wrap: anywhere; }
 .conversation-log .msg small { font-size: var(--ui-type-xs); line-height: 1.3; margin-bottom: var(--ui-space-1); }
 .conversation-log .message-text { white-space: pre-wrap; overflow-wrap: anywhere; }
 .typing-indicator { color: var(--ink-soft); font-size: var(--ui-type-sm); margin: .75rem 0 0; }
@@ -875,7 +875,7 @@ label.field input, label.field select, label.field textarea { width: 100%; }
   .conversation-log { height: clamp(220px, calc(100dvh - 565px), 360px); padding: var(--ui-space-3) var(--ui-space-2); }
   .conversation-log .avatar { width: 30px; height: 30px; }
   .conversation-log .msg-row { gap: var(--ui-space-2); }
-  .conversation-log .msg { max-width: min(82%, 38ch); padding: .6rem var(--ui-space-3); font-size: var(--ui-type-sm); }
+  .conversation-log .msg { max-width: min(82%, 38ch); padding: var(--ui-space-2) var(--ui-space-3); font-size: var(--ui-type-sm); }
   .handoff-panel { padding: .75rem; }
   .conversation-composer { padding: var(--ui-space-3); }
   .composer-help { font-size: var(--ui-type-xs); }

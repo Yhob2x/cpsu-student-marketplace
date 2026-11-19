@@ -1,5 +1,5 @@
 import { api } from './api';
-import { reconcilePushOwnership } from './push-reconciliation';
+import { reconcilePushOwnership, revokePushOnDevice } from './push-reconciliation';
 
 export type PushPreferences = {
   messages: boolean;
@@ -124,9 +124,12 @@ export async function previewLocalNotification(): Promise<void> {
 export async function disablePush(): Promise<void> {
   const sub = await currentSubscription();
   if (!sub) return;
-  // Revoke the server capability first so a failed network request cannot leave silent pushes enabled.
-  await api('/push/subscriptions', { method: 'DELETE', body: { endpoint: sub.endpoint } });
-  await sub.unsubscribe();
+  // The revoke API and browser unsubscribe each require positive completion.
+  // Never claim a successful opt-out when the browser resolves to false.
+  await revokePushOnDevice(
+    () => api('/push/subscriptions', { method: 'DELETE', body: { endpoint: sub.endpoint } }),
+    () => sub.unsubscribe(),
+  );
 }
 
 /** Logout must not be blocked by a failed Web Push cleanup request. */

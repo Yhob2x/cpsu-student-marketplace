@@ -87,7 +87,7 @@
 
 .category-section {
   margin-top: .75rem;
-  margin-bottom: 1.1rem;
+  margin-bottom: var(--ui-space-4);
 }
 .home-category-grid .cat {
   min-height: 92px;
@@ -131,8 +131,8 @@
     display: grid;
     grid-template-areas: "copy" "search" "art";
     min-height: 0;
-    gap: .9rem;
-    margin: .35rem 0 1.25rem;
+    gap: var(--ui-space-4);
+    margin: var(--ui-space-1) 0 1.25rem;
     padding: 1.2rem;
     overflow: hidden;
     border-radius: 16px;
@@ -148,7 +148,7 @@
     inset: auto;
     width: 100%;
     margin: 0;
-    padding: .85rem;
+    padding: var(--ui-space-3);
     border-radius: var(--ui-radius-md);
   }
   .hero-search-heading { font-size: var(--ui-type-lg); }
@@ -161,7 +161,7 @@
   }
   .hero > .hero-art .home-custom-hero { inset: 0; border-radius: var(--ui-radius-md); }
   .category-section { margin-top: var(--ui-space-2); }
-  .home-discovery-flow { margin-top: 1.15rem; gap: 1.4rem; }
+  .home-discovery-flow { margin-top: 1.15rem; gap: var(--ui-space-5); }
 }
 @media (max-width: 380px) {
   .hero { padding: 1rem; }

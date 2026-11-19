@@ -30,7 +30,7 @@
   background: var(--paper);
   border: 1px solid var(--surface-stroke);
   border-radius: 12px;
-  padding: var(--ui-space-1) 18px var(--ui-space-3);
+  padding: var(--ui-space-1) var(--ui-space-4) var(--ui-space-3);
 }
 .explore-sidebar-title {
   display: flex;
@@ -133,7 +133,7 @@
 }
 .explore-sidebar-show-more {
   margin: var(--ui-space-2) 0 0;
-  padding: 6px 0;
+  padding: var(--ui-space-1) 0;
   min-height: 36px;
   background: transparent;
   border: none;
@@ -151,7 +151,7 @@
 .explore-sidebar-price label {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: var(--ui-space-1);
   min-width: 0;
   color: var(--ink-soft);
   font: 600 .75rem/1.4 var(--font-body);
@@ -184,7 +184,7 @@
   color: var(--danger);
   font-size: var(--ui-type-xs);
 }
-.explore-sidebar-error p { margin: 0 0 6px; }
+.explore-sidebar-error p { margin: 0 0 var(--ui-space-1); }
 .explore-filter-sidebar .explore-price-error { margin-top: 8px; }
 .explore-content .explore-control-header {
   margin: 0;
@@ -195,7 +195,7 @@
   border-top: 0;
   border-bottom: 1px solid var(--surface-stroke);
   min-height: 47px;
-  margin: 0 0 18px;
+  margin: 0 0 var(--ui-space-4);
   padding: 0 0 var(--ui-space-2);
 }
 .explore-content .explore-results.listing-grid {

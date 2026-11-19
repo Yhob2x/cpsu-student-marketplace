@@ -31,3 +31,19 @@ export async function reconcilePushOwnership(
   }
   return 'detached';
 }
+
+/**
+ * Explicit device opt-out: revoke the server capability first and only then
+ * remove the browser subscription. A false return is not successful opt-out.
+ * Failed requests remain visible to the user rather than silently succeeding.
+ */
+export async function revokePushOnDevice(
+  revokeServer: () => Promise<unknown>,
+  unsubscribeBrowser: () => Promise<boolean>,
+): Promise<void> {
+  await revokeServer();
+  const removed = await unsubscribeBrowser();
+  if (!removed) {
+    throw new Error('The server disabled alerts, but this browser could not remove its subscription. Please try again.');
+  }
+}

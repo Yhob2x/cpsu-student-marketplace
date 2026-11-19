@@ -20,7 +20,7 @@ import { resolveHomePageContent, type HomePageView } from './home-page-content';
 import { categoriesForExplore, cleanExploreQuery, DEFAULT_EXPLORE_FILTERS, exploreAdvancedSummary, explorePriceError, previewExploreOptions, updateExploreQuery, type ExploreCategory, type ExploreFilters } from './explore-filters';
 
 export type Listing = { id: number; type: string; title: string; description: string; price: number; priceBasis: string; availability: string; condition?: 'new' | 'like_new' | 'good' | 'fair' | null;
-  handoffNote?: string; category: { name: string }; campus: { code: string; name: string }; seller: { id: number; storeName: string; avatarUrl?: string | null }; images: string[]; status?: string };
+  handoffNote?: string; category: { name: string }; campus: { code: string; name: string }; seller: { id: number; storeName: string; avatarUrl?: string | null; rating?: { average: number; count: number } | null }; images: string[]; status?: string };
 
 export function ListingCard({ l, priority = false }: { l: Listing; priority?: boolean }) {
   const nav = useNavigate();
@@ -74,7 +74,16 @@ export function ListingCard({ l, priority = false }: { l: Listing; priority?: bo
           <p className="product-category" title={l.category.name}>{l.category.name}</p>
           {l.condition && <span className="listing-condition">{l.condition.replace('_', ' ')}</span>}
         </div>
-        <p className="seller seller-byline" title={l.seller.storeName}><SellerAvatar name={l.seller.storeName} src={l.seller.avatarUrl} size="small" /><span>By <Link className="seller-store-link" to={`/stores/${l.seller.id}`}>{l.seller.storeName}</Link></span></p>
+        <p className="seller seller-byline listing-seller-row" title={l.seller.storeName}>
+          <SellerAvatar name={l.seller.storeName} src={l.seller.avatarUrl} size="small" />
+          <span className="listing-seller-name">By <Link className="seller-store-link" to={`/stores/${l.seller.id}`}>{l.seller.storeName}</Link></span>
+          {l.seller.rating && l.seller.rating.count > 0 && Number.isFinite(l.seller.rating.average) &&
+            <span className="listing-store-rating" role="img"
+              aria-label={`Store rating ${l.seller.rating.average.toFixed(1)} out of 5 from ${l.seller.rating.count} published ${l.seller.rating.count === 1 ? 'review' : 'reviews'}`}>
+              <Icon name="star" size={12} filled />
+              <span>{l.seller.rating.average.toFixed(1)}</span>
+            </span>}
+        </p>
         <p className="meta card-campus" title={l.campus.name}><Icon name="pin" size={13} /><span>{l.campus.name}</span></p>
         {l.availability !== 'available' && <p className="listing-availability">{l.availability.replaceAll('_', ' ')}</p>}
         {saveError && <p className="card-save-feedback" role="alert">{saveError}</p>}

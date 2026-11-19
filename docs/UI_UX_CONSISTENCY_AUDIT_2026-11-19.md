@@ -405,3 +405,114 @@ Physical iOS Safari/VoiceOver, Android Chrome/TalkBack, installed-PWA push tests
 - No Git commit or stage action was performed. Current repository HEAD remained `d218231` during verification; other working-tree files belong to concurrent projects and should not be discarded by this audit.
 
 **Disposition:** The updated UI batch passes automated tests and visual regression checks. A full production signoff remains open until actual-device/assistive-technology acceptance, real authenticated-role journeys and residual CSS exceptions are reviewed.
+
+---
+
+## Continuation checkpoint — seller dashboard mobile readability (19 November 2026)
+
+**Scope:** UI-only, on the connected Windows repository. No changes to approved palette, production API, business logic, data, sign-in, Git history or deployment. Concurrent edits were detected in PWA/push, API, and legacy button files; this pass intentionally avoided those files.
+
+- `apps/web/src/dashboard-storefront.css`: normalized **12 direct style declarations** in My Store using the existing UI spacing, border-radius, touch-target, type and weight tokens. Crucially, on 320/360px phones the three owner-action buttons no longer use **12.8px** typography: all now render at **14px**, weight **700**, with **44px** heights. The standard-width actions remain 16px. Existing two-column action arrangement, fluid store heading, accent colors and store interactions were retained. CSS pre-edit copy saved locally under ignored `.tmp/ux-dashboard-original.css`.
+- Added durable `apps/web/e2e/ui-storeowner.pw.ts`, testing the authenticated synthetic seller dashboard at **320, 360, 768 and 1280px** in **desktop + mobile Chrome**. Tests verify all three actions have at least 44×44px hit targets and >=14px text, no horizontal document overflow, no axe WCAG A/AA findings, no JavaScript errors, and that New listing opens the existing draft composer without writing data.
+- Before/after screenshots (ignored `.tmp/ux-storeowner-before-*.png`, `ux-storeowner-after-*.png`) confirm no clipped controls. Owner identity height at 360px viewport shrank by approx. **4px**; tablet/desktop matched dimensions and had 1.15%/0.85% pixels changed past a 12/255 per-channel threshold, consistent with clearer font weight and spacing.
+- Static heuristic source audit: **748 → 740 potential off-scale declarations** (509 spacing, 157 type, 74 radius) across 99 scanned CSS/TSX files. Several values intentionally remain fluid/editorial. This is not yet the mandated zero target.
+- Validation: **193/193** web unit tests passed; Vite TypeScript/production build passed with the existing large-chunk warning; `git diff --check` passed.
+- Browser verification: first combined run **7/8** due to a blank app shell in mobile Chrome at 768px; isolated replay of that case **4/4** passed, and the final full owner-browser matrix **8/8 passed** with a dedicated test output directory. No application behavior was changed to hide the intermittent runner issue.
+- **Still unverified:** real student/seller sign-in, physical Android/iPhone/PWA, TalkBack/VoiceOver/Narrator sessions, live push delivery, and strict all-source zero off-scale requirement. Release sign-off **remains open**. No commit or push by this audit.
+
+---
+
+## Continuation pass 9 — student/admin button unification and cross-route scroll correctness (19 Nov 2026)
+
+### Strict scope and concurrent work
+- Current Git HEAD was **ac4b9c4** at the start of this pass; other project work had already advanced it from the previous checkpoint. The audit intentionally did not create commits, stage files, alter backend/API/database behavior, or change the light-mode palette.
+- The working tree has independently edited PWA/push tests and documents. Preserve these changes. Source backups for all four migrated TSX files and `main.tsx` are stored under ignored `.tmp/ux-legacy-before-*` and `.tmp/ux-pass9-main-before.tsx`.
+
+### Implemented work
+- Migrated **63 more exact static `.btn` native buttons** to the existing `LegacyButton` compatibility wrapper, retaining original HTML button semantics, classes, click/submit events, disabled and accessibility props: `pages-account.tsx` **26**, `pages-admin.tsx` **20**, `pages-profile.tsx` **4**, `store-review-widgets.tsx` **13**.
+- **118 cumulative exact static buttons across 10 files** have been consolidated over passes 8–9 (previous 55 + current 63). Updated `test/ui-legacy-button.test.tsx` to verify all ten migrations and preserve the native form/button contract.
+- Fixed a real primary-navigation scroll issue in `main.tsx`: a smooth `scrollTo` could be canceled as the router swapped from Explore to Home, leaving the new route scrolled to ~1005px. Cross-path navigation now uses immediate `scrollTo(...behavior: 'auto')`; tapping the same active route still scrolls smoothly (unless reduced motion) and preserves Explore's query filters and state. Dedicated desktop/mobile browser navigation tests returned **4/4 pass** after this focused correction.
+
+### Visual and automated evidence
+- Synthetic authenticated before/after screenshots at 360/768/1280px: **36 frames**, including 27 student/admin route-width views plus 9 admin subviews. **35 were pixel-identical**, and the remaining Saved at 768px changed only **0.01%** beyond the 12-channel comparison threshold. No sampled document overflow, undersized controls, JavaScript runtime errors, or axe WCAG A/AA violations.
+- Production TypeScript/Vite build: **PASS**. Unit/component tests: **199 pass, 0 fail** (52 files; 782 assertions in latest run). Vite still warns about >500kB JS chunks; performance/code splitting is not included in this presentation-only pass.
+- PWA manifest/icons/offline/update-repair validator: **PASS**. Scope-limited `git diff --check` over this audit's UI source/test files: **PASS**.
+- Whole-tree `git diff --check` currently fails due **trailing whitespace in independently edited `docs/PWA_PUSH_AUDIT_2026-11-19.md`**, outside this audit's changes. Do not change that separate PWA document without coordination.
+- Latest heuristic off-scale scan on current 99 CSS/TSX files: **742 candidate declarations** (511 spacing, 157 type, 74 radius); strict zero is **NOT MET**. Fluid/negative geometry and intentionally shaped editorial/chat styles require a documented exception review, not a blanket rewrite.
+- Windows USB scan found **no currently connected Android/iPhone**, and ADB was not on PATH; Windows Narrator executable is present but has not been operated in an actual screen-reader session. Physical PWA and assistive-technology acceptance **NOT VERIFIED**.
+
+### Broad browser acceptance
+A pre-fix isolated full Playwright run on port 5793 produced **164/166 pass**; both failures were the new desktop/mobile cross-route Home scroll test and were corrected as described above. The targeted navigation retest on isolated port 5893 yielded **4/4 pass**. A new complete 166-test desktop/mobile run was started on isolated port 5993; record its final result separately after it actually finishes, rather than presuming a clean result.
+
+**Release decision remains open** until the completed full-suite rerun is confirmed, remaining deliberate CSS exceptions are accepted, and hands-on actual devices/assistive technology/authorized account flows are tested.
+
+### Pass 9 final verified result (after navigation scroll fix)
+
+- **Complete independent Playwright suite: 166 passed, 0 failed** using desktop and mobile Chrome, `UI_AUDIT_PORT=5993` and the isolated `.tmp/ux-pass9-final-e2e` output directory. The previously failing same-route/reselect and cross-path navigation assertions pass in this full run.
+- **Unit/component suite: 199 passed, 0 failed**; build/TypeScript **PASS**; PWA assets and update/offline validation **PASS**.
+- **Lighthouse production-preview homepage: Performance 97, Accessibility 100, Best Practices 100, SEO 100**, with **0 Lighthouse console errors**. The additional experimental agentic-browsing score of 50 is not part of the requested core performance/a11y release gates.
+- **Thirty-six authenticated screenshots** across 360/768/1280px before/after the 63-button migration: 35 pixel-identical, one 0.01% changed; 0 sampled overflow, under-44px controls, JS exceptions or axe WCAG A/AA violations.
+- **No connected physical phone** was found via the Windows USB device scan; ADB unavailable. Real iPhone/Android install, TalkBack/VoiceOver, hands-on screen readers, and authorized-user role acceptance remain **NOT VERIFIED**.
+- **742 potential off-scale CSS declarations remain** in the last count (511 spacing, 157 type, 74 radius) and must be reviewed against deliberate responsive/editorial geometry. Do not mark the strict zero-declaration exit criterion met.
+- **No Git commit was created** by the audit; other non-UI files are independently edited, including a PWA audit document with a pre-existing trailing-whitespace diff-check warning.
+- **Final whole-working-tree `git diff --check`: PASS**, as well as the UI-scope diff check; the earlier unrelated PWA-document whitespace warning was no longer present by final verification.
+
+---
+
+## Continuation pass 10 — remaining static buttons, legible text floor, and CSS exception triage (19 Nov 2026)
+
+**Scope and source integrity.** Work is on the authorized local Windows CPSU student marketplace. Current baseline repository HEAD was `ac4b9c4`, with independent API/PWA/storefront changes in the same working tree. No backend or database mutation, color-palette change, automatic commit, or staging action was performed by this UI pass.
+
+### Completed implementation
+- Migrated **13 additional literal `.btn` controls** into the existing native `LegacyButton` compatibility wrapper:
+  `meetup-location-card.tsx` (4), `seller-store-details.tsx` (2), `floating-chat-panel.tsx` (5), `main.tsx` (2).
+  Total exact static button migrations across passes 8–10: **131 across 14 source files**. JSX element types, explicit/implicit submit behavior, handlers and legacy CSS class suffixes remain identical. Updated `test/ui-legacy-button.test.tsx` to assert all 14 files.
+- Enforced the approved **12px minimum for authored font-size declarations**. Raised **seven small-text rules** to existing `--ui-type-xs` / scaled `clamp()`: hero eyebrow (1), hero assurance text at three breakpoints (3), photo signature (1), Leaflet attribution (1), and small-viewport tabbar labels (1). Files: `hero-artistic.css`, `home-color-polish.css`, `meetup-map.css`, `mobile-refinements.css`. New `test/font-size-floor.test.ts` scans all authored CSS recursively and requires **no positive authored pixel/rem font-size below 12px**. This does not establish actual physical-device text accessibility; it enforces the current source-token floor.
+
+### Controlled visual evidence
+- The initial development-server screenshot attempt was **discarded** because Vite HMR and transient concurrent source edits displayed a compile-error overlay or an incomplete blank frame; those are **not valid visual-diff baselines**.
+- To verify the button migration, a safety-checked script compared the exact pre-migration backups with the current four files, **temporarily restored the originals**, built a production preview, captured the fixtures, then **reapplied the migrated files in a `finally` block** and rebuilt. The final source state was confirmed `migrated-unchanged`; no unrelated work was overwritten.
+- That valid production-preview test compared **39 before/after frames** (12 public and 27 synthetic authenticated student/admin) at 360/768/1280px: **35 pixel-identical; maximum changed-pixel ratio 0.99%** in mobile Explore. Other differences were 0.11% or less. No captured page errors, visible document overflow, or axe WCAG A/AA violations appeared in the synthetic role checks.
+- A separate 39-frame production-preview comparison for the font-floor refinement found **21 pixel-identical**, maximum changed-pixel ratio **0.75%**. Visual review confirmed a modest enlargement in bottom-navigation text and no clipped controls or unexpected horizontal scroll.
+- Original source backups for reversible UI changes are retained under ignored `.tmp/ux-legacy-before-*`, `.tmp/ux-pass10-font-original`, and screenshot/test results under `.tmp/ux-pass10-*`.
+
+### Tests and outstanding scale work
+- **Production Vite/TypeScript build: PASS** with the existing main bundle and MapLibre chunk-size warnings.
+- **Bun unit/component tests: 200 passed, 0 failed**, including 14-file button coverage and 12px font-floor validation.
+- The older regex heuristic reported **744 potential off-scale values across 100 CSS/TSX files** (521 spacing, 149 type, 74 radius), up from 742 in the prior checkpoint because independently added CSS increased the source denominator. This is **not evidence of new visual regressions**.
+- A second PostCSS declaration-based triage under ignored `.tmp/ux-pass10-scale-triage.json` counted **960 non-token literal instances across 57 CSS files** using broader parsing: 580 static/manual-review candidates, 301 in responsive formulas, 39 shaped-surface radii, 28 negative positioning values, 7 large layout offsets, and 5 display-type sizes; **0 positive font-size declarations below 12px**. This parser covers more CSS declarations than the older regex heuristic; do not compare the two totals directly or treat its categories as approved exceptions. All remaining static values still require intentional review, not blanket replacement.
+- Full desktop/mobile isolated Playwright regression was started on `UI_AUDIT_PORT=6293`; its actual final result should be appended after completion.
+
+**Release gate:** Physical iPhone/Android PWA installation, push permission/delivery, TalkBack/VoiceOver, hands-on Windows Narrator/NVDA, authorized live-role acceptance, and strict off-scale-value closure remain **NOT VERIFIED**. The browser fixtures are synthetic.
+
+### Pass 10 verified completion
+
+- **Complete isolated Playwright desktop/mobile suite: 166 passed, 0 failed** on `UI_AUDIT_PORT=6293`. The suite included account/admin flows, storefront interactions, navigation scrolling, modal keyboard handling, responsive layouts, high contrast, store reviews, and 200%-root-relative text emulation.
+- **Bun unit/component suite: 200 passed, 0 failed** across 53 test files, including 14-file `LegacyButton` contract and the 12px authored font-size floor.
+- Vite/TypeScript production build **PASS**; existing >500kB entry and large lazy-loaded MapLibre chunks remain a performance follow-up.
+- PWA icon/manifest/offline/update-repair validation **PASS**, and both UI-scoped and whole-working-tree `git diff --check` **PASS**.
+- Local production-preview Lighthouse homepage: **Performance 97 / Accessibility 100 / Best Practices 100 / SEO 100**, with **0 console errors**. The optional agentic-browsing score remained 50; it is not one of the requested Lighthouse quality gates.
+- The font-size floor passes in source; sampled 39-frame visual differences were at most 0.75%, with no browser-detected clipping or horizontal scroll. This does **not** verify native iOS/Android font enlargement or real screen readers.
+- No commit was created during this continuation. Physical-device PWA and accessibility acceptance and the non-tokenized CSS manual-exception register are still **OPEN**; do not mark the full production release approved.
+
+---
+
+## Continuation pass 11 — implemented off-scale CSS fixes and acceptance groundwork (19 Nov 2026)
+
+**Implementation**
+- Replaced **97 close-to-scale layout literals** with existing `--ui-space-*` values in eight stylesheets: `styles.css` (14), `home-color-polish.css` (14), `mobile-refinements.css` (9), `home-simplification.css` (5), `storefront-hierarchy.css` (13), `image-zoom.css` (19), `hierarchy-polish.css` (21), and `header-search-polish.css` (2). Replacements were limited to positive, static padding/margin/gap values within ~2px of an approved step; negative offsets, responsive functions, text, width/height, and bespoke shapes remained untouched. The exact original files are backed up in ignored `.tmp/ux-pass11-css-backups`.
+- Corrected a **new 11.2px home/Explore store-rating label** in `listing-rating-polish.css` to `var(--ui-type-xs)` (12px). This was necessary for the pre-existing font-size-floor regression test to pass after concurrently added rating-card UI.
+- Added `apps/web/test/ui-spacing-regression.test.ts` to prevent near-scale CSS literals from returning to the eight migrated stylesheets.
+- Added a **persistent review command**: from `apps/web`, run `bun scripts/css-scale-review.cjs` for counts, `bun scripts/css-scale-review.cjs --json` for selectors and line numbers, and `--strict` to fail until every non-scale candidate is resolved. The script explicitly marks remaining values **pending**, not approved exceptions.
+- Added `docs/CSS_SCALE_REVIEW_REGISTER_2026-11-19.md` with a category-by-category review policy and `docs/PWA_DEVICE_ACCESSIBILITY_ACCEPTANCE_2026-11-19.md` with physical-device and screen-reader acceptance matrices, required HTTPS prerequisites, and evidence requirements. These documents do not claim that hands-on device tests took place.
+
+**Verification**
+- Current conservative scanner: **671** potential off-scale values over 101 CSS/TSX files (**447 spacing / 149 typography / 75 radius**), versus 744 at start of pass. Counts shifted due to concurrent source additions; this is still **NOT ZERO**.
+- Broader PostCSS review scanner: **868** literal instances across 58 CSS files (**487 manual static / 301 responsive formula / 40 shaped-surface radius / 28 negative offset / 7 large layout / 5 display typography**). The two parsers have different coverage and should not be compared directly.
+- 39 baseline/after production-preview screenshots at 360, 768, and 1280px: **33 pixel-identical**; largest change **4.53%** of pixels in mobile Home, second largest **3.99%** in seller dashboard. Manual inspection found small intentional vertical-spacing differences with no clipped controls; remaining frames were 0.33% or less. The sample found no document overflow, mobile target failures, JavaScript errors, or axe WCAG A/AA failures.
+- Web unit/component tests: **201 passed / 0 failed** (54 test files); production Vite/TypeScript build **PASS**; PWA icon/manifest/update/offline validator **PASS**; working-tree Git whitespace diff check **PASS**.
+- Complete isolated desktop/mobile Chrome Playwright suite: **170 passed / 0 failed** with `UI_AUDIT_PORT=6493` and output under ignored `.tmp/ux-pass11-e2e`. This includes new concurrent store-review tests, 320px high contrast, 200% root-relative text emulation, student/admin fixtures, photo modal keyboard and navigation scroll.
+- Existing Vite warnings for >500KB JS chunks remain. No production deploy or Git commit was performed. UI scripts and artifacts were created inside the authorized local repository.
+
+**Release blockers remain:** strict zero off-scale (pending manual design decisions), real student/admin role acceptance, actual Android/iPhone PWA installation and push, and hands-on VoiceOver/TalkBack/Narrator testing. No phone was connected during this audit and authenticated browser tests still use synthetic accounts. **Do not grant final production accessibility signoff.**
+- **Final fresh Lighthouse production-preview homepage**: Performance **97**, Accessibility **100**, Best Practices **100**, SEO **100**, with **0 console errors**. Extra experimental agentic-browsing category scored 50 outside core Lighthouse criteria. Browser and PWA checks are automated, not physical-device signoff.

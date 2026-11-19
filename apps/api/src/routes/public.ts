@@ -17,16 +17,18 @@ import { visibleListingRows } from '../row-access.js';
 import { canonicalStoreSlug, findStoreBySlug } from '../store-slug.js';
 import { visibleStudentStoreWhere } from '../store-visibility.js';
 import { storeListingPageInput, storeListingPageQuery, storeListingPageResult } from '../store-listing-pages.js';
+import { readPublishedStoreRatings, type PublishedStoreRating } from '../store-rating-summaries.js';
 
 const r = Router();
-export const publicListing = (l: any) => ({
+export const publicListing = (l: any, ratings?: ReadonlyMap<number, PublishedStoreRating>) => ({
   id: l.id, type: l.type, title: l.title, description: l.description, price: Number(l.price), priceBasis: l.priceBasis,
   currency: l.currency, availability: l.availabilityState, condition: l.condition,
   handoffNote: l.handoffNote, createdAt: l.createdAt,
   category: l.category && { id: l.category.id, name: l.category.name },
   campus: l.campus && { id: l.campus.id, code: l.campus.code, name: l.campus.name },
   seller: l.seller && { id: l.seller.id, storeName: l.seller.storeName, sellerType: l.seller.sellerType,
-    avatarUrl: sellerAvatarUrl(l.seller.id, l.seller.avatarPath) },
+    avatarUrl: sellerAvatarUrl(l.seller.id, l.seller.avatarPath),
+    ...(ratings ? { rating: ratings.get(l.seller.id) ?? null } : {}) },
   images: (l.media ?? []).sort((a: any, b: any) => a.position - b.position).map((m: any) => `/api/v1/media/${m.id}`),
 });
 // Keep public reads compatible with the development schema until the separately
@@ -95,7 +97,8 @@ r.get('/listings', async (req, res) => {
     prisma.listing.count({ where }),
     prisma.listing.findMany({ where, select, orderBy, skip: (q.page - 1) * q.pageSize, take: q.pageSize }),
   ]);
-  res.json({ total, page: q.page, pageSize: q.pageSize, items: rows.map(publicListing) });
+  const ratings = await readPublishedStoreRatings(prisma, rows.map(row => row.sellerProfileId));
+  res.json({ total, page: q.page, pageSize: q.pageSize, items: rows.map(row => publicListing(row, ratings)) });
 });
 
 // "Popular" = most saved by signed-in users; saves are the only engagement signal in v1.
@@ -107,7 +110,8 @@ r.get('/listings/popular', async (_q, res) => {
   },
     // Stable tie-break: equal save counts must not shuffle between refreshes.
     select, orderBy: popularListingOrderBy, take: 8 });
-  res.json({ items: rows.map(publicListing) });
+  const ratings = await readPublishedStoreRatings(prisma, rows.map(row => row.sellerProfileId));
+  res.json({ items: rows.map(row => publicListing(row, ratings)) });
 });
 
 // Home's Fresh rail follows the latest approval, when a listing becomes public.
@@ -122,7 +126,8 @@ r.get('/listings/fresh', async (_req, res) => {
     select,
   }) : [];
   const byId = new Map(rows.map(row => [row.id, row]));
-  res.json({ items: ids.flatMap(id => { const row = byId.get(id); return row ? [publicListing(row)] : []; }) });
+  const ratings = await readPublishedStoreRatings(prisma, rows.map(row => row.sellerProfileId));
+  res.json({ items: ids.flatMap(id => { const row = byId.get(id); return row ? [publicListing(row, ratings)] : []; }) });
 });
 
 r.get('/listings/:id', async (req, res) => {
@@ -183,7 +188,7 @@ async function sendPublicStore(req: Request, res: Response, id: number, stores?:
     avatarUrl: sellerAvatarUrl(s.id, s.avatarPath),
     badge: s.sellerType === 'student' ? activity.label : 'Campus establishment',
     badgeReason: s.sellerType === 'student' ? activity.reason : undefined,
-    listings: (listingPage?.items ?? s.listings).map(publicListing),
+    listings: (listingPage?.items ?? s.listings).map(row => publicListing(row)),
     ...(listingPage ? { hasMoreListings: listingPage.hasMoreListings,
       nextListingBeforeId: listingPage.nextListingBeforeId } : {}) });
 }

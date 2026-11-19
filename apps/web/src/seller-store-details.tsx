@@ -1,3 +1,4 @@
+import { LegacyButton } from './components/ui/legacy-button';
 import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { Link } from 'react-router-dom';
 import { api, explain } from './api';
@@ -57,9 +58,9 @@ export function SellerStoreDetails({ storeId, onSaved }: { storeId: number; onSa
           onChange={e => { setDraft(p => ({ ...p, description: e.target.value })); setNotice(''); }} />
       </label>
       <div className="seller-store-settings__actions">
-        <button className="btn" type="submit" disabled={!changed || !valid || saving}>{saving ? 'Saving…' : 'Save store details'}</button>
-        {changed && <button className="btn ghost" type="button" disabled={saving}
-          onClick={() => setDraft({ storeName: saved.storeName, description: saved.description })}>Discard changes</button>}
+        <LegacyButton className="" type="submit" disabled={!changed || !valid || saving}>{saving ? 'Saving…' : 'Save store details'}</LegacyButton>
+        {changed && <LegacyButton className="ghost" type="button" disabled={saving}
+          onClick={() => setDraft({ storeName: saved.storeName, description: saved.description })}>Discard changes</LegacyButton>}
       </div>
     </form>}
     {error && <p className="err" role="alert">{error}</p>}

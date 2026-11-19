@@ -301,3 +301,67 @@ Reviewed changed code for response contract changes, sensitive logging, spoofed 
 ### Final readiness decision / continuation gate
 
 **NOT PRODUCTION-CAPACITY-CERTIFIED.** The code fixes reduce avoidable repeated read volume for updated PWA clients, but actual success against 500 concurrent students/100 RPS, 300/500ms p95 latency, <=5 SQL queries, memory and DB saturation, 5 operational alerts, device experience, shared rate limits and 2-instance failover remains unknown. The correct next stage is a **separately approved isolated staging host and synthetic DB**, SQL/pool tracing, then guarded single-user tests followed by explicitly authorized ramp/load and two-instance restart verification. Do not run these tests against the active `cpsu_marketplace` database or a public campus environment.
+
+
+---
+
+## Post-iteration-5 continuation — approved preparation / Stage 0 preflight (19 Nov 2026)
+
+**Outcome: offline implementation ACCEPTED FOR REVIEW; staging traffic and deployment BLOCKED.** The owner approved continuing toward performance verification. Current workstation discovery still found **no provisioned, authorized staging host, no verified isolated performance database, and no installed `k6` executable**. The institutional staging proposal is still explicitly a proposal, and migration approvals remain outstanding. Chat approval is not evidence that an ICT-owned host, privacy retention rules, or all pending migrations have been authorized. **No load, database access, migrations, or deployment were attempted.**
+
+### Safety and correctness improvements delivered
+
+| ID | Severity | Previous weakness | Change and direct evidence |
+|---|---|---|---|
+| STAGE-P01 | P1 | k6 allowed `PERF_DB_VERIFIED` environment declarations to stand in for proof that its target API actually used a synthetic DB. A mistaken local URL might have pointed at a development API. | Added a separate API launcher `apps/api/src/perf-start.ts`, with pure fail-closed guards in `perf-isolation.ts`. Startup requires explicit synthetic DB name/URL, local MariaDB host, isolated absolute uploads directory, no real student-ID collection, no Google Drive media, push OFF, production-like cookie controls, and bind `127.0.0.1:4401`. Before listening it queries `SELECT DATABASE()` and aggregates the number of User emails **not ending `.test`**; a mismatch or non-synthetic account blocks startup. **This was tested with injected mock DB responses, not by connecting to any actual schema.** |
+| STAGE-P02 | P1 | Load script could start requests against a non-staging API after setting several strings. | The isolated launcher alone provides a loopback-only `/__perf/identity` endpoint protected by a separately generated long token; both read and synthetic-write k6 scripts now call it in `setup()` and refuse workload traffic unless it matches the configured synthetic DB name. No such endpoint is added to ordinary API startup. Refuses local targets on anything other than port `4401`, missing explicit origin or absent token. |
+| STAGE-P03 | P1 | Synthetic fixture accounts could be silently reused across virtual users or mix with real email domains; high stages checked total account count but not unique role pools. | Added `performance/fixture-policy.js`: non-smoke mixed stages require at least **maxVus distinct synthetic student/buyer AND maxVus distinct synthetic seller identities** (2 per VU), with unique case-insensitive `.test` email addresses and non-empty passwords. Public-only mode must be explicitly declared and cannot count as a mixed-load benchmark. |
+| STAGE-P04 | P2 | Performance journeys used older unbounded inbox/message/store endpoints and p95 threshold of 500 ms for reads instead of the stated 300 ms objective. | k6 now calls `inquiries?limit=30`, `messages?limit=50`, and `seller-profiles/:id?limit=24`. Read p95 threshold is 300 ms; synthetic write p95 threshold is 500 ms. No actual latency observation was collected. |
+| STAGE-P05 | P2 | Staging setup instructions did not describe the new runtime proof and a unique fixture pool. | Updated `performance/README.md` with blocked gate, dedicated launcher, explicit stop conditions, private ephemeral token, synthetic-only data rules and safe offline tests. |
+
+### Offline verification on local Windows (no traffic)
+
+- `bun test performance/config.test.js performance/fixture-policy.test.js performance/perf-gates.test.js performance/summarize-requests.test.js`: **17 passed, 0 failed**.
+- Safe top-level API tests across **59 files**: **317 passed, 1 intentionally skipped, 0 failed** (1,223 expectations).
+- `bunx tsc -p . --noEmit` for API: **passed**.
+- `bun build` of k6 source for syntax/dependency bundling with `k6` imports marked external: **passed**. This is **not k6 execution**.
+- `bun build apps/api/src/perf-start.ts` for compile-only check: **passed** (1622 modules). The generated ignored 43.62-MB compilation artifact was deleted immediately; no running service or database connection was created.
+- `git diff --check` on performance changes: **passed**. Existing unrelated UI/PWA work was preserved.
+
+### Gate still blocking further execution
+
+1. Have the ICT/authorized owner designate a distinct staging environment and operator; record approved host, network, HTTPS and privacy/retention policies. No stage endpoint is configured today.
+2. Explicitly approve the **exact** staging-only migration set and seed plan. Never run `prisma migrate deploy` against `cpsu_marketplace` or copy live student records.
+3. Create separate MariaDB DB and least-privilege synthetic-only user, provision synthetic fixtures, verify upload isolation and set unique ephemeral JWT and perf attestation secrets **outside the repository**. Probe checking `.test` emails does not by itself prove that every other table/media record is synthetic.
+4. Install k6 through an approved mechanism. After safety and metrics preflight, allow **only one-user smoke** against the guarded port 4401; review measurements and server/DB health before seeking new approval for each larger stage.
+5. Collect actual per-route p95, 429/5xx, query count/EXPLAIN, DB pool, memory/CPU, log retention, and supervisor restart data. Multi-instance chat/rate-limit issues and 100 RPS for ten minutes remain unverified. Never report projected VU counts as tested capacity.
+
+**Final disposition unchanged: 5/5 code audit iterations complete; post-audit isolated staging tooling ready for review, but NO production capacity certification and NO staging traffic executed.**
+
+
+---
+
+## Continuation: read-only migration-approval and drift gate (19 Nov 2026)
+
+**Status: OFFLINE IMPLEMENTED; ACTUAL STAGING STILL BLOCKED.** The synthetic-only load gate now accepts **only** database `cpsu_marketplace_perf`, not the development `cpsu_marketplace`, generic `cpsu_marketplace_test` or shared `cpsu_marketplace_staging` schemas. No DB queries were executed during this continuation.
+
+### New fail-closed safeguards
+
+1. `apps/api/src/perf-migration-policy.ts` inspects local migration folder names and SHA-256 hashes of each `migration.sql` (file reads only). It rejects missing SQL files, changed hashes, duplicate entries, unknown migrations and missing approval references.
+2. `apps/api/scripts/perf-migration-preflight.ts --audit-only` outputs the source migration inventory (names and hashes only); it cannot connect to any database, seed accounts, run migration commands or make HTTP requests. It returns a nonzero blocking status until an independently approved private `performance/perf-approval.local.json` file exists. The tracked `performance/perf-approval.example.json` has no approvals and cannot unlock staging. The private file is ignored by Git.
+3. `apps/api/src/perf-start.ts` now verifies that manifest **before** attempting DB access or opening port 4401. If separately approved and provisioned, it also reads `_prisma_migrations` and refuses startup if actual applied names, checksums, completion or rollback status diverge from the approved source snapshot. This is read-only verification, not automatic migration activation.
+4. The migration scan discovered **15 local folders**, including the currently uncommitted `20261119150000_push_delivery_outbox`. That migration is **not implicitly approved** by the user's request to continue preparation; it must be reviewed independently with every other migration.
+5. During the final API typecheck a concurrent public-store rating update had left a `.map(publicListing)` callback that passed `Array.map`'s index to the new optional ratings-map argument. The storefront mapping was adjusted to `map(row => publicListing(row))` to preserve the response contract and prevent an unintended callback argument. No data-layer or UI logic was rebuilt.
+
+### Verified offline results
+
+- Staging source preflight: **15 migrations inventoried; BLOCKED as designed**, with no approval manifest and no database interaction. Exit status 1 is the expected safe outcome.
+- Performance safety and analyzer tests: **17 passed, 0 failed** (84 assertions).
+- Safe top-level API unit tests: **343 passed, 1 intentionally skipped, 0 failed**, across 63 files (1,361 assertions).
+- API TypeScript check: initially surfaced three mapping incompatibilities from a concurrently modified ratings callback, and **passed on final recheck** after explicit callback adaptation was present at the call sites.
+- Guarded API bundle compile-only: **passed**; temporary compiled output was removed. No server started.
+- `git diff --check`: **passed**. No migration, schema mutation, data seeding, load test, deployment, Git commit or push performed by this assistant.
+
+### Next independent gates before a one-user performance smoke
+
+CPSU ICT/authorized operator must confirm a **dedicated host or local environment**, test-only MariaDB schema and least-privilege credentials; the designated privacy authority must approve synthetic fixture retention, and the migration owner must explicitly sign off the **exact 15-directory/fingerprint snapshot** (or a later reviewed inventory). Then provision a clean isolated DB and approved migrations, generate synthetic users/media and private secrets, install k6, verify CPU/SQL/pool instrumentation, and run another offline preflight. Only after these checks pass may a separately approved one-VU synthetic smoke use the guarded loopback entrypoint. The targets of 500 concurrent students and 100 requests/second for 10 minutes **remain unmeasured and uncertified**.

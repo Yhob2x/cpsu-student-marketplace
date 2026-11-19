@@ -7,6 +7,7 @@
  */
 import type { Prisma } from '@prisma/client';
 import { deliverPush } from './push.js';
+import { pushOutboxWritesActivated, stagePushOutbox } from './push-outbox.js';
 
 export const FOLLOWED_STORE_NEW_LISTING = 'store.new_listing';
 
@@ -65,6 +66,7 @@ export async function createFollowerPublicationNotices(
       data: { userId: follow.userId, type: FOLLOWED_STORE_NEW_LISTING, payload },
       select: { id: true },
     });
+    await stagePushOutbox(tx, { id: row.id, userId: follow.userId, type: FOLLOWED_STORE_NEW_LISTING });
     notices.push({ id: row.id, userId: follow.userId, payload });
   }
   return notices;
@@ -89,7 +91,7 @@ export async function sendFollowerPushBatch(
 
 /** Optional, best-effort push after the in-app transaction commits. */
 export function deliverFollowerPublicationPush(notices: FollowerPublicationNotice[]): void {
-  if (!notices.length) return;
+  if (!notices.length || pushOutboxWritesActivated) return;
   void sendFollowerPushBatch(notices, n =>
     deliverPush(n.userId, FOLLOWED_STORE_NEW_LISTING, n.payload, n.id),
   ).then(failures => {

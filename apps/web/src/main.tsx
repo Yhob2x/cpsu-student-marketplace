@@ -1,3 +1,4 @@
+import { LegacyButton } from './components/ui/legacy-button';
 import React, { createContext, useContext, useEffect, useRef, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import { BrowserRouter, Link, NavLink, Route, Routes, Navigate, useLocation, useNavigate } from 'react-router-dom';
@@ -61,6 +62,7 @@ import './guidelines-page.css';
 import './home-color-polish.css';
 import './async-feedback.css';
 import './pwa-status.css';
+import './listing-rating-polish.css';
 
 export type Me = { id: number; email: string; displayName: string; roles: { role: string; campusId: number | null }[];
   affiliations: { id: number; campus: { id: number; name: string }; status: string }[]; storeId: number | null };
@@ -89,7 +91,7 @@ function HeaderSearch() {
   };
   return <form className="head-search" role="search" aria-label="Header listing search" onSubmit={submit}>
     <input aria-label="Search listings" placeholder="Search listings…" maxLength={80} value={q} onChange={e => setQ(e.target.value)} />
-    <button className="btn" aria-label="Search"><Icon name="search" size={18} /></button>
+    <LegacyButton className="" aria-label="Search"><Icon name="search" size={18} /></LegacyButton>
   </form>;
 }
 
@@ -106,9 +108,12 @@ function NotFound() {
 // query-string filters and needlessly re-render the page.
 function scrollNavigationToTop(event: React.MouseEvent<HTMLAnchorElement>) {
   if (event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
-  if (event.currentTarget.pathname === window.location.pathname) event.preventDefault();
+  const sameRoute = event.currentTarget.pathname === window.location.pathname;
+  if (sameRoute) event.preventDefault();
   const reduceMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false;
-  window.scrollTo({ top: 0, left: 0, behavior: reduceMotion ? 'auto' : 'smooth' });
+  // A smooth scroll may be canceled when the router swaps the page.
+  // Reset immediately on route changes; retain smooth reselects of the active tab.
+  window.scrollTo({ top: 0, left: 0, behavior: sameRoute && !reduceMotion ? 'smooth' : 'auto' });
 }
 
 function Shell() {
@@ -258,7 +263,7 @@ function Shell() {
           </nav>}
           <div className={me ? 'who' : 'who who-guest'}>
             <InstallApp />
-            {me ? <button className="btn ghost" onClick={() => void logout()} disabled={loggingOut}>{loggingOut ? 'Signing out…' : 'Sign out'}</button>
+            {me ? <LegacyButton className="ghost" onClick={() => void logout()} disabled={loggingOut}>{loggingOut ? 'Signing out…' : 'Sign out'}</LegacyButton>
               : <NavLink className="signin" to="/login">Sign in</NavLink>}
           </div>
         </div>

@@ -1,3 +1,4 @@
+import { LegacyButton } from './components/ui/legacy-button';
 import { Field, Panel } from './components/ui/primitives';
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
@@ -249,26 +250,26 @@ export function Admin() {
       </nav>
       <div className="admin-workspace-main" id="admin-workspace-main">
     <div hidden={activeSection !== 'affiliations'}>
-    {err && <p className="err" role="alert">{err} <button type="button" className="btn ghost" onClick={load}>Retry</button></p>}
+    {err && <p className="err" role="alert">{err} <LegacyButton type="button" className="ghost" onClick={load}>Retry</LegacyButton></p>}
     {q === null && !err && <p role="status" className="muted">Loading review queue…</p>}
     <h2 id="admin-affiliations">Affiliations to verify</h2><p className="muted">This queue does not contain proof of enrollment. Confirm affiliation using authorized campus records before deciding.</p>{q?.affiliations.length === 0 && <p className="muted">All caught up.</p>}
     {q?.affiliations.map((a: any) => <Panel key={a.id} className="row"><div style={{ flex: 1 }}><h3>{a.user.displayName}</h3><span className="muted">{a.campus} · {a.user.email} · Affiliation #{a.id}</span></div>
       {field(`a${a.id}`, 'Reason (5+ characters)')}
       <div className="admin-inline-actions">
-        <button type="button" className="btn" disabled={Boolean(pending) || !reasonOk(`a${a.id}`)}
+        <LegacyButton type="button" className="" disabled={Boolean(pending) || !reasonOk(`a${a.id}`)}
           aria-busy={pending === `a${a.id}` && pendingAction === 'verified'}
           aria-label={`Verify affiliation for ${a.user.displayName}`} onClick={() => verify(a.id, 'verified')}>
           {pending === `a${a.id}` && pendingAction === 'verified' ? 'Verifying…' : 'Verify'}
-        </button>
-        <button type="button" className="btn danger-outline" disabled={Boolean(pending) || !reasonOk(`a${a.id}`)}
+        </LegacyButton>
+        <LegacyButton type="button" className="danger-outline" disabled={Boolean(pending) || !reasonOk(`a${a.id}`)}
           aria-busy={pending === `a${a.id}` && pendingAction === 'rejected'}
           aria-label={`Reject affiliation for ${a.user.displayName}`} onClick={() => verify(a.id, 'rejected')}>
           {pending === `a${a.id}` && pendingAction === 'rejected' ? 'Rejecting…' : 'Reject'}
-        </button>
+        </LegacyButton>
       </div></Panel>)}
     </div>
     <div hidden={activeSection !== 'listings'}>
-    {err && <p className="err" role="alert">{err} <button type="button" className="btn ghost" onClick={load}>Retry</button></p>}
+    {err && <p className="err" role="alert">{err} <LegacyButton type="button" className="ghost" onClick={load}>Retry</LegacyButton></p>}
     {q === null && !err && <p role="status" className="muted">Loading review queue…</p>}
     <h2 id="admin-listings">Listings to review</h2>{q?.listings.length === 0 && <p className="muted">No listings waiting.</p>}
     {q?.listings.length > 0 && <div className="admin-review-layout">
@@ -308,24 +309,24 @@ export function Admin() {
       </label>
       <div className="review-decision">{field(`l${l.id}`, 'Reason (required, 5+ characters, shown to the seller)')}{!reasonOk(`l${l.id}`) && <span className="muted">Enter a reason of at least 5 characters to enable a decision.</span>}{l.flags.includes('academic_integrity_concern') && <span className="muted">Academic-integrity flag: approval requires a documented reason of at least 20 characters.</span>}
         <div className="review-actions" role="group" aria-label={`Review decision for ${l.title}`}>
-          <button type="button" className="btn" disabled={Boolean(pending) || !reasonOk(`l${l.id}`, l.flags.includes('academic_integrity_concern') ? 20 : 5) || !photosReviewed[l.id] || l.images.length === 0}
+          <LegacyButton type="button" className="" disabled={Boolean(pending) || !reasonOk(`l${l.id}`, l.flags.includes('academic_integrity_concern') ? 20 : 5) || !photosReviewed[l.id] || l.images.length === 0}
             aria-busy={pending === `l${l.id}` && pendingAction === 'approved'} onClick={() => decide(l.id, 'approved')}>
             {pending === `l${l.id}` && pendingAction === 'approved' ? 'Approving…' : 'Approve'}
-          </button>
-          <button type="button" className="btn ghost" disabled={Boolean(pending) || !reasonOk(`l${l.id}`)}
+          </LegacyButton>
+          <LegacyButton type="button" className="ghost" disabled={Boolean(pending) || !reasonOk(`l${l.id}`)}
             aria-busy={pending === `l${l.id}` && pendingAction === 'changes_requested'} onClick={() => decide(l.id, 'changes_requested')}>
             {pending === `l${l.id}` && pendingAction === 'changes_requested' ? 'Requesting…' : 'Request changes'}
-          </button>
-          <button type="button" className="btn danger-outline" disabled={Boolean(pending) || !reasonOk(`l${l.id}`)}
+          </LegacyButton>
+          <LegacyButton type="button" className="danger-outline" disabled={Boolean(pending) || !reasonOk(`l${l.id}`)}
             aria-busy={pending === `l${l.id}` && pendingAction === 'rejected'} onClick={() => decide(l.id, 'rejected')}>
             {pending === `l${l.id}` && pendingAction === 'rejected' ? 'Rejecting…' : 'Reject'}
-          </button>
+          </LegacyButton>
         </div></div></Panel>)}
       </div>
     </div>}
     </div>
     <div hidden={activeSection !== 'reports'}>
-    <h2 id="admin-reports">Reports from students</h2><p className="muted">Review the report and record your findings. Closing it does not suspend the subject.</p>{reportsError && <p className="err" role="alert">Reports could not load: {reportsError} <button type="button" className="btn ghost" onClick={load}>Retry</button></p>}{reportActionError && <p className="err" role="alert">Could not save the report decision: {reportActionError}. Your findings are retained; check and retry the decision.</p>}
+    <h2 id="admin-reports">Reports from students</h2><p className="muted">Review the report and record your findings. Closing it does not suspend the subject.</p>{reportsError && <p className="err" role="alert">Reports could not load: {reportsError} <LegacyButton type="button" className="ghost" onClick={load}>Retry</LegacyButton></p>}{reportActionError && <p className="err" role="alert">Could not save the report decision: {reportActionError}. Your findings are retained; check and retry the decision.</p>}
     {reports === null && !reportsError && <p className="muted" role="status">Loading reports…</p>}
     {reports?.length === 0 && !reportsError && <p className="muted">No open reports.</p>}
     {!reportsError && reports?.map(rep => <Panel key={rep.id} className="row"><div style={{ flex: 1, minWidth: 0 }}>
@@ -339,23 +340,23 @@ export function Admin() {
         <textarea rows={2} minLength={10} maxLength={1000} value={reportReasons[rep.id] ?? ''} onChange={e => setReportReasons(previous => ({ ...previous, [rep.id]: e.target.value }))} placeholder="Record what you checked and why this decision is appropriate" />
       </Field>
       <div className="admin-inline-actions">
-        <button type="button" className="btn" disabled={Boolean(pending) || (reportReasons[rep.id] ?? '').trim().length < 10}
+        <LegacyButton type="button" className="" disabled={Boolean(pending) || (reportReasons[rep.id] ?? '').trim().length < 10}
           aria-busy={pending === `r${rep.id}` && pendingAction === 'resolved'}
           aria-label={`Resolve report ${rep.id}`} onClick={() => resolveReport(rep.id, 'resolved')}>
           {pending === `r${rep.id}` && pendingAction === 'resolved' ? 'Resolving…' : 'Resolve'}
-        </button>
-        <button type="button" className="btn ghost" disabled={Boolean(pending) || (reportReasons[rep.id] ?? '').trim().length < 10}
+        </LegacyButton>
+        <LegacyButton type="button" className="ghost" disabled={Boolean(pending) || (reportReasons[rep.id] ?? '').trim().length < 10}
           aria-busy={pending === `r${rep.id}` && pendingAction === 'dismissed'}
           aria-label={`Dismiss report ${rep.id}`} onClick={() => resolveReport(rep.id, 'dismissed')}>
           {pending === `r${rep.id}` && pendingAction === 'dismissed' ? 'Dismissing…' : 'Dismiss'}
-        </button>
+        </LegacyButton>
       </div></Panel>)}
     </div>
     {activeSection === 'store-reviews' && <StoreReviewModeration />}
     <section hidden={activeSection !== 'transactions'} aria-labelledby="admin-transactions-heading">
       <h2 id="admin-transactions-heading">Transaction monitoring</h2>
       <p className="muted">Read-only campus records. Completed means both students confirmed; payments are unverified. Private messages are hidden.</p>
-      {transactionError && <p role="alert" className="err">Transactions could not load: {transactionError} <button type="button" className="btn ghost" onClick={() => void loadTransactions(transactionPage)}>Retry</button></p>}
+      {transactionError && <p role="alert" className="err">Transactions could not load: {transactionError} <LegacyButton type="button" className="ghost" onClick={() => void loadTransactions(transactionPage)}>Retry</LegacyButton></p>}
       {!transactionLoading && !transactionError && monitoredTransactions.length === 0 && <p className="muted">No transactions to monitor.</p>}
       <div className="stack admin-transaction-list">{monitoredTransactions.map(t => <Panel as="article" className="admin-transaction-row" key={t.id}>
         <div><strong>{t.listing.title}</strong>
@@ -367,7 +368,7 @@ export function Admin() {
         </span>
       </Panel>)}</div>
       {transactionLoading && <p role="status" className="muted">Loading transaction records…</p>}
-      {!transactionLoading && !transactionError && monitoredTransactions.length < transactionCount && <button type="button" className="btn ghost" onClick={() => void loadTransactions(transactionPage + 1)}>Load more transactions</button>}
+      {!transactionLoading && !transactionError && monitoredTransactions.length < transactionCount && <LegacyButton type="button" className="ghost" onClick={() => void loadTransactions(transactionPage + 1)}>Load more transactions</LegacyButton>}
     </section>
     {accountAdmin && <section hidden={activeSection !== 'students'} aria-labelledby="student-management-heading">
       <h2 id="student-management-heading">Student accounts</h2>
@@ -377,9 +378,9 @@ export function Admin() {
         <Field className="">Campus<select value={studentCampusId} onChange={e => setStudentCampusId(e.target.value)}><option value="">All campuses</option>{campuses.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}</select></Field>
         <Field className="">Account<select value={studentStatus} onChange={e => setStudentStatus(e.target.value)}><option value="">Any status</option><option value="active">Active</option><option value="suspended">Suspended</option></select></Field>
         <Field className="">Verification<select value={studentVerification} onChange={e => setStudentVerification(e.target.value)}><option value="">Any status</option><option value="unverified">Unverified</option><option value="pending">Pending</option><option value="verified">Verified</option><option value="rejected">Rejected</option><option value="suspended">Suspended</option></select></Field>
-        <button className="btn" disabled={studentsLoading} type="submit">Apply filters</button>
+        <LegacyButton className="" disabled={studentsLoading} type="submit">Apply filters</LegacyButton>
       </form>
-      {studentsError && <p className="err" role="alert">Students could not load: {studentsError} <button className="btn ghost" type="button" onClick={() => void searchStudents(studentApplied, studentPage)}>Retry</button></p>}
+      {studentsError && <p className="err" role="alert">Students could not load: {studentsError} <LegacyButton className="ghost" type="button" onClick={() => void searchStudents(studentApplied, studentPage)}>Retry</LegacyButton></p>}
       {studentsLoading && <p role="status" className="muted">Loading student accounts…</p>}
       {!studentsLoading && students && !studentsError && <p className="muted" role="status">{studentTotal === 0 ? 'No matching students.' : `Showing ${(studentPage - 1) * 25 + 1}–${(studentPage - 1) * 25 + students.length} of ${studentTotal} students`}</p>}
       {!studentsError && students && students.length > 0 && <div className="admin-student-layout">
@@ -401,12 +402,12 @@ export function Admin() {
                 {campuses.filter(c => selectedStudent.affiliations.some((a: any) => a.campus.id === c.id && a.verificationStatus === 'verified' && (!a.expirationAt || new Date(a.expirationAt) > new Date()))).map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
               </select></Field>
               <Field className="">Reason for assignment<input value={reviewerReason} onChange={e => setReviewerReason(e.target.value)} minLength={10} maxLength={500} placeholder="Required reason (10+ characters)" /></Field>
-              <button className="btn" type="button" disabled={pending === `reviewer-${selectedStudent.id}` || !reviewerCampusId || reviewerReason.trim().length < 10} onClick={() => void assignStudentReviewer(selectedStudent.id)}>Assign as reviewer</button>
+              <LegacyButton className="" type="button" disabled={pending === `reviewer-${selectedStudent.id}` || !reviewerCampusId || reviewerReason.trim().length < 10} onClick={() => void assignStudentReviewer(selectedStudent.id)}>Assign as reviewer</LegacyButton>
             </div>}
           </>}
         </Panel>
       </div>}
-      {!studentsError && studentTotal > 25 && <nav className="admin-student-pages" aria-label="Student result pages"><button className="btn ghost" type="button" disabled={studentsLoading || studentPage <= 1} onClick={() => void searchStudents(studentApplied, studentPage - 1)}>Previous</button><span>Page {studentPage} of {Math.ceil(studentTotal / 25)}</span><button className="btn ghost" type="button" disabled={studentsLoading || studentPage * 25 >= studentTotal} onClick={() => void searchStudents(studentApplied, studentPage + 1)}>Next</button></nav>}
+      {!studentsError && studentTotal > 25 && <nav className="admin-student-pages" aria-label="Student result pages"><LegacyButton className="ghost" type="button" disabled={studentsLoading || studentPage <= 1} onClick={() => void searchStudents(studentApplied, studentPage - 1)}>Previous</LegacyButton><span>Page {studentPage} of {Math.ceil(studentTotal / 25)}</span><LegacyButton className="ghost" type="button" disabled={studentsLoading || studentPage * 25 >= studentTotal} onClick={() => void searchStudents(studentApplied, studentPage + 1)}>Next</LegacyButton></nav>}
     </section>}
     {accountAdmin && activeSection === 'staff' && <ReviewerAdmin active campuses={campuses} campusesError={campusesError} onRetryCampuses={() => void loadCampuses()} />}
     {accountAdmin && activeSection === 'content' && <ManagedContentAdmin />}
@@ -415,7 +416,7 @@ export function Admin() {
       <h2 id="audit-history-heading">Administrative audit history</h2>
       <p className="muted">Newest first.</p>
       {auditError && <p role="alert" className="err">Audit history could not load: {auditError}
-        <button className="btn ghost" type="button" onClick={() => void loadAudit(auditCursor ?? undefined)}>Retry</button>
+        <LegacyButton className="ghost" type="button" onClick={() => void loadAudit(auditCursor ?? undefined)}>Retry</LegacyButton>
       </p>}
       {auditEvents.length === 0 && !auditLoading && !auditError && <p className="muted">No audit events found.</p>}
       {auditEvents.length > 0 && <><p className="muted" role="status">Showing {auditEvents.length} events, newest first.</p>
@@ -428,7 +429,7 @@ export function Admin() {
           </li>;
         })}</ol></>}
       {auditLoading && <p role="status" className="muted">Loading audit history…</p>}
-      {auditCursor !== null && !auditLoading && !auditError && <button type="button" className="btn ghost" onClick={() => void loadAudit(auditCursor)}>Load older events</button>}
+      {auditCursor !== null && !auditLoading && !auditError && <LegacyButton type="button" className="ghost" onClick={() => void loadAudit(auditCursor)}>Load older events</LegacyButton>}
     </section>}
     <div hidden={activeSection !== 'overview'}>
     <h2 id="admin-overview">{accountAdmin ? 'University dashboard' : 'Campus overview'}</h2>
@@ -437,7 +438,7 @@ export function Admin() {
       <button type="button" onClick={() => changeSection('affiliations')}><strong>{q?.affiliations.length ?? '—'}</strong><span>Verifications</span></button>
       <button type="button" onClick={() => changeSection('reports')}><strong>{reports?.length ?? '—'}</strong><span>Open reports</span></button>
     </div>}
-    {statsError && <p className="err" role="alert">Campus overview could not load: {statsError} <button type="button" className="btn ghost" onClick={load}>Retry</button></p>}
+    {statsError && <p className="err" role="alert">Campus overview could not load: {statsError} <LegacyButton type="button" className="ghost" onClick={load}>Retry</LegacyButton></p>}
     {!stats && !statsError && <p className="muted" role="status">Loading campus overview…</p>}
     {stats && !statsError && <><p className="muted">{stats.note}</p>
       <div className="grid">{stats.campuses.map((c: any) => <Panel key={c.campus} className=""><h3>{c.campus}</h3>

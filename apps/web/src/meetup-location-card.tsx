@@ -1,3 +1,4 @@
+import { LegacyButton } from './components/ui/legacy-button';
 import { lazy, Suspense, useEffect, useState, type FormEvent } from 'react';
 import { api, explain } from './api';
 import { showActionFeedback } from './action-feedback';
@@ -102,12 +103,12 @@ export function MeetupLocationCard({
       {!saved.point && <p className="muted">No map pin saved yet.</p>}
     </div> : <p className="muted" style={{ margin: 0 }}>No meeting point has been shared.</p>}
     <div className="meetup-actions">
-      {saved.point && !editing && <button type="button" className="btn ghost"
-        onClick={() => setMapOpen(value => !value)}>{mapOpen ? 'Hide map' : 'View map'}</button>}
-      {editable && !editing && <button type="button" className="btn"
+      {saved.point && !editing && <LegacyButton type="button" className="ghost"
+        onClick={() => setMapOpen(value => !value)}>{mapOpen ? 'Hide map' : 'View map'}</LegacyButton>}
+      {editable && !editing && <LegacyButton type="button" className=""
         onClick={() => { setMapOpen(true); setEditing(true); setAcknowledgedReset(false); setError(''); }}>
         {saved.point ? 'Change meetup pin' : 'Choose meetup pin'}
-      </button>}
+      </LegacyButton>}
     </div>
     {saved.point && mapOpen && !editing && <Suspense fallback={<p role="status" className="muted">Loading map…</p>}>
       <MeetupMap point={saved.point} campusName={campusName} />
@@ -141,13 +142,13 @@ export function MeetupLocationCard({
         <span>Change the agreed meeting point and ask both students to confirm again.</span>
       </label>}
       <div className="meetup-actions">
-        <button className="btn" type="submit"
+        <LegacyButton className="" type="submit"
           disabled={busy || !point || !validMeetupPoint(point) || place.trim().length < 3
             || timeWindow.trim().length < 3 || (requiresReconfirmation && !acknowledgedReset)}>
           {busy ? 'Saving…' : 'Save meetup location'}
-        </button>
-        <button className="btn ghost" type="button" disabled={busy}
-          onClick={() => { setEditing(false); setError(''); }}>Cancel</button>
+        </LegacyButton>
+        <LegacyButton className="ghost" type="button" disabled={busy}
+          onClick={() => { setEditing(false); setError(''); }}>Cancel</LegacyButton>
       </div>
       <p className="muted" style={{ margin: 0 }}>The pin is a proposed meeting point, not proof of an agreed or completed transaction.
         Do not use private home addresses. Map tiles load from third-party map servers.</p>

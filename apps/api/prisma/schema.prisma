@@ -216,6 +216,8 @@ model User {
   notifications         Notification[]
   pushSubscriptions     PushSubscription[]
   pushPreference        PushPreference?
+  pushOutbox            PushOutbox[]
+  pushDailyBudgets      PushDailyBudget[]
   auditLogs             AuditLog[]
   buyingTransactions    Transaction[] @relation("TransactionBuyer")
   sellingTransactions   Transaction[] @relation("TransactionSeller")
@@ -575,7 +577,7 @@ model Notification {
   readAt    DateTime?
   createdAt DateTime  @default(now())
   user User @relation(fields: [userId], references: [id], onDelete: Restrict, onUpdate: Cascade)
-
+  pushOutbox PushOutbox?
 }
 
 model PushSubscription {
@@ -601,8 +603,87 @@ model PushPreference {
   messages       Boolean  @default(true)
   listingReviews Boolean  @default(true)
   accountUpdates Boolean  @default(true)
+  // Existing device enrollment remains opt-in; this is an additional account-wide kill switch.
+  masterEnabled  Boolean  @default(true)
+  // Both null = quiet hours disabled. Store minutes after midnight in Asia/Manila.
+  quietStartMinute Int?
+  quietEndMinute   Int?
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+
+/// Staged durable Web Push work queue. The canonical Notification remains the
+/// source of truth. Do not activate external dispatch before isolated DB QA.
+model PushOutbox {
+  id            Int       @id @default(autoincrement())
+  notificationId Int       @unique
+  userId        Int
+  category      String    @db.VarChar(32)
+  state         String    @default("pending") @db.VarChar(16)
+  attemptCount  Int       @default(0)
+  budgetReservedAt DateTime?
+  nextAttemptAt DateTime  @default(now())
+  expiresAt     DateTime
+  leaseToken    String?   @db.VarChar(64)
+  leasedUntil   DateTime?
+  lastStatus    String?   @db.VarChar(32)
+  sentAt        DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  notification Notification @relation(fields: [notificationId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  attempts PushAttempt[]
+
+  @@index([state, nextAttemptAt])
+  @@index([state, leasedUntil])
+  @@index([userId, createdAt])
+}
+
+/// Per-endpoint delivery ledger for best-effort idempotency after job retries.
+/// Store only a SHA-256 endpoint hash, NEVER a push capability URL or message text.
+model PushAttempt {
+  id            Int      @id @default(autoincrement())
+  outboxId      Int
+  endpointHash  String   @db.Char(64)
+  state         String   @default("pending") @db.VarChar(16)
+  attemptCount  Int      @default(0)
+  lastStatus    String?  @db.VarChar(32)
+  nextAttemptAt DateTime @default(now())
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  outbox PushOutbox @relation(fields: [outboxId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  @@unique([outboxId, endpointHash])
+  @@index([state, nextAttemptAt])
+}
+
+/// A reservation is consumed once per account/day before device fan-out.
+/// dayKey is YYYY-MM-DD in Asia/Manila, NOT UTC.
+model PushDailyBudget {
+  userId    Int
+  dayKey    String   @db.Char(10)
+  count     Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  @@id([userId, dayKey])
+  @@index([dayKey])
+}
+
+/// Aggregate-only counters. No personal IDs or push tokens.
+model PushDailyMetric {
+  dayKey     String   @db.Char(10)
+  category   String   @db.VarChar(32)
+  outcome    String   @db.VarChar(24)
+  count      Int      @default(0)
+  updatedAt  DateTime @updatedAt
+
+  @@id([dayKey, category, outcome])
 }

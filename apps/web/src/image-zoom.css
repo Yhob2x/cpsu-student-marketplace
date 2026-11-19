@@ -48,7 +48,7 @@
   flex: 0 0 auto;
   gap: 16px;
   min-width: 0;
-  padding: 24px 18px 14px;
+  padding: 24px var(--ui-space-4) var(--ui-space-3);
 }
 .image-zoom-heading {
   display: grid;
@@ -76,7 +76,7 @@
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 6px;
+  gap: var(--ui-space-1);
 }
 .image-zoom-actions button,
 .image-zoom-view > button {
@@ -85,7 +85,7 @@
   flex: 0 0 auto;
   min-width: 42px;
   min-height: 42px;
-  padding: 0 9px;
+  padding: 0 var(--ui-space-2);
   border: 1px solid var(--surface-stroke);
   border-radius: 9px;
   background: var(--color-card);
@@ -126,7 +126,7 @@
   min-height: 0;
   min-width: 0;
   height: 100%;
-  padding: 18px;
+  padding: var(--ui-space-4);
   border-right: 1px solid var(--surface-stroke);
   background: var(--surface-neutral);
 }
@@ -183,10 +183,10 @@
   grid-template-columns: repeat(3, minmax(0, 1fr));
   grid-auto-rows: max-content;
   align-content: start;
-  gap: 10px;
+  gap: var(--ui-space-2);
   min-width: 0;
   min-height: 0;
-  padding: 14px 18px 12px;
+  padding: var(--ui-space-3) var(--ui-space-4) 12px;
   overflow-y: auto;
   overscroll-behavior: contain;
   scrollbar-width: thin;
@@ -223,7 +223,7 @@
   grid-area: help;
   min-width: 0;
   margin: 0;
-  padding: 10px 18px 20px;
+  padding: var(--ui-space-2) var(--ui-space-4) 20px;
   color: var(--ink-soft);
   font-size: .75rem;
   line-height: 1.5;
@@ -248,8 +248,8 @@
     grid-template-rows: auto minmax(0, 1fr) auto auto;
     grid-template-areas: "toolbar" "view" "filmstrip" "help";
   }
-  .image-zoom-toolbar { padding: 12px 14px 10px; gap: 8px; }
-  .image-zoom-heading { min-height: 35px; gap: 2px; padding-right: 46px; }
+  .image-zoom-toolbar { padding: 12px var(--ui-space-3) var(--ui-space-2); gap: 8px; }
+  .image-zoom-heading { min-height: 35px; gap: 2px; padding-right: var(--ui-space-7); }
   .image-zoom-heading > strong { -webkit-line-clamp: 1; font-size: .92rem; }
   .image-zoom-actions { gap: 4px; }
   .image-zoom-actions button { min-width: 40px; min-height: 40px; }
@@ -261,24 +261,24 @@
   .image-zoom-filmstrip {
     display: flex;
     gap: 8px;
-    padding: 10px 14px;
+    padding: var(--ui-space-2) var(--ui-space-3);
     overflow-x: auto;
     overflow-y: hidden;
     scroll-snap-type: x proximity;
     scrollbar-width: thin;
   }
   .image-zoom-thumb { flex: 0 0 64px; width: 64px; height: 64px; scroll-snap-align: center; }
-  .image-zoom-help { text-align: center; padding: 2px 14px 10px; font-size: var(--ui-type-xs); }
+  .image-zoom-help { text-align: center; padding: 2px var(--ui-space-3) var(--ui-space-2); font-size: var(--ui-type-xs); }
 }
 @media (max-width: 360px) {
   .image-zoom-value { min-width: 40px; }
   .image-zoom-actions .image-zoom-reset { min-width: 50px; }
-  .image-zoom-actions button { padding: 0 6px; }
+  .image-zoom-actions button { padding: 0 var(--ui-space-1); }
 }
 @media (max-height: 500px) and (max-width: 760px) {
   .image-zoom-toolbar { flex-direction: row; align-items: center; padding-block: 4px; }
   .image-zoom-heading { flex: 1 1 auto; }
-  .image-zoom-actions { padding-right: 30px; }
+  .image-zoom-actions { padding-right: var(--ui-space-6); }
   .image-zoom-help { display: none; }
   .image-zoom-thumb { flex-basis: 48px; width: 48px; height: 48px; }
 }

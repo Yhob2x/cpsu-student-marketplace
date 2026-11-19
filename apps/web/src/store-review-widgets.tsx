@@ -1,3 +1,4 @@
+import { LegacyButton } from './components/ui/legacy-button';
 import { Field, Panel } from './components/ui/primitives';
 import { useEffect, useRef, useState, type FormEvent, type ReactNode } from 'react';
 import { api, ApiError, explain } from './api';
@@ -7,7 +8,8 @@ import './store-reviews.css';
 
 type Review = { id: number; rating: number; body: string | null; createdAt: string;
   status?: string; moderationReason?: string | null };
-type PublicPage = { available: boolean; summary: { count: number; average: number | null; distribution?: Record<number, number> } | null;
+export type StoreReviewSummary = { count: number; average: number | null; distribution?: Record<number, number> };
+type PublicPage = { available: boolean; summary: StoreReviewSummary | null;
   items: Review[]; page: number; pageSize: number };
 
 function RatingStars({ value, size = 'normal' }: { value: number; size?: 'normal' | 'large' }) {
@@ -16,7 +18,8 @@ function RatingStars({ value, size = 'normal' }: { value: number; size?: 'normal
   </span>;
 }
 
-export function StoreRatingsAndReviews({ storeId, reviewAction }: { storeId: number; reviewAction?: ReactNode }) {
+export function StoreRatingsAndReviews({ storeId, reviewAction, onSummary }: { storeId: number; reviewAction?: ReactNode;
+  onSummary?: (summary: StoreReviewSummary | null) => void }) {
   const [page, setPage] = useState(1);
   const [data, setData] = useState<PublicPage | null>(null);
   const [error, setError] = useState('');
@@ -26,9 +29,14 @@ export function StoreRatingsAndReviews({ storeId, reviewAction }: { storeId: num
     const request = ++requestId.current;
     setLoading(true); setError('');
     api<PublicPage>(`/seller-profiles/${storeId}/reviews?page=${page}`)
-      .then(result => { if (request === requestId.current) setData(result); })
+      .then(result => {
+        if (request !== requestId.current) return;
+        setData(result);
+        onSummary?.(result.available ? result.summary : null);
+      })
       .catch(e => {
         if (request !== requestId.current) return;
+        onSummary?.(null);
         // Older development API processes have no review route yet. Do not show a false outage.
         if (e instanceof ApiError && e.status === 404) {
           setData({ available: false, summary: null, items: [], page, pageSize: 8 });
@@ -40,23 +48,27 @@ export function StoreRatingsAndReviews({ storeId, reviewAction }: { storeId: num
   useEffect(() => { load(); return () => { requestId.current++; }; }, [storeId, page]);
   const pages = data?.summary ? Math.ceil(data.summary.count / (data.pageSize || 8)) : 1;
   return <section className="store-reviews-section" aria-labelledby="store-review-heading">
-    <div className="store-reviews-heading"><h2 id="store-review-heading">Ratings & reviews</h2>
-      {data?.available && data.summary && data.summary.count > 0 && <div className="store-review-summary">
-        <RatingStars value={data.summary.average ?? 0} size="large" />
-        <strong>{data.summary.average?.toFixed(1)} / 5</strong>
-        <span>from {data.summary.count} moderated {data.summary.count === 1 ? 'review' : 'reviews'}</span>
-      </div>}
+    <div className="store-reviews-heading">
+      <h2 id="store-review-heading">Ratings &amp; reviews</h2>
+      {data?.available && data.summary && data.summary.count > 0 && <span className="store-reviews-kicker">Published buyer feedback</span>}
     </div>
-    {data?.available && data.summary && data.summary.count > 0 && data.summary.distribution &&
-      <div className="store-review-distribution" role="group" aria-label="Published rating distribution">
+    {data?.available && data.summary && data.summary.count > 0 && <div className="store-review-overview">
+      <div className="store-review-score-card" role="group" aria-label="Store's average published rating">
+        <strong className="store-review-average">{data.summary.average?.toFixed(1)} <span>/ 5</span></strong>
+        <RatingStars value={data.summary.average ?? 0} size="large" />
+        <p>{data.summary.count} moderated {data.summary.count === 1 ? 'review' : 'reviews'}</p>
+      </div>
+      {data.summary.distribution && <div className="store-review-distribution" role="group" aria-label="Published rating distribution">
+        <h3>Rating breakdown</h3>
         {[5, 4, 3, 2, 1].map(stars => <div key={stars} className="store-review-distribution-row">
-          <span>{stars} ★</span>
+          <span>{stars} <span aria-hidden="true">★</span></span>
           <progress aria-label={`${stars}-star reviews`} value={data.summary!.distribution?.[stars] ?? 0} max={data.summary!.count} />
           <span>{data.summary!.distribution?.[stars] ?? 0}</span>
         </div>)}
       </div>}
+    </div>}
     {loading && <p className="muted" role="status">Loading store reviews…</p>}
-    {error && <p className="err" role="alert">Could not load store reviews: {error} <button type="button" className="btn ghost" onClick={load}>Retry</button></p>}
+    {error && <p className="err" role="alert">Could not load store reviews: {error} <LegacyButton type="button" className="ghost" onClick={load}>Retry</LegacyButton></p>}
     {!loading && !error && data?.available === false && <p className="muted">Store ratings and reviews are being prepared.</p>}
     {!loading && !error && data?.available && data.summary?.count === 0 &&
       <div className="store-review-empty">
@@ -80,9 +92,9 @@ export function StoreRatingsAndReviews({ storeId, reviewAction }: { storeId: num
     {!loading && !error && data?.available && data.summary?.count !== 0 && reviewAction}
     <p className="muted store-review-disclosure">Only verified buyers of completed transactions can rate stores. Reviews are student opinions, not CPSU endorsements.</p>
     {!loading && !error && data?.available && pages > 1 && <nav className="store-review-pagination" aria-label="Store review pages">
-      <button type="button" className="btn ghost" disabled={page <= 1} onClick={() => setPage(p => p - 1)}>Previous</button>
+      <LegacyButton type="button" className="ghost" disabled={page <= 1} onClick={() => setPage(p => p - 1)}>Previous</LegacyButton>
       <span>Page {page} of {pages}</span>
-      <button type="button" className="btn ghost" disabled={page >= pages} onClick={() => setPage(p => p + 1)}>Next</button>
+      <LegacyButton type="button" className="ghost" disabled={page >= pages} onClick={() => setPage(p => p + 1)}>Next</LegacyButton>
     </nav>}
   </section>;
 }
@@ -164,14 +176,14 @@ export function TransactionStoreReview({ transactionId, onSubmitted }: {
           placeholder="Describe your experience with this store. Avoid personal contact details."
           onChange={e => setBody(e.target.value)} />
       </Field>
-      <button type="submit" className="btn" disabled={saving || rating < 1}>{saving ? 'Submitting…' : 'Submit store rating'}</button>
+      <LegacyButton type="submit" className="" disabled={saving || rating < 1}>{saving ? 'Submitting…' : 'Submit store rating'}</LegacyButton>
     </form>}
     {!loading && data?.available && !data.eligible && !data.review &&
       <p className="muted">{data.reason && reviewEligibilityMessages[data.reason]
         ? reviewEligibilityMessages[data.reason]
         : 'This transaction is not currently eligible for a new review.'}</p>}
     {notice && <p role="status">{notice}</p>}
-    {error && <p className="err" role="alert">{error} <button type="button" className="btn ghost" onClick={load}>Retry</button></p>}
+    {error && <p className="err" role="alert">{error} <LegacyButton type="button" className="ghost" onClick={load}>Retry</LegacyButton></p>}
   </Panel>;
 }
 
@@ -220,10 +232,10 @@ export function StoreReviewModeration() {
   return <section className="store-review-admin" aria-labelledby="store-review-admin-heading">
     <h2 id="store-review-admin-heading">Store rating moderation</h2>
     <p className="muted">Ratings from completed transactions need review before appearing publicly. You can hide published reviews if they violate CPSU marketplace rules.</p>
-    <div className="row"><button type="button" className="btn ghost" disabled={busy !== null} aria-pressed={mode === 'pending'} onClick={() => { setMode('pending'); setPage(1); }}>Awaiting review</button>
-      <button type="button" className="btn ghost" disabled={busy !== null} aria-pressed={mode === 'published'} onClick={() => { setMode('published'); setPage(1); }}>Published reviews</button></div>
+    <div className="row"><LegacyButton type="button" className="ghost" disabled={busy !== null} aria-pressed={mode === 'pending'} onClick={() => { setMode('pending'); setPage(1); }}>Awaiting review</LegacyButton>
+      <LegacyButton type="button" className="ghost" disabled={busy !== null} aria-pressed={mode === 'published'} onClick={() => { setMode('published'); setPage(1); }}>Published reviews</LegacyButton></div>
     {notice && <p role="status">{notice}</p>}
-    {error && <p className="err" role="alert">{error} <button type="button" className="btn ghost" onClick={() => void load()}>Retry</button></p>}
+    {error && <p className="err" role="alert">{error} <LegacyButton type="button" className="ghost" onClick={() => void load()}>Retry</LegacyButton></p>}
     {loading && <p role="status">Loading store ratings…</p>}
     {!loading && !error && items.length === 0 && <p className="muted">No reviews in this category.</p>}
     {!loading && !error && items.map(item => <Panel as="article" className="store-review-admin-card" key={item.id}>
@@ -237,17 +249,17 @@ export function StoreReviewModeration() {
           onChange={event => setReasons(prev => ({ ...prev, [item.id]: event.target.value }))} />
       </Field>
       <div className="row">{mode === 'pending' ? <>
-        <button className="btn" disabled={(reasons[item.id] || '').trim().length < 10 || busy !== null}
-          onClick={() => void decide(item.id, 'published')}>Approve review</button>
-        <button className="btn ghost" disabled={(reasons[item.id] || '').trim().length < 10 || busy !== null}
-          onClick={() => void decide(item.id, 'rejected')}>Reject review</button>
-      </> : <button className="btn danger" disabled={(reasons[item.id] || '').trim().length < 10 || busy !== null}
-        onClick={() => void decide(item.id, 'hidden')}>Hide review</button>}</div>
+        <LegacyButton className="" disabled={(reasons[item.id] || '').trim().length < 10 || busy !== null}
+          onClick={() => void decide(item.id, 'published')}>Approve review</LegacyButton>
+        <LegacyButton className="ghost" disabled={(reasons[item.id] || '').trim().length < 10 || busy !== null}
+          onClick={() => void decide(item.id, 'rejected')}>Reject review</LegacyButton>
+      </> : <LegacyButton className="danger" disabled={(reasons[item.id] || '').trim().length < 10 || busy !== null}
+        onClick={() => void decide(item.id, 'hidden')}>Hide review</LegacyButton>}</div>
     </Panel>)}
     {!error && !loading && (page > 1 || hasMore) && <nav className="row" aria-label="Moderated review pages">
-      <button type="button" className="btn ghost" disabled={page === 1 || busy !== null} onClick={() => setPage(p => p - 1)}>Previous</button>
+      <LegacyButton type="button" className="ghost" disabled={page === 1 || busy !== null} onClick={() => setPage(p => p - 1)}>Previous</LegacyButton>
       <span>Page {page}</span>
-      <button type="button" className="btn ghost" disabled={!hasMore || busy !== null} onClick={() => setPage(p => p + 1)}>Next</button>
+      <LegacyButton type="button" className="ghost" disabled={!hasMore || busy !== null} onClick={() => setPage(p => p + 1)}>Next</LegacyButton>
     </nav>}
   </section>;
 }

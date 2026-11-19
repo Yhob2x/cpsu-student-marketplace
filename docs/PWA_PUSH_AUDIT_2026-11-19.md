@@ -1,8 +1,72 @@
 # CPSU Market — PWA and Web Push audit
 **Date:** 19 November 2026 (Asia/Manila)  
 **Scope:** React/Vite PWA and Express/Prisma Web Push. Expo excluded.  
-**Machine:** Local Windows developer workstation. **Iteration:** 4/5 (remaining work blocked by separately approved schema/policy and physical-device/HTTPS staging gates).  
+**Machine:** Local Windows developer workstation. **Stage:** 6B leased-worker and budget-reservation source verification; production remains blocked.
 **Release status:** BLOCKED. No commit, push, hosting deployment, migrations, credentials rotation or real-user notifications.
+
+## Stage 6B — leased outbox worker and quota transactions (19 November 2026)
+**Outcome: SOURCE-IMPLEMENTED, NOT ACTIVATED.** Built `push-outbox-worker.ts` with bounded 8-job claims and 2-job concurrent dispatch, 90-second leases, retry/expiry/429 handling, and explicitly hard-disabled worker entrypoint; `push-outbox-repository.ts` with due-row compare-and-set, fenced settlement and exhausted/expired cleanup; and `push-outbox-budget.ts` with a one-time recipient-wide five-per-Manila-day SQL reservation transaction and rollback on lost lease.
+
+**Focused acceptance:** Stage 6B **23/23 synthetic/query tests passed** (8 worker + 8 reservation + 7 repository), Stage 6A/B total **45/45**. Full API **347 passed, 8 optional integration suites skipped**, TypeScript PASS; full web **200 passed**, build PASS; Prisma schema validation PASS; PWA asset check PASS; staging-template checks **16/16 PASS**.
+
+**Important limit:** The sender/provider callback is still injectable and **not wired** to the real Web Push relay. No database migrations, actual MySQL lease claims, provider traffic, physical phone acceptance, HTTP settings or production worker activation occurred. `pushOutboxWritesActivated`, `durableOutboxWorkerActivated` and `pushOutboxTickActivated` remain false. Both existing push environment release flags are still default-off.
+
+**Next gate:** Real generated Prisma adapter + isolated MariaDB migration/transaction rehearsal; account/category/quiet-hour consent checks at send time; per-device attempt ledger, aggregate-only monitoring, retention, approved HTTPS staging and consenting phones. Two development migrations remain unapplied, including the unrelated privacy-gated `20261117230000_private_student_identity`. Do not bulk-deploy migrations.
+
+Stage 6B verification and follow-on requirements: `docs/PWA_PUSH_STAGE6B_LEASED_WORKER_2026-11-19.md`.
+
+---
+
+## Stage 6A — approved durable-outbox architecture preparation (19 November 2026)
+**Outcome: PREPARED, NOT ACTIVATED.** Created additive schema/migration draft for `PushOutbox`, `PushAttempt`, `PushDailyBudget` and `PushDailyMetric`; staged account-wide master-off and optional quiet-hour preference fields; implemented pure Manila-day, five-per-day, retry/quiet-hour policy logic and transaction-scoped notification producer hooks. Both queue producers and outward relay delivery are **hard-disabled at compile time** pending a leased worker and isolated migration acceptance. Existing in-app notifications are unchanged.
+
+**Verified:** 22 new focused tests passed; Prisma schema validation passed; full API **317 passed / 8 opt-in skipped**, full web **199 passed**, API/web typechecks and Vite build passed, static PWA validator passed, staging templates **16/16 passed**. No real push, DB migration, production activation or deployment.
+
+**Migration caveat:** Read-only Prisma status on development found **two pending migrations**: the older `20261117230000_private_student_identity` and the new `20261119150000_push_delivery_outbox`. A generic `migrate deploy` could inadvertently apply the unapproved identity migration. Do not run it; use a guarded explicitly isolated single-migration rehearsal after reviewing data-protection requirements.
+
+**Not yet complete:** Actual leasing/acknowledgment worker, atomic SQL daily reservation, server-facing master/quiet-hour settings, monitoring retention and expiry, isolated MySQL integration, HTTPS staging, physical device and provider load acceptance. All launch gates remain blocked.
+
+Full design, file inventory, test/rollback requirements: `docs/PWA_PUSH_STAGE6_OUTBOX_PREPARATION_2026-11-19.md`.
+
+---
+
+## Iteration 5 — confirmed device opt-out and multitab safe-updates (19 November 2026)
+**Status:** Local remediation cycle 5/5 complete, code-only. Production release remains **BLOCKED**.
+
+### Implemented
+- **PUSH-16 — truthful device opt-out:** `apps/web/src/push-reconciliation.ts` now exposes `revokePushOnDevice()`; `apps/web/src/push-client.ts` uses it when a student chooses **Disable alerts on this device**. The server DELETE still executes first. Local `PushSubscription.unsubscribe()` must resolve `true`; `false` or a thrown error propagates into the existing accessible `role="alert"` error UI, instead of claiming alerts were disabled. The server may already have successfully revoked delivery even when local unsubscribing fails; retrying is safe because the server DELETE is owner-scoped and idempotent.
+- **PUSH-17 — consent and error acceptance:** Four new `apps/web/test/push-reconciliation.test.ts` tests check server-first ordering, failure before local removal, browser unsubscribe(false), and browser exception propagation.
+- **PWA-09 — unsent rich-text and two-tab updates:** Two new `apps/web/pwa-tests/pwa-update.pw.ts` cases verify that a contenteditable unsent draft blocks explicit activation/reload and that a waiting worker does not reload either of two existing tabs. These run twice, in desktop and 390px mobile Chromium configurations, using disposable local build A→B copies, never a real production worker.
+- **No changed consent defaults:** Browser permission remains user-initiated. No auto subscription rotation or enabling of Web Push flags. The existing private offline fallback and server category preferences remain unchanged.
+
+### Final local test and release evidence
+| Check | Result |
+|---|---|
+| Entire API unit suite | **275 passed, 8 opt-in integration tests skipped, 0 failed** |
+| Entire web unit suite | **199 passed, 0 failed** |
+| PWA Playwright Chromium | **24/24 passed** (12 desktop, 12 emulated mobile) |
+| Focused push ownership/opt-out | **13/13 passed** |
+| Focused API push delivery and worker | **20/20 passed** |
+| API and web typechecks, Vite production build | **PASS** (existing >500 KiB chunk warnings) |
+| Manifest and PWA static assets | **PASS**, 192/512 maskable/standard + Apple icon |
+| Staging template safety checks | **16/16 passed** |
+| Read-only staging preflight | **2 BLOCKED** (no approved public HTTPS staging URL; no approved monitored, non-local VAPID contact) |
+| Real Android/iOS notification delivery, Focus/DND, OS badge, installed-app launch | **NOT VERIFIED** |
+| Durable queue, quiet hours, five-per-day limits, production telemetry | **NOT IMPLEMENTED**; proposal only, requires owner/DPO review |
+
+### Closure and outstanding approvals
+The five planned **local** iterations are complete; this is **not** G1–G23 full production acceptance. Source changes are not committed, pushed, migrated, or deployed by this iteration. No external browser push relay requests were made, and no real student device received a notification. Private VAPID material was not printed or changed.
+
+**Do not activate Web Push for real accounts.** Subsequent work should first secure written decisions on the durable outbox migration and retention, account-level opt-out, quiet-hour timezone/exemptions, daily cap and alerting policy. Then run backup/isolated MySQL restore rehearsal, staging HTTPS and monitored VAPID contact approval, safe synthetic provider load, and consenting iPhone/Android installed-PWA tests. Recheck accessibility/OS permissions and performance on real phones. If any gate fails, keep `PUSH_SUBSCRIPTIONS_ENABLED=false` and `PUSH_DELIVERY_ENABLED=false`, and preserve canonical in-app notifications.
+
+### Files changed in iteration 5
+- `apps/web/src/push-client.ts`
+- `apps/web/src/push-reconciliation.ts`
+- `apps/web/test/push-reconciliation.test.ts`
+- `apps/web/pwa-tests/pwa-update.pw.ts`
+- `docs/PWA_PUSH_AUDIT_2026-11-19.md`
+
+---
 
 ## Iteration 4 — bounded dispatch, client resilience and performance evidence (19 November 2026)
 **Scope:** Local code-only safety and verification. The real Web Push relay, enrollment/delivery configuration, schema, dependencies, migrations, credentials and student records were not touched.

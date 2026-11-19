@@ -121,3 +121,50 @@ test('build A to B: explicit Update activates B, deletes A cache and reloads a c
     await fixture.close();
   }
 });
+
+test('build A to B: a rich-text draft also prevents an explicit update reload', async ({ page }) => {
+  const fixture = await withIsolatedBuild();
+  try {
+    await initialControlledPage(page, fixture.origin);
+    await page.evaluate(() => {
+      const editor = document.createElement('div');
+      editor.id = 'synthetic-unsaved-editor';
+      editor.contentEditable = 'true';
+      editor.textContent = 'unsent rich-text message';
+      document.body.append(editor);
+      editor.dispatchEvent(new InputEvent('input', { bubbles: true }));
+    });
+    await detectVersionB(page, fixture.deployVersionB);
+    await page.getByRole('button', { name: 'Update', exact: true }).click();
+    await expect(page.getByText('Finish and save your changes', { exact: false })).toBeVisible();
+    await expect(page.locator('#synthetic-unsaved-editor')).toHaveText('unsent rich-text message');
+    expect(await page.evaluate(async () => Boolean((await navigator.serviceWorker.getRegistration())?.waiting))).toBe(true);
+  } finally {
+    await page.close().catch(() => {});
+    await fixture.close();
+  }
+});
+
+test('build A to B: waiting updates do not force either of two active tabs to reload', async ({ page, context }) => {
+  const fixture = await withIsolatedBuild();
+  const other = await context.newPage();
+  let firstLoads = 0;
+  let otherLoads = 0;
+  page.on('load', () => { firstLoads++; });
+  other.on('load', () => { otherLoads++; });
+  try {
+    await initialControlledPage(page, fixture.origin);
+    await initialControlledPage(other, fixture.origin);
+    await detectVersionB(page, fixture.deployVersionB);
+    await expect(page.getByRole('button', { name: 'Update', exact: true })).toBeVisible();
+    expect(await other.evaluate(async () => Boolean((await navigator.serviceWorker.getRegistration())?.waiting))).toBe(true);
+    await page.waitForTimeout(350);
+    expect(firstLoads).toBe(1);
+    expect(otherLoads).toBe(1);
+    await expect(other.locator('main#main-content')).toBeVisible();
+  } finally {
+    await other.close().catch(() => {});
+    await page.close().catch(() => {});
+    await fixture.close();
+  }
+});

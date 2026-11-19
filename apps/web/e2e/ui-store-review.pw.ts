@@ -22,6 +22,7 @@ for (const width of [360, 768, 1280]) {
     await page.goto('/store/synthetic-campus-books');
     const reviews = page.locator('.store-reviews-section');
     await expect(reviews.getByRole('heading', { name: 'Ratings & reviews' })).toBeVisible();
+    await expect(page.getByRole('link', { name: 'Store rating 4.5 out of 5 from 2 moderated reviews. View reviews' })).toBeVisible();
     await expect(reviews.locator('.store-review-row')).toHaveCount(2);
     await expect(reviews.getByRole('progressbar')).toHaveCount(5);
     const size = await reviews.evaluate(section => {
@@ -51,6 +52,7 @@ test('unreviewed store has an accessible, non-deceptive empty state', async ({ p
     }) }));
   await page.goto('/store/synthetic-campus-books');
   await expect(page.getByText('No reviews yet')).toBeVisible();
+  await expect(page.locator('.storefront-rating-badge')).toHaveCount(0);
   await expect(page.getByText('Approved buyer reviews will appear here.')).toBeVisible();
   await expect(page.getByRole('button', { name: 'Write a review' })).toBeVisible();
 });

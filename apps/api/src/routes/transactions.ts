@@ -5,6 +5,7 @@ import { prisma } from '../db.js';
 import { HttpError } from '../http.js';
 import { requireStudent } from '../auth.js';
 import { deliverPush } from '../push.js';
+import { pushOutboxWritesActivated, stagePushOutbox } from '../push-outbox.js';
 import { rowAccess } from '../row-access.js';
 import { meetupLocationBody, serializedMeetupLocation } from '../meetup-location.js';
 
@@ -46,7 +47,7 @@ type TransactionPushNotice = {
   notificationId: number;
 };
 function dispatchCommittedTransactionPush(notice: TransactionPushNotice | null) {
-  if (!notice) return;
+  if (!notice || pushOutboxWritesActivated) return;
   // Side effect only after the database transaction commits successfully.
   void deliverPush(notice.userId, notice.type, notice.payload, notice.notificationId)
     .catch(() => console.warn('Transaction Web Push delivery skipped'));
@@ -69,6 +70,7 @@ async function logEvent(tx: Tx, t: Transaction, actor: number, event: string,
   const notification = await tx.notification.create({
     data: { userId: recipientId, type, payload }, select: { id: true },
   });
+  await stagePushOutbox(tx, { id: notification.id, userId: recipientId, type });
   return { userId: recipientId, type, payload, notificationId: notification.id };
 }
 

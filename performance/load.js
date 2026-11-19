@@ -2,15 +2,16 @@ import http from 'k6/http';
 import { check, sleep } from 'k6';
 import { Counter } from 'k6/metrics';
 import { chooseJourney, pickByVu, validateConfig } from './config.js';
+import { verifyTargetBeforeLoad } from './target-probe.js';
+import { validateSyntheticAccountPools, syntheticAccountForVu } from './fixture-policy.js';
 
 const settings = validateConfig(__ENV); // Fails before any network traffic.
 const fixtures = JSON.parse(open(__ENV.PERF_FIXTURES || './fixtures.example.json'));
-if (!['smoke', 'baseline'].includes(settings.profileName) && __ENV.PERF_PUBLIC_ONLY !== 'YES') {
-  if (!Array.isArray(fixtures.accounts) || fixtures.accounts.length < settings.profile.maxVus ||
-      !fixtures.accounts.some(a => a.role === 'seller') ||
-      !fixtures.accounts.some(a => a.role === 'student'))
-    throw Error('Mixed-load stages require distinct synthetic accounts >= maxVus and both student/seller roles; alternatively explicitly use PERF_PUBLIC_ONLY=YES and report it as public-only');
-}
+// Validate before executing setup() or allocating VUs. Every VU has its own
+// synthetic buyer/seller pair; public-only stages must opt in explicitly.
+const syntheticPools = settings.profileName !== 'smoke' && __ENV.PERF_PUBLIC_ONLY !== 'YES'
+  ? validateSyntheticAccountPools(fixtures.accounts, settings.profile.maxVus)
+  : null;
 const skipped = new Counter('cpsu_skipped_steps');
 const journeys = new Counter('cpsu_journeys');
 let tokens = {}; // Per virtual-user JS runtime; do not share tokens across users.
@@ -26,7 +27,7 @@ export const options = {
   thresholds: {
     http_req_failed: [{ threshold: 'rate<0.01', abortOnFail: true, delayAbortEval: '30s' }],
     'http_req_duration{kind:read}': [
-      { threshold: 'p(95)<500', abortOnFail: true, delayAbortEval: '30s' },
+      { threshold: 'p(95)<300', abortOnFail: true, delayAbortEval: '30s' },
       { threshold: 'p(99)<1500', abortOnFail: true, delayAbortEval: '30s' },
     ],
   },
@@ -46,10 +47,8 @@ function get(path, tag, token) {
   return json(response);
 }
 function requireAuth(role = 'student') {
-  const pool = (fixtures.accounts || []).filter(a =>
-    a.role === role || (role === 'student' && a.role === 'seller'));
-  if (!pool.length) { skipped.add(1, { reason: 'no_synthetic_accounts' }); return null; }
-  const account = pickByVu(pool, __VU);
+  const account = syntheticPools ? syntheticAccountForVu(syntheticPools, __VU, role) : null;
+  if (!account) { skipped.add(1, { reason: 'public_only_or_missing_vu_identity' }); return null; }
   if (!account.email.endsWith('.test') || typeof account.password !== 'string' || !account.password)
     throw Error('Fixture accounts must use synthetic .test identities');
   if (tokens[account.email]?.expiresAt > Date.now()) return tokens[account.email].token;
@@ -87,7 +86,7 @@ function details() {
   if (!item) { skipped.add(1, { reason: 'no_published_listing' }); return; }
   get('/api/v1/listings/' + item.id, 'listing_detail');
   if (item.seller?.id) {
-    get('/api/v1/seller-profiles/' + item.seller.id, 'store_detail');
+    get('/api/v1/seller-profiles/' + item.seller.id + '?limit=24', 'store_detail');
     get('/api/v1/seller-profiles/' + item.seller.id + '/connections?countsOnly=true', 'store_follows_count');
   }
   if (Array.isArray(item.images) && item.images.length && fixtures.includeMedia === true) {
@@ -102,10 +101,11 @@ function details() {
 function messaging() {
   const token = requireAuth();
   if (!token) return;
-  const threads = get('/api/v1/inquiries', 'inbox', token);
+  const page = get('/api/v1/inquiries?limit=30', 'inbox', token);
+  const threads = page?.items;
   if (Array.isArray(threads) && threads.length) {
     // IMPORTANT: reading messages also updates synthetic delivery receipts in this API.
-    get('/api/v1/inquiries/' + threads[0].id + '/messages', 'messages', token);
+    get('/api/v1/inquiries/' + threads[0].id + '/messages?limit=50', 'messages', token);
   }
 }
 function seller() {
@@ -135,6 +135,12 @@ function notifications() {
   if (!token) return;
   get('/api/v1/notifications/unread-count', 'notifications_unread', token);
   get('/api/v1/notifications', 'notifications_feed', token);
+}
+
+// Run this once before VUs start: never infer isolation solely from env flags.
+export function setup() {
+  verifyTargetBeforeLoad(settings, __ENV);
+  return null;
 }
 
 export default function () {

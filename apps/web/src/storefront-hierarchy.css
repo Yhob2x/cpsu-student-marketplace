@@ -8,9 +8,9 @@
   padding-bottom: 20px;
 }
 .storefront .storefront-primary { min-width: 0; gap: var(--ui-space-4); }
-.storefront .storefront-primary-text { padding-top: 10px; }
+.storefront .storefront-primary-text { padding-top: var(--ui-space-2); }
 .storefront .storefront-primary h1 { font-size: clamp(1.6rem, 2.1vw, 2.05rem); line-height: 1.16; }
-.storefront .storefront-campus { gap: var(--ui-space-2); margin-bottom: 6px; }
+.storefront .storefront-campus { gap: var(--ui-space-2); margin-bottom: var(--ui-space-1); }
 .storefront .storefront-affiliation { gap: var(--ui-space-2); font-weight: var(--ui-weight-bold); }
 
 /* Three equal, icon-only targets with no permanent strokes or outlines.
@@ -89,7 +89,7 @@
 /* One unmistakable listings heading, one type switcher and a secondary search. */
 .storefront .storefront-products-heading { margin-bottom: var(--ui-space-4); }
 .storefront .storefront-products-heading h2 { margin: 0; }
-.storefront .storefront-navigation { gap: 12px; padding-bottom: 14px; margin-bottom: 18px; }
+.storefront .storefront-navigation { gap: 12px; padding-bottom: var(--ui-space-3); margin-bottom: var(--ui-space-4); }
 .storefront .storefront-toolbar { gap: 12px; }
 .storefront .storefront-tabs {
   display: inline-flex;
@@ -126,7 +126,7 @@
   background: var(--forest);
   color: var(--paper);
 }
-.storefront .storefront-listings .product-card .body { padding-inline: 10px; }
+.storefront .storefront-listings .product-card .body { padding-inline: var(--ui-space-2); }
 
 @media (min-width: 701px) and (max-width: 1120px) {
   .storefront .storefront-identity-content { grid-template-columns: minmax(0, 1fr) auto; }
@@ -135,7 +135,7 @@
 @media (max-width: 700px) {
   .storefront .storefront-identity-content {
     grid-template-columns: minmax(0, 1fr);
-    row-gap: 10px;
+    row-gap: var(--ui-space-2);
     padding-bottom: 16px;
   }
   .storefront .storefront-primary { gap: var(--ui-space-3); }
@@ -145,7 +145,7 @@
     justify-self: start;
     justify-content: flex-start;
     width: max-content;
-    gap: 6px;
+    gap: var(--ui-space-1);
     margin-left: -2px;
   }
   .storefront .storefront-owner-actions .btn.storefront-icon-action,
@@ -156,7 +156,7 @@
   }
   .storefront .storefront-facts {
     grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 14px 12px;
+    gap: var(--ui-space-3) 12px;
     padding: var(--ui-space-4);
   }
   .storefront .storefront-facts > div,
@@ -230,7 +230,7 @@
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 4px 14px;
+  gap: 4px var(--ui-space-3);
   min-width: 0;
 }
 .storefront .storefront-opened {
@@ -293,8 +293,8 @@
 @media (max-width: 700px) {
   .storefront .storefront-facts {
     grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: var(--ui-space-4) 10px;
-    padding: 14px var(--ui-space-4);
+    gap: var(--ui-space-4) var(--ui-space-2);
+    padding: var(--ui-space-3) var(--ui-space-4);
   }
 }
 
@@ -326,14 +326,14 @@
 .storefront .storefront-report {
   display: grid;
   justify-items: start;
-  gap: .65rem;
+  gap: var(--ui-space-3);
   width: min(100%, 42rem);
   margin: .15rem 0 0;
   padding: 0;
   border: 0;
   background: transparent;
 }
-.storefront .storefront-report .row { gap: .65rem; margin: 0; }
+.storefront .storefront-report .row { gap: var(--ui-space-3); margin: 0; }
 .storefront .storefront-report .storefront-report-trigger.btn.ghost {
   display: inline-flex;
   align-items: center;

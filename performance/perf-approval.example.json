@@ -1,0 +1,10 @@
+{
+  "_purpose": "EXAMPLE ONLY. Never insert real approvals into this tracked example.",
+  "purpose": "isolated-local-performance",
+  "databaseName": "cpsu_marketplace_perf",
+  "hostApprovalReference": "",
+  "privacyApprovalReference": "",
+  "migrationApprovalReference": "",
+  "syntheticDataApproved": false,
+  "reviewedMigrations": []
+}

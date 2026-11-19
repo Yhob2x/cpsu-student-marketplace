@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'bun:test';
-import { reconcilePushOwnership } from '../src/push-reconciliation';
+import { reconcilePushOwnership, revokePushOnDevice } from '../src/push-reconciliation';
 
 describe('browser push ownership during account switching', () => {
   it('keeps a subscription only if the active account is confirmed to own it', async () => {
@@ -100,5 +100,41 @@ describe('browser push ownership during account switching', () => {
       async () => { throw new Error('browser refused unsubscribe'); },
       () => true,
     )).rejects.toThrow('browser refused unsubscribe');
+  });
+});
+
+describe('explicit push opt-out requires truthful revocation results', () => {
+  it('revokes the server endpoint before unsubscribing locally', async () => {
+    const calls: string[] = [];
+    await revokePushOnDevice(
+      async () => { calls.push('server'); },
+      async () => { calls.push('browser'); return true; },
+    );
+    expect(calls).toEqual(['server', 'browser']);
+  });
+
+  it('does not unsubscribe locally if the server capability could not be revoked', async () => {
+    let localAttempts = 0;
+    await expect(revokePushOnDevice(
+      async () => { throw new Error('server offline'); },
+      async () => { localAttempts++; return true; },
+    )).rejects.toThrow('server offline');
+    expect(localAttempts).toBe(0);
+  });
+
+  it('never reports opt-out success if the browser resolves unsubscribe(false)', async () => {
+    let revoked = 0;
+    await expect(revokePushOnDevice(
+      async () => { revoked++; },
+      async () => false,
+    )).rejects.toThrow('this browser could not remove its subscription');
+    expect(revoked).toBe(1);
+  });
+
+  it('propagates browser unsubscribe errors after server revocation', async () => {
+    await expect(revokePushOnDevice(
+      async () => {},
+      async () => { throw new Error('browser permission failure'); },
+    )).rejects.toThrow('browser permission failure');
   });
 });

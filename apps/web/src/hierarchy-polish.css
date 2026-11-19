@@ -6,7 +6,7 @@
   display: grid;
   gap: .75rem;
   min-width: 0;
-  margin: .35rem 0;
+  margin: var(--ui-space-1) 0;
   padding: 1rem;
   border: 1px solid var(--line);
   border-radius: 12px;
@@ -17,10 +17,10 @@
 .register-identity-fields .muted { margin: 0; font-size: var(--ui-type-sm); line-height: 1.55; }
 .register-identity-note {
   display: flex;
-  gap: .65rem;
+  gap: var(--ui-space-3);
   align-items: flex-start;
   margin: .25rem 0 0;
-  padding: .75rem .85rem;
+  padding: .75rem var(--ui-space-3);
   border: 1px solid var(--line);
   border-radius: 12px;
   background: var(--surface-soft);
@@ -50,9 +50,9 @@
   .explore-control-header .filters.filter-panel {
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: .6rem .9rem;
+    gap: var(--ui-space-2) var(--ui-space-4);
     padding: var(--ui-space-3) 1rem;
-    margin: .5rem 0 .35rem;
+    margin: .5rem 0 var(--ui-space-1);
   }
   .explore-control-header .filters.filter-panel:not([data-desktop-open="true"]) .explore-secondary-filter {
     display: none;
@@ -63,10 +63,10 @@
   .explore-control-header .desktop-filter-toggle {
     display: inline-flex;
     align-items: center;
-    gap: .4rem;
+    gap: var(--ui-space-2);
     min-height: 40px;
     margin: .15rem 0 0;
-    padding: .35rem var(--ui-space-2);
+    padding: var(--ui-space-1) var(--ui-space-2);
     border: 1px solid transparent;
     border-radius: var(--ui-radius-sm);
     background: transparent;
@@ -79,7 +79,7 @@
   .desktop-filter-toggle span { font-size: var(--ui-type-xs); font-weight: 650; color: var(--ink-soft); }
   .desktop-filter-toggle:hover { background: var(--surface-soft); border-color: var(--line); }
   .desktop-filter-toggle:focus-visible { outline: 3px solid var(--color-focus); outline-offset: 2px; }
-  .explore-control-header .results { margin-block: .35rem .6rem; }
+  .explore-control-header .results { margin-block: var(--ui-space-1) var(--ui-space-2); }
 }
 
 /* Short but meaningful names can occupy two lines. */
@@ -89,34 +89,34 @@
 }
 
 @media (max-width: 700px) {
-  .storefront { gap: .85rem; }
+  .storefront { gap: var(--ui-space-3); }
   .storefront-banner { height: 65px; padding: .75rem 1rem; }
   .storefront-banner svg { width: 22px; height: 22px; }
-  .storefront-identity-content { gap: var(--ui-space-2); padding: 0 .9rem .75rem; }
-  .storefront-primary { gap: .6rem; }
+  .storefront-identity-content { gap: var(--ui-space-2); padding: 0 var(--ui-space-4) .75rem; }
+  .storefront-primary { gap: var(--ui-space-2); }
   .storefront-primary > .seller-avatar { width: 64px; height: 64px; margin-top: -19px; border-width: 3px; }
   .storefront-primary-text { padding-top: .25rem; }
   .storefront-primary h1 { font-size: 1.4rem; }
   .storefront-campus { margin-bottom: var(--ui-space-1); }
-  .storefront-owner-actions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .4rem; }
+  .storefront-owner-actions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--ui-space-2); }
   .storefront-owner-actions .btn { width: 100%; min-width: 0; padding-inline: .5rem; font-size: var(--ui-type-sm); }
   .storefront-owner-actions .storefront-browse-action { grid-column: 1 / -1; }
   .storefront-owner-actions .storefront-follow-feedback { grid-column: 1 / -1; }
-  .storefront-facts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); padding: var(--ui-space-2) .9rem; gap: var(--ui-space-2) var(--ui-space-3); }
+  .storefront-facts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); padding: var(--ui-space-2) var(--ui-space-4); gap: var(--ui-space-2) var(--ui-space-3); }
   .storefront-facts > div { min-width: 0; gap: .08rem; }
   .storefront-facts span { font-size: var(--ui-type-xs); }
   .storefront-facts strong { font-size: var(--ui-type-sm); }
-  .storefront-products-heading { margin-bottom: .4rem; }
-  .storefront-navigation { gap: .25rem; padding: var(--ui-space-1) 0 .4rem; margin-bottom: .5rem; }
+  .storefront-products-heading { margin-bottom: var(--ui-space-2); }
+  .storefront-navigation { gap: .25rem; padding: var(--ui-space-1) 0 var(--ui-space-2); margin-bottom: .5rem; }
   .storefront-category-tabs { gap: var(--ui-space-1); }
-  .storefront-category-tabs button { padding-inline: .65rem; }
-  .storefront-browser { padding-bottom: .6rem; }
+  .storefront-category-tabs button { padding-inline: var(--ui-space-3); }
+  .storefront-browser { padding-bottom: var(--ui-space-2); }
 }
 
 /* On regular-width phones these four real facts fit on one concise row,
    making the first listing visible sooner. Narrow 320px phones keep two rows. */
 @media (min-width: 370px) and (max-width: 700px) {
-  .storefront-facts { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: .35rem; }
+  .storefront-facts { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--ui-space-1); }
   .storefront-facts > div { align-content: start; }
 }
 @media (max-width: 359px) {
@@ -176,7 +176,7 @@
     display: flex;
     flex-wrap: nowrap;
     align-items: center;
-    gap: .35rem;
+    gap: var(--ui-space-1);
     padding-inline: var(--ui-space-3);
   }
   .masthead:has(.who-guest) > .brand {

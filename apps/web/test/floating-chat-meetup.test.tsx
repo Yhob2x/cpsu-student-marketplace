@@ -103,3 +103,64 @@ describe('floating chat meetup map', () => {
     expect(screen.getByRole('link', { name: 'View transaction and confirm meetup' })).toBeTruthy();
   });
 });
+
+describe('floating inbox unread states and receipts', () => {
+  test('unread conversations are distinguished without styling read threads as unread', async () => {
+    globalThis.fetch = (async (url: string | URL | Request) => {
+      const path = String(url).split('?')[0];
+      if (path.endsWith('/inquiries')) return Response.json({
+        items: [
+          { id: 9, otherStudentName: 'New Partner', listing: { title: 'Notebook' },
+            unreadCount: 2, lastMessage: { id: 21, mine: false, body: 'Is it available?', createdAt: '2026-11-19T06:30:00Z' } },
+          { id: 10, otherStudentName: 'Read Partner', listing: { title: 'Bag' },
+            unreadCount: 0, lastMessage: { id: 20, mine: true, body: 'Thanks', receipt: 'read', createdAt: '2026-11-19T06:00:00Z' } },
+        ], hasMore: false, nextBeforeId: null,
+      });
+      if (path.endsWith('/inquiries/9/messages')) return Response.json({
+        thread: { id: 9, otherStudentName: 'New Partner', listingId: 7, status: 'open' },
+        listing: null, handoff: null, transaction: null, typing: false,
+        messages: [
+          { id: 21, mine: false, body: 'Is it available?', seenAt: '2026-11-19T06:40:00Z', createdAt: '2026-11-19T06:30:00Z' },
+          { id: 22, mine: true, body: 'Yes', receipt: 'delivered', createdAt: '2026-11-19T06:41:00Z' },
+        ],
+      });
+      return Response.json({});
+    }) as typeof fetch;
+    render(<MemoryRouter><FloatingChatPanel motionState="open" motionEnabled={false}
+      onClose={() => {}} onExitComplete={() => {}} onUnreadChanged={async () => {}} /></MemoryRouter>);
+    const unread = await screen.findByRole('button', { name: /New Partner.*2 unread messages/ });
+    const read = screen.getByRole('button', { name: /Read Partner/ });
+    expect(unread.className).toContain('is-unread');
+    expect(read.className).not.toContain('is-unread');
+    expect(unread.querySelector('.floating-chat-unread-dot')).toBeTruthy();
+    expect(read.querySelector('.floating-chat-unread-dot')).toBeNull();
+    expect(read.querySelector('.floating-chat-preview-receipt.is-read')).toBeTruthy();
+
+    fireEvent.click(unread);
+    await waitFor(() => expect(screen.getByText('Delivered')).toBeTruthy());
+    expect(screen.queryByText('Read')).toBeNull();
+  });
+
+  test('the latest outgoing message shows the read double-check state', async () => {
+    globalThis.fetch = (async (url: string | URL | Request) => {
+      const path = String(url).split('?')[0];
+      if (path.endsWith('/inquiries')) return Response.json({
+        items: [{ id: 9, otherStudentName: 'Sofia', listing: { title: 'Notebook' }, unreadCount: 0,
+          lastMessage: { id: 22, mine: true, receipt: 'read', body: 'Thank you', createdAt: '2026-11-19T06:30:00Z' } }],
+        hasMore: false, nextBeforeId: null,
+      });
+      if (path.endsWith('/inquiries/9/messages')) return Response.json({
+        thread: { id: 9, otherStudentName: 'Sofia', listingId: 7, status: 'open' },
+        listing: null, handoff: null, transaction: null,
+        messages: [{ id: 22, mine: true, body: 'Thank you', receipt: 'read', createdAt: '2026-11-19T06:30:00Z' }],
+      });
+      return Response.json({});
+    }) as typeof fetch;
+    render(<MemoryRouter><FloatingChatPanel motionState="open" motionEnabled={false}
+      onClose={() => {}} onExitComplete={() => {}} onUnreadChanged={async () => {}} /></MemoryRouter>);
+    fireEvent.click(await screen.findByText('Sofia'));
+    const read = await screen.findByText('Read');
+    expect(read.parentElement?.className).toContain('is-read');
+    expect(read.parentElement?.querySelectorAll('svg').length).toBe(1);
+  });
+});

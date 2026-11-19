@@ -40,7 +40,12 @@ export const endpointHash = (endpoint: string) => createHash('sha256').update(en
 // Separate subscription and outbound-delivery gates; never infer approval from VAPID keys alone.
 const pushPolicy = evaluatePushPolicy(env);
 export const pushReady = pushPolicy.subscriptionsEnabled;
-export const pushDeliveryReady = pushPolicy.deliveryEnabled;
+// Phase 6 preparation only: the new queue/worker and its transaction integration
+// are NOT activated yet. Even two accidentally enabled environment switches must
+// not revive legacy fire-and-forget outbound delivery before isolated migration
+// and privacy-reviewed device acceptance. Flip only with reviewed worker wiring.
+export const durableOutboxWorkerActivated = false;
+export const pushDeliveryReady = pushPolicy.deliveryEnabled && durableOutboxWorkerActivated;
 
 const IMPORTANT_TRANSACTION_EVENTS = new Set([
   'transaction.requested', 'transaction.accepted', 'transaction.rejected',

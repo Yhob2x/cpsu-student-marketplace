@@ -238,7 +238,7 @@ main .category-section { margin-top: 16px; }
   }
   header.top .masthead > .who-guest { grid-template-columns: none; }
   header.top .masthead .who .signin { padding: 8px var(--ui-space-1); font-size: var(--ui-type-xs); }
-  header.top .masthead .who .signup-action { min-height: 40px; padding: var(--ui-space-2) 10px; font-size: var(--ui-type-xs); }
+  header.top .masthead .who .signup-action { min-height: 40px; padding: var(--ui-space-2) var(--ui-space-2); font-size: var(--ui-type-xs); }
   header.top .masthead .who > button { padding: 8px; font-size: var(--ui-type-xs); }
   header.top .actions a { padding: var(--ui-space-1); min-width: 40px; min-height: 40px; }
   main .home-hero {
@@ -345,7 +345,7 @@ main .category-section { margin-top: 16px; }
     width: clamp(88px, 24vw, 106px);
     min-width: 88px;
     min-height: 88px;
-    padding: 10px var(--ui-space-2);
+    padding: var(--ui-space-2) var(--ui-space-2);
     gap: var(--ui-space-1);
     border-radius: 12px;
     font-size: 12px;

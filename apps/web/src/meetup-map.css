@@ -5,7 +5,7 @@
 .meetup-location-card .meetup-actions { display: flex; flex-wrap: wrap; gap: .65rem; align-items: center; }
 .meetup-location-card .meetup-actions .btn { min-height: 42px; }
 .meetup-map { height: min(55vh, 340px); min-height: 250px; width: 100%; border-radius: 12px; overflow: hidden; z-index: 0; background: var(--color-neutral-200); }
-.meetup-map .leaflet-control-attribution { font-size: .65rem; }
+.meetup-map .leaflet-control-attribution { font-size: var(--ui-type-xs); }
 .meetup-location-card .meetup-map-wrap { display: grid; gap: .55rem; }
 .meetup-location-card .meetup-map-wrap > button { justify-self: start; }
 .meetup-location-card .meetup-map-guide { margin: 0; }

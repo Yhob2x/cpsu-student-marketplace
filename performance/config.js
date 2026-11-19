@@ -60,15 +60,20 @@ export function validateConfig(env) {
   const profile = PROFILES[profileName];
   if (!profile) throw Error('Unknown PERF_PROFILE');
   if (env.PERF_ISOLATED !== 'I_CONFIRM_SYNTHETIC_ONLY') throw Error('Explicit PERF_ISOLATED confirmation required');
-  if (!/^cpsu_marketplace_(test|perf|staging)(_[a-z0-9_]+)?$/.test(env.PERF_DB_NAME || ''))
+  if (env.PERF_DB_NAME !== 'cpsu_marketplace_perf')
     throw Error('PERF_DB_NAME must identify an isolated synthetic database');
   if (env.PERF_DB_VERIFIED !== 'I_CHECKED_API_DATABASE_TARGET')
     throw Error('Verify the running API connection actually points to the isolated database');
-  const url = new URL(env.PERF_BASE_URL || 'http://127.0.0.1:4400');
+  if (!env.PERF_BASE_URL) throw Error('Explicit isolated performance API origin required');
+  if (!env.PERF_TARGET_TOKEN || env.PERF_TARGET_TOKEN.length < 32 || env.PERF_TARGET_TOKEN.length > 512)
+    throw Error('Dedicated performance API attestation token required');
+  const url = new URL(env.PERF_BASE_URL);
   if (!['http:', 'https:'].includes(url.protocol) || url.username || url.password ||
       url.search || url.hash || url.pathname !== '/')
     throw Error('PERF_BASE_URL must be a bare HTTP(S) origin without credentials or path');
   const loopback = ['127.0.0.1', 'localhost', '[::1]'].includes(url.hostname);
+  if (loopback && url.port !== '4401')
+    throw Error('Local load may target only the dedicated isolated API on port 4401');
   if (!loopback) {
     if (env.PERF_STAGING_APPROVED !== 'YES' || env.PERF_APPROVED_HOST !== url.hostname)
       throw Error('Non-loopback hosts require exact hostname approval');
@@ -84,6 +89,13 @@ export function validateConfig(env) {
   if (env.PERF_ENABLE_WRITES === 'YES' && env.PERF_APPROVED_WRITES !== 'I_APPROVE_SYNTHETIC_MUTATIONS')
     throw Error('Writes require a second explicit approval');
   return { profileName, profile, baseUrl: url.origin };
+}
+
+/** Reject a different API process even when URL and declaration flags look plausible. */
+export function assertIsolatedApiAttestation(payload, expectedDbName) {
+  if (!payload || payload.isolated !== true || payload.database !== expectedDbName)
+    throw Error('Running API did not prove its synthetic database identity');
+  return true;
 }
 
 export function pickByVu(items, vu) {

@@ -3,6 +3,7 @@
 import http from 'k6/http';
 import { check, sleep } from 'k6';
 import { validateConfig } from './config.js';
+import { verifyTargetBeforeLoad } from './target-probe.js';
 
 const config = validateConfig(__ENV);
 if (config.profileName !== 'smoke') throw Error('Writes harness only supports smoke profile');
@@ -23,6 +24,7 @@ export const options = {
     vus: 1, iterations: 1, maxDuration: '30s' } },
   thresholds: {
     http_req_failed: [{ threshold: 'rate<0.01', abortOnFail: true }],
+    'http_req_duration{kind:write}': [{ threshold: 'p(95)<500', abortOnFail: true }],
   },
 };
 
@@ -31,6 +33,11 @@ function request(method, path, body, token, name) {
     tags: { endpoint: name, kind: 'write' }, timeout: '10s' };
   return http.request(method, config.baseUrl + path, body === null ? null : JSON.stringify(body), params);
 }
+export function setup() {
+  verifyTargetBeforeLoad(config, __ENV);
+  return null;
+}
+
 export default function () {
   const login = http.post(config.baseUrl + '/api/v1/auth/login',
     JSON.stringify({ email: buyer.email, password: buyer.password }), {

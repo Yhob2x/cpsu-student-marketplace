@@ -1,16 +1,32 @@
 import { describe, expect, test } from 'bun:test';
-import { chooseJourney, TRAFFIC, validateConfig, PROFILES, pickByVu } from './config.js';
+import { chooseJourney, TRAFFIC, validateConfig, PROFILES, pickByVu, assertIsolatedApiAttestation } from './config.js';
 const good = {
   PERF_ISOLATED: 'I_CONFIRM_SYNTHETIC_ONLY',
-  PERF_DB_NAME: 'cpsu_marketplace_test',
+  PERF_DB_NAME: 'cpsu_marketplace_perf',
   PERF_DB_VERIFIED: 'I_CHECKED_API_DATABASE_TARGET',
-  PERF_BASE_URL: 'http://127.0.0.1:4400',
+  PERF_BASE_URL: 'http://127.0.0.1:4401',
+  PERF_TARGET_TOKEN: 'synthetic-only-not-a-real-token-1234567890',
 };
 describe('load generator safety gates', () => {
   test('requires isolation and verified DB target', () => {
     expect(() => validateConfig({})).toThrow();
     expect(() => validateConfig({ ...good, PERF_DB_NAME: 'cpsu_marketplace' })).toThrow();
+    expect(() => validateConfig({ ...good, PERF_DB_NAME: 'cpsu_marketplace_test' })).toThrow();
+    expect(() => validateConfig({ ...good, PERF_DB_NAME: 'cpsu_marketplace_staging' })).toThrow();
     expect(validateConfig(good).profileName).toBe('smoke');
+  });
+  test('requires an explicit separate port and an attestation token', () => {
+    expect(() => validateConfig({ ...good, PERF_BASE_URL: '' })).toThrow();
+    expect(() => validateConfig({ ...good, PERF_BASE_URL: 'http://127.0.0.1:4000' })).toThrow();
+    expect(() => validateConfig({ ...good, PERF_BASE_URL: 'http://127.0.0.1:4400' })).toThrow();
+    expect(() => validateConfig({ ...good, PERF_TARGET_TOKEN: '' })).toThrow();
+    expect(() => validateConfig({ ...good, PERF_TARGET_TOKEN: 'short' })).toThrow();
+  });
+  test('rejects missing, forged or wrong-schema API attestation before requests', () => {
+    expect(assertIsolatedApiAttestation({ isolated: true, database: good.PERF_DB_NAME }, good.PERF_DB_NAME)).toBe(true);
+    for (const bad of [null, {}, { isolated: false, database: good.PERF_DB_NAME },
+      { isolated: true, database: 'cpsu_marketplace' }, { isolated: true, database: 'cpsu_marketplace_test' }])
+      expect(() => assertIsolatedApiAttestation(bad, good.PERF_DB_NAME)).toThrow();
   });
   test('refuses real campus network targets', () => {
     expect(() => validateConfig({ ...good, PERF_BASE_URL: 'https://cpsu.edu.ph', PERF_STAGING_APPROVED: 'YES', PERF_APPROVED_HOST: 'cpsu.edu.ph' })).toThrow();

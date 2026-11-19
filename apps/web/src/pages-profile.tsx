@@ -1,3 +1,4 @@
+import { LegacyButton } from './components/ui/legacy-button';
 import { Field, Panel } from './components/ui/primitives';
 import { FormEvent, useEffect, useRef, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
@@ -186,7 +187,7 @@ export function Profile() {
             aria-invalid={showNameError} aria-describedby={showNameError ? 'profile-name-help profile-name-error' : 'profile-name-help'} />
           <p id="profile-name-help" className="muted profile-name-help">Shown to students and reviewers. Changes do not affect campus verification.</p>
           {showNameError && <p className="profile-field-error" id="profile-name-error">Enter 2–80 characters for your display name.</p>}
-          <button className="btn profile-save-button" disabled={busy || !nameChange.canSave}>{busy ? 'Saving...' : 'Save changes'}</button>
+          <LegacyButton className="profile-save-button" disabled={busy || !nameChange.canSave}>{busy ? 'Saving...' : 'Save changes'}</LegacyButton>
           {ok && <p className="profile-save-success" role="status"><Icon name="check" size={16} />{ok}</p>}
           {err && <p className="err" role="alert">{err}</p>}
         </form>
@@ -365,13 +366,13 @@ export function Notifications() {
           ? unread + ' unread' : 'You’re caught up'}</strong>
         {rows === null && err && <p>Try again to load your notifications.</p>}
       </div>
-      <button type="button" className="btn notifications-mark-all" onClick={() => void markAll()}
+      <LegacyButton type="button" className="notifications-mark-all" onClick={() => void markAll()}
         disabled={rows === null || busy || markingId !== null || unread === 0} aria-busy={busy}
         aria-label={busy ? 'Marking all notifications as read' : 'Mark all as read'}
         title={busy ? 'Marking all notifications as read' : 'Mark all as read'}>
         <Icon name="checks" size={19} />
         <span className="sr-only">{busy ? 'Marking notifications read' : 'Mark all read'}</span>
-      </button>
+      </LegacyButton>
     </div>
 
     <div className="notifications-toolbar">
@@ -390,9 +391,9 @@ export function Notifications() {
 
     {err && <div className="notifications-error" role="alert">
       <p>{err}</p>
-      <button type="button" className="btn ghost" onClick={() => void load(true)} disabled={refreshing}>
+      <LegacyButton type="button" className="ghost" onClick={() => void load(true)} disabled={refreshing}>
         Try again
-      </button>
+      </LegacyButton>
     </div>}
     <p className="notifications-feedback" role="status" aria-atomic="true">{feedback}</p>
 
@@ -412,7 +413,7 @@ export function Notifications() {
       <span className="notifications-empty-icon" aria-hidden="true"><Icon name="check" size={28} /></span>
       <h2>No unread notifications</h2>
       <p>You’re all caught up. Your previous updates are still available.</p>
-      <button type="button" className="btn ghost" onClick={() => setFilter('all')}>Show all notifications</button>
+      <LegacyButton type="button" className="ghost" onClick={() => setFilter('all')}>Show all notifications</LegacyButton>
     </div>}
 
     {groups.length > 0 && <div className="notifications-feed">

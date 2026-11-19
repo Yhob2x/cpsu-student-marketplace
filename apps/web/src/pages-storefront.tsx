@@ -3,7 +3,8 @@ import { Fragment, useMemo, useState, type ReactNode } from 'react';
 import { Link } from 'react-router-dom';
 import { Icon } from './icons';
 import { SellerAvatar } from './seller-avatar';
-import { StoreRatingsAndReviews } from './store-review-widgets';
+import { StoreRatingsAndReviews, type StoreReviewSummary } from './store-review-widgets';
+import { StoreRatingBadge } from './store-rating-badge';
 import { StoreReviewEntry } from './store-review-entry';
 import { StoreAppreciation } from './store-appreciation';
 import { StoreFollowers } from './store-followers';
@@ -61,6 +62,9 @@ export function StorefrontView({ store, isOwner, canFollow, onFollow, followBusy
   const [chatOpen, setChatOpen] = useState(false);
   const [chatListingId, setChatListingId] = useState(store.listings[0]?.id ?? 0);
   const [chatBody, setChatBody] = useState('');
+  // Reuse the reviews section's published aggregate rather than making another request.
+  const [rating, setRating] = useState<{ storeId: number; summary: StoreReviewSummary | null } | null>(null);
+  const currentRating = rating?.storeId === store.id ? rating.summary : null;
   const categories = useMemo(() => Array.from(new Set(store.listings
     .filter(listing => filter === 'all' || listing.type === filter)
     .map(listing => listing.category.name))).sort((a, b) => a.localeCompare(b)), [store.listings, filter]);
@@ -79,6 +83,7 @@ export function StorefrontView({ store, isOwner, canFollow, onFollow, followBusy
           <div className="storefront-primary-text">
             <div className="storefront-title-row">
               <h1 id="storefront-name">{store.storeName}</h1>
+              <StoreRatingBadge summary={currentRating} />
               <div className="storefront-owner-actions">
           {isOwner && <Link className="btn storefront-edit-action" to="/profile#store-profile">Edit my store</Link>}
           {!isOwner && canFollow && <LegacyButton type="button"
@@ -209,6 +214,7 @@ export function StorefrontView({ store, isOwner, canFollow, onFollow, followBusy
       {moreError && <p className="err" role="alert">Could not load more listings: {moreError}</p>}
     </section>
     <StoreRatingsAndReviews storeId={store.id}
+      onSummary={summary => setRating({ storeId: store.id, summary })}
       reviewAction={!isOwner && canFollow ? <StoreReviewEntry storeId={store.id}
         signedIn={signedIn} onSignIn={onChatSignIn} /> : undefined} />
     <section className="storefront-about" aria-label="About this store">

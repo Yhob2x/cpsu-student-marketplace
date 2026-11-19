@@ -27,7 +27,7 @@ describe('legacy button consolidation without design or behavior changes', () =>
     expect(danger).toContain('class="btn danger"');
   });
 
-  test('six public, transaction, and admin screens use the reusable native button', () => {
+  test('fourteen marketplace, chat, student, review, and admin files reuse the native button', () => {
     for (const [filename, expected] of [
       ['pages-managed-content.tsx', 8],
       ['pages-reviewers.tsx', 7],
@@ -35,6 +35,14 @@ describe('legacy button consolidation without design or behavior changes', () =>
       ['pages-public.tsx', 13],
       ['pages-transactions.tsx', 10],
       ['pages-storefront.tsx', 6],
+      ['pages-account.tsx', 26],
+      ['pages-admin.tsx', 20],
+      ['pages-profile.tsx', 4],
+      ['store-review-widgets.tsx', 13],
+      ['meetup-location-card.tsx', 4],
+      ['seller-store-details.tsx', 2],
+      ['floating-chat-panel.tsx', 5],
+      ['main.tsx', 2],
     ] as const) {
       const source = readFileSync(new URL('../src/' + filename, import.meta.url), 'utf8');
       expect(source).toContain("from './components/ui/legacy-button'");

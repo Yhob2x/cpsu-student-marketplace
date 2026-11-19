@@ -1,3 +1,4 @@
+import { LegacyButton } from './components/ui/legacy-button';
 import { Field, Panel } from './components/ui/primitives';
 import { FormEvent, useEffect, useRef, useState } from 'react';
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
@@ -76,7 +77,7 @@ export function Login() {
         onChange={() => clearField('password')} />
     </Field>
     {fieldErrors.password && <p className="field-error" id="login-password-error" role="alert">{fieldErrors.password}</p>}
-    {err && <p className="err" role="alert">{err}</p>}<button className="btn" disabled={busy}>{busy ? 'Signing in…' : 'Sign in'}</button>
+    {err && <p className="err" role="alert">{err}</p>}<LegacyButton className="" disabled={busy}>{busy ? 'Signing in…' : 'Sign in'}</LegacyButton>
     <p className="muted">New here? <Link to={next === '/' ? '/register' : `/register?next=${encodeURIComponent(next)}`}>Create an account</Link></p></form>;
 }
 
@@ -169,7 +170,7 @@ export function Register() {
     {fieldErrors.campusId && <p className="field-error" id="register-campus-error" role="alert">{fieldErrors.campusId}</p>}
     {campusStatus === 'loading' && <p className="muted" role="status">Loading campuses…</p>}
     {campusStatus === 'error' && <div className="stack" role="alert"><p className="err">Campus options could not load. {campusError}</p>
-      <button type="button" className="btn ghost" onClick={loadCampuses}>Retry campuses</button></div>}
+      <LegacyButton type="button" className="ghost" onClick={loadCampuses}>Retry campuses</LegacyButton></div>}
     {identityStatus === 'active' && <fieldset className="register-identity-fields" aria-describedby="register-private-identity-info">
       <legend>Private student verification details</legend>
       <p className="muted" id="register-private-identity-info">These details are kept private and do not automatically verify your CPSU affiliation.</p>
@@ -192,10 +193,10 @@ export function Register() {
       {fieldErrors.studentIdNumber && <p className="field-error" id="register-student-id-error" role="alert">{fieldErrors.studentIdNumber}</p>}
     </fieldset>}
     {identityStatus === 'error' && <div className="stack" role="alert"><p className="err">Could not check registration requirements.</p>
-      <button type="button" className="btn ghost" onClick={loadIdentityPolicy}>Retry registration check</button></div>}
+      <LegacyButton type="button" className="ghost" onClick={loadIdentityPolicy}>Retry registration check</LegacyButton></div>}
     <p className="muted">You can browse and message now. A campus reviewer must verify you before you can sell.</p>
     {err && <p className="err" role="alert">{err}</p>}
-    <button className="btn" disabled={busy || campusStatus !== 'ready' || (identityStatus !== 'active' && identityStatus !== 'inactive')}>{busy ? 'Creating account…' : 'Create account'}</button>
+    <LegacyButton className="" disabled={busy || campusStatus !== 'ready' || (identityStatus !== 'active' && identityStatus !== 'inactive')}>{busy ? 'Creating account…' : 'Create account'}</LegacyButton>
     {identityStatus === 'inactive' && <p className="register-identity-note"><Icon name="shield" size={17} /><span><strong>Student ID and full name aren't collected yet.</strong> Identity collection is awaiting CPSU privacy approval. You can create an account without them.</span></p>}
     {identityStatus === 'checking' && <p className="muted" role="status">Checking private registration requirements…</p>}
   </form>;
@@ -457,9 +458,9 @@ export function Dashboard() {
           </div>
         </div>
         <div className="storefront-owner-actions store-dashboard-actions">
-          <button type="button" className="btn store-new-listing-action" onClick={openListingComposer}>
+          <LegacyButton type="button" className="store-new-listing-action" onClick={openListingComposer}>
             <Icon name="plus" size={18} /> {repeatListing ? 'Continue draft' : 'New listing'}
-          </button>
+          </LegacyButton>
           <Link className="btn ghost" to={`/stores/${me.storeId}`}>View public store</Link>
           <Link className="btn ghost" to="/profile#store-profile">Store settings</Link>
         </div>
@@ -485,14 +486,14 @@ export function Dashboard() {
     {verified && !me.storeId && <form className="panel stack" onSubmit={createStore}><h2>Open your store</h2>
       <Field className="">Store name<input name="storeName" placeholder="Name students will see" required minLength={2} maxLength={80} /></Field>
       <Field className="">Store description<textarea name="description" placeholder="What do you make or offer?" required minLength={10} maxLength={1000} /></Field>
-      <button className="btn">Open store</button></form>}
+      <LegacyButton className="">Open store</LegacyButton></form>}
     {me.storeId && <>
       <details className="panel store-create" ref={createDetails}><summary><span>{repeatListing ? 'Sell again' : 'New listing'}</span><span className="store-create-hint">Save a draft</span></summary>
       <form key={repeatListing?.id ?? 'new'} className="stack seller-composer listing-composer" onChange={() => setCreateDirty(true)} onSubmit={createListing}>
         <div className="listing-composer-intro"><span>YOUR NEXT LISTING</span><p>{repeatListing ? 'Create a fresh draft from this sold listing. The original stays sold.' : 'Add the details, save your draft, then submit it for campus review.'}</p></div>
-        {categoriesError && <p className="err" role="alert">Could not load categories: {categoriesError} <button type="button" className="btn ghost" onClick={() => { void loadCategories(); }}>Retry categories</button></p>}
+        {categoriesError && <p className="err" role="alert">Could not load categories: {categoriesError} <LegacyButton type="button" className="ghost" onClick={() => { void loadCategories(); }}>Retry categories</LegacyButton></p>}
         {categoriesLoading && <p className="muted" role="status">Loading categories…</p>}
-        {repeatListing && <button type="button" className="btn ghost store-start-blank" onClick={startBlankListing}>Start blank instead</button>}
+        {repeatListing && <LegacyButton type="button" className="ghost store-start-blank" onClick={startBlankListing}>Start blank instead</LegacyButton>}
         <fieldset className="listing-kind-field" disabled={creatingListing}>
           <legend>What are you listing?</legend>
           <p className="listing-kind-hint">Choose one to see the right categories.</p>
@@ -530,21 +531,21 @@ export function Dashboard() {
           <p><strong>Drafts do not need photos.</strong> Add 1–{MAX_LISTING_PHOTOS} photos before submitting for review. Select your cover before saving; it uploads first.</p>
           <p><Icon name="shield" size={17} /> Show the actual item or your own service work. Do not use unrelated photos or misleading promotional images. Pornography, sexual imagery, graphic violence and other prohibited content are not allowed; campus reviewers check photos before publication.</p>
         </div>
-        <div className="listing-composer-footer"><p>Saving creates a private draft, not a public listing.</p><button className="btn" disabled={creatingListing || categoriesLoading || Boolean(categoriesError) || (newListingKind !== '' && categoriesForKind(cats, newListingKind).length === 0)}>{creatingListing ? 'Saving draft…' : 'Save draft'}</button></div></form></details>
+        <div className="listing-composer-footer"><p>Saving creates a private draft, not a public listing.</p><LegacyButton className="" disabled={creatingListing || categoriesLoading || Boolean(categoriesError) || (newListingKind !== '' && categoriesForKind(cats, newListingKind).length === 0)}>{creatingListing ? 'Saving draft…' : 'Save draft'}</LegacyButton></div></form></details>
       <div className="store-listings-head"><div><h2 ref={listingsHeading} tabIndex={-1}>Your listings</h2></div>{!listingsLoading && !listingLoadError && <span className="store-listing-count">{visibleListings.length} {visibleListings.length === 1 ? 'listing' : 'listings'}</span>}</div>
       {listingsLoading && <ListingCardsSkeleton />}
-      {listingLoadError && <p className="err" role="alert">Could not load your listings: {listingLoadError} <button type="button" className="btn ghost" onClick={() => { void load(); }}>Retry</button></p>}
+      {listingLoadError && <p className="err" role="alert">Could not load your listings: {listingLoadError} <LegacyButton type="button" className="ghost" onClick={() => { void load(); }}>Retry</LegacyButton></p>}
       {!listingsLoading && !listingLoadError && visibleListings.length === 0 && <Panel className="store-empty"><h3>No listings yet</h3><p className="muted">Create a draft, then submit it for campus review.</p></Panel>}
       {!listingsLoading && !listingLoadError && visibleListings.length > 0 && <>
         <div className="store-listing-filters">
           <Field className="">Find a listing<input type="search" value={listingQuery} onChange={e => { setListingQuery(e.target.value); setListingPage(1); }} placeholder="Search by title" /></Field>
           <Field className="">Status<select value={listingStatus} onChange={e => { setListingStatus(e.target.value); setListingPage(1); }}><option value="all">All statuses</option><option value="draft">Draft</option><option value="changes_requested">Changes requested</option><option value="pending_review">Pending review</option><option value="published">Published</option><option value="rejected">Rejected</option><option value="suspended">Suspended</option></select></Field>
         </div>
-        {matchingListings.length === 0 ? <Panel className="store-empty"><h3>No matching listings</h3><p className="muted">Try another title or status to find your listing.</p><button type="button" className="btn ghost" onClick={() => { setListingQuery(''); setListingStatus('all'); setListingPage(1); }}>Clear filters</button></Panel> : <p className="store-listing-range" role="status">Showing {(currentPage - 1) * pageSize + 1}–{Math.min(currentPage * pageSize, matchingListings.length)} of {matchingListings.length} {matchingListings.length === 1 ? 'listing' : 'listings'}</p>}
+        {matchingListings.length === 0 ? <Panel className="store-empty"><h3>No matching listings</h3><p className="muted">Try another title or status to find your listing.</p><LegacyButton type="button" className="ghost" onClick={() => { setListingQuery(''); setListingStatus('all'); setListingPage(1); }}>Clear filters</LegacyButton></Panel> : <p className="store-listing-range" role="status">Showing {(currentPage - 1) * pageSize + 1}–{Math.min(currentPage * pageSize, matchingListings.length)} of {matchingListings.length} {matchingListings.length === 1 ? 'listing' : 'listings'}</p>}
       </>}
       {!listingsLoading && !listingLoadError && pageListings.length > 0 && <div className="store-card-grid">{pageListings.map(l => editing?.id === l.id
         ? <form key={l.id} className="panel stack store-edit-form" onChange={() => setEditDirty(true)} onSubmit={saveEdit}><h2>Edit listing</h2>
-            {categoriesError && <p className="err" role="alert">Could not load categories: {categoriesError} <button type="button" className="btn ghost" onClick={() => { void loadCategories(); }}>Retry categories</button></p>}
+            {categoriesError && <p className="err" role="alert">Could not load categories: {categoriesError} <LegacyButton type="button" className="ghost" onClick={() => { void loadCategories(); }}>Retry categories</LegacyButton></p>}
             <Field className="">Title<input name="title" defaultValue={l.title} required minLength={3} maxLength={120} /></Field>
             {assessListingReadability(l.title, l.description).length > 0 && <div className="listing-editor-guidance" role="note">
               <strong>Improve this listing before resubmitting:</strong>
@@ -574,14 +575,14 @@ export function Dashboard() {
               onCoverChange={index => { setEditCover({ source: 'new', index }); setEditDirty(true); }} disabled={savingEdit} />}
             {savingEdit && <OperationProgress stage={saveStage} progress={photoProgress} />}
             <p className="muted" id="edit-photo-policy">Choose a cover from existing or new photos. Explicit or harmful images are prohibited. Adding photos to a published listing sends it back for review.</p>
-            <div className="row"><button className="btn" disabled={savingEdit || categoriesLoading || Boolean(categoriesError)}>{savingEdit ? 'Saving…' : 'Save changes'}</button><button type="button" className="btn ghost" disabled={savingEdit} onClick={() => closeEditor()}>Cancel</button></div></form>
+            <div className="row"><LegacyButton className="" disabled={savingEdit || categoriesLoading || Boolean(categoriesError)}>{savingEdit ? 'Saving…' : 'Save changes'}</LegacyButton><LegacyButton type="button" className="ghost" disabled={savingEdit} onClick={() => closeEditor()}>Cancel</LegacyButton></div></form>
         : <Panel as="article" key={l.id} id={`store-listing-${l.id}`} tabIndex={-1} className="store-listing"><StoreListingPhoto media={l.media} title={l.title} type={l.type} /><div className="store-listing-main"><div className="store-listing-title"><h3>{l.title}</h3><strong>{peso(Number(l.price))}</strong></div><p className="store-listing-category">{l.category?.name}</p><div className="store-listing-meta"><span className={`status ${l.status}`}>{l.status.replace('_', ' ')}</span>{l.status === 'published' && <span className="status">{l.availabilityState || 'available'}</span>}</div>
             <p className="muted store-listing-help">{l.status === 'draft' ? 'Draft only · submit for campus review when ready.' : l.status === 'changes_requested' ? 'Changes requested · edit and resubmit for review.' : l.status === 'pending_review' ? 'Waiting for a campus reviewer.' : l.status === 'published' ? l.availabilityState === 'sold' ? 'Sold · use Sell again to make a new draft.' : 'Published · manage availability below.' : l.status === 'rejected' ? 'Not approved for publication.' : l.status === 'suspended' ? 'Removed from public browsing by a reviewer.' : 'Check this listing’s review status.'}</p>{l.status === 'published' && <Link className="store-listing-view" to={`/listings/${l.id}`}>View listing <Icon name="arrow" size={15} /></Link>}</div>
             <div className="store-listing-actions">{!['pending_review', 'suspended', 'rejected'].includes(l.status) && l.availabilityState !== 'sold' && <IconAction className="store-edit-action" icon="edit" label={`Edit ${l.title}`} onClick={() => openEditor(l)} />}
-            {['draft', 'changes_requested'].includes(l.status) && <button type="button" className="btn" disabled={pending === l.id} onClick={() => submit(l.id)}>{pending === l.id ? 'Submitting…' : 'Submit for review'}</button>}
+            {['draft', 'changes_requested'].includes(l.status) && <LegacyButton type="button" className="" disabled={pending === l.id} onClick={() => submit(l.id)}>{pending === l.id ? 'Submitting…' : 'Submit for review'}</LegacyButton>}
             {l.status === 'published' && l.availabilityState !== 'sold' && <select aria-label={`Availability for ${l.title}`} value={l.availabilityState || 'available'} disabled={pending === l.id} onChange={async e => { const next = e.target.value as 'available' | 'reserved' | 'sold'; if (!(await changeAvailability(l.id, next))) e.target.value = l.availabilityState || 'available'; }}><option value="available">Available</option><option value="reserved">Reserved</option><option value="sold">Sold (final)</option></select>}
-            {l.status === 'published' && l.availabilityState === 'sold' && <button type="button" className="btn" aria-label={`Sell ${l.title} again`} disabled={creatingListing} onClick={() => sellAgain(l)}>Sell again</button>}
-            <button type="button" className="btn ghost store-remove" disabled={pending === l.id} onClick={() => removeListing(l.id)}>Remove</button></div></Panel>)}</div>}
+            {l.status === 'published' && l.availabilityState === 'sold' && <LegacyButton type="button" className="" aria-label={`Sell ${l.title} again`} disabled={creatingListing} onClick={() => sellAgain(l)}>Sell again</LegacyButton>}
+            <LegacyButton type="button" className="ghost store-remove" disabled={pending === l.id} onClick={() => removeListing(l.id)}>Remove</LegacyButton></div></Panel>)}</div>}
       {!listingsLoading && !listingLoadError && pageCount > 1 && <nav className="store-pagination" aria-label="Your listings pages"><IconAction className="page-nav-button" icon="chevronLeft" label="Previous listings page" disabled={currentPage === 1} onClick={() => changeListingPage(currentPage - 1)} /><span>Page {currentPage} of {pageCount}</span><IconAction className="page-nav-button" icon="chevronRight" label="Next listings page" disabled={currentPage === pageCount} onClick={() => changeListingPage(currentPage + 1)} /></nav>}
     </>}
   </div>;
@@ -700,7 +701,7 @@ export function Inquiries() {
     <div className="page-head messages-heading">
       <div><h1>Messages</h1></div>
       <div className="messages-audio-actions">
-        <button type="button" className="btn ghost conversation-sound-toggle"
+        <LegacyButton type="button" className="ghost conversation-sound-toggle"
           aria-label={receiveSoundOn ? 'Sound on — mute incoming message sound' : 'Sound off — enable incoming message sound'}
           aria-pressed={receiveSoundOn}
           onClick={() => {
@@ -710,7 +711,7 @@ export function Inquiries() {
             if (enabled) unlockMessageReceiveSound();
           }}>
           <Icon name="bell" size={17} /> {receiveSoundOn ? 'Sound on' : 'Sound off'}
-        </button>
+        </LegacyButton>
         <Link className="btn ghost" to="/explore">Browse listings</Link>
       </div>
     </div>
@@ -735,8 +736,8 @@ export function Inquiries() {
       <span className="inq-open" aria-hidden="true"><Icon name="arrow" size={18} /></span>
     </Link>)}</div>}
     {hasOlder && rows !== null && <div className="row" style={{ justifyContent: 'center', padding: '12px' }}>
-      <button type="button" className="btn ghost" disabled={loadingOlder}
-        onClick={() => void loadOlder()}>{loadingOlder ? 'Loading conversations…' : 'Load older conversations'}</button>
+      <LegacyButton type="button" className="ghost" disabled={loadingOlder}
+        onClick={() => void loadOlder()}>{loadingOlder ? 'Loading conversations…' : 'Load older conversations'}</LegacyButton>
     </div>}
     {olderError && <p className="err" role="alert">Could not load older conversations: {olderError}</p>}
   </section>;
@@ -1044,7 +1045,7 @@ export function Thread() {
   if (loadError && !d) return <section className="conversation-page">
     <Link to="/inquiries" className="conversation-back">Back to messages</Link>
     <div className="empty" role="alert"><h1>Conversation unavailable</h1><p className="muted">{loadError}</p>
-      <button className="btn" type="button" onClick={() => void refreshRef.current()}>Try again</button></div>
+      <LegacyButton className="" type="button" onClick={() => void refreshRef.current()}>Try again</LegacyButton></div>
   </section>;
   if (!d) return <p className="muted" role="status">Loading conversation…</p>;
 
@@ -1065,25 +1066,25 @@ export function Thread() {
         </p>}
       </div>
       <div className="conversation-actions">
-        {!closed && <button type="button" className="btn ghost conversation-sound-toggle"
+        {!closed && <LegacyButton type="button" className="ghost conversation-sound-toggle"
           aria-pressed={receiveSoundOn} aria-label={receiveSoundOn ? 'Sound on — mute incoming message sound' : 'Sound off — enable incoming message sound'}
           onClick={() => { const enabled = !receiveSoundOn; setReceiveSoundOn(enabled); setMessageReceiveSoundEnabled(enabled); if (enabled) unlockMessageReceiveSound(); }}>
           <Icon name="bell" size={17} /> {receiveSoundOn ? 'Sound on' : 'Sound off'}
-        </button>}
+        </LegacyButton>}
         {closed && <span className="status closed">Closed</span>}
-        {!closed && <button type="button" className="btn ghost" disabled={closing || busy}
+        {!closed && <LegacyButton type="button" className="ghost" disabled={closing || busy}
           aria-label="End conversation" aria-expanded={closeConfirm} onClick={() => { setCloseConfirm(open => !open); setSafetyError(''); }}>
           End chat
-        </button>}
+        </LegacyButton>}
         <Link className="btn ghost" to={`/listings/${d.thread.listingId}`}>View listing <Icon name="arrow" size={16} /></Link>
       </div>
     </div>
     {closeConfirm && !closed && <Panel className="stack" role="group" aria-label="End conversation confirmation">
       <h2>End this conversation for both students?</h2>
       <p className="muted">Neither of you can send more messages in this listing's conversation. Previous messages stay readable. This does not block the student on other listings or cancel any transaction.</p>
-      <div className="row"><button type="button" className="btn danger" disabled={closing || busy}
-        onClick={() => void closeConversation()}>{closing ? 'Ending…' : 'Yes, end conversation'}</button>
-        <button type="button" className="btn ghost" disabled={closing} onClick={() => setCloseConfirm(false)}>Keep chatting</button></div>
+      <div className="row"><LegacyButton type="button" className="danger" disabled={closing || busy}
+        onClick={() => void closeConversation()}>{closing ? 'Ending…' : 'Yes, end conversation'}</LegacyButton>
+        <LegacyButton type="button" className="ghost" disabled={closing} onClick={() => setCloseConfirm(false)}>Keep chatting</LegacyButton></div>
     </Panel>}
     {safetyError && <p className="err" role="alert">Could not end conversation: {safetyError}</p>}
     {safetyNotice && <p role="status">{safetyNotice}</p>}
@@ -1091,10 +1092,10 @@ export function Thread() {
     <div className="thread-scroll conversation-log" ref={logRef} role="log" tabIndex={0} aria-label="Conversation messages" aria-live="polite"
       onScroll={e => { const el = e.currentTarget; followLatest.current = el.scrollHeight - el.scrollTop - el.clientHeight < 80; }}>
       {d.hasEarlier && <div className="row" style={{ justifyContent: 'center', padding: '8px 12px' }}>
-        <button type="button" className="btn ghost" disabled={loadingEarlier}
+        <LegacyButton type="button" className="ghost" disabled={loadingEarlier}
           onClick={() => void loadEarlier()} aria-label="Load earlier conversation messages">
           {loadingEarlier ? 'Loading earlier messages…' : 'Load earlier messages'}
-        </button>
+        </LegacyButton>
       </div>}
       {earlierError && <p role="alert" className="err">Could not load earlier messages: {earlierError}</p>}
       {d.messages.length > 0 && <div className="message-day-divider"><span>{messageDayLabel(d.messages[0].createdAt)}</span></div>}
@@ -1149,7 +1150,7 @@ export function Thread() {
             onBlur={() => window.requestAnimationFrame(() => syncKeyboardRef.current())}
             onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey && !e.nativeEvent.isComposing) { e.preventDefault(); void send(); } }}
             enterKeyHint="send" maxLength={1000} placeholder="Type a message…" />
-          <button className="btn chat-send" aria-label={busy ? 'Sending message' : 'Send message'} disabled={busy || !body.trim()}><Icon name="arrow" size={19} /></button>
+          <LegacyButton className="chat-send" aria-label={busy ? 'Sending message' : 'Send message'} disabled={busy || !body.trim()}><Icon name="arrow" size={19} /></LegacyButton>
         </div>
         <div className="composer-help"><span>Enter to send · Shift+Enter for a new line</span>{body.length > 850 && <span>{body.length}/1000</span>}</div>
       </form>}

@@ -20,7 +20,7 @@ describe('conversation swipe actions', () => {
     const state = setup();
     const more = screen.getByRole('button', { name: 'Show options for Alex' });
     expect(more.getAttribute('aria-expanded')).toBe('false');
-    expect(screen.getByRole('button', { name: 'Mute notifications for Alex' }).tabIndex).toBe(-1);
+    expect(screen.queryByRole('button', { name: 'Mute notifications for Alex' })).toBeNull();
     fireEvent.click(more);
     expect(screen.getByRole('button', { name: 'Mute notifications for Alex' }).tabIndex).toBe(0);
     fireEvent.click(screen.getByRole('button', { name: 'Mute notifications for Alex' }));

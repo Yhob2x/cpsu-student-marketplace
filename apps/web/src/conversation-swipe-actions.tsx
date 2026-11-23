@@ -1,4 +1,4 @@
-import { useRef, useState, type PointerEvent, type ReactNode } from 'react';
+import { useRef, useState, type PointerEvent, type MouseEvent, type ReactNode } from 'react';
 import { Bell, BellOff, MoreHorizontal, Trash2 } from 'lucide-react';
 import { explain } from './api';
 
@@ -59,7 +59,7 @@ export function ConversationSwipeActions({ name, muted, children, onMute, onDele
     setDrag(null);
   };
   const onCancel = () => { gesture.current = null; setDrag(null); };
-  const onClickCapture = (event: React.MouseEvent<HTMLDivElement>) => {
+  const onClickCapture = (event: MouseEvent<HTMLDivElement>) => {
     if (suppressClick.current) {
       event.preventDefault();
       event.stopPropagation();

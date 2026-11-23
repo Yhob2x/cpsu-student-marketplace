@@ -10,9 +10,9 @@ import { categoriesForKind, categoryMatchesKind, type ListingKind } from './list
 import { useForegroundRefresh } from './foreground-refresh';
 import { decodeMeetupLocation, openStreetMapPinUrl } from './meetup-location';
 import { ListingCard, Listing } from './pages-public';
+import { ListingAppreciation } from './listing-appreciation';
 import { ConversationListingCard } from './conversation-listing-card';
 import { StoreFollowers } from './store-followers';
-import { StoreAppreciation } from './store-appreciation';
 import { SellerAvatar } from './seller-avatar';
 import './storefront.css';
 import { Icon } from './icons';
@@ -28,6 +28,8 @@ import { authFieldForError, type AuthField } from './auth-field-error';
 import { hasNewIncomingMessage, messageReceiveSoundEnabled, playMessageReceiveSound, prepareMessageReceiveSound, setMessageReceiveSoundEnabled, unlockMessageReceiveSound } from './message-receive-sound';
 import { mergeMessageHistory } from './message-history';
 import { mergeInboxPages, type InboxPage } from './inbox-pages';
+import { ConversationSwipeActions } from './conversation-swipe-actions';
+import { BellOff } from 'lucide-react';
 
 function HandoffPlace({ location }: { location: string }) {
   const { place, point } = decodeMeetupLocation(location);
@@ -214,7 +216,7 @@ function StoreListingPhoto({ media, title, type }: { media: { id: number; positi
   </div>;
 }
 
-type RepeatListing = { id: number; type: ListingKind; categoryId: number; title: string; description: string; price: number; priceBasis?: string | null; condition?: string | null };
+type RepeatListing = { id: number; type: ListingKind; categoryId: number; title: string; description: string; price: number; priceBasis?: string | null; condition?: string | null; stockQuantity?: number | null };
 
 export function Dashboard() {
   const { me, reload } = useMe(); const [listings, setListings] = useState<any[]>([]); const [cats, setCats] = useState<any[]>([]); const [err, setErr] = useState(''); const [ok, setOk] = useState('');
@@ -343,7 +345,7 @@ export function Dashboard() {
     createInFlight.current = true;
     setCreatingListing(true); setSaveStage('saving'); setPhotoProgress(null); setErr(''); setOk('');
     try {
-      const l = await api<{ id: number }>('/seller/listings', { body: { type: cat.listingType, categoryId: cat.id, title: d.title, description: d.description, price: Number(d.price), priceBasis: d.priceBasis || undefined, condition: cat.listingType === 'physical_product' ? d.condition || null : null } });
+      const l = await api<{ id: number }>('/seller/listings', { body: { type: cat.listingType, categoryId: cat.id, title: d.title, description: d.description, price: Number(d.price), priceBasis: d.priceBasis || undefined, condition: cat.listingType === 'physical_product' ? d.condition || null : null, stockQuantity: cat.listingType === 'physical_product' ? Number(d.stockQuantity) : undefined } });
       // Once the server creates a draft, upload failure must not suggest that nothing was saved.
       let uploadFailure = '';
       if (files.length) {
@@ -402,7 +404,7 @@ export function Dashboard() {
     editInFlight.current = true;
     setSavingEdit(true); setSaveStage('saving'); setPhotoProgress(null); setErr(''); setOk('');
     try {
-      await api(`/seller/listings/${editing.id}`, { method: 'PATCH', body: { type: cat.listingType, categoryId: cat.id, title: d.title, description: d.description, price: Number(d.price), priceBasis: d.priceBasis || undefined, condition: cat.listingType === 'physical_product' ? d.condition || null : null } });
+      await api(`/seller/listings/${editing.id}`, { method: 'PATCH', body: { type: cat.listingType, categoryId: cat.id, title: d.title, description: d.description, price: Number(d.price), priceBasis: d.priceBasis || undefined, condition: cat.listingType === 'physical_product' ? d.condition || null : null, stockQuantity: cat.listingType === 'physical_product' && editing.stockQuantity != null && d.stockQuantity !== '' ? Number(d.stockQuantity) : undefined } });
       let uploadFailure = '';
       let coverFailure = '';
       const uploadedIds: number[] = [];
@@ -468,7 +470,6 @@ export function Dashboard() {
       <div className="storefront-facts">
         <div><span>Your listings</span><strong>{listingsLoading || listingLoadError ? '—' : visibleListings.length.toLocaleString('en-PH')}</strong></div>
         <StoreFollowers key={me.id} storeId={me.storeId} />
-        <StoreAppreciation storeId={me.storeId} readOnly />
         {campus && <div><span>Campus</span><strong>{campus.campus.name}</strong></div>}
       </div>
     </section> : <div className="page-head store-workspace-head">
@@ -517,6 +518,7 @@ export function Dashboard() {
           </select>
         </Field>
         {newListingKind && !categoriesLoading && !categoriesError && categoriesForKind(cats, newListingKind).length === 0 && <p className="err" role="alert">No {newListingKind === 'service' ? 'service' : 'product'} categories are available. Try reloading categories.</p>}
+        {newListingKind === 'physical_product' && <Field className="">Stock available<input type="number" name="stockQuantity" min="1" max="100000" step="1" inputMode="numeric" defaultValue={Math.max(1, repeatListing?.stockQuantity ?? 1)} required disabled={creatingListing} /></Field>}
         {newListingKind === 'physical_product' && <Field className="">Product condition<select name="condition" defaultValue={repeatListing?.condition ?? ''} required disabled={creatingListing}><option value="" disabled>Select condition</option><option value="new">New</option><option value="like_new">Like new</option><option value="good">Good</option><option value="fair">Fair</option></select></Field>}
         <Field className="">Description<textarea name="description" placeholder={newListingKind === 'service' ? 'Explain what you offer, what is included and when you are available' : 'Describe the item, its condition, size and what is included'} defaultValue={repeatListing?.description ?? ''} required minLength={10} maxLength={3000} rows={4} /></Field>
         <div className="row">
@@ -554,6 +556,7 @@ export function Dashboard() {
             <Field className="">Category
               <select name="categoryId" required disabled={categoriesLoading || Boolean(categoriesError)} value={editCategoryId} onChange={e => setEditCategoryId(e.target.value)}>{cats.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}</select>
             </Field>
+            {l.stockQuantity != null && cats.find(c => c.id === Number((editCategoryId || l.categoryId)))?.listingType === 'physical_product' && <Field className="">Stock available<input name="stockQuantity" type="number" min="0" max="100000" step="1" inputMode="numeric" defaultValue={l.stockQuantity ?? 1} required /></Field>}
             {cats.find(c => c.id === Number((editCategoryId || l.categoryId)))?.listingType === 'physical_product' && <Field className="">Product condition<select name="condition" defaultValue={l.condition ?? ''} required><option value="" disabled>Select condition</option><option value="new">New</option><option value="like_new">Like new</option><option value="good">Good</option><option value="fair">Fair</option></select></Field>}
             <Field className="">Description<textarea name="description" defaultValue={l.description} required minLength={10} maxLength={3000} /></Field>
             <div className="row">
@@ -576,7 +579,7 @@ export function Dashboard() {
             {savingEdit && <OperationProgress stage={saveStage} progress={photoProgress} />}
             <p className="muted" id="edit-photo-policy">Choose a cover from existing or new photos. Explicit or harmful images are prohibited. Adding photos to a published listing sends it back for review.</p>
             <div className="row"><LegacyButton className="" disabled={savingEdit || categoriesLoading || Boolean(categoriesError)}>{savingEdit ? 'Saving…' : 'Save changes'}</LegacyButton><LegacyButton type="button" className="ghost" disabled={savingEdit} onClick={() => closeEditor()}>Cancel</LegacyButton></div></form>
-        : <Panel as="article" key={l.id} id={`store-listing-${l.id}`} tabIndex={-1} className="store-listing"><StoreListingPhoto media={l.media} title={l.title} type={l.type} /><div className="store-listing-main"><div className="store-listing-title"><h3>{l.title}</h3><strong>{peso(Number(l.price))}</strong></div><p className="store-listing-category">{l.category?.name}</p><div className="store-listing-meta"><span className={`status ${l.status}`}>{l.status.replace('_', ' ')}</span>{l.status === 'published' && <span className="status">{l.availabilityState || 'available'}</span>}</div>
+        : <Panel as="article" key={l.id} id={`store-listing-${l.id}`} tabIndex={-1} className="store-listing"><StoreListingPhoto media={l.media} title={l.title} type={l.type} /><div className="store-listing-main"><div className="store-listing-title"><h3>{l.title}</h3><strong>{peso(Number(l.price))}</strong></div><p className="store-listing-category">{l.category?.name}</p>{l.type === 'physical_product' && typeof l.stockQuantity === 'number' && <p className="listing-stock-label">{l.stockQuantity} in stock{l.reservedQuantity ? ` · ${l.reservedQuantity} reserved` : ''}</p>}<div className="store-listing-meta">{l.status === 'published' && <span className="seller-listing-appreciations" title="Appreciations for this listing"><ListingAppreciation listingId={l.id} signedIn readOnly compact showCount /> <span>appreciations</span></span>}<span className={`status ${l.status}`}>{l.status.replace('_', ' ')}</span>{l.status === 'published' && <span className="status">{l.availabilityState || 'available'}</span>}</div>
             <p className="muted store-listing-help">{l.status === 'draft' ? 'Draft only · submit for campus review when ready.' : l.status === 'changes_requested' ? 'Changes requested · edit and resubmit for review.' : l.status === 'pending_review' ? 'Waiting for a campus reviewer.' : l.status === 'published' ? l.availabilityState === 'sold' ? 'Sold · use Sell again to make a new draft.' : 'Published · manage availability below.' : l.status === 'rejected' ? 'Not approved for publication.' : l.status === 'suspended' ? 'Removed from public browsing by a reviewer.' : 'Check this listing’s review status.'}</p>{l.status === 'published' && <Link className="store-listing-view" to={`/listings/${l.id}`}>View listing <Icon name="arrow" size={15} /></Link>}</div>
             <div className="store-listing-actions">{!['pending_review', 'suspended', 'rejected'].includes(l.status) && l.availabilityState !== 'sold' && <IconAction className="store-edit-action" icon="edit" label={`Edit ${l.title}`} onClick={() => openEditor(l)} />}
             {['draft', 'changes_requested'].includes(l.status) && <LegacyButton type="button" className="" disabled={pending === l.id} onClick={() => submit(l.id)}>{pending === l.id ? 'Submitting…' : 'Submit for review'}</LegacyButton>}
@@ -624,7 +627,7 @@ export function Inquiries() {
   const inboxLoadedRef = useRef(false);
   const foregroundRef = useRef(false);
   const requestRef = useRef(0);
-  const { me } = useMe();
+  const { me, syncUnread } = useMe();
   const currentUserIdRef = useRef(me?.id);
   currentUserIdRef.current = me?.id;
   // Poll only while this inbox is mounted. Do not sound on first history load,
@@ -640,9 +643,13 @@ export function Inquiries() {
         setHasOlder(page.hasMore);
       }
       const focused = document.visibilityState === 'visible' && document.hasFocus();
-      const latest = next.flatMap(t => t.lastMessage ? [{ id: t.lastMessage.id, mine: t.lastMessage.mine }] : []);
-      if (hasNewIncomingMessage(latest, knownMessageIdsRef.current,
+      const latest = next.flatMap(t => t.lastMessage
+        ? [{ id: t.lastMessage.id, mine: t.lastMessage.mine }] : []);
+      const audible = next.flatMap(t => !t.muted && t.lastMessage
+        ? [{ id: t.lastMessage.id, mine: t.lastMessage.mine }] : []);
+      if (hasNewIncomingMessage(audible, knownMessageIdsRef.current,
         inboxLoadedRef.current, focused && foregroundRef.current)) playMessageReceiveSound();
+      // Muted messages must still be remembered so unmuting never rings for history.
       for (const message of latest) knownMessageIdsRef.current.add(message.id);
       inboxLoadedRef.current = true;
       foregroundRef.current = focused;
@@ -695,6 +702,19 @@ export function Inquiries() {
       if (currentUserIdRef.current === userId) setLoadingOlder(false);
     }
   };
+  const updateMuted = async (id: number, muted: boolean) => {
+    await api(`/inquiries/${id}/preferences`, { method: 'PATCH', body: { muted } });
+    setRows(previous => previous?.map(row => row.id === id ? { ...row, muted } : row) ?? null);
+    showActionFeedback({ kind: 'success', title: muted ? 'Notifications muted' : 'Notifications enabled',
+      message: muted ? 'You will not receive alerts for this conversation.' : 'New messages can notify you again.' });
+  };
+  const removeFromInbox = async (id: number) => {
+    await api(`/inquiries/${id}/hide`, { body: {} });
+    setRows(previous => previous?.filter(row => row.id !== id) ?? null);
+    void syncUnread();
+    showActionFeedback({ kind: 'success', title: 'Removed from inbox',
+      message: 'The other student and your transaction records are unaffected.' });
+  };
   return <section className="messages-page"
     onPointerDownCapture={() => unlockMessageReceiveSound()}
     onKeyDownCapture={e => { if (e.key === 'Enter' || e.key === ' ') unlockMessageReceiveSound(); }}>
@@ -719,12 +739,16 @@ export function Inquiries() {
     {error && rows === null && <ErrorState title="Messages could not load" retry={load} retryText="Try again">{error}</ErrorState>}
     {error && rows !== null && <ErrorState title="Could not refresh messages" retry={load} compact>{error}</ErrorState>}
     {rows?.length === 0 && !error && <EmptyState title="No conversations yet" action={<Link className="btn" to="/explore">Explore listings</Link>}>Explore listings and send a seller a question to start a conversation.</EmptyState>}
-    {rows !== null && rows.length > 0 && <div className="inquiry-list">{rows.map(t => <Link key={t.id} to={`/inquiries/${t.id}`}
+    {rows !== null && rows.length > 0 && <div className="inquiry-list">{rows.map(t => <ConversationSwipeActions
+      key={t.id} name={t.otherStudentName || 'Student'} muted={Boolean(t.muted)}
+      onMute={muted => updateMuted(t.id, muted)} onDelete={() => removeFromInbox(t.id)}>
+      <Link to={`/inquiries/${t.id}`}
       className={`inquiry-row${t.unreadCount ? ' is-unread' : ''}`}>
       <span className="avatar" aria-hidden="true">{initials(t.otherStudentName || 'Student')}</span>
       {Boolean(t.unreadCount) && <span className="sr-only">{t.unreadCount} unread messages. </span>}
       <span className="inq-main">
         <span className="inq-top"><strong>{t.otherStudentName || 'Student'}</strong>
+          {Boolean(t.muted) && <span className="inquiry-muted-icon" title="Notifications muted"><BellOff size={14} aria-hidden="true" /><span className="sr-only">Notifications muted</span></span>}
           {Boolean(t.unreadCount) && <span className="inquiry-row-unread-dot" aria-hidden="true" />}
           {t.lastMessage && <time dateTime={t.lastMessage.createdAt}>{timeAgo(t.lastMessage.createdAt)}</time>}</span>
         <span className="inq-listing" title={t.listing.title}>About: {t.listing.title}</span>
@@ -734,7 +758,7 @@ export function Inquiries() {
           {t.lastMessage?.mine && <MessageReceipt state={t.lastMessage.receipt ?? 'sent'} compact />}</span>
       </span>
       <span className="inq-open" aria-hidden="true"><Icon name="arrow" size={18} /></span>
-    </Link>)}</div>}
+    </Link></ConversationSwipeActions>)}</div>}
     {hasOlder && rows !== null && <div className="row" style={{ justifyContent: 'center', padding: '12px' }}>
       <LegacyButton type="button" className="ghost" disabled={loadingOlder}
         onClick={() => void loadOlder()}>{loadingOlder ? 'Loading conversations…' : 'Load older conversations'}</LegacyButton>
@@ -843,7 +867,7 @@ export function Thread() {
           // Only NEW incoming messages ring: never the first history load,
           // outgoing sends, repeated polls, or background/refocus catch-up.
           const focused = document.visibilityState === 'visible' && document.hasFocus();
-          if (hasNewIncomingMessage(next.messages, messageIdsRef.current,
+          if (!next.muted && hasNewIncomingMessage(next.messages, messageIdsRef.current,
             firstFetchRef.current, focused && continuouslyForeground)) playMessageReceiveSound();
           continuouslyForeground = focused;
           // Animate only messages arriving after the first history load.

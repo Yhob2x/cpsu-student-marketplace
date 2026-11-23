@@ -1,16 +1,15 @@
 /**
- * Prisma-shaped persistence adapter for the dormant Stage 6B worker.
- * No Prisma Client generation or DB migration is required to typecheck this
- * structural port, and this module is not imported by any live server route.
+ * Prisma persistence adapter for the leased Web Push outbox.
  */
+import type { Prisma } from '@prisma/client';
 import { PUSH_MAX_ATTEMPTS } from './push-delivery-controls.js';
 import type {
   PushCompletion, PushJob, PushLease, PushLeasePort,
 } from './push-outbox-worker.js';
 
 export type PushOutboxDelegate = {
-  findMany: (query: object) => Promise<PushJob[]>;
-  updateMany: (query: object) => Promise<{ count: number }>;
+  findMany: (query: Prisma.PushOutboxFindManyArgs) => Promise<PushJob[]>;
+  updateMany: (query: Prisma.PushOutboxUpdateManyArgs) => Promise<{ count: number }>;
 };
 
 export type PushOutboxDataSource = { pushOutbox: PushOutboxDelegate };

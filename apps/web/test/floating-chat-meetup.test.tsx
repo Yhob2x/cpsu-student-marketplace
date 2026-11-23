@@ -129,7 +129,7 @@ describe('floating inbox unread states and receipts', () => {
     render(<MemoryRouter><FloatingChatPanel motionState="open" motionEnabled={false}
       onClose={() => {}} onExitComplete={() => {}} onUnreadChanged={async () => {}} /></MemoryRouter>);
     const unread = await screen.findByRole('button', { name: /New Partner.*2 unread messages/ });
-    const read = screen.getByRole('button', { name: /Read Partner/ });
+    const read = screen.getByRole('button', { name: /^Read Partner, Bag$/ });
     expect(unread.className).toContain('is-unread');
     expect(read.className).not.toContain('is-unread');
     expect(unread.querySelector('.floating-chat-unread-dot')).toBeTruthy();

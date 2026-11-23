@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import rateLimit from 'express-rate-limit';
+import { Prisma } from '@prisma/client';
 import { z } from 'zod';
 import { requireAuth } from '../auth.js';
 import { prisma } from '../db.js';
@@ -14,6 +15,7 @@ r.use(rateLimit({ windowMs: 15 * 60_000, limit: 40, standardHeaders: 'draft-7',
   legacyHeaders: false, keyGenerator: req => `account:${req.user!.id}` }));
 
 const DEFAULTS = { messages: true, listingReviews: true, accountUpdates: true };
+const categorySelect = { messages: true, listingReviews: true, accountUpdates: true } as const;
 const preferenceSchema = z.object({
   messages: z.boolean().optional(),
   listingReviews: z.boolean().optional(),
@@ -51,21 +53,29 @@ r.post('/subscriptions/status', async (req, res) => {
 r.get('/preferences', async (req, res) => {
   res.setHeader('Cache-Control', 'no-store');
   if (!pushReady) return res.json(DEFAULTS);
-  const row = await prisma.pushPreference.findUnique({ where: { userId: req.user!.id } });
-  res.json(row ? { messages: row.messages, listingReviews: row.listingReviews,
-    accountUpdates: row.accountUpdates } : DEFAULTS);
+  const row = await prisma.pushPreference.findUnique({ where: { userId: req.user!.id }, select: categorySelect });
+  res.json(row ?? DEFAULTS);
 });
 
 r.patch('/preferences', async (req, res) => {
   if (!pushReady) throw new HttpError(503, 'push_not_configured');
   const data = preferenceSchema.parse(req.body);
-  const row = await prisma.pushPreference.upsert({
-    where: { userId: req.user!.id },
-    create: { userId: req.user!.id, ...DEFAULTS, ...data },
-    update: data,
+  const userId = req.user!.id;
+  const initial = { ...DEFAULTS, ...data };
+  const row = await prisma.$transaction(async tx => {
+    // Use the original columns only. Prisma's create branch can write schema defaults
+    // for columns that do not exist on an enrollment-only database yet.
+    await tx.$executeRaw`INSERT INTO PushPreference
+      (userId, messages, listingReviews, accountUpdates, updatedAt)
+      VALUES (${userId}, ${initial.messages}, ${initial.listingReviews}, ${initial.accountUpdates}, UTC_TIMESTAMP(3))
+      ON DUPLICATE KEY UPDATE
+        messages = COALESCE(${data.messages ?? null}, messages),
+        listingReviews = COALESCE(${data.listingReviews ?? null}, listingReviews),
+        accountUpdates = COALESCE(${data.accountUpdates ?? null}, accountUpdates),
+        updatedAt = UTC_TIMESTAMP(3)`;
+    return tx.pushPreference.findUniqueOrThrow({ where: { userId }, select: categorySelect });
   });
-  res.json({ messages: row.messages, listingReviews: row.listingReviews,
-    accountUpdates: row.accountUpdates });
+  res.json(row);
 });
 
 r.post('/subscriptions', async (req, res) => {
@@ -73,27 +83,31 @@ r.post('/subscriptions', async (req, res) => {
   const sub = subscriptionSchema.parse(req.body);
   if (!permittedPushEndpoint(sub.endpoint)) throw new HttpError(400, 'invalid_push_endpoint');
   const hash = endpointHash(sub.endpoint);
-  // Reclaim dead records before enforcing the eight-device cap.
-  await prisma.pushSubscription.deleteMany({ where: { userId: req.user!.id,
-    expiresAt: { lte: new Date() } } });
-  const existing = await prisma.pushSubscription.findUnique({ where: { endpointHash: hash } });
-  if (!existing || existing.userId !== req.user!.id) {
-    const count = await prisma.pushSubscription.count({ where: { userId: req.user!.id } });
-    if (count >= 8) throw new HttpError(409, 'push_device_limit');
+  const userId = req.user!.id;
+  const registration = { userId, endpoint: sub.endpoint, p256dh: sub.keys.p256dh,
+    auth: sub.keys.auth, expiresAt: sub.expirationTime ? new Date(sub.expirationTime) : null };
+  for (let attempt = 1; ; attempt++) {
+    try {
+      await prisma.$transaction(async tx => {
+        const users = await tx.$queryRaw<{ status: string }[]>`SELECT status FROM User WHERE id = ${userId} FOR UPDATE`;
+        if (users[0]?.status !== 'active') throw new HttpError(401, 'unauthenticated');
+        // Serialize enrollments for this account, including transfers into it.
+        await tx.pushSubscription.deleteMany({ where: { userId, expiresAt: { lte: new Date() } } });
+        const existing = await tx.pushSubscription.findUnique({
+          where: { endpointHash: hash }, select: { userId: true },
+        });
+        if (existing?.userId !== userId && await tx.pushSubscription.count({ where: { userId } }) >= 8) {
+          throw new HttpError(409, 'push_device_limit');
+        }
+        await tx.pushSubscription.upsert({ where: { endpointHash: hash },
+          create: { ...registration, endpointHash: hash }, update: registration });
+      }, { isolationLevel: Prisma.TransactionIsolationLevel.ReadCommitted });
+      break;
+    } catch (error) {
+      if (!(error instanceof Prisma.PrismaClientKnownRequestError)
+        || !['P2034', 'P2002'].includes(error.code) || attempt >= 3) throw error;
+    }
   }
-  await prisma.pushSubscription.upsert({
-    where: { endpointHash: hash },
-    create: {
-      userId: req.user!.id, endpointHash: hash, endpoint: sub.endpoint,
-      p256dh: sub.keys.p256dh, auth: sub.keys.auth,
-      expiresAt: sub.expirationTime ? new Date(sub.expirationTime) : null,
-    },
-    update: {
-      userId: req.user!.id, endpoint: sub.endpoint,
-      p256dh: sub.keys.p256dh, auth: sub.keys.auth,
-      expiresAt: sub.expirationTime ? new Date(sub.expirationTime) : null,
-    },
-  });
   res.status(201).json({ ok: true });
 });
 

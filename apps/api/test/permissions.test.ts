@@ -31,4 +31,12 @@ describe('material changes', () => {
     expect(isMaterialChange({ categoryId: 3 })).toBe(true);
     expect(isMaterialChange({ price: 10, availability: 'sold out' })).toBe(false);
   });
+  it('keeps published approval when full seller form submits unchanged identity fields plus stock', () => {
+    const current = { title: 'Original', description: 'An accurate description', categoryId: 4,
+      type: 'physical_product', condition: 'new', price: 150 };
+    expect(isMaterialChange({ ...current, price: 180 }, current)).toBe(false);
+    expect(isMaterialChange({ ...current, categoryId: 5 }, current)).toBe(true);
+    expect(isMaterialChange({ ...current, title: 'Different product' }, current)).toBe(true);
+    expect(isMaterialChange({ condition: null }, { condition: null })).toBe(false);
+  });
 });

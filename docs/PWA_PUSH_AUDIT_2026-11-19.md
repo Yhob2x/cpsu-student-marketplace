@@ -4,6 +4,14 @@
 **Machine:** Local Windows developer workstation. **Stage:** 6B leased-worker and budget-reservation source verification; production remains blocked.
 **Release status:** BLOCKED. No commit, push, hosting deployment, migrations, credentials rotation or real-user notifications.
 
+## Follow-up remediation — 23 November 2026
+
+- The service worker displays a privacy-safe notification for every Web Push event, including when the destination is focused. It continues to refresh open tabs and update supported badges. This supersedes the foreground suppression described below.
+- The enrollment API reads and writes only the three legacy category columns. Device enrollment locks the recipient account row before reclaiming expired subscriptions, checking the eight-device cap and writing the subscription.
+- The durable worker is the only outbound code path. It validates the canonical notification and current device consent, reserves the Manila-day quota, persists lease-fenced device outcomes and honors provider retry windows. The relay request uses a wall-clock abort deadline. The bootstrap claims only jobs with an available execution slot and drains on shutdown.
+- A disposable loopback MariaDB instance verified nine HTTP cases on the legacy schema and ten on the outbox schema. Concurrent enrollment accepted eight distinct devices and rejected two. The migrated-schema run simulated a device revocation, mixed 503 and 429 responses, a partial retry, account opt-out and two competing reservations for the final daily quota slot. No real relay calls occurred.
+- Production delivery remains gated. Live staging preflight could not read the private local API environment under workspace permissions. Institutional staging and privacy approval, installed-device acceptance, and the remaining operations checks are tracked in the existing release documentation.
+
 ## Stage 6B — leased outbox worker and quota transactions (19 November 2026)
 **Outcome: SOURCE-IMPLEMENTED, NOT ACTIVATED.** Built `push-outbox-worker.ts` with bounded 8-job claims and 2-job concurrent dispatch, 90-second leases, retry/expiry/429 handling, and explicitly hard-disabled worker entrypoint; `push-outbox-repository.ts` with due-row compare-and-set, fenced settlement and exhausted/expired cleanup; and `push-outbox-budget.ts` with a one-time recipient-wide five-per-Manila-day SQL reservation transaction and rollback on lost lease.
 

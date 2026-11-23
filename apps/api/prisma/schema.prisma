@@ -205,11 +205,13 @@ model User {
   roles          UserRole[]
   sellerProfiles SellerProfile[]
   inquiryMessages InquiryMessage[]
+  inquiryPreferences InquiryPreference[]
   sessions              Session[]
   listingReviews        ListingReview[]      @relation("ListingReviewer")
   savedListings         SavedListing[]
   storeFollows          StoreFollow[]
   storeAppreciations    StoreAppreciation[]
+  listingAppreciations  ListingAppreciation[]
   buyerThreads          InquiryThread[]
   reportedItems         Report[]             @relation("ReportReporter")
   assignedReports       Report[]             @relation("ReportAssignee")
@@ -384,11 +386,53 @@ model Listing {
   threads       InquiryThread[]
   savedListings SavedListing[]
   listingReviews ListingReview[]
+  inventory      ListingInventory?
+  appreciations  ListingAppreciation[]
+  viewCounter    ListingViewCounter?
+  viewDedup      ListingViewDedup[]
   reports        Report[] @relation("ReportListing")
   transactions   Transaction[] @relation("TransactionListing")
   reservedBy     Transaction? @relation("TransactionReservation", fields: [reservationTransactionId], references: [id], onDelete: Restrict, onUpdate: Cascade)
   @@index([status, categoryId, campusId, createdAt], map: "Listing_discovery_idx")
 
+}
+
+// Stock is per physical product listing. Services have no inventory row.
+// Available and held units are changed atomically by transaction acceptance/closure.
+model ListingInventory {
+  listingId         Int @id
+  availableQuantity Int @default(1)
+  reservedQuantity  Int @default(0)
+  listing           Listing @relation(fields: [listingId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+}
+
+// Aggregate counts remain after per-day anonymous deduplication rows expire.
+model ListingViewCounter {
+  listingId Int @id
+  viewCount BigInt @default(0) @db.UnsignedBigInt
+  listing Listing @relation(fields: [listingId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+}
+
+// Two-day ephemeral HMACs prevent refresh inflation without storing IPs or student IDs.
+model ListingViewDedup {
+  listingId Int
+  viewerHash String @db.Char(64)
+  createdAt DateTime @default(now())
+  listing Listing @relation(fields: [listingId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+
+  @@id([listingId, viewerHash])
+  @@index([createdAt])
+}
+
+// A student may appreciate multiple different products, but only once per listing.
+model ListingAppreciation {
+  userId    Int
+  listingId Int
+  createdAt DateTime @default(now())
+  user      User @relation(fields: [userId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  listing   Listing @relation(fields: [listingId], references: [id], onDelete: Restrict, onUpdate: Cascade)
+  @@id([userId, listingId])
+  @@index([listingId, createdAt])
 }
 
 model ListingMedia {
@@ -447,12 +491,28 @@ model InquiryThread {
   listing  Listing         @relation(fields: [listingId], references: [id])
   seller   SellerProfile   @relation(fields: [sellerProfileId], references: [id])
   messages InquiryMessage[]
+  preferences InquiryPreference[]
   buyer   User     @relation(fields: [buyerUserId], references: [id], onDelete: Restrict, onUpdate: Cascade)
   handoff Handoff?
   transactions Transaction[]
 
 
   @@unique([listingId, buyerUserId])
+}
+
+// Per-participant inbox controls. Removing a conversation never erases shared
+// history, transaction evidence, or the other student's view.
+model InquiryPreference {
+  threadId Int
+  userId Int
+  muted Boolean @default(false)
+  hidden Boolean @default(false)
+
+  thread InquiryThread @relation(fields: [threadId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  @@id([threadId, userId])
+  @@index([userId, hidden])
 }
 
 model InquiryMessage {

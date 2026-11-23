@@ -20,6 +20,7 @@ import { readStoreFollowSummary } from '../store-follows.js';
 import { storeActivityBadge } from '../store-activity-badge.js';
 import { screenSellerAvatar } from '../seller-avatar-screening.js';
 import { rowAccess } from '../row-access.js';
+import { inventoryAvailable, readListingStocks } from '../listing-inventory.js';
 
 const r = Router();
 r.use(requireStudent);
@@ -47,6 +48,7 @@ const listingBody = z.object({
   description: z.string().trim().min(10).max(3000), price: z.number().positive().max(1_000_000), priceBasis: z.string().max(40).default('per item'),
   condition: z.enum(['new', 'like_new', 'good', 'fair']).nullable().optional(),
   handoffNote: z.string().max(200).optional(),
+  stockQuantity: z.number().int().min(0).max(100000).optional(),
 });
 
 async function verifiedCampus(userId: number) {
@@ -178,37 +180,72 @@ r.delete('/store/avatar', async (req, res) => {
 
 r.get('/listings', async (req, res) => {
   res.setHeader('Cache-Control', 'no-store');
-  res.json(await prisma.listing.findMany({ where: rowAccess.listingOwner(req.user!.id), include: { media: true, category: true }, orderBy: { updatedAt: 'desc' } }));
+  const rows = await prisma.listing.findMany({ where: rowAccess.listingOwner(req.user!.id), include: { media: true, category: true }, orderBy: { updatedAt: 'desc' } });
+  const stocks = await readListingStocks(prisma, rows.map(row => row.id));
+  res.json(rows.map(row => ({ ...row, stockQuantity: stocks?.get(row.id)?.stockQuantity ?? null, reservedQuantity: stocks?.get(row.id)?.reservedQuantity ?? null })));
 });
 
 r.post('/listings', async (req, res) => {
-  const b = listingBody.parse(req.body);
-  if (b.type === 'service' && b.condition != null) throw new HttpError(400, 'condition_not_applicable');
+  const { stockQuantity, ...b } = listingBody.parse(req.body);
+  if (b.type === 'service' && (b.condition != null || stockQuantity !== undefined)) throw new HttpError(400, 'condition_not_applicable');
+  if (b.type === 'physical_product' && stockQuantity === 0) throw new HttpError(400, 'initial_stock_required');
+  const inventoryReady = b.type === 'physical_product' && await inventoryAvailable(prisma);
+  if (b.type === 'physical_product' && !inventoryReady && stockQuantity !== undefined && stockQuantity !== 1) throw new HttpError(503, 'stock_not_ready');
   if (req.body && ('availability' in req.body || 'availabilityState' in req.body || 'deletedAt' in req.body))
     throw new HttpError(400, 'invalid_availability_update');
   const store = await prisma.sellerProfile.findFirst({ where: { ownerUserId: req.user!.id, approvalStatus: 'approved' } });
   if (!store) throw new HttpError(403, 'no_approved_store');
-  const l = await prisma.listing.create({ data: { ...b, sellerProfileId: store.id, campusId: store.campusId, status: 'draft' } });
-  res.status(201).json(l);
+  const l = await prisma.$transaction(async tx => {
+    const created = await tx.listing.create({ data: { ...b, sellerProfileId: store.id, campusId: store.campusId, status: 'draft' } });
+    if (inventoryReady) await tx.listingInventory.create({ data: { listingId: created.id, availableQuantity: stockQuantity ?? 1 } });
+    return created;
+  });
+  res.status(201).json({ ...l, stockQuantity: b.type === 'physical_product' ? (inventoryReady ? stockQuantity ?? 1 : null) : null });
 });
 
 r.patch('/listings/:id', async (req, res) => {
   const l = await ownListing(req.user!.id, Number(req.params.id));
   if (l.deletedAt) throw new HttpError(409, 'listing_deleted');
+  if (l.availabilityState === 'sold') throw new HttpError(409, 'sold_is_final');
   if (l.reservationTransactionId !== null) throw new HttpError(409, 'transaction_reservation_active');
   if (['pending_review', 'suspended', 'rejected'].includes(l.status)) throw new HttpError(409, 'not_editable');
   if (req.body && ('availability' in req.body || 'availabilityState' in req.body || 'deletedAt' in req.body))
     throw new HttpError(400, 'invalid_availability_update');
-  const patch = listingBody.partial().parse(req.body);
+  const { stockQuantity, ...patch } = listingBody.partial().parse(req.body);
   const type = patch.type ?? l.type;
-  if (type === 'service' && patch.condition != null) throw new HttpError(400, 'condition_not_applicable');
-  // Product condition is a material detail; changes to approved listings require review again.
-  const status = l.status === 'published' && isMaterialChange(patch) ? 'draft' : l.status;
-  const changed = await prisma.listing.updateMany({ where: {
-    id: l.id, reservationTransactionId: null, deletedAt: null, status: l.status,
-  }, data: { ...patch, ...(type === 'service' && { condition: null }), status } });
-  if (!changed.count) throw new HttpError(409, 'listing_changed');
-  res.json(await prisma.listing.findUniqueOrThrow({ where: { id: l.id } }));
+  if (type === 'service' && (patch.condition != null || stockQuantity !== undefined)) throw new HttpError(400, 'condition_not_applicable');
+  const inventoryReady = (type === 'physical_product' || l.type === 'physical_product') && await inventoryAvailable(prisma);
+  if (stockQuantity !== undefined && !inventoryReady) throw new HttpError(503, 'stock_not_ready');
+  // Stock changes do not reset moderation. Changes to the actual listing description still do.
+  const status = l.status === 'published' && isMaterialChange(patch, l) ? 'draft' : l.status;
+  const result = await prisma.$transaction(async tx => {
+    const stock = inventoryReady ? await tx.listingInventory.findUnique({ where: { listingId: l.id } }) : null;
+    if (stock?.reservedQuantity) throw new HttpError(409, 'transaction_reservation_active');
+    if (type === 'physical_product' && inventoryReady) {
+      const next = stockQuantity ?? stock?.availableQuantity ?? 1;
+      if (stock) {
+        const updatedStock = await tx.listingInventory.updateMany({ where: {
+          listingId: l.id, reservedQuantity: 0, availableQuantity: stock.availableQuantity,
+        }, data: { availableQuantity: next } });
+        if (updatedStock.count !== 1) throw new HttpError(409, 'transaction_reservation_active');
+      } else await tx.listingInventory.create({ data: { listingId: l.id, availableQuantity: next } });
+    } else if (type === 'service' && stock) {
+      await tx.listingInventory.delete({ where: { listingId: l.id } });
+    }
+    const quantity = type === 'physical_product' ? stockQuantity ?? stock?.availableQuantity ?? 1 : null;
+    const setUnavailable = l.status === 'published' && type === 'physical_product' && quantity === 0;
+    const restocked = l.status === 'published' && type === 'physical_product' && quantity !== null && quantity > 0 &&
+      stock?.availableQuantity === 0 && l.availabilityState === 'reserved';
+    const changed = await tx.listing.updateMany({ where: {
+      id: l.id, reservationTransactionId: null, deletedAt: null, status: l.status,
+    }, data: { ...patch, ...(type === 'service' && { condition: null }), status,
+      ...(setUnavailable ? { availabilityState: 'reserved', availability: 'reserved' } : {}),
+      ...(restocked ? { availabilityState: 'available', availability: 'available' } : {}),
+    } });
+    if (!changed.count) throw new HttpError(409, 'listing_changed');
+    return { row: await tx.listing.findUniqueOrThrow({ where: { id: l.id } }), quantity };
+  });
+  res.json({ ...result.row, stockQuantity: result.quantity });
 });
 
 // Authorize and check the quota BEFORE accepting any file bytes to avoid
@@ -299,12 +336,22 @@ r.patch('/listings/:id/availability', async (req, res) => {
   if (l.status !== 'published') throw new HttpError(409, 'not_published');
   if (l.availabilityState === 'sold' && availability !== 'sold') throw new HttpError(409, 'sold_is_final');
   if (l.reservationTransactionId !== null && availability !== l.availabilityState) throw new HttpError(409, 'transaction_reservation_active');
+  const stocks = await readListingStocks(prisma, [l.id]);
+  const stock = stocks?.get(l.id);
+  if (stock?.reservedQuantity && availability !== l.availabilityState) throw new HttpError(409, 'transaction_reservation_active');
+  if (l.type === 'physical_product' && stock && availability === 'available' && stock.stockQuantity < 1) throw new HttpError(409, 'out_of_stock');
   if (l.availabilityState === availability) return res.json(l);
 
   const updated = await prisma.$transaction(async tx => {
+    if (availability === 'sold' && stock) {
+      const changedStock = await tx.listingInventory.updateMany({ where: {
+        listingId: l.id, reservedQuantity: 0, availableQuantity: stock.stockQuantity,
+      }, data: { availableQuantity: 0 } });
+      if (!changedStock.count) throw new HttpError(409, 'transaction_reservation_active');
+    }
     const result = await tx.listing.updateMany({ where: {
       id: l.id, deletedAt: null, status: 'published', availabilityState: l.availabilityState,
-      reservationTransactionId: null,
+      reservationTransactionId: null, ...(stock ? { inventory: { is: { reservedQuantity: 0 } } } : {}),
     }, data: { availabilityState: availability, availability } });
     if (result.count !== 1) throw new HttpError(409, 'listing_changed');
     await tx.auditLog.create({ data: {
@@ -329,6 +376,8 @@ r.delete('/listings/:id', async (req, res) => {
   const l = await ownListing(req.user!.id, Number(req.params.id));
   if (l.deletedAt) return res.status(204).end();
   if (l.reservationTransactionId !== null) throw new HttpError(409, 'transaction_reservation_active');
+  const stocks = await readListingStocks(prisma, [l.id]);
+  if (stocks?.get(l.id)?.reservedQuantity) throw new HttpError(409, 'transaction_reservation_active');
   await prisma.$transaction(async tx => {
     const updated = await tx.listing.updateMany({
       where: { id: l.id, deletedAt: null, reservationTransactionId: null }, data: { deletedAt: new Date() },

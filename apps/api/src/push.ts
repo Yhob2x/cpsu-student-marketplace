@@ -1,9 +1,6 @@
 import { createHash } from 'node:crypto';
-import * as webPush from 'web-push';
-import { prisma } from './db.js';
 import { env } from './env.js';
 import { evaluatePushPolicy } from './push-policy.js';
-import { allSettledBounded, sendWithBoundedRetries } from './push-delivery.js';
 
 export type PushCategory = 'messages' | 'listingReviews' | 'accountUpdates';
 type EventData = Record<string, unknown>;
@@ -40,10 +37,7 @@ export const endpointHash = (endpoint: string) => createHash('sha256').update(en
 // Separate subscription and outbound-delivery gates; never infer approval from VAPID keys alone.
 const pushPolicy = evaluatePushPolicy(env);
 export const pushReady = pushPolicy.subscriptionsEnabled;
-// Phase 6 preparation only: the new queue/worker and its transaction integration
-// are NOT activated yet. Even two accidentally enabled environment switches must
-// not revive legacy fire-and-forget outbound delivery before isolated migration
-// and privacy-reviewed device acceptance. Flip only with reviewed worker wiring.
+// The durable integration remains gated until approved staging and physical-device acceptance.
 export const durableOutboxWorkerActivated = false;
 export const pushDeliveryReady = pushPolicy.deliveryEnabled && durableOutboxWorkerActivated;
 
@@ -96,64 +90,4 @@ export function pushContent(type: string, data: EventData, notificationId: numbe
     body = 'A store you follow has published a new listing.';
   }
   return { title: 'CPSU Market', body, url, tag: `cpsu-${notificationId}`, id: notificationId, type, unread: Math.max(0, unread) };
-}
-
-const VAPID = pushReady ? {
-  subject: env.VAPID_SUBJECT!,
-  publicKey: env.VAPID_PUBLIC_KEY!,
-  privateKey: env.VAPID_PRIVATE_KEY!,
-} : null;
-
-// Process-local aggregate counters. Never include endpoints, user IDs, or notification content.
-const deliveryStats = { sent: 0, expired: 0, failed: 0, retried: 0 };
-export const readPushDeliveryStats = () => ({ ...deliveryStats });
-
-/** Delivery is best-effort: in-app notification persistence must not depend on external push services. */
-export async function deliverPush(userId: number, type: string, data: EventData, notificationId: number): Promise<void> {
-  const category = categoryForNotice(type);
-  if (!pushDeliveryReady || !VAPID || !category || env.NODE_ENV === 'test') return;
-  const recipient = await prisma.user.findUnique({ where: { id: userId }, select: { status: true } });
-  if (recipient?.status !== 'active') return;
-  const preferences = await prisma.pushPreference.findUnique({ where: { userId } });
-  if (preferences && !preferences[category]) return;
-  const now = new Date();
-  await prisma.pushSubscription.deleteMany({ where: { userId, expiresAt: { lte: now } } });
-  const subscriptions = await prisma.pushSubscription.findMany({
-    where: { userId, OR: [{ expiresAt: null }, { expiresAt: { gt: now } }] },
-    orderBy: { createdAt: 'desc' }, take: 8,
-  });
-  if (subscriptions.length === 0) return;
-  const unread = await prisma.notification.count({ where: { userId, readAt: null } });
-  const payload = pushContent(type, data, notificationId, unread);
-  if (!payload) return;
-
-  // A student may have up to eight enrolled devices. Bound simultaneous relay
-  // calls per notification to reduce burst pressure without changing consent.
-  const deliveries = await allSettledBounded(subscriptions, 4, async (row) => {
-    if (!permittedPushEndpoint(row.endpoint)) {
-      deliveryStats.expired++;
-      await prisma.pushSubscription.deleteMany({ where: { id: row.id, userId } });
-      console.warn('Web Push removed an untrusted stored subscription');
-      return;
-    }
-    const result = await sendWithBoundedRetries(() => webPush.sendNotification({
-      endpoint: row.endpoint,
-      keys: { p256dh: row.p256dh, auth: row.auth },
-      expirationTime: row.expiresAt?.getTime() ?? null,
-    }, JSON.stringify(payload), { TTL: 3600, urgency: 'normal', vapidDetails: VAPID, timeout: 8000 }));
-    if (result.attempts > 1) deliveryStats.retried++;
-    if (result.outcome === 'sent') deliveryStats.sent++;
-    else if (result.outcome === 'expired') {
-      deliveryStats.expired++;
-      await prisma.pushSubscription.deleteMany({ where: { id: row.id, userId } });
-    } else {
-      deliveryStats.failed++;
-      // No endpoint, user ID, device ID, or message contents in logs.
-      console.warn('Web Push delivery unavailable', { category, status: result.status, attempts: result.attempts });
-    }
-  });
-  const bookkeepingFailures = deliveries.filter(r => r.status === 'rejected').length;
-  if (bookkeepingFailures) {
-    console.warn('Web Push dispatch bookkeeping failures', { category, count: bookkeepingFailures });
-  }
 }

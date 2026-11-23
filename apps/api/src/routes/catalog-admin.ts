@@ -5,6 +5,7 @@ import { prisma } from '../db.js';
 import { requireAuth } from '../auth.js';
 import { HttpError } from '../http.js';
 import { canManageCatalog } from '../permissions.js';
+import { publicCampusesCache, publicCategoriesCache } from '../public-read-cache.js';
 
 // Only university-wide administrators can change the shared campus and listing-category catalog.
 // Campus reviewers cannot change taxonomy for the whole university.
@@ -68,6 +69,7 @@ catalogAdminRoutes.post('/campuses', async (req, res) => {
         targetType: 'campus', targetId: campus.id, metadata: { code: campus.code, name: campus.name } } });
       return campus;
     });
+    publicCampusesCache.invalidate();
     res.status(201).json(result);
   } catch (error) { knownConflict(error); }
 });
@@ -97,6 +99,7 @@ catalogAdminRoutes.patch('/campuses/:id', async (req, res) => {
           after: { code: campus.code, name: campus.name, active: campus.active } } } });
       return campus;
     });
+    publicCampusesCache.invalidate();
     res.json(result);
   } catch (error) { knownConflict(error); }
 });
@@ -111,6 +114,7 @@ catalogAdminRoutes.post('/services', async (req, res) => {
       targetType: 'category', targetId: category.id, metadata: { name: category.name } } });
     return category;
   });
+  publicCategoriesCache.invalidate();
   res.status(201).json(result);
 });
 
@@ -128,6 +132,7 @@ catalogAdminRoutes.patch('/services/:id', async (req, res) => {
       targetType: 'category', targetId: id, metadata: { before: current.name, after: category.name } } });
     return category;
   });
+  publicCategoriesCache.invalidate();
   res.json(result);
 });
 
@@ -145,6 +150,7 @@ catalogAdminRoutes.post('/categories', async (req, res) => {
       metadata: { name: created.name, listingType: created.listingType } } });
     return created;
   });
+  publicCategoriesCache.invalidate();
   res.status(201).json(category);
 });
 
@@ -164,5 +170,6 @@ catalogAdminRoutes.patch('/categories/:id', async (req, res) => {
       metadata: { before: current.name, after: updated.name, listingType: current.listingType } } });
     return updated;
   });
+  publicCategoriesCache.invalidate();
   res.json(category);
 });

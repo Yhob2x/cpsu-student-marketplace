@@ -12,17 +12,21 @@ import { sellerAvatarUrl } from '../seller-avatar-url.js';
 import { readStoreFollowSummary } from '../store-follows.js';
 import { storeActivityBadge } from '../store-activity-badge.js';
 import { readMostFollowedStores } from '../most-followed-stores.js';
-import { popularListingOrderBy } from '../popular-listing-ranking.js';
+import { readPopularListingIds } from '../popular-listing-ranking.js';
 import { visibleListingRows } from '../row-access.js';
 import { canonicalStoreSlug, findStoreBySlug } from '../store-slug.js';
 import { visibleStudentStoreWhere } from '../store-visibility.js';
 import { storeListingPageInput, storeListingPageQuery, storeListingPageResult } from '../store-listing-pages.js';
 import { readPublishedStoreRatings, type PublishedStoreRating } from '../store-rating-summaries.js';
+import { publicAnnouncementsCache, publicCampusesCache, publicCategoriesCache, publicGuidelinesCache } from '../public-read-cache.js';
+import { readListingStocks, type ListingStock } from '../listing-inventory.js';
+import { readStoreListingAppreciationCount } from '../store-listing-appreciation-count.js';
 
 const r = Router();
-export const publicListing = (l: any, ratings?: ReadonlyMap<number, PublishedStoreRating>) => ({
+export const publicListing = (l: any, ratings?: ReadonlyMap<number, PublishedStoreRating>, stocks?: ReadonlyMap<number, ListingStock> | null) => ({
   id: l.id, type: l.type, title: l.title, description: l.description, price: Number(l.price), priceBasis: l.priceBasis,
   currency: l.currency, availability: l.availabilityState, condition: l.condition,
+  stockQuantity: l.type === 'physical_product' ? stocks?.get(l.id)?.stockQuantity ?? null : null,
   handoffNote: l.handoffNote, createdAt: l.createdAt,
   category: l.category && { id: l.category.id, name: l.category.name },
   campus: l.campus && { id: l.campus.id, code: l.campus.code, name: l.campus.name },
@@ -45,13 +49,12 @@ export const publicListingSelect = (avatarColumnExists: boolean) => ({
   media: { select: { id: true, position: true } },
 }) satisfies Prisma.ListingSelect;
 
-r.get('/campuses', async (_q, res) => res.json(await prisma.campus.findMany({ where: { active: true }, select: { id: true, code: true, name: true } })));
-r.get('/categories', async (_q, res) => res.json(await prisma.category.findMany({ select: { id: true, parentId: true, name: true, listingType: true } })));
+r.get('/campuses', async (_q, res) => res.json(await publicCampusesCache.read()));
+r.get('/categories', async (_q, res) => res.json(await publicCategoriesCache.read()));
 
 r.get('/guidelines', async (_req, res) => {
   try {
-    const content = await prisma.guidelineContent.findUnique({ where: { id: 1 }, select: { publishedBody: true, publishedAt: true } });
-    res.json({ body: content?.publishedBody ?? DEFAULT_GUIDELINES, publishedAt: content?.publishedAt ?? null });
+    res.json(await publicGuidelinesCache.read());
   } catch (error) {
     if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2021') {
       return res.json({ body: DEFAULT_GUIDELINES, publishedAt: null });
@@ -62,9 +65,7 @@ r.get('/guidelines', async (_req, res) => {
 
 r.get('/announcements', async (_req, res) => {
   try {
-    const items = await prisma.announcement.findMany({ where: { status: 'published' }, orderBy: { publishedAt: 'desc' }, take: 10,
-      select: { id: true, title: true, body: true, publishedAt: true } });
-    res.json({ items });
+    res.json(await publicAnnouncementsCache.read());
   } catch (error) {
     if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2021') return res.json({ items: [] });
     throw error;
@@ -97,21 +98,26 @@ r.get('/listings', async (req, res) => {
     prisma.listing.count({ where }),
     prisma.listing.findMany({ where, select, orderBy, skip: (q.page - 1) * q.pageSize, take: q.pageSize }),
   ]);
-  const ratings = await readPublishedStoreRatings(prisma, rows.map(row => row.sellerProfileId));
-  res.json({ total, page: q.page, pageSize: q.pageSize, items: rows.map(row => publicListing(row, ratings)) });
+  const [ratings, stocks] = await Promise.all([readPublishedStoreRatings(prisma, rows.map(row => row.sellerProfileId)),
+    readListingStocks(prisma, rows.map(row => row.id))]);
+  res.json({ total, page: q.page, pageSize: q.pageSize, items: rows.map(row => publicListing(row, ratings, stocks)) });
 });
 
-// "Popular" = most saved by signed-in users; saves are the only engagement signal in v1.
+// Popular = actual per-listing appreciations and detail-page views, never saves.
+// Rank globally before hydration; do not borrow engagement from a whole store.
 r.get('/listings/popular', async (_q, res) => {
+  const { ids, ranking } = await readPopularListingIds(prisma);
   const select = publicListingSelect(await sellerAvatarColumnExists());
-  const rows = await prisma.listing.findMany({ where: {
-    status: 'published', availabilityState: 'available', deletedAt: null,
-    seller: visibleStudentStoreWhere(), savedListings: { some: {} },
-  },
-    // Stable tie-break: equal save counts must not shuffle between refreshes.
-    select, orderBy: popularListingOrderBy, take: 8 });
-  const ratings = await readPublishedStoreRatings(prisma, rows.map(row => row.sellerProfileId));
-  res.json({ items: rows.map(row => publicListing(row, ratings)) });
+  const rows = ids.length ? await prisma.listing.findMany({
+    where: { id: { in: ids }, status: 'published', availabilityState: 'available', deletedAt: null,
+      seller: visibleStudentStoreWhere() },
+    select,
+  }) : [];
+  const byId = new Map(rows.map(row => [row.id, row]));
+  const [ratings, stocks] = await Promise.all([readPublishedStoreRatings(prisma, rows.map(row => row.sellerProfileId)),
+    readListingStocks(prisma, rows.map(row => row.id))]);
+  res.setHeader('Cache-Control', 'no-store');
+  res.json({ ranking, items: ids.flatMap(id => { const row = byId.get(id); return row ? [publicListing(row, ratings, stocks)] : []; }) });
 });
 
 // Home's Fresh rail follows the latest approval, when a listing becomes public.
@@ -126,8 +132,9 @@ r.get('/listings/fresh', async (_req, res) => {
     select,
   }) : [];
   const byId = new Map(rows.map(row => [row.id, row]));
-  const ratings = await readPublishedStoreRatings(prisma, rows.map(row => row.sellerProfileId));
-  res.json({ items: ids.flatMap(id => { const row = byId.get(id); return row ? [publicListing(row, ratings)] : []; }) });
+  const [ratings, stocks] = await Promise.all([readPublishedStoreRatings(prisma, rows.map(row => row.sellerProfileId)),
+    readListingStocks(prisma, rows.map(row => row.id))]);
+  res.json({ items: ids.flatMap(id => { const row = byId.get(id); return row ? [publicListing(row, ratings, stocks)] : []; }) });
 });
 
 r.get('/listings/:id', async (req, res) => {
@@ -139,7 +146,8 @@ r.get('/listings/:id', async (req, res) => {
   const reviewer = u && (() => { const c = reviewCampusIds(u); return c === 'all' || c.includes(l.campusId); })();
   const publiclyVisible = !l.deletedAt && l.status === 'published' && l.seller.approvalStatus === 'approved' && l.seller.owner.status === 'active';
   if (!publiclyVisible && !owner && !reviewer) throw new HttpError(404, 'not_found'); // drafts / deleted listings never leak
-  res.json({ ...publicListing(l), status: owner || reviewer ? l.status : undefined });
+  const stocks = await readListingStocks(prisma, [l.id]);
+  res.json({ ...publicListing(l, undefined, stocks), status: owner || reviewer ? l.status : undefined });
 });
 
 // Public store discovery is ranked strictly by real StoreFollow rows.
@@ -171,24 +179,27 @@ async function sendPublicStore(req: Request, res: Response, id: number, stores?:
   });
   if (!s) throw new HttpError(404, 'not_found');
   const slug = canonicalStoreSlug(stores ?? await visibleStoreNames(), s);
-  const [follow, publishedListingCount, availableListingCount] = await Promise.all([
+  const [follow, publishedListingCount, availableListingCount, appreciationCount] = await Promise.all([
     readStoreFollowSummary(prisma, s.id, req.user?.id),
     prisma.listing.count({ where: { sellerProfileId: s.id, status: 'published', deletedAt: null } }),
     paging ? prisma.listing.count({ where: { sellerProfileId: s.id, status: 'published',
       deletedAt: null, availabilityState: 'available' } }) : Promise.resolve(s.listings.length),
+    readStoreListingAppreciationCount(prisma, s.id),
   ]);
   const listingPage = paging && pageRequest.limit !== undefined
     ? storeListingPageResult(s.listings, pageRequest.limit) : null;
+  const [stocks] = await Promise.all([readListingStocks(prisma, s.listings.map(row => row.id))]);
   const activity = storeActivityBadge({ publishedListingCount, followerCount: follow.count });
   res.setHeader('Cache-Control', 'private, no-store');
   res.json({ id: s.id, slug, storeName: s.storeName, description: s.description,
     sellerType: s.sellerType, campusId: s.campusId, campus: s.campus, createdAt: s.createdAt,
     listingCount: availableListingCount,
+    appreciationCount,
     follow,
     avatarUrl: sellerAvatarUrl(s.id, s.avatarPath),
     badge: s.sellerType === 'student' ? activity.label : 'Campus establishment',
     badgeReason: s.sellerType === 'student' ? activity.reason : undefined,
-    listings: (listingPage?.items ?? s.listings).map(row => publicListing(row)),
+    listings: (listingPage?.items ?? s.listings).map(row => publicListing(row, undefined, stocks)),
     ...(listingPage ? { hasMoreListings: listingPage.hasMoreListings,
       nextListingBeforeId: listingPage.nextListingBeforeId } : {}) });
 }

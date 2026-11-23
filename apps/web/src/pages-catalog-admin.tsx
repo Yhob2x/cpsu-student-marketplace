@@ -1,6 +1,6 @@
 import { LegacyButton } from './components/ui/legacy-button';
 import { Field, Panel } from './components/ui/primitives';
-import { useEffect, useState, type FormEvent } from 'react';
+import { useEffect, useId, useState, type FormEvent } from 'react';
 import { api, explain } from './api';
 import { showActionFeedback } from './action-feedback';
 import './catalog-admin.css';
@@ -12,6 +12,38 @@ type Campus = {
 type CategoryKind = 'physical_product' | 'service';
 type Category = { id: number; name: string; listingType: CategoryKind; parentId: number | null; _count: { listings: number; children: number } };
 type Catalog = { campuses: Campus[]; categories: Category[] };
+type CampusDraft = Pick<Campus, 'code' | 'name'>;
+type CampusField = keyof CampusDraft;
+
+const campusFieldMessages = {
+  code: 'Enter a campus code of 2–24 characters. Use letters, numbers, hyphens and underscores.',
+  name: 'Enter a campus name of 2–100 characters.',
+};
+
+function campusFieldError(draft: CampusDraft): CampusField | null {
+  if (!/^[A-Za-z0-9_-]{2,24}$/.test(draft.code.trim())) return 'code';
+  const nameLength = draft.name.trim().length;
+  return nameLength < 2 || nameLength > 100 ? 'name' : null;
+}
+
+function CampusFields({ draft, onChange, error }: {
+  draft: CampusDraft; onChange: (draft: CampusDraft) => void; error: CampusField | null;
+}) {
+  const errorId = useId();
+  return <>
+    <div className="catalog-admin-fields">
+      <Field>Code<input name="code" required minLength={2} maxLength={24} value={draft.code}
+        placeholder="e.g. CPSU-WEST" aria-invalid={error === 'code' || undefined}
+        aria-describedby={error === 'code' ? errorId : undefined}
+        onChange={event => onChange({ ...draft, code: event.target.value })} /></Field>
+      <Field>Campus name<input name="name" required minLength={2} maxLength={100} value={draft.name}
+        placeholder="Campus name" aria-invalid={error === 'name' || undefined}
+        aria-describedby={error === 'name' ? errorId : undefined}
+        onChange={event => onChange({ ...draft, name: event.target.value })} /></Field>
+    </div>
+    {error && <p id={errorId} role="alert" className="err">{campusFieldMessages[error]}</p>}
+  </>;
+}
 
 export function CatalogAdmin({ onCampusesChange }: { onCampusesChange: () => void }) {
   const [data, setData] = useState<Catalog | null>(null);
@@ -20,11 +52,13 @@ export function CatalogAdmin({ onCampusesChange }: { onCampusesChange: () => voi
   const [actionError, setActionError] = useState('');
   const [busy, setBusy] = useState('');
   const [newCampus, setNewCampus] = useState({ code: '', name: '' });
+  const [newCampusError, setNewCampusError] = useState<CampusField | null>(null);
   const [newCategory, setNewCategory] = useState<Record<CategoryKind, string>>({ physical_product: '', service: '' });
   const [selectedKind, setSelectedKind] = useState<CategoryKind>('physical_product');
   const [editCampus, setEditCampus] = useState<number | null>(null);
   const [editCategory, setEditCategory] = useState<number | null>(null);
   const [campusDraft, setCampusDraft] = useState({ code: '', name: '' });
+  const [campusDraftError, setCampusDraftError] = useState<CampusField | null>(null);
   const [categoryDraft, setCategoryDraft] = useState('');
 
   const load = async () => {
@@ -51,8 +85,17 @@ export function CatalogAdmin({ onCampusesChange }: { onCampusesChange: () => voi
     } finally { setBusy(''); }
   };
 
-  const addCampus = async (event: FormEvent<HTMLFormElement>) => {
+  const validateCampus = (event: FormEvent<HTMLFormElement>, draft: CampusDraft,
+    setFieldError: (field: CampusField | null) => void) => {
     event.preventDefault();
+    setActionError('');
+    const field = campusFieldError(draft);
+    setFieldError(field);
+    if (field) (event.currentTarget.elements.namedItem(field) as HTMLInputElement).focus();
+    return !field;
+  };
+  const addCampus = async (event: FormEvent<HTMLFormElement>) => {
+    if (!validateCampus(event, newCampus, setNewCampusError)) return;
     if (await save('add-campus', () => api('/admin/catalog/campuses', {
       body: { code: newCampus.code.trim(), name: newCampus.name.trim() },
     }), 'The campus is now available to the marketplace.', true)) setNewCampus({ code: '', name: '' });
@@ -101,21 +144,19 @@ export function CatalogAdmin({ onCampusesChange }: { onCampusesChange: () => voi
         <div className="catalog-admin-title"><div><h3>Campuses</h3>
           <p className="muted">Update names, codes, or availability. Existing records are never deleted.</p></div>
           <span className="catalog-admin-count">{data.campuses.length}</span></div>
-        <form className="catalog-admin-add" onSubmit={event => void addCampus(event)}>
+        <form className="catalog-admin-add" noValidate onSubmit={event => void addCampus(event)}>
           <strong>Add campus</strong>
-          <div className="catalog-admin-fields">
-            <Field>Code<input required minLength={2} maxLength={24} pattern="[A-Za-z0-9_-]+" value={newCampus.code} placeholder="e.g. MAIN" onChange={event => setNewCampus(current => ({ ...current, code: event.target.value }))} /></Field>
-            <Field>Campus name<input required minLength={2} maxLength={100} value={newCampus.name} placeholder="Campus name" onChange={event => setNewCampus(current => ({ ...current, name: event.target.value }))} /></Field>
-          </div>
+          <CampusFields draft={newCampus} error={newCampusError}
+            onChange={draft => { setNewCampus(draft); setNewCampusError(null); }} />
           <LegacyButton className="" disabled={Boolean(busy) || !newCampus.name.trim() || !newCampus.code.trim()} type="submit">{busy === 'add-campus' ? 'Adding…' : 'Add campus'}</LegacyButton>
         </form>
         <div className="catalog-admin-rows">
           {data.campuses.map(campus => <div className="catalog-admin-item" key={campus.id}>
-            {editCampus === campus.id ? <form onSubmit={event => { event.preventDefault(); void updateCampus(campus, campusDraft); }}>
-              <div className="catalog-admin-fields">
-                <Field>Code<input required minLength={2} maxLength={24} pattern="[A-Za-z0-9_-]+" value={campusDraft.code} onChange={event => setCampusDraft(prev => ({ ...prev, code: event.target.value }))} /></Field>
-                <Field>Campus name<input required minLength={2} maxLength={100} value={campusDraft.name} onChange={event => setCampusDraft(prev => ({ ...prev, name: event.target.value }))} /></Field>
-              </div>
+            {editCampus === campus.id ? <form noValidate onSubmit={event => {
+              if (validateCampus(event, campusDraft, setCampusDraftError)) void updateCampus(campus, campusDraft);
+            }}>
+              <CampusFields draft={campusDraft} error={campusDraftError}
+                onChange={draft => { setCampusDraft(draft); setCampusDraftError(null); }} />
               <div className="catalog-admin-actions"><LegacyButton className="" type="submit" disabled={Boolean(busy)}>Save</LegacyButton>
                 <LegacyButton className="ghost" type="button" onClick={() => setEditCampus(null)} disabled={Boolean(busy)}>Cancel</LegacyButton></div>
             </form> : <>
@@ -125,7 +166,7 @@ export function CatalogAdmin({ onCampusesChange }: { onCampusesChange: () => voi
               </div></div>
               <div className="catalog-admin-actions">
                 <LegacyButton type="button" className="ghost" aria-label={`Edit campus ${campus.name}`} disabled={Boolean(busy)}
-                  onClick={() => { setEditCampus(campus.id); setEditCategory(null); setCampusDraft({ code: campus.code, name: campus.name }); }}>Edit</LegacyButton>
+                  onClick={() => { setEditCampus(campus.id); setEditCategory(null); setCampusDraftError(null); setCampusDraft({ code: campus.code, name: campus.name }); }}>Edit</LegacyButton>
                 <LegacyButton type="button" className="ghost" aria-label={`${campus.active ? 'Deactivate' : 'Reactivate'} campus ${campus.name}`} disabled={Boolean(busy)}
                   onClick={() => void toggleCampus(campus)}>{busy === 'campus-' + campus.id ? 'Saving…' : campus.active ? 'Deactivate' : 'Reactivate'}</LegacyButton>
               </div>

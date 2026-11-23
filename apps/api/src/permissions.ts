@@ -19,5 +19,6 @@ export const reviewCampusIds = (u: AuthUser): number[] | 'all' => {
 };
 
 // Material changes after approval send the listing back to review.
-export const isMaterialChange = (patch: Record<string, unknown>) =>
-  ['title', 'description', 'categoryId', 'type', 'campusId', 'condition'].some(k => k in patch);
+export const isMaterialChange = (patch: Record<string, unknown>, current?: Record<string, unknown>) =>
+  ['title', 'description', 'categoryId', 'type', 'campusId', 'condition'].some(k =>
+    k in patch && (!current || (patch[k] ?? null) !== (current[k] ?? null)));

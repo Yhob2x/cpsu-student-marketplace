@@ -146,6 +146,8 @@ Sentence case for headings and buttons. Prices as `₱` on web (`Intl` en-PH, no
 
 ## 9. Listing-card refinement — Phase 2 (12 November 2026)
 
+**23 November 2026 update.** Home, Explore, Saved, and storefronts use a shared photo-first card with a 4:3 image and a borderless layout. Save and photo count stay on the image. The title and linked seller name use the full card width. Long titles are visually shortened, with the full title available through the listing link. The icon-only appreciation control sits beside the price and listing metadata. Campus and reported stock or availability follow. Explore's loading state uses the same photo proportions.
+
 - **Single reusable card:** `ListingCard` in `apps/web/src/pages-public.tsx` is shared across Home, Explore, Saved, and store pages; keep all listing and save actions unchanged.
 - **Reading space:** card text has 8 px horizontal padding on phones and 10 px on larger viewports, while photos remain frameless and the Product/Service badge and 44 px save target keep their positions.
 - **Long metadata:** category and product condition may wrap into separate lines; seller and campus names retain their one-line truncation and full text in their title attributes.

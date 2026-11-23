@@ -54,18 +54,8 @@ self.addEventListener('push', (event) => {
       'A student sent you a purchase or service request.',
       'The other student updated your transaction.',
     ]);
-    // Window discovery must never prevent a legitimate alert from displaying.
-    let windows = [];
-    try { windows = await self.clients.matchAll({ type: 'window', includeUncontrolled: true }); }
-    catch { /* No known foreground clients; display the safe alert normally. */ }
-    // Avoid a lock-screen alert for the exact conversation/listing already in focus.
-    const viewingTarget = windows.some((client) => {
-      try {
-        const current = new URL(client.url);
-        return client.focused && current.origin === self.location.origin && current.pathname === url;
-      } catch { return false; }
-    });
-    if (!viewingTarget) await self.registration.showNotification('CPSU Market', {
+    // WebKit requires a visible notification for every userVisibleOnly push.
+    await self.registration.showNotification('CPSU Market', {
       body: allowedBodies.has(detail.body) ? detail.body : 'You have a new marketplace update.',
       icon: '/icons/icon-192.png',
       badge: '/icons/icon-maskable-192.png',
@@ -83,6 +73,9 @@ self.addEventListener('push', (event) => {
         else if (typeof self.navigator.clearAppBadge === 'function') await self.navigator.clearAppBadge();
       } catch { /* Badging support varies by OS and launcher. */ }
     }
+    let windows = [];
+    try { windows = await self.clients.matchAll({ type: 'window', includeUncontrolled: true }); }
+    catch { /* The alert is already visible. */ }
     for (const client of windows) {
       try { client.postMessage({ type: 'CPSU_PUSH_RECEIVED' }); }
       catch { /* A navigated/closed tab cannot block other foreground updates. */ }

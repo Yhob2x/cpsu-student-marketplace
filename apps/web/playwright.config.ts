@@ -1,6 +1,7 @@
 import { defineConfig, devices } from '@playwright/test';
 
-const baseURL = 'http://127.0.0.1:5189';
+const port = process.env.CPSU_E2E_PORT ?? '5189';
+const baseURL = `http://127.0.0.1:${port}`;
 export default defineConfig({
   testDir: './e2e',
   // .pw.ts keeps Playwright browser tests out of Bun's unit-test discovery.
@@ -16,7 +17,7 @@ export default defineConfig({
     { name: 'mobile-chrome', use: { ...devices['Desktop Chrome'], channel: 'chrome', viewport: { width: 390, height: 844 }, isMobile: true, hasTouch: true } },
   ],
   webServer: {
-    command: 'bun run dev --host 127.0.0.1 --port 5189 --strictPort',
+    command: `bun run dev --host 127.0.0.1 --port ${port} --strictPort`,
     url: baseURL,
     reuseExistingServer: !process.env.CI,
     timeout: 45_000,

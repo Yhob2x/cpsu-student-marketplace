@@ -4,7 +4,7 @@
  * A few high-value responses only:
  * 1. Saved-heart presses and confirmed selected states.
  * 2. Opened mobile advanced filters.
- * 3. Desktop discovery photo hover, without moving swipeable card columns.
+ * 3. Desktop discovery photo vignette, without moving or scaling images.
  * 4. Seller photo-cover selection.
  *
  * No page entrance animation, auto-playing carousels, or animated widths/heights.
@@ -48,16 +48,6 @@
     }
   }
 
-  /* Photo only, not the card container: avoids layout shift or moving scroll columns. */
-  @media (hover: hover) and (pointer: fine) {
-    .product-card .product-photo img {
-      transition: transform 190ms var(--cpsu-press-ease);
-      transform-origin: center center;
-    }
-    .product-card:has(> .card-link:hover) .product-photo img {
-      transform: scale(1.025);
-    }
-  }
 
   @media (pointer: coarse) {
     .product-card .product-photo .heart-btn:active:not(:disabled) svg,

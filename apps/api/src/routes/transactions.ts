@@ -4,9 +4,10 @@ import { z } from 'zod';
 import { prisma } from '../db.js';
 import { HttpError } from '../http.js';
 import { requireStudent } from '../auth.js';
-import { deliverPush } from '../push.js';
-import { pushOutboxWritesActivated, stagePushOutbox } from '../push-outbox.js';
+import { stagePushOutbox } from '../push-outbox.js';
 import { rowAccess } from '../row-access.js';
+import { inventoryAvailable } from '../listing-inventory.js';
+import { holdProductUnit, completeProductUnit, releaseProductUnit } from '../listing-stock-transactions.js';
 import { meetupLocationBody, serializedMeetupLocation } from '../meetup-location.js';
 
 const r = Router();
@@ -41,20 +42,9 @@ const ensureListingNotModerated = (listing: { status: string; deletedAt: Date | 
 };
 
 type Tx = Prisma.TransactionClient;
-type TransactionPushNotice = {
-  userId: number; type: string;
-  payload: { transactionId: number; listingId: number; status: TransactionStatus };
-  notificationId: number;
-};
-function dispatchCommittedTransactionPush(notice: TransactionPushNotice | null) {
-  if (!notice || pushOutboxWritesActivated) return;
-  // Side effect only after the database transaction commits successfully.
-  void deliverPush(notice.userId, notice.type, notice.payload, notice.notificationId)
-    .catch(() => console.warn('Transaction Web Push delivery skipped'));
-}
 async function logEvent(tx: Tx, t: Transaction, actor: number, event: string,
                         previous: TransactionStatus | null, next: TransactionStatus,
-                        reason?: string): Promise<TransactionPushNotice> {
+                        reason?: string): Promise<void> {
   await tx.transactionStatusLog.create({ data: {
     transactionId: t.id, actorUserId: actor, fromStatus: previous,
     toStatus: next, event, reason,
@@ -71,7 +61,6 @@ async function logEvent(tx: Tx, t: Transaction, actor: number, event: string,
     data: { userId: recipientId, type, payload }, select: { id: true },
   });
   await stagePushOutbox(tx, { id: notification.id, userId: recipientId, type });
-  return { userId: recipientId, type, payload, notificationId: notification.id };
 }
 
 const response = (t: Transaction) => ({ ...t, price: Number(t.price) });
@@ -119,16 +108,15 @@ r.post('/', async (req, res) => {
         update: {},
       });
       const prior = await tx.transaction.findUnique({ where: { activeThreadId: thread.id } });
-      if (prior) return { transaction: prior, wasCreated: false, pushNotice: null };
+      if (prior) return { transaction: prior, wasCreated: false };
       const t = await tx.transaction.create({ data: {
         inquiryThreadId: thread.id, activeThreadId: thread.id, listingId,
         buyerUserId: buyerId, sellerUserId: listing.seller.ownerUserId,
         status: 'pending', price: liveListing.price, currency: liveListing.currency,
       } });
-      const pushNotice = await logEvent(tx, t, buyerId, 'requested', null, 'pending');
-      return { transaction: t, wasCreated: true, pushNotice };
+      await logEvent(tx, t, buyerId, 'requested', null, 'pending');
+      return { transaction: t, wasCreated: true };
     });
-    dispatchCommittedTransactionPush(created.pushNotice);
     return res.status(created.wasCreated ? 201 : 200).json(response(created.transaction));
   } catch (e) {
     // Concurrent duplicate submissions race on the nullable activeThreadId unique index.
@@ -189,8 +177,8 @@ r.post('/:id/decision', async (req, res) => {
     z.object({ action: z.literal('accept') }).strict(),
     z.object({ action: z.literal('reject'), reason: z.string().trim().min(10).max(500) }).strict(),
   ]).parse(req.body);
+  const inventoryEnabled = t.listing.type === 'physical_product' && await inventoryAvailable(prisma);
   const result = await prisma.$transaction(async tx => {
-    let pushNotice: TransactionPushNotice;
     if (b.action === 'accept') {
       // The buyer may have been suspended or lost CPSU verification after submitting.
       // A seller must not accept a request for an ineligible student.
@@ -205,30 +193,24 @@ r.post('/:id/decision', async (req, res) => {
       const updated = await tx.transaction.updateMany({ where: { id: t.id, ...rowAccess.transactionParticipant(userId), status: 'pending', activeThreadId: t.inquiryThreadId },
         data: { status: 'accepted' } });
       if (!updated.count) throw new HttpError(409, 'invalid_transaction_state');
-      // Guard inventory with one row-level conditional UPDATE: two accepted requests
-      // for a one-off physical item can never share its reservation.
+      // Reserve one unit atomically; other buyers may still purchase remaining stock.
       if (t.listing.type === 'physical_product') {
-        const reserve = await tx.listing.updateMany({ where: {
-          id: t.listingId, status: 'published', deletedAt: null,
-          availabilityState: 'available', reservationTransactionId: null,
-        }, data: { availabilityState: 'reserved', availability: 'reserved', reservationTransactionId: t.id } });
-        if (!reserve.count) throw new HttpError(409, 'listing_unavailable');
+        await holdProductUnit(tx, t.listingId, t.id, inventoryEnabled);
       } else {
         const active = await tx.listing.count({ where: { id: t.listingId, status: 'published',
           deletedAt: null, availabilityState: 'available' } });
         if (!active) throw new HttpError(409, 'listing_unavailable');
       }
-      pushNotice = await logEvent(tx, t, userId, 'accepted', 'pending', 'accepted');
+      await logEvent(tx, t, userId, 'accepted', 'pending', 'accepted');
     } else {
       const updated = await tx.transaction.updateMany({ where: { id: t.id, ...rowAccess.transactionParticipant(userId), status: 'pending', activeThreadId: t.inquiryThreadId },
         data: { status: 'cancelled', activeThreadId: null } });
       if (!updated.count) throw new HttpError(409, 'invalid_transaction_state');
-      pushNotice = await logEvent(tx, t, userId, 'rejected', 'pending', 'cancelled', b.reason);
+      await logEvent(tx, t, userId, 'rejected', 'pending', 'cancelled', b.reason);
     }
-    return { transaction: await tx.transaction.findUniqueOrThrow({ where: { id: t.id } }), pushNotice };
+    return tx.transaction.findUniqueOrThrow({ where: { id: t.id } });
   });
-  dispatchCommittedTransactionPush(result.pushNotice);
-  res.json(response(result.transaction));
+  res.json(response(result));
 });
 
 r.post('/:id/negotiating', async (req, res) => {
@@ -241,11 +223,10 @@ r.post('/:id/negotiating', async (req, res) => {
   const result = await prisma.$transaction(async tx => {
     const changed = await tx.transaction.updateMany({ where: { id: t.id, ...rowAccess.transactionParticipant(userId), status: 'accepted' }, data: { status: 'negotiating' } });
     if (!changed.count) throw new HttpError(409, 'invalid_transaction_state');
-    const pushNotice = await logEvent(tx, t, userId, 'negotiating', 'accepted', 'negotiating');
-    return { transaction: await tx.transaction.findUniqueOrThrow({ where: { id: t.id } }), pushNotice };
+    await logEvent(tx, t, userId, 'negotiating', 'accepted', 'negotiating');
+    return tx.transaction.findUniqueOrThrow({ where: { id: t.id } });
   });
-  dispatchCommittedTransactionPush(result.pushNotice);
-  res.json(response(result.transaction));
+  res.json(response(result));
 });
 
 // A pin stays participant-private. Revising an agreed meetup explicitly returns
@@ -288,14 +269,13 @@ r.put('/:id/meetup-location', async (req, res) => {
         timeWindow: b.timeWindow, generalLocation, status: 'proposed' },
       update: { timeWindow: b.timeWindow, generalLocation, status: 'proposed' },
     });
-    const pushNotice = await logEvent(tx, t, userId,
+    await logEvent(tx, t, userId,
       needsReconfirmation ? 'meetup_location_revised' : 'meetup_location_shared',
       t.status, needsReconfirmation ? 'negotiating' : t.status);
-    return { handoff: next, pushNotice };
+    return next;
   });
-  dispatchCommittedTransactionPush(result.pushNotice);
   res.setHeader('Cache-Control', 'no-store');
-  res.json(result.handoff);
+  res.json(result);
 });
 
 r.post('/:id/confirm-meetup', async (req, res) => {
@@ -320,11 +300,10 @@ r.post('/:id/confirm-meetup', async (req, res) => {
       if (!advanced.count) throw new HttpError(409, 'invalid_transaction_state');
     }
     const next = both ? 'for_meetup' : updated.status;
-    const pushNotice = await logEvent(tx, t, userId, 'meetup_confirmed', updated.status, next);
-    return { transaction: await tx.transaction.findUniqueOrThrow({ where: { id: t.id } }), pushNotice };
+    await logEvent(tx, t, userId, 'meetup_confirmed', updated.status, next);
+    return tx.transaction.findUniqueOrThrow({ where: { id: t.id } });
   });
-  dispatchCommittedTransactionPush(result.pushNotice);
-  res.json(response(result.transaction));
+  res.json(response(result));
 });
 
 r.post('/:id/confirm-completion', async (req, res) => {
@@ -335,6 +314,7 @@ r.post('/:id/confirm-completion', async (req, res) => {
   if (t.status !== 'for_meetup') throw new HttpError(409, 'invalid_transaction_state');
   ensureListingNotModerated(t.listing);
   const field = t.buyerUserId === userId ? 'buyerCompletionConfirmedAt' : 'sellerCompletionConfirmedAt';
+  const inventoryEnabled = t.listing.type === 'physical_product' && await inventoryAvailable(prisma);
   const result = await prisma.$transaction(async tx => {
     const changed = await tx.transaction.updateMany({ where: {
       id: t.id, ...rowAccess.transactionParticipant(userId), status: 'for_meetup', [field]: null,
@@ -344,20 +324,16 @@ r.post('/:id/confirm-completion', async (req, res) => {
     const both = !!updated.buyerCompletionConfirmedAt && !!updated.sellerCompletionConfirmedAt;
     if (both) {
       if (t.listing.type === 'physical_product') {
-        const sold = await tx.listing.updateMany({ where: {
-          id: t.listingId, availabilityState: 'reserved', reservationTransactionId: t.id,
-        }, data: { availabilityState: 'sold', availability: 'sold', reservationTransactionId: null } });
-        if (!sold.count) throw new HttpError(409, 'reservation_changed');
+        await completeProductUnit(tx, t.listingId, t.id, inventoryEnabled);
       }
       const finish = await tx.transaction.updateMany({ where: { id: t.id, ...rowAccess.transactionParticipant(userId), status: 'for_meetup', activeThreadId: t.inquiryThreadId },
         data: { status: 'completed', activeThreadId: null } });
       if (!finish.count) throw new HttpError(409, 'invalid_transaction_state');
     }
-    const pushNotice = await logEvent(tx, t, userId, 'completion_confirmed', updated.status, both ? 'completed' : 'for_meetup');
-    return { transaction: await tx.transaction.findUniqueOrThrow({ where: { id: t.id } }), pushNotice };
+    await logEvent(tx, t, userId, 'completion_confirmed', updated.status, both ? 'completed' : 'for_meetup');
+    return tx.transaction.findUniqueOrThrow({ where: { id: t.id } });
   });
-  dispatchCommittedTransactionPush(result.pushNotice);
-  res.json(response(result.transaction));
+  res.json(response(result));
 });
 
 r.post('/:id/cancel', async (req, res) => {
@@ -366,22 +342,19 @@ r.post('/:id/cancel', async (req, res) => {
   const b = reasonBody.parse(req.body);
   const t = await participant(userId, idOf(req.params.id));
   if (terminal.includes(t.status as typeof terminal[number])) throw new HttpError(409, 'invalid_transaction_state');
+  const inventoryEnabled = t.listing.type === 'physical_product' && await inventoryAvailable(prisma);
   const result = await prisma.$transaction(async tx => {
     const cancelled = await tx.transaction.updateMany({ where: {
       id: t.id, ...rowAccess.transactionParticipant(userId), status: { notIn: ['completed', 'cancelled'] }, activeThreadId: t.inquiryThreadId,
     }, data: { status: 'cancelled', activeThreadId: null } });
     if (!cancelled.count) throw new HttpError(409, 'invalid_transaction_state');
     if (t.listing.type === 'physical_product' && t.status !== 'pending') {
-      const released = await tx.listing.updateMany({ where: {
-        id: t.listingId, reservationTransactionId: t.id, availabilityState: 'reserved',
-      }, data: { reservationTransactionId: null, availabilityState: 'available', availability: 'available' } });
-      if (!released.count) throw new HttpError(409, 'reservation_changed');
+      await releaseProductUnit(tx, t.listingId, t.id, inventoryEnabled);
     }
-    const pushNotice = await logEvent(tx, t, userId, 'cancelled', t.status, 'cancelled', b.reason);
-    return { transaction: await tx.transaction.findUniqueOrThrow({ where: { id: t.id } }), pushNotice };
+    await logEvent(tx, t, userId, 'cancelled', t.status, 'cancelled', b.reason);
+    return tx.transaction.findUniqueOrThrow({ where: { id: t.id } });
   });
-  dispatchCommittedTransactionPush(result.pushNotice);
-  res.json(response(result.transaction));
+  res.json(response(result));
 });
 
 export default r;

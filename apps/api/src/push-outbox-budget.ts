@@ -3,6 +3,7 @@
  * Reserve exactly once PER NOTICE, not once per device. The parent transaction
  * must use Serializable isolation to retry/fail safely on contention.
  */
+import type { Prisma } from '@prisma/client';
 import { PUSH_DAILY_CAP, manilaDayAndMinute } from './push-delivery-controls.js';
 import type { PushLease } from './push-outbox-worker.js';
 
@@ -10,12 +11,12 @@ type Count = { count: number };
 type ReservedRow = { userId: number; budgetReservedAt: Date | null };
 export interface BudgetTransaction {
   pushOutbox: {
-    findFirst: (args: object) => Promise<ReservedRow | null>;
-    updateMany: (args: object) => Promise<Count>;
+    findFirst: (args: Prisma.PushOutboxFindFirstArgs) => Promise<ReservedRow | null>;
+    updateMany: (args: Prisma.PushOutboxUpdateManyArgs) => Promise<Count>;
   };
   pushDailyBudget: {
-    upsert: (args: object) => Promise<unknown>;
-    updateMany: (args: object) => Promise<Count>;
+    upsert: (args: Prisma.PushDailyBudgetUpsertArgs) => Promise<unknown>;
+    updateMany: (args: Prisma.PushDailyBudgetUpdateManyArgs) => Promise<Count>;
   };
 }
 export interface BudgetDataSource {

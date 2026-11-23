@@ -26,7 +26,7 @@ describe('conversation close safety', () => {
   test('both inquiry entry points reject closed threads and re-check inside a serializable transaction', () => {
     // Both message paths plus typing and presence must reject closed conversations.
     expect((inquiries.match(/if \(!inquiryAllowsMessage\(t.status\)\) throw new HttpError\(409, 'thread_closed'\)/g) ?? []).length).toBe(4);
-    expect((inquiries.match(/prisma\.\$transaction\(tx => appendMessageToOpenThread\(tx,/g) ?? []).length).toBe(2);
+    expect((inquiries.match(/const saved = await appendMessageToOpenThread\(tx,/g) ?? []).length).toBe(2);
     expect((inquiries.match(/isolationLevel: Prisma\.TransactionIsolationLevel\.Serializable/g) ?? []).length).toBe(3);
   });
 

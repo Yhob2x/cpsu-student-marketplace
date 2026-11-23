@@ -30,7 +30,7 @@ assert.match(sw, /url\.pathname\.startsWith\('\/api\/'\)/);
 
 assert.match(sw, /const CACHE_NAME = 'cpsu-offline-shell-v\d+'/);
 assert.match(sw, /CPSU_ACTIVATE_UPDATE/);
-assert.match(sw, /client\.focused/);
+assert.match(sw, /await self\.registration\.showNotification/);
 assert.match(updateUi, /userRequestedReload/);
 assert.match(updateUi, /edited\.current/);
 assert.match(offline, /id="repair"/);

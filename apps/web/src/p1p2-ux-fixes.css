@@ -1,16 +1,6 @@
-/* P1: reserve a true dock slot for mobile chat and keep actionable
-   category links scrollable above the fixed bottom navigation. */
+/* P1: keep actionable category links scrollable above the fixed navigation.
+   Chat is now a separate floating button, so do not reserve a fifth dock slot. */
 @media (max-width: 860px) {
-  body:has(.floating-chat) .tabbar {
-    box-sizing: border-box;
-    padding-inline-end: calc(76px + env(safe-area-inset-right, 0px));
-  }
-  body:has(.floating-chat) .floating-chat {
-    right: max(11px, env(safe-area-inset-right, 0px));
-    bottom: calc(8px + env(safe-area-inset-bottom, 0px));
-    max-width: 56px;
-    z-index: 31;
-  }
   :is(.category-section .category-head a, .home-listing-section .sec-head a) {
     scroll-margin-block-end: calc(95px + env(safe-area-inset-bottom, 0px));
   }

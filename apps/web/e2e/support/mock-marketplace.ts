@@ -14,7 +14,7 @@ export const syntheticListing = {
   id: 91, type: 'physical_product', title: 'Synthetic calculus textbook',
   description: 'Good condition calculus textbook for student practice.',
   price: 250, priceBasis: 'per item', availability: 'available', status: 'published',
-  condition: 'good', category: { id: 1, name: 'Books' }, campus,
+  condition: 'good', stockQuantity: 3, category: { id: 1, name: 'Books' }, campus,
   seller: { id: 30, storeName: 'Synthetic Campus Books', avatarUrl: null }, images: [],
 };
 const book = syntheticListing;
@@ -25,6 +25,9 @@ export async function mockMarketplace(page: Page, initialPersona: Persona = 'gue
     drafts: [] as any[],
     uploads: 0,
     reports: [] as any[],
+    appreciatedListings: new Set<number>(),
+    viewCounts: new Map<number, number>([[91, 298]]),
+    viewedListings: new Set<number>(),
     verified: false,
     threadStatus: 'open',
     messages: [] as any[],
@@ -94,7 +97,8 @@ export async function mockMarketplace(page: Page, initialPersona: Persona = 'gue
         id: 30, slug: 'synthetic-campus-books', storeName: 'Synthetic Campus Books',
         description: 'Books and study supplies for synthetic UI testing only.',
         badge: 'Verified CPSU community member', createdAt: '2026-11-18T00:00:00Z',
-        listingCount: 1, follow: { count: 0, isFollowing: false, available: true },
+        listingCount: 1, appreciationCount: state.appreciatedListings.has(91) ? 1 : 0,
+        follow: { count: 0, isFollowing: false, available: true },
         campus, listings: [book],
       };
     } else if (path === '/seller/store') {
@@ -111,6 +115,35 @@ export async function mockMarketplace(page: Page, initialPersona: Persona = 'gue
       const photoId = 600 + ++state.uploads;
       state.drafts[0]?.media.push({ id: photoId, position: state.uploads - 1 });
       status = 201; data = { id: photoId };
+    } else if (path === '/listing-views' && method === 'GET') {
+      const ids = (url.searchParams.get('ids') ?? '').split(',').map(Number).filter(Number.isSafeInteger);
+      data = { views: Object.fromEntries(ids.filter(id => id === 91).map(id => [id,
+        { available: true, count: state.viewCounts.get(id) ?? 0 }])) };
+    } else if (path === '/listings/91/view' && method === 'POST') {
+      const canCount = state.persona !== 'seller' && state.persona !== 'reviewer' && state.persona !== 'admin';
+      const recorded = canCount && !state.viewedListings.has(91);
+      if (recorded) {
+        state.viewedListings.add(91);
+        state.viewCounts.set(91, (state.viewCounts.get(91) ?? 0) + 1);
+      }
+      data = { available: true, count: state.viewCounts.get(91) ?? 0, recorded };
+    } else if (path === '/listing-appreciations' && method === 'GET') {
+      const ids = (url.searchParams.get('ids') ?? '').split(',').map(Number).filter(Number.isSafeInteger);
+      data = { summaries: Object.fromEntries(ids.filter(id => id === 91).map(id => [id,
+        { available: true, count: state.appreciatedListings.has(id) ? 1 : 0,
+          isAppreciated: state.persona !== 'guest' && state.appreciatedListings.has(id) }])) };
+    } else if (path === '/listings/91/appreciations' && method === 'GET') {
+      data = { available: true, count: state.appreciatedListings.has(91) ? 1 : 0,
+        isAppreciated: state.persona !== 'guest' && state.appreciatedListings.has(91) };
+    } else if (path === '/listing-appreciations/91' && (method === 'PUT' || method === 'DELETE')) {
+      if (state.persona === 'guest') { status = 401; data = { error: { code: 'unauthorized' } }; }
+      else if (state.persona !== 'buyer') { status = 403; data = { error: { code: 'student_account_required' } }; }
+      else {
+        if (method === 'PUT') state.appreciatedListings.add(91);
+        else state.appreciatedListings.delete(91);
+        data = { available: true, count: state.appreciatedListings.has(91) ? 1 : 0,
+          isAppreciated: state.appreciatedListings.has(91) };
+      }
     } else if (path === '/saved') {
       data = [];
     } else if (path === '/transactions' && method === 'GET') {

@@ -6,8 +6,7 @@
  * must never fan out as "new" items.
  */
 import type { Prisma } from '@prisma/client';
-import { deliverPush } from './push.js';
-import { pushOutboxWritesActivated, stagePushOutbox } from './push-outbox.js';
+import { stagePushOutbox } from './push-outbox.js';
 
 export const FOLLOWED_STORE_NEW_LISTING = 'store.new_listing';
 
@@ -32,7 +31,7 @@ export type FollowerPublicationNotice = {
   };
 };
 
-type PublicationTransaction = Pick<Prisma.TransactionClient, 'storeFollow' | 'notification'>;
+type PublicationTransaction = Pick<Prisma.TransactionClient, 'storeFollow' | 'notification' | 'pushOutbox'>;
 
 export async function createFollowerPublicationNotices(
   tx: PublicationTransaction, listing: PublishedListing,
@@ -70,31 +69,4 @@ export async function createFollowerPublicationNotices(
     notices.push({ id: row.id, userId: follow.userId, payload });
   }
   return notices;
-}
-
-/** Bound fan-out so a popular store cannot spawn an unlimited relay burst. */
-export async function sendFollowerPushBatch(
-  notices: FollowerPublicationNotice[],
-  send: (notice: FollowerPublicationNotice) => Promise<void>,
-  concurrency = 4,
-): Promise<number> {
-  let next = 0;
-  let failures = 0;
-  await Promise.all(Array.from({ length: Math.min(Math.max(1, concurrency), notices.length) }, async () => {
-    while (next < notices.length) {
-      const notice = notices[next++];
-      try { await send(notice); } catch { failures++; }
-    }
-  }));
-  return failures;
-}
-
-/** Optional, best-effort push after the in-app transaction commits. */
-export function deliverFollowerPublicationPush(notices: FollowerPublicationNotice[]): void {
-  if (!notices.length || pushOutboxWritesActivated) return;
-  void sendFollowerPushBatch(notices, n =>
-    deliverPush(n.userId, FOLLOWED_STORE_NEW_LISTING, n.payload, n.id),
-  ).then(failures => {
-    if (failures > 0) console.warn('Followed-store push attempts failed', { failures });
-  });
 }

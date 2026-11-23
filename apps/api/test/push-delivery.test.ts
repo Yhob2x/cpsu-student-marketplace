@@ -1,43 +1,28 @@
 import { describe, expect, it } from 'bun:test';
-import { allSettledBounded, sendWithBoundedRetries } from '../src/push-delivery.js';
+import { generateVAPIDKeys } from 'web-push';
+import { allSettledBounded, createPushRelay } from '../src/push-delivery.js';
 
-const failure = (statusCode?: number) => Object.assign(new Error('synthetic push failure'), { statusCode });
-
-describe('bounded Web Push delivery (no network)', () => {
-  it('does not retry when the provider confirms a dead subscription', async () => {
+describe('Web Push relay request (no network)', () => {
+  it('encrypts the payload, attaches an abort deadline, and returns a private Retry-After error', async () => {
+    const endpoint = 'https://fcm.googleapis.com/fcm/send/synthetic-device';
+    const device = { endpoint, p256dh: generateVAPIDKeys().publicKey, auth: Buffer.alloc(16).toString('base64url') };
+    const payload = { title: 'CPSU Market', body: 'You have a new message.', url: '/inquiries/7',
+      id: 1, tag: 'cpsu-1', type: 'inquiry.reply', unread: 2 } as const;
     let calls = 0;
-    const result = await sendWithBoundedRetries(async () => { calls++; throw failure(410); }, async () => {});
-    expect(result).toEqual({ outcome: 'expired', attempts: 1, status: 410 });
+    const relay = createPushRelay({ ...generateVAPIDKeys(), subject: 'mailto:qa@example.invalid' }, undefined,
+      async (url, options) => {
+        calls++;
+        expect(url).toBe(endpoint);
+        expect(options?.method).toBe('POST');
+        expect(options?.redirect).toBe('manual');
+        expect(options?.signal).toBeInstanceOf(AbortSignal);
+        expect(new Headers(options?.headers).get('ttl')).toBe('30');
+        expect(new Headers(options?.headers).get('content-encoding')).toBe('aes128gcm');
+        expect(Buffer.from(options?.body as Uint8Array).includes(payload.body)).toBe(false);
+        return new Response('DO NOT RETAIN', { status: 429, headers: { 'Retry-After': '60' } });
+      });
+    await expect(relay(device, payload, 30)).rejects.toEqual({ statusCode: 429, headers: { 'retry-after': '60' } });
     expect(calls).toBe(1);
-  });
-  it('retries once after a transient provider error', async () => {
-    let calls = 0;
-    const pauses: number[] = [];
-    const result = await sendWithBoundedRetries(async () => {
-      if (++calls === 1) throw failure(503);
-    }, async ms => { pauses.push(ms); });
-    expect(result).toEqual({ outcome: 'sent', attempts: 2, status: 201 });
-    expect(pauses).toEqual([400]);
-  });
-  it('stops after two transient attempts and never loops indefinitely', async () => {
-    let calls = 0;
-    const result = await sendWithBoundedRetries(async () => {
-      calls++;
-      throw failure();
-    }, async () => {});
-    expect(result).toEqual({ outcome: 'failed', attempts: 2, status: 'network_error' });
-    expect(calls).toBe(2);
-  });
-  it('does not immediately retry rate limits, permission errors or invalid subscriptions', async () => {
-    for (const code of [400, 401, 403, 429]) {
-      let calls = 0;
-      const result = await sendWithBoundedRetries(async () => {
-        calls++; throw failure(code);
-      }, async () => { throw new Error('Unexpected delay'); });
-      expect(result.outcome).toBe('failed');
-      expect(result.attempts).toBe(1);
-      expect(calls).toBe(1);
-    }
   });
 });
 

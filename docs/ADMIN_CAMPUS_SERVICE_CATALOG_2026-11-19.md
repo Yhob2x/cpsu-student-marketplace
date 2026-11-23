@@ -5,6 +5,7 @@
 ## Admin interface
 
 - Under **Management → Campuses & categories**, campus management remains available (add, edit, deactivate/reactivate with confirmation).
+- Campus forms check the trimmed code and name before submitting. Codes use 2–24 letters, digits, hyphens, or underscores and are stored in uppercase. Campus names may contain spaces. Forms highlight and focus the first invalid field with a specific message. The API still validates the submitted values.
 - A two-option **Products / Services** selector controls which category list and creation form are shown.
 - The form asks what product or service category should be added and creates the correct `listingType` (`physical_product` or `service`). Each type preserves its own unsaved name draft when switching.
 - Both types support rename-in-place, retaining listing IDs, category relationships, history and moderation records. Category type is fixed after creation, to avoid converting existing listings.

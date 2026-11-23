@@ -7,7 +7,7 @@ import type { Listing } from '../src/pages-public';
 const sample = {
   id: 88, storeName: 'Synthetic Campus Store', description: 'For local tests only',
   badge: 'Active seller', badgeReason: 'Based on 1 published listing. Activity label only.', createdAt: '2026-11-17T00:00:00Z',
-  listingCount: 1, follow: {count: 2, isFollowing: false, available: true},
+  listingCount: 1, appreciationCount: 37, follow: {count: 2, isFollowing: false, available: true},
   campus: {code:'MAIN', name:'CPSU Main Campus'},
   listings: [{id: 10, title:'Textbook', category:{name:'Books'},type:'physical_product'} as Listing],
 } satisfies PublicStorefront;
@@ -34,11 +34,12 @@ describe('public store messaging CTA and real categories',()=>{
     expect(html).toContain('2');
     expect(html).not.toContain('Message Synthetic Campus Store');
   });
-  test('shows a compact statistic row with appreciation beside following and no duplicate campus',()=>{
+  test('shows the published-listing appreciation total between listings and followers',()=>{
     const html = draw();
     const stats = html.match(/<div class="storefront-facts">([\s\S]*?)<\/section>/)?.[1] ?? '';
-    const labels = ['Listings', 'Followers', 'Following', 'Appreciations'];
-    expect(stats).toContain('store-appreciation-fact');
+    const labels = ['Listings', 'Appreciations', 'Followers', 'Following'];
+    expect(stats).toContain('storefront-appreciations-fact');
+    expect(stats).toMatch(/Appreciations<\/span><strong>37<\/strong>/);
     for (let i = 0; i < labels.length; i++) {
       expect(stats).toContain(labels[i]);
       if (i > 0) expect(stats.indexOf(labels[i])).toBeGreaterThan(stats.indexOf(labels[i - 1]));
@@ -84,7 +85,7 @@ describe('public store messaging CTA and real categories',()=>{
     const actions = html.match(/<div class="storefront-owner-actions">([\s\S]*?)<\/div>/)?.[1] ?? '';
     expect(actions).toContain('aria-label="Follow"');
     expect(actions).toContain('aria-label="Chat with seller"');
-    expect(actions).toContain('aria-label="Appreciate this store');
+    expect(actions).not.toContain('Appreciate this store');
     expect(actions).toContain('storefront-icon-action');
     expect(actions).not.toContain('Browse listings');
     expect(actions).not.toContain('Chat with seller</button>');

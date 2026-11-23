@@ -130,6 +130,111 @@ if (process.env.CPSU_PUSH_TESTS === '1') {
       expect(await prisma.pushSubscription.count({ where: { userId: b } })).toBe(0);
     });
 
+    test('concurrent device enrollments obey the account cap and allow a device refresh at the cap', async () => {
+      const endpointPrefix = `${fakeEndpoint}-cap-${a}-`;
+      const enroll = (endpoint: string) => request(app).post('/api/v1/push/subscriptions')
+        .set(auth(a)).send({ ...sub, endpoint });
+      try {
+        const replies = await Promise.all(Array.from({ length: 10 }, (_, index) => enroll(endpointPrefix + index)));
+        expect(replies.map(reply => reply.status).sort()).toEqual([
+          201, 201, 201, 201, 201, 201, 201, 201, 409, 409,
+        ]);
+        expect(replies.filter(reply => reply.status === 409).map(reply => reply.body.error.code))
+          .toEqual(['push_device_limit', 'push_device_limit']);
+        expect(await prisma.pushSubscription.count({ where: { userId: a } })).toBe(8);
+        expect((await enroll(endpointPrefix + replies.findIndex(reply => reply.status === 201))).status).toBe(201);
+      } finally {
+        await prisma.pushSubscription.deleteMany({ where: { userId: a, endpoint: { startsWith: endpointPrefix } } });
+      }
+    });
+
+    test.skipIf(process.env.CPSU_PUSH_OUTBOX_TESTS !== '1')(
+      'durable worker rechecks consent and retries only devices with a pending delivery', async () => {
+        const { insertPushOutbox } = await import('../../src/push-outbox.js');
+        const { createPushOutboxDelivery } = await import('../../src/push-outbox-delivery.js');
+        const { PrismaPushLeasePort } = await import('../../src/push-outbox-repository.js');
+        const { claimPushJobs, runPushOutboxTick } = await import('../../src/push-outbox-worker.js');
+        const { reserveRecipientBudget } = await import('../../src/push-outbox-budget.js');
+        const first = `${fakeEndpoint}-worker-${a}-first`;
+        const second = `${fakeEndpoint}-worker-${a}-second`;
+        const transient = `${fakeEndpoint}-worker-${a}-transient`;
+        const revoked = `${fakeEndpoint}-worker-${a}-revoked`;
+        const endpoints = [first, second, transient, revoked];
+        const jobIds: number[] = [];
+        const deliveries: string[] = [];
+        let clock = new Date();
+        try {
+          await prisma.pushPreference.upsert({ where: { userId: a },
+            create: { userId: a }, update: { messages: true } });
+          for (const endpoint of endpoints) {
+            const registered = await request(app).post('/api/v1/push/subscriptions').set(auth(a)).send({ ...sub, endpoint });
+            expect(registered.status).toBe(201);
+          }
+          async function enqueue() {
+            const id = await prisma.$transaction(async tx => {
+              const row = await tx.notification.create({ data: { userId: a, type: 'inquiry.reply',
+                payload: { threadId: 42, body: 'private text' } } });
+              await insertPushOutbox(tx, row, clock);
+              return row.id;
+            });
+            jobIds.push(id);
+            return id;
+          }
+          const now = new Date(Date.now() + 1000);
+          clock = now;
+          const notice = await enqueue();
+          const port = new PrismaPushLeasePort(prisma);
+          const deliver = createPushOutboxDelivery(prisma, async (target, payload) => {
+            expect(payload.body).toBe('You have a new message.');
+            deliveries.push(target.endpoint);
+            if (target.endpoint === revoked) {
+              await prisma.pushSubscription.deleteMany({ where: { endpoint: first, userId: a } });
+            }
+            if (target.endpoint === second && deliveries.filter(endpoint => endpoint === second).length === 1) {
+              throw { statusCode: 429, headers: { 'retry-after': '60' } };
+            }
+            if (target.endpoint === transient && deliveries.filter(endpoint => endpoint === transient).length === 1) {
+              throw { statusCode: 503 };
+            }
+          }, () => clock);
+          const tick = () => runPushOutboxTick(port, deliver, clock, { enabled: true, now: () => clock });
+          await tick();
+          const queued = await prisma.pushOutbox.findUniqueOrThrow({ where: { notificationId: notice } });
+          expect(queued.state).toBe('pending');
+          expect(queued.nextAttemptAt.getTime()).toBe(now.getTime() + 60_000);
+          expect(deliveries).toEqual([revoked, transient, second]);
+          clock = new Date(queued.nextAttemptAt.getTime() + 1);
+          await tick();
+          expect(deliveries).toEqual([revoked, transient, second, transient, second]);
+          expect(await prisma.pushAttempt.count({ where: { outboxId: queued.id, state: 'sent' } })).toBe(3);
+          expect((await prisma.pushOutbox.findUniqueOrThrow({ where: { id: queued.id } })).state).toBe('sent');
+          expect((await prisma.pushDailyBudget.findFirstOrThrow({ where: { userId: a } })).count).toBe(1);
+
+          const optedOut = await enqueue();
+          await prisma.pushPreference.update({ where: { userId: a }, data: { masterEnabled: false } });
+          await tick();
+          expect((await prisma.pushOutbox.findUniqueOrThrow({ where: { notificationId: optedOut } })).lastStatus).toBe('master_off');
+          expect(deliveries).toHaveLength(5);
+
+          // Two real transactions compete for the final account-wide reservation.
+          await prisma.pushDailyBudget.updateMany({ where: { userId: a }, data: { count: 4 } });
+          const finalNotices = [await enqueue(), await enqueue()];
+          const leases = (await claimPushJobs(port, clock)).filter(lease => finalNotices.includes(lease.notificationId));
+          expect(leases).toHaveLength(2);
+          const concurrent = await Promise.allSettled(leases.map(lease => reserveRecipientBudget(prisma, lease, clock)));
+          const reservations = await Promise.all(concurrent.map((outcome, index) => outcome.status === 'fulfilled'
+            ? outcome.value : reserveRecipientBudget(prisma, leases[index]!, clock)));
+          expect(reservations.sort()).toEqual(['capped', 'reserved']);
+          expect((await prisma.pushDailyBudget.findFirstOrThrow({ where: { userId: a } })).count).toBe(5);
+        } finally {
+          await prisma.notification.deleteMany({ where: { id: { in: jobIds }, userId: a } });
+          await prisma.pushDailyBudget.deleteMany({ where: { userId: a } });
+          await prisma.pushSubscription.deleteMany({ where: { userId: a, endpoint: { in: endpoints } } });
+          await prisma.pushPreference.deleteMany({ where: { userId: a } });
+        }
+      },
+    );
+
     test('logout revokes only its own current-device subscription after valid session revocation', async () => {
       const token = newRefreshToken();
       const myEndpoint = fakeEndpoint + '-logout';

@@ -1,4 +1,4 @@
-import { categoryForNotice, type PushCategory } from './push.js';
+import { categoryForNotice, pushDeliveryReady, type PushCategory } from './push.js';
 
 export type EnqueuedNotice = {
   id: number;
@@ -46,16 +46,14 @@ export async function insertPushOutbox(
 }
 
 /**
- * Intentionally disabled until isolation testing verifies the additive schema
- * and a durable leasing worker is integrated. Never activate producer writes
- * before every committed notification flow uses the same transaction.
+ * Producer writes and delivery use the same release gate.
  */
-export const pushOutboxWritesActivated = false;
+export const pushOutboxWritesActivated = pushDeliveryReady;
 
 export async function stagePushOutbox(
-  tx: unknown,
+  tx: PushOutboxWritePort,
   notice: EnqueuedNotice,
 ): Promise<void> {
   if (!pushOutboxWritesActivated) return;
-  await insertPushOutbox(tx as PushOutboxWritePort, notice);
+  await insertPushOutbox(tx, notice);
 }

@@ -80,19 +80,6 @@ main .home-hero h1 em { color: var(--color-primary-dark); }
 }
 .home-discovery-flow { gap: clamp(32px, 4vw, 48px); margin-top: 24px; }
 .home-listing-section .sec-head { margin-bottom: var(--ui-space-3); }
-.home-listing-section .rail > .product-card {
-  border: 1px solid var(--color-border);
-  background: var(--color-card);
-  box-shadow: none;
-  transition: box-shadow 180ms ease, border-color 180ms ease;
-}
-@media (hover: hover) and (pointer: fine) {
-  .home-listing-section .rail > .product-card:hover {
-    border-color: color-mix(in srgb, var(--color-primary) 22%, var(--color-border));
-    box-shadow: 0 8px 22px color-mix(in srgb, var(--color-text) 8%, transparent);
-  }
-}
-.home-listing-section .product-card .body { padding: var(--ui-space-3) var(--ui-space-3) 16px; }
 .home-listing-section .product-card .price { color: var(--color-primary); }
 .home-listing-section .product-card-arrow {
   background: var(--color-primary-light);

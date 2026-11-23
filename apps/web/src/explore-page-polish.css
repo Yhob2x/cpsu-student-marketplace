@@ -358,10 +358,6 @@
 .explore-results .product-card .body { padding: var(--ui-space-3) var(--ui-space-3) var(--ui-space-4); gap: var(--ui-space-2); }
 .explore-results .product-card .card-campus { margin-top: auto; }
 .product-card .product-photo { background: var(--color-neutral-200); }
-.product-card .product-photo img { transition: transform 260ms ease; }
-@media (hover: hover) {
-  .product-card:hover .product-photo img { transform: scale(1.035); }
-}
 .product-card .listing-kind {
   border-radius: 6px;
   font-size: var(--ui-type-xs);

@@ -23,7 +23,8 @@ import pushRoutes from './routes/push.js';
 import { makePublicStoreConnectionsRouter, makeStoreFollowRouter } from './store-follows.js';
 import { prisma } from './db.js';
 import { makeStoreReviewsRouter } from './store-reviews.js';
-import { makeStoreAppreciationsRouter } from './store-appreciations.js';
+import { makeListingAppreciationsRouter } from './listing-appreciations.js';
+import { makeListingViewsRouter } from './listing-views.js';
 
 export function createApp() {
   const app = express();
@@ -61,7 +62,9 @@ export function createApp() {
   v1.use(publicRoutes);
   v1.use(makePublicStoreConnectionsRouter(prisma));
   v1.use(makeStoreReviewsRouter(prisma));
-  v1.use(makeStoreAppreciationsRouter(prisma));
+  // Legacy store appreciation data is preserved, but the store-level API is retired.
+  v1.use(makeListingAppreciationsRouter(prisma));
+  v1.use(makeListingViewsRouter(prisma));
   v1.use('/home-page', homePagePublicRoutes);
   v1.use('/store-follows', makeStoreFollowRouter(prisma));
   v1.use(accountRoutes);

@@ -5,16 +5,16 @@ import { prisma } from '../db.js';
 import { HttpError } from '../http.js';
 import { requireAuth, requireReviewer, canReview, reviewCampusIds } from '../auth.js';
 import { audit, notify } from '../audit.js';
-import { deliverPush } from '../push.js';
-import { pushOutboxWritesActivated, stagePushOutbox } from '../push-outbox.js';
+import { stagePushOutbox } from '../push-outbox.js';
 import {
-  createFollowerPublicationNotices, deliverFollowerPublicationPush,
+  createFollowerPublicationNotices,
 } from '../store-publication-notifications.js';
 import { requirePhotoReview } from '../photo-review.js';
 import { suppressSmallCount } from '../analytics-privacy.js';
 import { DEFAULT_GUIDELINES, plainContent } from '../managed-content.js';
 import { contentEditorErrorHandler } from '../content-editor-errors.js';
 import { rowAccess } from '../row-access.js';
+import { publicAnnouncementsCache, publicGuidelinesCache } from '../public-read-cache.js';
 
 const r = Router();
 r.use(requireAuth, requireReviewer);
@@ -63,7 +63,7 @@ r.post('/listings/:id/decision', async (req, res) => {
   const status = { approved: 'published', changes_requested: 'changes_requested', rejected: 'rejected' }[b.decision] as any;
   // Publish, review, audit and follower notifications commit together.
   // The guarded transition prevents concurrent reviewers from creating duplicate alerts.
-  const recorded = await prisma.$transaction(async tx => {
+  await prisma.$transaction(async tx => {
     const changed = await tx.listing.updateMany({
       where: { id: l.id, ...rowAccess.reviewListing(req.user!), status: 'pending_review', deletedAt: null },
       data: { status },
@@ -89,21 +89,15 @@ r.post('/listings/:id/decision', async (req, res) => {
       userId: l.seller.ownerUserId, type: 'listing.decision', payload: decisionPayload,
     }, select: { id: true } });
     await stagePushOutbox(tx, { id: ownerNotice.id, userId: l.seller.ownerUserId, type: 'listing.decision' });
-    const followerNotices = b.decision === 'approved' && !approvedBefore
+    if (b.decision === 'approved' && !approvedBefore
       && l.availabilityState === 'available' && l.seller.approvalStatus === 'approved'
-      && l.seller.owner.status === 'active'
-      ? await createFollowerPublicationNotices(tx, {
-          id: l.id, title: l.title, type: l.type, sellerProfileId: l.sellerProfileId,
-          storeName: l.seller.storeName, ownerUserId: l.seller.ownerUserId,
-        })
-      : [];
-    return { ownerNoticeId: ownerNotice.id, decisionPayload, followerNotices };
+      && l.seller.owner.status === 'active') {
+      await createFollowerPublicationNotices(tx, {
+        id: l.id, title: l.title, type: l.type, sellerProfileId: l.sellerProfileId,
+        storeName: l.seller.storeName, ownerUserId: l.seller.ownerUserId,
+      });
+    }
   }, { isolationLevel: Prisma.TransactionIsolationLevel.Serializable, timeout: 20_000 });
-  // Push is optional and never blocks the committed in-app notifications.
-  if (!pushOutboxWritesActivated) void deliverPush(l.seller.ownerUserId, 'listing.decision',
-    recorded.decisionPayload, recorded.ownerNoticeId).catch(() =>
-      console.warn('Review decision push delivery skipped'));
-  deliverFollowerPublicationPush(recorded.followerNotices);
   res.json({ id: l.id, status });
 });
 
@@ -210,6 +204,7 @@ r.post('/content/guidelines/publish', async (req, res) => {
   if (current.draftBody !== expectedBody) throw new HttpError(409, 'draft_changed');
   const changed = await prisma.guidelineContent.updateMany({ where: { id: 1, draftBody: expectedBody }, data: { publishedBody: expectedBody, publishedAt: new Date() } });
   if (changed.count !== 1) throw new HttpError(409, 'draft_changed');
+  publicGuidelinesCache.invalidate();
   const content = await prisma.guidelineContent.findUniqueOrThrow({ where: { id: 1 } });
   await audit(req.user!.id, 'guidelines.published', 'guidelines', 1);
   res.json(content);
@@ -255,6 +250,7 @@ r.post('/content/announcements/:id/publish', async (req, res) => {
     pendingTitle: null, pendingBody: null, status: 'published', publishedAt: new Date(),
   } });
   if (changed.count !== 1) throw new HttpError(409, 'draft_changed');
+  publicAnnouncementsCache.invalidate();
   const item = await prisma.announcement.findUniqueOrThrow({ where: { id } });
   await audit(req.user!.id, 'announcement.published', 'announcement', id);
   res.json(item);
@@ -266,6 +262,7 @@ r.post('/content/announcements/:id/archive', async (req, res) => {
   if (!current) throw new HttpError(404, 'not_found');
   if (current.status === 'archived') throw new HttpError(409, 'archived');
   const item = await prisma.announcement.update({ where: { id }, data: { status: 'archived' } });
+  publicAnnouncementsCache.invalidate();
   await audit(req.user!.id, 'announcement.archived', 'announcement', id);
   res.json(item);
 });

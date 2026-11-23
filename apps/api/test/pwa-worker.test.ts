@@ -81,7 +81,7 @@ describe('PWA service-worker lifecycle and privacy', () => {
     expect(await responses[0]).toMatchObject({ offline: true });
   });
 
-  it('suppresses a duplicate banner on the focused destination while keeping in-app updates', async () => {
+  it('shows a visible notification on the focused destination and refreshes in-app updates', async () => {
     const posted: unknown[] = [];
     const current = { url: 'https://market.example.test/inquiries/27', focused: true,
       postMessage: (message: unknown) => posted.push(message), focus: async () => {} };
@@ -90,15 +90,16 @@ describe('PWA service-worker lifecycle and privacy', () => {
       body: 'You have a new message.', url: '/inquiries/27',
       id: 31, type: 'inquiry.reply', tag: 'cpsu-31',
     }) } });
-    expect(worker.notificationOptions).toHaveLength(0);
+    expect(worker.notificationOptions).toHaveLength(1);
+    expect(worker.notificationOptions[0]?.tag).toBe('cpsu-31');
     expect(posted).toEqual([{ type: 'CPSU_PUSH_RECEIVED' }]);
 
     await worker.fire('push', { data: { json: () => ({
       body: 'Your listing was approved.', url: '/listings/20',
       id: 32, type: 'listing.decision', tag: 'cpsu-32',
     }) } });
-    expect(worker.notificationOptions).toHaveLength(1);
-    expect(worker.notificationOptions[0]?.data).toEqual({
+    expect(worker.notificationOptions).toHaveLength(2);
+    expect(worker.notificationOptions[1]?.data).toEqual({
       url: '/listings/20', id: 32, type: 'listing.decision',
     });
   });

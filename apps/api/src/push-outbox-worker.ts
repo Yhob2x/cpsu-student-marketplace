@@ -1,11 +1,11 @@
 /**
  * Stage 6B: retryable, lease-fenced outbox state machine.
- * Intentionally NOT started by the API or a background process.
- * Real Web Push remains hard-disabled until isolated MariaDB and device QA.
+ * The API starts this only when the durable delivery release gate allows it.
  */
 import { randomUUID } from 'node:crypto';
 import { allSettledBounded } from './push-delivery.js';
-import { nextRetryAt, type ProviderFailure } from './push-delivery-controls.js';
+import { nextRetryAt, PUSH_MAX_ATTEMPTS, type ProviderFailure } from './push-delivery-controls.js';
+import { pushDeliveryReady } from './push.js';
 
 export const PUSH_OUTBOX_LEASE_MS = 90_000;
 export const PUSH_OUTBOX_MAX_BATCH = 8;
@@ -32,7 +32,8 @@ export type PushCompletion =
 export type PushDeliveryResult =
   | { outcome: 'sent' }
   | { outcome: 'suppressed'; reason: string }
-  | { outcome: 'failed'; status: ProviderFailure; retryAfterSeconds?: number | null };
+  | { outcome: 'retry'; at: Date }
+  | { outcome: 'failed'; status: ProviderFailure; retryAfterSeconds?: number | null; terminal?: boolean };
 
 /**
  * Adapter must claim with a single SQL update WHERE id, due state and expiry.
@@ -77,16 +78,17 @@ export async function runPushOutboxTick(
   port: PushLeasePort,
   deliver: (lease: PushLease) => Promise<PushDeliveryResult>,
   now: Date,
-  opts: { enabled?: boolean; concurrency?: number; batchSize?: number; jitter?: () => number } = {},
+  opts: { enabled?: boolean; concurrency?: number; batchSize?: number; jitter?: () => number; now?: () => Date } = {},
 ): Promise<{ claimed: number; settled: number; lostLeases: number }> {
   if (!opts.enabled) return { claimed: 0, settled: 0, lostLeases: 0 };
   const jobs = await claimPushJobs(port, now, opts.batchSize);
   let settled = 0;
   let lostLeases = 0;
+  const clock = opts.now ?? (() => now);
   const outcomes = await allSettledBounded(jobs, opts.concurrency ?? PUSH_OUTBOX_WORKERS, async lease => {
     let completion: PushCompletion;
     try {
-      if (lease.expiresAt <= now) {
+      if (lease.expiresAt <= clock()) {
         completion = { state: 'skipped', status: 'expired' };
       } else {
         const delivered = await deliver(lease);
@@ -94,9 +96,13 @@ export async function runPushOutboxTick(
           completion = { state: 'sent', status: 'accepted' };
         } else if (delivered.outcome === 'suppressed') {
           completion = { state: 'skipped', status: delivered.reason };
+        } else if (delivered.outcome === 'retry') {
+          completion = lease.attemptCount + 1 < PUSH_MAX_ATTEMPTS && delivered.at < lease.expiresAt
+            ? { state: 'pending', status: 'device_retry', nextAttemptAt: delivered.at }
+            : { state: 'failed', status: 'device_retry_expired' };
         } else {
-          const retry = nextRetryAt(
-            delivered.status, lease.attemptCount + 1, now, lease.expiresAt,
+          const retry = !delivered.terminal && nextRetryAt(
+            delivered.status, lease.attemptCount + 1, clock(), lease.expiresAt,
             delivered.retryAfterSeconds ?? null, opts.jitter?.() ?? 0.5,
           );
           completion = retry
@@ -106,7 +112,7 @@ export async function runPushOutboxTick(
       }
     } catch {
       // Never log exception messages; provider errors may include capability URLs.
-      const retry = nextRetryAt('network_error', lease.attemptCount + 1, now, lease.expiresAt,
+      const retry = nextRetryAt('network_error', lease.attemptCount + 1, clock(), lease.expiresAt,
         null, opts.jitter?.() ?? 0.5);
       completion = retry
         ? { state: 'pending', status: 'network_error', nextAttemptAt: retry }
@@ -122,12 +128,13 @@ export async function runPushOutboxTick(
   return { claimed: jobs.length, settled, lostLeases };
 }
 
-/** A hard-off production entry point; synthetic tests invoke the injected runner directly. */
-export const pushOutboxTickActivated = false;
+export const pushOutboxTickActivated = pushDeliveryReady;
 export function runConfiguredPushOutboxTick(
   port: PushLeasePort,
   deliver: (lease: PushLease) => Promise<PushDeliveryResult>,
   now = new Date(),
 ): Promise<{ claimed: number; settled: number; lostLeases: number }> {
-  return runPushOutboxTick(port, deliver, now, { enabled: pushOutboxTickActivated });
+  return runPushOutboxTick(port, deliver, now, {
+    enabled: pushOutboxTickActivated, batchSize: PUSH_OUTBOX_WORKERS, now: () => new Date(),
+  });
 }

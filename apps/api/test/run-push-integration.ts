@@ -30,6 +30,7 @@ const env = {
   PUSH_SUBSCRIPTIONS_ENABLED: 'true',
   PUSH_DELIVERY_ENABLED: 'false',
   CPSU_PUSH_TESTS: '1',
+  CPSU_PUSH_OUTBOX_TESTS: '1',
 };
 
 const admin = new PrismaClient({ datasources: { db: { url: source } } });

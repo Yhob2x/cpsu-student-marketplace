@@ -15,6 +15,45 @@ const initial = {
 const originalFetch = globalThis.fetch;
 afterEach(() => { cleanup(); globalThis.fetch = originalFetch; });
 
+test('identifies invalid campus fields and saves the corrected campus', async () => {
+  const campuses = structuredClone(initial.campuses);
+  const writes: unknown[] = [];
+  globalThis.fetch = (async (_input: RequestInfo | URL, init?: RequestInit) => {
+    if (init?.method === 'POST') {
+      const body = JSON.parse(String(init.body));
+      writes.push(body);
+      const created = { ...campuses[0], ...body, id: 8 };
+      campuses.push(created);
+      return Response.json(created, { status: 201 });
+    }
+    return Response.json({ ...initial, campuses });
+  }) as typeof fetch;
+
+  render(<CatalogAdmin onCampusesChange={() => {}} />);
+  const add = await screen.findByRole('button', { name: 'Add campus' });
+  const code = screen.getByLabelText('Code');
+  const name = screen.getByLabelText('Campus name');
+  fireEvent.change(code, { target: { value: 'CPSU West' } });
+  fireEvent.change(name, { target: { value: 'W' } });
+  fireEvent.click(add);
+
+  expect(code.getAttribute('aria-invalid')).toBe('true');
+  expect(document.activeElement).toBe(code);
+  expect(screen.getByRole('alert').textContent).toContain('hyphens and underscores');
+  expect(writes).toEqual([]);
+
+  fireEvent.change(code, { target: { value: ' CPSU-WEST ' } });
+  fireEvent.click(add);
+  expect(name.getAttribute('aria-invalid')).toBe('true');
+  expect(document.activeElement).toBe(name);
+  expect(writes).toEqual([]);
+
+  fireEvent.change(name, { target: { value: ' CPSU West Campus ' } });
+  fireEvent.click(add);
+  expect(await screen.findByText('CPSU West Campus')).toBeTruthy();
+  expect(writes).toEqual([{ code: 'CPSU-WEST', name: 'CPSU West Campus' }]);
+});
+
 describe('admin product and service category editing', () => {
   test('selects product/service type when adding and keeps existing category edits in the same type', async () => {
     const actions: { url: string; method: string; body?: any }[] = [];

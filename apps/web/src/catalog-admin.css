@@ -13,6 +13,7 @@
 .catalog-admin-fields { display: grid; grid-template-columns: minmax(95px, .65fr) minmax(0, 1.35fr); gap: var(--ui-space-3); }
 .catalog-admin .field { min-width: 0; display: grid; gap: var(--ui-space-1); }
 .catalog-admin input { width: 100%; min-width: 0; min-height: 44px; box-sizing: border-box; }
+.catalog-admin input[aria-invalid="true"] { border-color: var(--danger); }
 .catalog-admin-rows { display: grid; gap: 0; }
 .catalog-admin-item { display: grid; gap: var(--ui-space-3); min-width: 0; padding: 1rem 0; border-top: 1px solid var(--line); }
 .catalog-admin-item:first-child { border-top: 0; padding-top: 0; }

@@ -247,7 +247,6 @@
 }
 body:has(.floating-chat) .storefront .storefront-listings { padding-right: 0; }
 .storefront .storefront-listings .product-card { min-width: 0; }
-.storefront .storefront-listings .product-card .product-photo { border-radius: var(--ui-radius-md); }
 .storefront .storefront-listings .product-card .body { padding-inline: var(--ui-space-1); }
 .storefront .storefront-about {
   max-width: none;

@@ -1,12 +1,12 @@
 import { LegacyButton } from './components/ui/legacy-button';
-import { Fragment, useMemo, useState, type ReactNode } from 'react';
+import { Fragment, useEffect, useMemo, useState, type ReactNode } from 'react';
+import { api } from './api';
 import { Link } from 'react-router-dom';
 import { Icon } from './icons';
 import { SellerAvatar } from './seller-avatar';
 import { StoreRatingsAndReviews, type StoreReviewSummary } from './store-review-widgets';
 import { StoreRatingBadge } from './store-rating-badge';
 import { StoreReviewEntry } from './store-review-entry';
-import { StoreAppreciation } from './store-appreciation';
 import { StoreFollowers } from './store-followers';
 import { filterStoreListings, type StoreFilter } from './storefront-filter';
 import type { Listing } from './pages-public';
@@ -22,6 +22,7 @@ export type PublicStorefront = {
   avatarUrl?: string | null;
   createdAt: string;
   listingCount: number;
+  appreciationCount?: number | null;
   hasMoreListings?: boolean;
   nextListingBeforeId?: number | null;
   follow?: { count: number | null; isFollowing: boolean; available: boolean };
@@ -62,6 +63,24 @@ export function StorefrontView({ store, isOwner, canFollow, onFollow, followBusy
   const [chatOpen, setChatOpen] = useState(false);
   const [chatListingId, setChatListingId] = useState(store.listings[0]?.id ?? 0);
   const [chatBody, setChatBody] = useState('');
+  const [appreciations, setAppreciations] = useState<number | null>(store.appreciationCount ?? null);
+  useEffect(() => { setAppreciations(store.appreciationCount ?? null); }, [store.id, store.appreciationCount]);
+  useEffect(() => {
+    let active = true;
+    let pending: ReturnType<typeof setTimeout> | undefined;
+    const sync = (event: Event) => {
+      const listingId = (event as CustomEvent<{ listingId: number }>).detail?.listingId;
+      if (!store.listings.some(listing => listing.id === listingId)) return;
+      clearTimeout(pending);
+      pending = setTimeout(() => {
+        void api<Pick<PublicStorefront, 'appreciationCount'>>(`/seller-profiles/${store.id}?limit=1`)
+          .then(result => { if (active) setAppreciations(result.appreciationCount ?? null); })
+          .catch(() => { if (active) setAppreciations(null); });
+      }, 90);
+    };
+    window.addEventListener('listing-appreciation-changed', sync);
+    return () => { active = false; clearTimeout(pending); window.removeEventListener('listing-appreciation-changed', sync); };
+  }, [store.id, store.listings]);
   // Reuse the reviews section's published aggregate rather than making another request.
   const [rating, setRating] = useState<{ storeId: number; summary: StoreReviewSummary | null } | null>(null);
   const currentRating = rating?.storeId === store.id ? rating.summary : null;
@@ -107,7 +126,6 @@ export function StorefrontView({ store, isOwner, canFollow, onFollow, followBusy
             }}>
             <Icon name="chat" size={21} />
           </LegacyButton>}
-          {!isOwner && canFollow && <StoreAppreciation storeId={store.id} signedIn={signedIn} onSignIn={onChatSignIn} />}
               </div>
             </div>
             <p className="storefront-campus"><Icon name="pin" size={16} /> {store.campus?.name ?? store.campus?.code ?? 'CPSU campus'}</p>
@@ -159,8 +177,10 @@ export function StorefrontView({ store, isOwner, canFollow, onFollow, followBusy
       </div>}
       <div className="storefront-facts">
         <div><span>Listings</span><strong>{store.listingCount ?? store.listings.length}</strong></div>
+        <div className="storefront-appreciations-fact" title="Total appreciations across this store's published listings">
+          <span>Appreciations</span><strong>{appreciations === null ? '—' : appreciations.toLocaleString('en-PH')}</strong>
+        </div>
         {store.follow?.available && <StoreFollowers key={`${store.id}-${store.follow.count}`} storeId={store.id} publicView />}
-        <StoreAppreciation storeId={store.id} readOnly />
       </div>
     </section>
     <section className="storefront-products" aria-labelledby="storefront-listings">

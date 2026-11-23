@@ -49,6 +49,12 @@ There is no OpenAPI document; this file is the contract of record and must chang
 
 `publicListing()` (`routes/public.ts`) whitelists response fields, so seller email/password material cannot leak through an include.
 
+### Shared reference data cache
+
+`GET /campuses`, `GET /categories`, `GET /guidelines`, and `GET /announcements` reuse successful results for 30 seconds inside each API process. Simultaneous requests share one database query per endpoint when a cache entry needs refreshing. Admin campus and category writes, guideline publication, and announcement publication or archival invalidate the affected entry in the process that handled the write. Other processes and direct database edits are reflected on the next read after expiry.
+
+The cache contains only the existing public projections, including published content and active campuses. Authorization and listing or storefront visibility still query current data. HTTP cache headers and response formats are unchanged. Database failures are retried on the next request, including when the public guidelines or announcements endpoint returns its existing missing-table fallback.
+
 ## 5. Account — authenticated
 
 | Method | Path | Notes |

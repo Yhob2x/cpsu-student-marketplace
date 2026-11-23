@@ -13,6 +13,8 @@ import { MobileBrowseControls, SwipeableListingRail } from './mobile-browse-cont
 import { ListingGallery } from './listing-gallery';
 import { isPublicNotFound, publicResourceLoadMessage } from './public-resource-error';
 import { SellerAvatar } from './seller-avatar';
+import { ListingAppreciation } from './listing-appreciation';
+import { ListingViews } from './listing-views';
 import { StorefrontView, type PublicStorefront } from './pages-storefront';
 import { StoresInResults } from './stores-in-results';
 import { MostFollowedStores, type MostFollowedStore } from './most-followed-stores';
@@ -20,7 +22,7 @@ import { resolveHomePageContent, type HomePageView } from './home-page-content';
 import { categoriesForExplore, cleanExploreQuery, DEFAULT_EXPLORE_FILTERS, exploreAdvancedSummary, explorePriceError, previewExploreOptions, updateExploreQuery, type ExploreCategory, type ExploreFilters } from './explore-filters';
 
 export type Listing = { id: number; type: string; title: string; description: string; price: number; priceBasis: string; availability: string; condition?: 'new' | 'like_new' | 'good' | 'fair' | null;
-  handoffNote?: string; category: { name: string }; campus: { code: string; name: string }; seller: { id: number; storeName: string; avatarUrl?: string | null; rating?: { average: number; count: number } | null }; images: string[]; status?: string };
+  handoffNote?: string; stockQuantity?: number | null; category: { name: string }; campus: { code: string; name: string }; seller: { id: number; storeName: string; avatarUrl?: string | null; rating?: { average: number; count: number } | null }; images: string[]; status?: string };
 
 export function ListingCard({ l, priority = false }: { l: Listing; priority?: boolean }) {
   const nav = useNavigate();
@@ -58,36 +60,50 @@ export function ListingCard({ l, priority = false }: { l: Listing; priority?: bo
         {showImage
           ? <img src={imageSrc} alt="" loading={priority ? 'eager' : 'lazy'} decoding="async" onError={() => setFailedImageSrc(imageSrc)} />
           : <span className="photo-placeholder"><Icon name="tag" size={30} /><span>{imageSrc ? 'Photo unavailable' : 'No photo yet'}</span></span>}
-        <span className="listing-kind">{l.type === 'service' ? 'Service' : 'Product'}</span>
         {l.images.length > 1 && <span className="product-photo-multiple">{l.images.length} photos</span>}
-        {!staff && <button type="button" className="heart-btn" aria-pressed={saved} aria-label={saveLabel}
+        {!staff && <button type="button" className="listing-save-btn" aria-pressed={saved} aria-label={saveLabel}
           title={saveLabel} aria-busy={busy || saveSyncing} disabled={busy || saveSyncing || !canSave} onClick={flip}>
-          <Icon name="heart" filled={saved} size={16} /></button>}
+          <Icon name="folder" size={16} /><span>{saved ? 'Saved' : 'Save'}</span></button>}
       </div>
-      <div className="body">
-        <h3 title={l.title}>{l.title}</h3>
-        <div className="card-foot">
-          <span className="price">{peso(l.price)}</span>
-          {/[a-z]/i.test(l.priceBasis ?? '') && <span className="price-unit" title={l.priceBasis}>{l.priceBasis}</span>}
+      <div className="listing-card-body">
+        <div className="listing-card-heading">
+          <h3 title={l.title}>{l.title}</h3>
+          <p className="seller seller-byline listing-seller-row">
+            <Link className="seller-store-link listing-seller-name" title={l.seller.storeName} to={`/stores/${l.seller.id}`}>
+              <span><span aria-hidden="true">By </span>{l.seller.storeName}</span>
+            </Link>
+            {l.seller.rating && l.seller.rating.count > 0 && Number.isFinite(l.seller.rating.average) &&
+              <span className="listing-store-rating" role="img"
+                aria-label={`Store rating ${l.seller.rating.average.toFixed(1)} out of 5 from ${l.seller.rating.count} published ${l.seller.rating.count === 1 ? 'review' : 'reviews'}`}>
+                <Icon name="star" size={12} filled />
+                <span>{l.seller.rating.average.toFixed(1)}</span>
+              </span>}
+          </p>
         </div>
-        <div className="listing-subline">
-          <p className="product-category" title={l.category.name}>{l.category.name}</p>
-          {l.condition && <span className="listing-condition">{l.condition.replace('_', ' ')}</span>}
+        <div className="listing-card-summary">
+          <div className="listing-card-price">
+            <span className="price">{peso(l.price)}</span>
+            {/[a-z]/i.test(l.priceBasis ?? '') && l.priceBasis.trim().toLowerCase() !== 'per item' && <span className="price-unit" title={l.priceBasis}>{l.priceBasis}</span>}
+          </div>
+          <div className="listing-card-meta">
+            <span className="listing-kind">{l.type === 'service' ? 'Service' : 'Product'}</span>{' '}
+            <span className="product-category" title={l.category.name}>{l.category.name}</span>
+            {l.condition && <>{' '}<span className="listing-condition"><span aria-hidden="true">· </span>{l.condition.replace('_', ' ')}</span></>}
+          </div>
+          <div className="listing-card-engagement" aria-label="Listing engagement">
+            <ListingAppreciation listingId={l.id} signedIn={Boolean(me)} readOnly={isOwner || Boolean(staff)} compact showCount />
+            <ListingViews listingId={l.id} compact />
+          </div>
         </div>
-        <p className="seller seller-byline listing-seller-row" title={l.seller.storeName}>
-          <SellerAvatar name={l.seller.storeName} src={l.seller.avatarUrl} size="small" />
-          <span className="listing-seller-name">By <Link className="seller-store-link" to={`/stores/${l.seller.id}`}>{l.seller.storeName}</Link></span>
-          {l.seller.rating && l.seller.rating.count > 0 && Number.isFinite(l.seller.rating.average) &&
-            <span className="listing-store-rating" role="img"
-              aria-label={`Store rating ${l.seller.rating.average.toFixed(1)} out of 5 from ${l.seller.rating.count} published ${l.seller.rating.count === 1 ? 'review' : 'reviews'}`}>
-              <Icon name="star" size={12} filled />
-              <span>{l.seller.rating.average.toFixed(1)}</span>
+        <div className="listing-card-status">
+          {l.type === 'physical_product' && typeof l.stockQuantity === 'number' &&
+            <span className={`listing-stock-label ${l.stockQuantity === 0 ? 'is-empty' : l.stockQuantity <= 3 ? 'is-low' : ''}`}>
+              {l.stockQuantity === 0 ? 'Out of stock' : `${l.stockQuantity} in stock`}
             </span>}
-        </p>
-        <p className="meta card-campus" title={l.campus.name}><Icon name="pin" size={13} /><span>{l.campus.name}</span></p>
-        {l.availability !== 'available' && <p className="listing-availability">{l.availability.replaceAll('_', ' ')}</p>}
+          {l.availability !== 'available' && <span className="listing-availability">{l.availability.replaceAll('_', ' ')}</span>}
+        </div>
         {saveError && <p className="card-save-feedback" role="alert">{saveError}</p>}
-        <span className="product-card-arrow" aria-hidden="true"><Icon name="arrow" size={15} /></span>
+        <p className="meta card-campus" title={l.campus.name}><Icon name="pin" size={13} /><span>{l.campus.name}</span></p>
       </div>
     </article>
   );
@@ -144,6 +160,16 @@ export function Home() {
     api<HomePageView>('/home-page').then(setManagedContent).catch(() => setManagedContent(null));
   };
   useEffect(loadHome, []);
+  useEffect(() => {
+    const refreshPopular = () => {
+      api<{ items: Listing[] }>('/listings/popular')
+        .then(result => setPopular(result.items))
+        // Preserve the last successful rail during an intermittent refresh failure.
+        .catch(() => {});
+    };
+    window.addEventListener('listing-appreciation-committed', refreshPopular);
+    return () => window.removeEventListener('listing-appreciation-committed', refreshPopular);
+  }, []);
   const rail = (rows: Listing[], label: string) => <SwipeableListingRail itemCount={rows.length} label={label}>
     {rows.map((l, index) => <ListingCard key={l.id} l={l} priority={label === 'Fresh listings' && index < 2} />)}
   </SwipeableListingRail>;
@@ -345,7 +371,14 @@ export function Discover() {
   const reset = () => setSp(new URLSearchParams(), { replace: true });
   const dirty = (Object.keys(NO_FILTERS) as (keyof Filters)[]).some(k => k !== 'sort' && f[k] !== '');
   const skel = <div className="grid listing-grid explore-results" role="status" aria-label="Loading listing results">
-    {Array.from({ length: 8 }, (_, i) => <div key={i} className="skel card" aria-hidden="true" />)}
+    {Array.from({ length: 8 }, (_, i) => <div key={i} className="listing-card-placeholder" aria-hidden="true">
+      <div className="skeleton-block listing-card-placeholder-photo" />
+      <div className="listing-card-body">
+        <div className="skeleton-block listing-card-placeholder-title" />
+        <div className="skeleton-block listing-card-placeholder-detail" />
+        <div className="skeleton-block listing-card-placeholder-detail" />
+      </div>
+    </div>)}
   </div>;
 
   return <>
@@ -496,7 +529,7 @@ export function Discover() {
 }
 
 export function ListingDetail() {
-  const { id } = useParams(); const { me, savedIds, pendingSavedIds, toggleSaved } = useMe();
+  const { id } = useParams(); const { me, ready, savedIds, pendingSavedIds, toggleSaved } = useMe();
   const navigate = useNavigate();
   const [l, setL] = useState<Listing | null>(null); const [body, setBody] = useState(''); const [note, setNote] = useState(''); const [err, setErr] = useState('');
   const [inquiryThreadId, setInquiryThreadId] = useState<number | null>(null);
@@ -510,6 +543,21 @@ export function ListingDetail() {
       .catch(e => { if (request === loadRequest.current) setLoadError(e); });
   };
   useEffect(() => { loadListing(); return () => { loadRequest.current++; }; }, [id]);
+  useEffect(() => {
+    // Wait for session restoration so a signed-in owner is never counted as a guest.
+    if (!ready || !l || me?.storeId === l.seller.id || me?.roles.length) return;
+    let active = true;
+    // Only an actual listing-detail visit counts, not card display or preload.
+    api<{ available: boolean; count: number | null }>(`/listings/${l.id}/view`, { method: 'POST' })
+      .then(result => {
+        if (active && result.available) {
+          window.dispatchEvent(new CustomEvent('listing-view-confirmed', {
+            detail: { listingId: l.id, available: true, count: result.count },
+          }));
+        }
+      }).catch(() => { /* Viewing must remain usable if metrics are unavailable. */ });
+    return () => { active = false; };
+  }, [ready, l?.id, me?.storeId, me?.roles.length]);
   if (loadError && !l) return <Panel as="section" className="stack" role="alert">
     <h1>{isPublicNotFound(loadError) ? 'Listing unavailable' : 'Could not load this listing'}</h1>
     <p>{isPublicNotFound(loadError) ? 'This listing may have been removed or is no longer public.' : publicResourceLoadMessage(loadError)}</p>
@@ -576,6 +624,13 @@ export function ListingDetail() {
             </span>
           </div>
           {conditionLabel && <p className="listing-detail-condition">Condition: <strong>{conditionLabel}</strong></p>}
+          <div className="listing-detail-stock-actions">
+            {!isService && typeof l.stockQuantity === 'number' && <span className={`listing-stock-label ${l.stockQuantity === 0 ? 'is-empty' : l.stockQuantity <= 3 ? 'is-low' : ''}`}>
+              <Icon name="package" size={17} /> {l.stockQuantity === 0 ? 'Out of stock' : `${l.stockQuantity} ${l.stockQuantity === 1 ? 'item' : 'items'} in stock`}
+            </span>}
+            <ListingAppreciation listingId={l.id} signedIn={Boolean(me)} readOnly={isOwner || Boolean(staff)} />
+            <ListingViews listingId={l.id} />
+          </div>
         </header>
 
         <section className="listing-detail-seller-card" aria-label="Seller information">

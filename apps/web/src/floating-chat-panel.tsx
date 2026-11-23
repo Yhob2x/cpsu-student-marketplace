@@ -10,6 +10,7 @@ import { hasNewIncomingMessage, messageReceiveSoundEnabled, playMessageReceiveSo
 import { MeetupLocationCard, type MeetupHandoff } from './meetup-location-card';
 import { decodeMeetupLocation } from './meetup-location';
 import type { InboxPage } from './inbox-pages';
+import { ConversationSwipeActions } from './conversation-swipe-actions';
 
 type InboxItem = {
   id: number;
@@ -17,6 +18,7 @@ type InboxItem = {
   listing: { title: string };
   status: string;
   unreadCount?: number;
+  muted?: boolean;
   lastMessage?: { id: number; mine: boolean; body: string; createdAt: string; receipt?: 'sent' | 'delivered' | 'read' };
 };
 type ChatMessage = {
@@ -39,6 +41,7 @@ type Conversation = {
   } | null;
   typing?: boolean;
   otherActiveInChat?: boolean;
+  muted?: boolean;
 };
 type Props = {
   onClose: (instant?: boolean) => void;
@@ -125,7 +128,7 @@ export function FloatingChatPanel({ onClose, onUnreadChanged, motionState, motio
           const rows = page.items;
           if (!active || request !== issued) return;
           const foreground = document.visibilityState === 'visible' && document.hasFocus();
-          const latest = rows.flatMap(item => item.lastMessage
+          const latest = rows.flatMap(item => !item.muted && item.lastMessage
             ? [{ id: item.lastMessage.id, mine: item.lastMessage.mine }] : []);
           if (hasNewIncomingMessage(latest, knownIdsRef.current,
             initialLoadRef.current, foreground && wasForegroundRef.current)) playMessageReceiveSound();
@@ -137,7 +140,7 @@ export function FloatingChatPanel({ onClose, onUnreadChanged, motionState, motio
           const next = await api<Conversation>(`/inquiries/${threadId}/messages?limit=50`);
           if (!active || request !== issued) return;
           const foreground = document.visibilityState === 'visible' && document.hasFocus();
-          if (hasNewIncomingMessage(next.messages, knownIdsRef.current,
+          if (!next.muted && hasNewIncomingMessage(next.messages, knownIdsRef.current,
             initialLoadRef.current, foreground && wasForegroundRef.current)) playMessageReceiveSound();
           next.messages.forEach(message => knownIdsRef.current.add(message.id));
           initialLoadRef.current = true;
@@ -230,6 +233,19 @@ export function FloatingChatPanel({ onClose, onUnreadChanged, motionState, motio
     setMessageReceiveSoundEnabled(enabled);
     if (enabled) unlockMessageReceiveSound();
   };
+  const updateMuted = async (id: number, muted: boolean) => {
+    await api(`/inquiries/${id}/preferences`, { method: 'PATCH', body: { muted } });
+    setInbox(previous => previous?.map(item => item.id === id ? { ...item, muted } : item) ?? null);
+    showActionFeedback({ kind: 'success', title: muted ? 'Notifications muted' : 'Notifications enabled',
+      message: muted ? 'This conversation will stay quiet.' : 'You can receive new alerts from this conversation.' });
+  };
+  const removeFromInbox = async (id: number) => {
+    await api(`/inquiries/${id}/hide`, { body: {} });
+    setInbox(previous => previous?.filter(item => item.id !== id) ?? null);
+    void onUnreadChanged();
+    showActionFeedback({ kind: 'success', title: 'Removed from inbox',
+      message: 'Chat history is preserved, and the other student is unaffected.' });
+  };
   const endConversation = async () => {
     if (endLockRef.current || sending || !conversation || threadId === null || conversation.thread.status === 'closed') return;
     endLockRef.current = true;
@@ -304,9 +320,12 @@ export function FloatingChatPanel({ onClose, onUnreadChanged, motionState, motio
           <p>Explore a listing and ask its seller a question to start chatting.</p>
           <Link to="/explore" onClick={() => onClose(true)}>Explore listings</Link>
         </div>}
-        {inbox?.map(item => <button type="button"
+        {inbox?.map(item => <ConversationSwipeActions key={item.id}
+          name={item.otherStudentName || 'Student'} muted={Boolean(item.muted)}
+          onMute={muted => updateMuted(item.id, muted)} onDelete={() => removeFromInbox(item.id)}>
+          <button type="button"
           className={`floating-chat-inbox-row${item.unreadCount ? ' is-unread' : ''}`}
-          key={item.id} aria-label={`${item.otherStudentName || 'Student'}, ${item.listing?.title ?? 'Marketplace listing'}${item.unreadCount ? `, ${item.unreadCount} unread message${item.unreadCount === 1 ? '' : 's'}` : ''}`}
+          aria-label={`${item.otherStudentName || 'Student'}, ${item.listing?.title ?? 'Marketplace listing'}${item.unreadCount ? `, ${item.unreadCount} unread message${item.unreadCount === 1 ? '' : 's'}` : ''}`}
           onClick={event => { setViewMotion(event.detail !== 0); setSelectedName(item.otherStudentName || 'Student'); setThreadId(item.id); latestRef.current = true; }}>
           <span className="floating-chat-avatar" aria-hidden="true">{initials(item.otherStudentName || 'Student')}</span>
           <span className="floating-chat-inbox-copy">
@@ -322,7 +341,7 @@ export function FloatingChatPanel({ onClose, onUnreadChanged, motionState, motio
             </span>
           </span>
           {Boolean(item.unreadCount) && <span className="floating-chat-unread-dot" aria-hidden="true" />}
-        </button>)}
+        </button></ConversationSwipeActions>)}
       </div>
       <div className="floating-chat-panel-foot"><Link to="/inquiries" onClick={() => onClose(true)}>Open all messages <Icon name="arrow" size={15} /></Link></div>
     </> : <>

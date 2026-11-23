@@ -69,3 +69,7 @@
 @media (prefers-reduced-motion: reduce) {
   .swipe-conversation-foreground { transition: none; }
 }
+
+.inquiry-muted-icon { display: inline-flex; flex: none; color: var(--ink-soft); align-items: center; }
+.swipe-conversation .inq-top strong { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.swipe-conversation .inq-top time, .swipe-conversation .floating-chat-inbox-top time { margin-left: auto; }

@@ -29,6 +29,7 @@ import { hasNewIncomingMessage, messageReceiveSoundEnabled, playMessageReceiveSo
 import { mergeMessageHistory } from './message-history';
 import { mergeInboxPages, type InboxPage } from './inbox-pages';
 import { ConversationSwipeActions } from './conversation-swipe-actions';
+import { BellOff } from 'lucide-react';
 
 function HandoffPlace({ location }: { location: string }) {
   const { place, point } = decodeMeetupLocation(location);
@@ -746,6 +747,7 @@ export function Inquiries() {
       {Boolean(t.unreadCount) && <span className="sr-only">{t.unreadCount} unread messages. </span>}
       <span className="inq-main">
         <span className="inq-top"><strong>{t.otherStudentName || 'Student'}</strong>
+          {Boolean(t.muted) && <span className="inquiry-muted-icon" title="Notifications muted"><BellOff size={14} aria-hidden="true" /><span className="sr-only">Notifications muted</span></span>}
           {Boolean(t.unreadCount) && <span className="inquiry-row-unread-dot" aria-hidden="true" />}
           {t.lastMessage && <time dateTime={t.lastMessage.createdAt}>{timeAgo(t.lastMessage.createdAt)}</time>}</span>
         <span className="inq-listing" title={t.listing.title}>About: {t.listing.title}</span>

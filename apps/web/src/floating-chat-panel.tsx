@@ -128,10 +128,13 @@ export function FloatingChatPanel({ onClose, onUnreadChanged, motionState, motio
           const rows = page.items;
           if (!active || request !== issued) return;
           const foreground = document.visibilityState === 'visible' && document.hasFocus();
-          const latest = rows.flatMap(item => !item.muted && item.lastMessage
+          const latest = rows.flatMap(item => item.lastMessage
             ? [{ id: item.lastMessage.id, mine: item.lastMessage.mine }] : []);
-          if (hasNewIncomingMessage(latest, knownIdsRef.current,
+          const audible = rows.flatMap(item => !item.muted && item.lastMessage
+            ? [{ id: item.lastMessage.id, mine: item.lastMessage.mine }] : []);
+          if (hasNewIncomingMessage(audible, knownIdsRef.current,
             initialLoadRef.current, foreground && wasForegroundRef.current)) playMessageReceiveSound();
+          // Remember muted messages too; unmute should not play catch-up sounds.
           latest.forEach(message => knownIdsRef.current.add(message.id));
           initialLoadRef.current = true;
           wasForegroundRef.current = foreground;

@@ -91,7 +91,7 @@ export function ConversationSwipeActions({ name, muted, children, onMute, onDele
 
   return <div className="swipe-conversation">
     <div className="swipe-conversation-track">
-      <div className="swipe-conversation-actions" aria-label={`Actions for ${name}`}>
+      <div className="swipe-conversation-actions" aria-label={`Actions for ${name}`} aria-hidden={!open}>
         <button type="button" disabled={pending} tabIndex={open ? 0 : -1}
           aria-label={`${muted ? 'Unmute' : 'Mute'} notifications for ${name}`}
           onClick={() => void toggleMute()}>

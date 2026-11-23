@@ -1,0 +1,71 @@
+/* Reusable inbox action tray: gestures on touch, explicit More button everywhere. */
+.swipe-conversation { width: 100%; min-width: 0; }
+.swipe-conversation-track { position: relative; overflow: hidden; border-bottom: 1px solid var(--line); }
+.swipe-conversation-actions {
+  position: absolute; inset: 0 0 0 auto; display: flex; width: 160px;
+  background: var(--surface-soft); z-index: 0;
+}
+.swipe-conversation-actions button {
+  display: flex; flex: 1 1 80px; flex-direction: column; align-items: center;
+  justify-content: center; gap: 5px; min-width: 0; min-height: 64px;
+  border: 0; border-left: 1px solid var(--line);
+  color: var(--color-primary-dark); background: var(--surface-soft);
+  font: 700 .75rem/1.1 var(--font-body); cursor: pointer;
+}
+.swipe-conversation-actions button:last-child { color: var(--danger); }
+.swipe-conversation-actions button:disabled { opacity: .5; cursor: not-allowed; }
+.swipe-conversation-foreground {
+  position: relative; z-index: 1; display: flex; align-items: stretch;
+  width: 100%; min-width: 0; background: var(--paper); touch-action: pan-y;
+  transition: transform 180ms cubic-bezier(.23,1,.32,1);
+}
+.swipe-conversation-foreground[data-open="true"] { transform: translate3d(-160px,0,0); }
+.swipe-conversation-content { display: flex; flex: 1 1 auto; min-width: 0; }
+.swipe-conversation-content > :is(.inquiry-row,.floating-chat-inbox-row) {
+  flex: 1 1 auto; width: 100%; min-width: 0; margin: 0; border-bottom: 0;
+}
+.swipe-conversation-more {
+  display: grid; place-items: center; flex: 0 0 42px;
+  min-height: 56px; padding: 0; border: 0;
+  color: var(--ink-soft); background: transparent; cursor: pointer;
+}
+.swipe-conversation-more[aria-expanded="true"] { color: var(--color-primary-dark); }
+.swipe-conversation .inq-open { display: none; }
+.swipe-conversation :is(button,a):focus-visible {
+  outline: 3px solid var(--color-focus);
+  outline-offset: -3px;
+}
+.swipe-conversation-confirm {
+  display: grid; gap: 8px; padding: 12px;
+  border-bottom: 1px solid var(--line); background: var(--surface-soft);
+  font-size: var(--ui-type-sm);
+}
+.swipe-conversation-confirm p { margin: 0; color: var(--ink-soft); line-height: 1.45; }
+.swipe-conversation-confirm > div { display: flex; gap: 8px; flex-wrap: wrap; }
+.swipe-conversation-confirm button {
+  flex: 1 1 110px; min-height: 44px; padding: 8px 12px;
+  border: 1px solid var(--line); border-radius: var(--ui-radius-sm);
+  background: var(--paper); color: var(--ink); cursor: pointer;
+  font: 700 .82rem/1.2 var(--font-body);
+}
+.swipe-conversation-confirm .swipe-conversation-delete-confirm {
+  background: var(--danger); border-color: var(--danger); color: var(--paper);
+}
+.swipe-conversation-error { margin: 0; padding: 8px 12px; color: var(--danger); font-size: .85rem; }
+@media (max-width: 860px) {
+  /* Last stylesheet wins over legacy mobile dock overrides. Chat floats independently. */
+  .floating-chat {
+    right: max(16px, env(safe-area-inset-right, 0px));
+    bottom: calc(82px + env(safe-area-inset-bottom, 0px));
+    width: 52px; height: 52px; min-width: 52px; min-height: 52px;
+    padding: 0; border-radius: 16px;
+  }
+  .floating-chat > span:not(.floating-chat-badge) { display: none; }
+  .floating-chat-panel {
+    bottom: calc(146px + env(safe-area-inset-bottom, 0px));
+    height: min(520px, calc(100dvh - 160px - env(safe-area-inset-bottom, 0px)));
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .swipe-conversation-foreground { transition: none; }
+}

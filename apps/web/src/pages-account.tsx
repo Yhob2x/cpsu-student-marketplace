@@ -641,10 +641,13 @@ export function Inquiries() {
         setHasOlder(page.hasMore);
       }
       const focused = document.visibilityState === 'visible' && document.hasFocus();
-      const latest = next.flatMap(t => !t.muted && t.lastMessage
+      const latest = next.flatMap(t => t.lastMessage
         ? [{ id: t.lastMessage.id, mine: t.lastMessage.mine }] : []);
-      if (hasNewIncomingMessage(latest, knownMessageIdsRef.current,
+      const audible = next.flatMap(t => !t.muted && t.lastMessage
+        ? [{ id: t.lastMessage.id, mine: t.lastMessage.mine }] : []);
+      if (hasNewIncomingMessage(audible, knownMessageIdsRef.current,
         inboxLoadedRef.current, focused && foregroundRef.current)) playMessageReceiveSound();
+      // Muted messages must still be remembered so unmuting never rings for history.
       for (const message of latest) knownMessageIdsRef.current.add(message.id);
       inboxLoadedRef.current = true;
       foregroundRef.current = focused;

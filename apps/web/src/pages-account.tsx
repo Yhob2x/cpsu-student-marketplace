@@ -28,6 +28,8 @@ import { authFieldForError, type AuthField } from './auth-field-error';
 import { hasNewIncomingMessage, messageReceiveSoundEnabled, playMessageReceiveSound, prepareMessageReceiveSound, setMessageReceiveSoundEnabled, unlockMessageReceiveSound } from './message-receive-sound';
 import { mergeMessageHistory } from './message-history';
 import { mergeInboxPages, type InboxPage } from './inbox-pages';
+import { ConversationSwipeActions } from './conversation-swipe-actions';
+import { BellOff } from 'lucide-react';
 
 function HandoffPlace({ location }: { location: string }) {
   const { place, point } = decodeMeetupLocation(location);
@@ -624,7 +626,7 @@ export function Inquiries() {
   const inboxLoadedRef = useRef(false);
   const foregroundRef = useRef(false);
   const requestRef = useRef(0);
-  const { me } = useMe();
+  const { me, syncUnread } = useMe();
   const currentUserIdRef = useRef(me?.id);
   currentUserIdRef.current = me?.id;
   // Poll only while this inbox is mounted. Do not sound on first history load,
@@ -640,9 +642,13 @@ export function Inquiries() {
         setHasOlder(page.hasMore);
       }
       const focused = document.visibilityState === 'visible' && document.hasFocus();
-      const latest = next.flatMap(t => t.lastMessage ? [{ id: t.lastMessage.id, mine: t.lastMessage.mine }] : []);
-      if (hasNewIncomingMessage(latest, knownMessageIdsRef.current,
+      const latest = next.flatMap(t => t.lastMessage
+        ? [{ id: t.lastMessage.id, mine: t.lastMessage.mine }] : []);
+      const audible = next.flatMap(t => !t.muted && t.lastMessage
+        ? [{ id: t.lastMessage.id, mine: t.lastMessage.mine }] : []);
+      if (hasNewIncomingMessage(audible, knownMessageIdsRef.current,
         inboxLoadedRef.current, focused && foregroundRef.current)) playMessageReceiveSound();
+      // Muted messages must still be remembered so unmuting never rings for history.
       for (const message of latest) knownMessageIdsRef.current.add(message.id);
       inboxLoadedRef.current = true;
       foregroundRef.current = focused;
@@ -695,6 +701,19 @@ export function Inquiries() {
       if (currentUserIdRef.current === userId) setLoadingOlder(false);
     }
   };
+  const updateMuted = async (id: number, muted: boolean) => {
+    await api(`/inquiries/${id}/preferences`, { method: 'PATCH', body: { muted } });
+    setRows(previous => previous?.map(row => row.id === id ? { ...row, muted } : row) ?? null);
+    showActionFeedback({ kind: 'success', title: muted ? 'Notifications muted' : 'Notifications enabled',
+      message: muted ? 'You will not receive alerts for this conversation.' : 'New messages can notify you again.' });
+  };
+  const removeFromInbox = async (id: number) => {
+    await api(`/inquiries/${id}/hide`, { body: {} });
+    setRows(previous => previous?.filter(row => row.id !== id) ?? null);
+    void syncUnread();
+    showActionFeedback({ kind: 'success', title: 'Removed from inbox',
+      message: 'The other student and your transaction records are unaffected.' });
+  };
   return <section className="messages-page"
     onPointerDownCapture={() => unlockMessageReceiveSound()}
     onKeyDownCapture={e => { if (e.key === 'Enter' || e.key === ' ') unlockMessageReceiveSound(); }}>
@@ -719,12 +738,16 @@ export function Inquiries() {
     {error && rows === null && <ErrorState title="Messages could not load" retry={load} retryText="Try again">{error}</ErrorState>}
     {error && rows !== null && <ErrorState title="Could not refresh messages" retry={load} compact>{error}</ErrorState>}
     {rows?.length === 0 && !error && <EmptyState title="No conversations yet" action={<Link className="btn" to="/explore">Explore listings</Link>}>Explore listings and send a seller a question to start a conversation.</EmptyState>}
-    {rows !== null && rows.length > 0 && <div className="inquiry-list">{rows.map(t => <Link key={t.id} to={`/inquiries/${t.id}`}
+    {rows !== null && rows.length > 0 && <div className="inquiry-list">{rows.map(t => <ConversationSwipeActions
+      key={t.id} name={t.otherStudentName || 'Student'} muted={Boolean(t.muted)}
+      onMute={muted => updateMuted(t.id, muted)} onDelete={() => removeFromInbox(t.id)}>
+      <Link to={`/inquiries/${t.id}`}
       className={`inquiry-row${t.unreadCount ? ' is-unread' : ''}`}>
       <span className="avatar" aria-hidden="true">{initials(t.otherStudentName || 'Student')}</span>
       {Boolean(t.unreadCount) && <span className="sr-only">{t.unreadCount} unread messages. </span>}
       <span className="inq-main">
         <span className="inq-top"><strong>{t.otherStudentName || 'Student'}</strong>
+          {Boolean(t.muted) && <span className="inquiry-muted-icon" title="Notifications muted"><BellOff size={14} aria-hidden="true" /><span className="sr-only">Notifications muted</span></span>}
           {Boolean(t.unreadCount) && <span className="inquiry-row-unread-dot" aria-hidden="true" />}
           {t.lastMessage && <time dateTime={t.lastMessage.createdAt}>{timeAgo(t.lastMessage.createdAt)}</time>}</span>
         <span className="inq-listing" title={t.listing.title}>About: {t.listing.title}</span>
@@ -734,7 +757,7 @@ export function Inquiries() {
           {t.lastMessage?.mine && <MessageReceipt state={t.lastMessage.receipt ?? 'sent'} compact />}</span>
       </span>
       <span className="inq-open" aria-hidden="true"><Icon name="arrow" size={18} /></span>
-    </Link>)}</div>}
+    </Link></ConversationSwipeActions>)}</div>}
     {hasOlder && rows !== null && <div className="row" style={{ justifyContent: 'center', padding: '12px' }}>
       <LegacyButton type="button" className="ghost" disabled={loadingOlder}
         onClick={() => void loadOlder()}>{loadingOlder ? 'Loading conversations…' : 'Load older conversations'}</LegacyButton>
@@ -843,7 +866,7 @@ export function Thread() {
           // Only NEW incoming messages ring: never the first history load,
           // outgoing sends, repeated polls, or background/refocus catch-up.
           const focused = document.visibilityState === 'visible' && document.hasFocus();
-          if (hasNewIncomingMessage(next.messages, messageIdsRef.current,
+          if (!next.muted && hasNewIncomingMessage(next.messages, messageIdsRef.current,
             firstFetchRef.current, focused && continuouslyForeground)) playMessageReceiveSound();
           continuouslyForeground = focused;
           // Animate only messages arriving after the first history load.

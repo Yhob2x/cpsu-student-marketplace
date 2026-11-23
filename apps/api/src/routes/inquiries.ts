@@ -39,18 +39,28 @@ async function participantThread(userId: number, id: number) {
   return t;
 }
 
+async function notificationsMuted(userId: number, threadId: number) {
+  const preference = await prisma.inquiryPreference.findUnique({
+    where: { threadId_userId: { threadId, userId } }, select: { muted: true },
+  });
+  return preference?.muted === true;
+}
+
 r.get('/', async (req, res) => {
   const uid = req.user!.id;
   const page = inboxPageInput.parse(req.query);
   const paging = page.limit === undefined ? null : inboxPageQuery(page.limit, page.beforeId);
   const rows = await prisma.inquiryThread.findMany({
-    where: { ...rowAccess.inquiryParticipant(uid), ...(paging && page.beforeId !== undefined
+    where: { ...rowAccess.inquiryParticipant(uid),
+      preferences: { none: { userId: uid, hidden: true } },
+      ...(paging && page.beforeId !== undefined
       ? { id: { lt: page.beforeId } } : {}) },
     include: {
       listing: { select: { id: true, title: true } },
       buyer: { select: { displayName: true } },
       seller: { include: { owner: { select: { displayName: true, status: true } } } },
       messages: { orderBy: { createdAt: 'desc' }, take: 1 },
+      preferences: { where: { userId: uid }, select: { muted: true } },
     },
     orderBy: paging?.orderBy ?? { createdAt: 'desc' },
     ...(paging ? { take: paging.take } : {}),
@@ -65,6 +75,7 @@ r.get('/', async (req, res) => {
   const unreadByThread = new Map(unreadGroups.map(group => [group.threadId, group._count._all]));
   const items = rows.map(t => ({
     id: t.id, status: t.status, listing: t.listing,
+    muted: t.preferences[0]?.muted ?? false,
     unreadCount: unreadByThread.get(t.id) ?? 0,
     // The authorized recipient sees the other participant's display name, never credentials.
     otherStudentName: t.buyerUserId === uid ? t.seller.owner.displayName : t.buyer.displayName,
@@ -95,10 +106,15 @@ r.post('/', async (req, res) => {
     create: { listingId: l.id, buyerUserId: req.user!.id, sellerProfileId: l.sellerProfileId }, update: {},
   });
   if (!inquiryAllowsMessage(t.status)) throw new HttpError(409, 'thread_closed');
-  const message = await prisma.$transaction(tx => appendMessageToOpenThread(tx, t.id, req.user!.id, b.body), {
-    isolationLevel: Prisma.TransactionIsolationLevel.Serializable,
-  });
-  await notify(l.seller.ownerUserId, 'inquiry.new', { threadId: t.id, messageId: message.id, listingTitle: l.title });
+  const message = await prisma.$transaction(async tx => {
+    const saved = await appendMessageToOpenThread(tx, t.id, req.user!.id, b.body);
+    // An incoming message brings a removed conversation back to the inbox.
+    await tx.inquiryPreference.updateMany({ where: { threadId: t.id, hidden: true }, data: { hidden: false } });
+    return saved;
+  }, { isolationLevel: Prisma.TransactionIsolationLevel.Serializable });
+  if (!await notificationsMuted(l.seller.ownerUserId, t.id)) {
+    await notify(l.seller.ownerUserId, 'inquiry.new', { threadId: t.id, messageId: message.id, listingTitle: l.title });
+  }
   res.status(201).json({ id: t.id });
 });
 
@@ -162,7 +178,8 @@ r.get('/:id/messages', async (req, res) => {
     ...(page ? { hasEarlier: page.hasEarlier } : {}),
     // Never disclose stale heartbeats for a closed thread, even if a heartbeat races closure.
     typing: inquiryAllowsMessage(t.status) && (typing.get(`${t.id}:${other}`) ?? 0) > Date.now(),
-    otherActiveInChat: inquiryAllowsMessage(t.status) && (presence.get(`${t.id}:${other}`) ?? 0) > Date.now() });
+    otherActiveInChat: inquiryAllowsMessage(t.status) && (presence.get(`${t.id}:${other}`) ?? 0) > Date.now(),
+    muted: await notificationsMuted(req.user!.id, t.id) });
 });
 
 // Participant-only presence, in-memory, expires if the conversation is not foregrounded.
@@ -212,12 +229,50 @@ r.post('/:id/messages', async (req, res) => {
   if (!inquiryAllowsMessage(t.status)) throw new HttpError(409, 'thread_closed');
   if (t.seller.owner.status !== 'active') throw new HttpError(409, 'seller_unavailable');
   const b = z.object({ body: z.string().trim().min(1).max(1000) }).parse(req.body);
-  const m = await prisma.$transaction(tx => appendMessageToOpenThread(tx, t.id, req.user!.id, b.body), {
-    isolationLevel: Prisma.TransactionIsolationLevel.Serializable,
-  });
+  const m = await prisma.$transaction(async tx => {
+    const saved = await appendMessageToOpenThread(tx, t.id, req.user!.id, b.body);
+    await tx.inquiryPreference.updateMany({ where: { threadId: t.id, hidden: true }, data: { hidden: false } });
+    return saved;
+  }, { isolationLevel: Prisma.TransactionIsolationLevel.Serializable });
   const other = t.buyerUserId === req.user!.id ? t.seller.ownerUserId : t.buyerUserId;
-  await notify(other, 'inquiry.reply', { threadId: t.id, messageId: m.id, listingTitle: t.listing.title });
+  if (!await notificationsMuted(other, t.id)) {
+    await notify(other, 'inquiry.reply', { threadId: t.id, messageId: m.id, listingTitle: t.listing.title });
+  }
   res.status(201).json({ id: m.id });
+});
+
+// Settings are scoped to the currently signed-in participant, never the other student.
+r.patch('/:id/preferences', async (req, res) => {
+  const uid = req.user!.id;
+  const threadId = z.coerce.number().int().positive().max(2_147_483_647).parse(req.params.id);
+  await participantThread(uid, threadId);
+  const { muted } = z.object({ muted: z.boolean() }).strict().parse(req.body);
+  const preference = await prisma.inquiryPreference.upsert({
+    where: { threadId_userId: { threadId, userId: uid } },
+    create: { threadId, userId: uid, muted }, update: { muted },
+  });
+  res.json({ muted: preference.muted });
+});
+
+// Hide only from the current student's inbox; preserve all messages, receipts,
+// transactions and the other participant's copy. A new message restores the row.
+r.post('/:id/hide', async (req, res) => {
+  const uid = req.user!.id;
+  const threadId = z.coerce.number().int().positive().max(2_147_483_647).parse(req.params.id);
+  await participantThread(uid, threadId);
+  await prisma.$transaction(async tx => {
+    await tx.inquiryPreference.upsert({
+      where: { threadId_userId: { threadId, userId: uid } },
+      create: { threadId, userId: uid, hidden: true }, update: { hidden: true },
+    });
+    // Clear this conversation's alert badges, but never claim that unseen
+    // messages were read: an unread receipt requires an actual viewport view.
+    await tx.notification.updateMany({ where: {
+      userId: uid, readAt: null, type: { in: ['inquiry.new', 'inquiry.reply'] },
+      payload: { path: '$.threadId', equals: threadId },
+    }, data: { readAt: new Date() } });
+  });
+  res.status(204).end();
 });
 
 // Ending a chat is participant-only and applies to this listing, not to other conversations.

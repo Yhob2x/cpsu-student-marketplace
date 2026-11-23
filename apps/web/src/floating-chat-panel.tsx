@@ -333,6 +333,7 @@ export function FloatingChatPanel({ onClose, onUnreadChanged, motionState, motio
           <span className="floating-chat-avatar" aria-hidden="true">{initials(item.otherStudentName || 'Student')}</span>
           <span className="floating-chat-inbox-copy">
             <span className="floating-chat-inbox-top"><strong>{item.otherStudentName || 'Student'}</strong>
+              {Boolean(item.muted) && <span className="inquiry-muted-icon" title="Notifications muted"><BellOff size={14} aria-hidden="true" /><span className="sr-only">Notifications muted</span></span>}
               {item.lastMessage && <time dateTime={item.lastMessage.createdAt}>{timeAgo(item.lastMessage.createdAt)}</time>}</span>
             <span className="floating-chat-item-listing">{item.listing?.title ?? 'Marketplace listing'}</span>
             <span className="floating-chat-message-preview"><span className="floating-chat-preview-text">{item.lastMessage?.mine ? 'You: ' : ''}{item.lastMessage?.body ?? 'No messages yet.'}</span>

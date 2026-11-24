@@ -1,0 +1,87 @@
+/* CPSU administration — role-focused workspaces without changing the student theme. */
+.admin-workspace { min-width: 0; }
+.admin-workspace-layout { display: grid; grid-template-columns: minmax(190px, 220px) minmax(0, 1fr); align-items: start; gap: clamp(1rem, 2vw, 1.5rem); }
+.admin-workspace-main { min-width: 0; }
+.admin-workspace-nav { position: sticky; top: 1rem; display: grid; gap: var(--ui-space-5); padding: .5rem .25rem .5rem 0; }
+.admin-workspace-nav-group { display: grid; gap: var(--ui-space-1); }
+.admin-workspace-nav-title { margin: 0 0 var(--ui-space-1); color: var(--ink-soft); font-size: .75rem; font-weight: var(--ui-weight-bold); letter-spacing: .025em; }
+.admin-workspace-nav-item { display: flex; align-items: center; justify-content: space-between; width: 100%; gap: var(--ui-space-2); min-height: 44px; padding: var(--ui-space-3) var(--ui-space-3); border: 1px solid transparent; border-radius: var(--ui-radius-md); background: transparent; color: var(--forest); text-align: left; font: inherit; font-size: var(--ui-type-sm); font-weight: var(--ui-weight-bold); cursor: pointer; }
+.admin-workspace-nav-item:hover { background: var(--surface-soft); }
+.admin-workspace-nav-item[aria-current="page"] { background: var(--mango-soft); border-color: var(--surface-stroke); color: var(--forest); font-weight: var(--ui-weight-bold); }
+.admin-workspace-count { display: inline-flex; min-width: 1.6rem; min-height: 1.6rem; padding: var(--ui-space-1); align-items: center; justify-content: center; border-radius: var(--ui-radius-sm); background: var(--paper); color: var(--forest); font-size: var(--ui-type-xs); font-variant-numeric: tabular-nums; }
+.admin-workspace-nav-item:focus-visible, .admin-review-queue-item:focus-visible, .admin-overview-shortcuts button:focus-visible { outline: 3px solid var(--color-focus); outline-offset: 2px; }
+.admin-workspace-mobile-nav { display: none !important; }
+.admin-action-notice { margin: 0 0 1rem; padding: var(--ui-space-3) 1rem; border-radius: var(--ui-radius-md); background: var(--mango-soft); color: var(--forest); font-weight: var(--ui-weight-bold); }
+.admin-review-layout { display: grid; grid-template-columns: minmax(180px, 235px) minmax(0, 1fr); align-items: start; gap: 1rem; }
+.admin-review-queue { display: grid; gap: var(--ui-space-2); min-width: 0; max-height: min(70vh, 660px); overflow-y: auto; overscroll-behavior: contain; padding: var(--ui-space-1) var(--ui-space-1) var(--ui-space-1) 0; }
+.admin-review-queue > p { margin: 0 0 var(--ui-space-2); font-size: var(--ui-type-sm); line-height: 1.45; }
+.admin-review-queue-item { display: grid; gap: .25rem; width: 100%; min-height: 62px; padding: .75rem; border: 1px solid var(--line); border-radius: var(--ui-radius-md); background: var(--paper); text-align: left; color: var(--ink); font: inherit; cursor: pointer; }
+.admin-review-queue-item strong { font-size: var(--ui-type-sm); line-height: 1.35; overflow-wrap: anywhere; }
+.admin-review-queue-item span { font-size: var(--ui-type-xs); color: var(--ink-soft); overflow-wrap: anywhere; }
+.admin-review-queue-item[aria-pressed="true"] { border-color: var(--forest); background: var(--mango-soft); }
+.admin-review-mobile-picker { display: none !important; }
+.admin-review-detail { min-width: 0; }
+.admin-review-detail .review-listing { margin: 0; }
+.admin-review-detail .review-photos { grid-template-columns: repeat(auto-fill, minmax(min(125px, 100%), 1fr)); }
+.admin-workspace-main .moderation-reason textarea { width: 100%; min-height: 82px; resize: vertical; }
+.admin-workspace-main #admin-reports ~ .panel { min-width: 0; }
+.admin-workspace-main .review-actions { align-items: center; }
+.admin-inline-actions { display: flex; flex-wrap: wrap; gap: .5rem; align-items: center; }
+.admin-inline-actions .btn { flex: 1 1 auto; }
+.admin-workspace .btn.danger-outline {
+  background: var(--paper); color: var(--danger);
+  border: 1px solid var(--danger);
+}
+@media (hover: hover) and (pointer: fine) {
+  .admin-workspace .btn.danger-outline:not(:disabled):hover {
+    color: var(--danger); background: var(--color-neutral-100);
+  }
+}
+.admin-workspace .btn.danger-outline:active:not(:disabled) { background: var(--color-neutral-200); }
+.admin-workspace .btn.danger-outline:focus-visible { outline: 3px solid var(--color-focus); outline-offset: 2px; }
+.admin-overview-shortcuts { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .75rem; margin: var(--ui-space-3) 0 var(--ui-space-5); }
+.admin-overview-shortcuts button { display: grid; gap: var(--ui-space-1); padding: var(--ui-space-3); min-height: 82px; border: 1px solid var(--line); border-radius: var(--ui-radius-md); background: var(--paper); color: var(--ink); text-align: left; cursor: pointer; }
+.admin-overview-shortcuts button:hover { border-color: var(--forest); background: var(--surface-soft); }
+.admin-overview-shortcuts strong { font-size: var(--ui-type-2xl); line-height: 1.15; font-variant-numeric: tabular-nums; }
+.admin-overview-shortcuts span { font-size: var(--ui-type-sm); color: var(--ink-soft); }
+@media (max-width: 1100px) {
+  .admin-workspace-layout { grid-template-columns: minmax(155px, 190px) minmax(0, 1fr); }
+  .admin-review-layout { grid-template-columns: minmax(0, 1fr); }
+  .admin-review-queue { grid-template-columns: repeat(2, minmax(0, 1fr)); max-height: 220px; }
+  .admin-review-queue > p { grid-column: 1 / -1; }
+}
+@media (max-width: 860px) {
+  .admin-workspace-layout { display: block; }
+  .admin-workspace-nav { display: none; }
+  .admin-workspace-mobile-nav { display: grid !important; gap: var(--ui-space-2); margin: 0 0 var(--ui-space-5); }
+  .admin-workspace-mobile-nav select { width: 100%; min-height: 48px; padding: var(--ui-space-2) var(--ui-space-3); border: 1px solid var(--line); border-radius: var(--ui-radius-md); background: var(--paper); color: var(--forest); }
+  .admin-review-mobile-picker { display: grid !important; grid-column: 1 / -1; margin: 0 0 var(--ui-space-3); }
+  .admin-review-mobile-picker select { min-height: 48px; width: 100%; padding: var(--ui-space-2); border: 1px solid var(--line); border-radius: var(--ui-radius-md); background: var(--paper); color: var(--forest); }
+  .admin-review-queue { display: none; }
+  .admin-workspace-main .admin-student-layout { grid-template-columns: 1fr; }
+}
+@media (max-width: 440px) {
+  .admin-review-queue { grid-template-columns: 1fr; max-height: 215px; }
+  .admin-overview-shortcuts { gap: var(--ui-space-2); }
+  .admin-overview-shortcuts button { min-width: 0; padding: var(--ui-space-2); }
+  .admin-overview-shortcuts strong { font-size: var(--ui-type-lg); }
+  .admin-overview-shortcuts span { font-size: var(--ui-type-xs); line-height: 1.35; }
+  .admin-workspace-main .review-listing { padding: var(--ui-space-3); }
+  .admin-workspace-main #admin-reports ~ .panel.row { align-items: stretch; }
+  .admin-inline-actions { width: 100%; }
+  .admin-inline-actions .btn { flex-basis: 0; min-width: 0; }
+  .admin-workspace-main .review-actions .btn { flex: 1 1 100%; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .admin-workspace-nav-item, .admin-review-queue-item, .admin-overview-shortcuts button { scroll-behavior: auto; }
+}
+/* Read-only transaction monitoring uses the same status vocabulary as student views. */
+.admin-workspace-main .admin-transaction-list { max-width: none; gap: var(--ui-space-2); margin-top: var(--ui-space-3); }
+.admin-workspace-main .admin-transaction-row {
+  display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-start;
+  gap: 12px; padding: var(--ui-space-4) var(--ui-space-4); margin: 0;
+}
+.admin-workspace-main .admin-transaction-row > div { min-width: 0; flex: 1 1 220px; }
+.admin-workspace-main .admin-transaction-row strong { font-size: var(--ui-type-md); overflow-wrap: anywhere; }
+.admin-workspace-main .admin-transaction-row p { margin: 4px 0 var(--ui-space-1); font-size: var(--ui-type-sm); }
+.admin-workspace-main .admin-transaction-row time { font-size: var(--ui-type-xs); }

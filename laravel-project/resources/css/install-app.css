@@ -1,0 +1,122 @@
+/* One install entry across all routes. The header remains the source of truth,
+   and installation guidance only appears after a deliberate user action. */
+header.top .masthead { position: relative; }
+header.top .masthead > .who { position: static; }
+header.top .install-app--header {
+  position: static;
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  margin: 0;
+  padding: 0;
+  min-width: 0;
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+}
+header.top .install-app__button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--ui-space-2);
+  min-height: 44px;
+  min-width: 44px;
+  padding: 8px var(--ui-space-3);
+  background: transparent;
+  color: var(--forest);
+  border: 1px solid var(--surface-stroke);
+  border-radius: 9px;
+  font: 650 .81rem/1.3 var(--font-body);
+  white-space: nowrap;
+  cursor: pointer;
+}
+header.top .install-app__button svg { display: block; flex: 0 0 auto; }
+header.top .install-app__button[aria-expanded="true"] {
+  background: var(--surface-soft);
+  border-color: var(--forest);
+}
+@media (hover:hover) and (pointer:fine) {
+  header.top .install-app__button:hover:not(:disabled) {
+    background: var(--surface-soft);
+    border-color: var(--forest);
+  }
+}
+header.top .install-app__button:focus-visible,
+header.top .install-app__close:focus-visible {
+  outline: 3px solid var(--color-focus);
+  outline-offset: 2px;
+}
+header.top .install-app__guide {
+  position: absolute;
+  z-index: 40;
+  top: calc(100% + 44px);
+  right: 0;
+  display: grid;
+  gap: var(--ui-space-3);
+  width: min(340px, calc(100vw - 32px));
+  max-height: min(440px, calc(100dvh - 130px));
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 18px;
+  color: var(--ink);
+  background: var(--paper);
+  border: 1px solid var(--surface-stroke);
+  border-radius: 12px;
+  box-shadow: 0 12px 28px color-mix(in srgb, var(--color-primary-dark) 16%, transparent);
+  white-space: normal;
+  text-align: left;
+}
+header.top .install-app__guide-title {
+  font: 700 .98rem/1.3 var(--font-body);
+  color: var(--ink);
+}
+header.top .install-app__guide p {
+  margin: 0;
+  max-width: 50ch;
+  font: 400 .84rem/1.55 var(--font-body);
+  color: var(--ink-soft);
+}
+header.top .install-app__guide p strong { color: var(--ink); font-weight: 650; }
+header.top .install-app__guide .install-app__warning {
+  color: var(--color-warning-ink);
+}
+header.top .install-app__guide .install-app__feedback {
+  color: var(--color-warning-ink);
+}
+header.top .install-app__close {
+  justify-self: start;
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 8px 0;
+  color: var(--forest);
+  font: 650 .84rem/1.3 var(--font-body);
+  background: none;
+  border: 0;
+  cursor: pointer;
+}
+@media (max-width: 860px) {
+  header.top .install-app__label { display: none; }
+  header.top .install-app__button {
+    width: 44px;
+    min-width: 44px;
+    min-height: 44px;
+    padding: 0;
+    border: 0;
+    background: transparent;
+  }
+  header.top .install-app__button[aria-expanded="true"] { border: 0; }
+  header.top .masthead > .who { align-items: center; }
+  /* Anchor under the complete two-row mobile header and cap tablet width. */
+  header.top .install-app__guide {
+    position: absolute;
+    top: calc(100% + 6px);
+    left: auto;
+    right: max(16px, env(safe-area-inset-right, 0px));
+    width: min(360px, calc(100vw - 32px));
+    max-height: calc(100dvh - 155px - env(safe-area-inset-bottom, 0px));
+  }
+}
+@media (max-width: 359px) {
+  header.top .masthead > .who { gap: 0; }
+}

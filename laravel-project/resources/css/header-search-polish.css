@@ -1,0 +1,371 @@
+/* CPSU Market header search / spacing pass — Shopee-style hierarchy, CPSU styling.
+   Search belongs in the header; the approved homepage hero stays editorial. */
+header.top { background: var(--paper); }
+header.top .strip .wrap {
+  justify-content: space-between;
+  gap: 12px 24px;
+  padding-block: var(--ui-space-1);
+  font: 500 12px/1.4 var(--font-body);
+}
+header.top .strip span { gap: var(--ui-space-1); white-space: nowrap; }
+header.top .masthead {
+  display: flex;
+  align-items: center;
+  min-height: 76px;
+  gap: clamp(14px, 2vw, 28px);
+  padding-block: 12px;
+}
+header.top .brand {
+  display: inline-flex;
+  align-items: center;
+  flex: 0 0 auto;
+  min-width: 0;
+  gap: var(--ui-space-2);
+  margin: 0;
+  color: var(--forest);
+  font: 600 16px/1.25 var(--font-body);
+  letter-spacing: -.01em;
+  white-space: nowrap;
+}
+header.top .brand b { color: var(--ink); font-weight: var(--ui-weight-bold); }
+header.top .brand-symbol { width: 36px; height: 36px; flex: 0 0 36px; }
+header.top .head-search {
+  display: flex;
+  align-items: center;
+  flex: 1 1 450px;
+  width: 100%;
+  min-width: 0;
+  max-width: none;
+  height: 52px;
+  min-height: 52px;
+  margin: 0;
+  padding: 4px;
+  gap: 4px;
+  border: 1px solid var(--surface-stroke);
+  border-radius: var(--ui-radius-md);
+  background: var(--color-card);
+  box-shadow: none;
+}
+header.top .head-search:focus-within {
+  border-color: var(--forest);
+  outline: 2px solid var(--forest);
+  outline-offset: 2px;
+}
+header.top .head-search input {
+  flex: 1 1 auto;
+  width: 100%;
+  min-width: 0;
+  height: 42px;
+  min-height: 42px;
+  padding: 8px var(--ui-space-3);
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--ink);
+  font: 400 16px/1.4 var(--font-body);
+  box-shadow: none;
+}
+header.top .head-search input:focus { outline: none; border: 0; }
+header.top .head-search input::placeholder { color: var(--ink-soft); opacity: .85; }
+header.top .head-search .btn {
+  display: grid;
+  place-items: center;
+  flex: 0 0 46px;
+  width: 46px;
+  height: 42px;
+  min-height: 42px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--ui-radius-sm);
+  background: var(--forest);
+  color: var(--paper);
+  box-shadow: none;
+  cursor: pointer;
+}
+header.top .head-search .btn svg { width: 20px; height: 20px; }
+header.top .head-search .btn:focus-visible {
+  outline: 3px solid var(--mango);
+  outline-offset: 2px;
+}
+header.top .who,
+header.top .actions {
+  flex: 0 0 auto;
+  min-width: 0;
+  gap: 8px;
+}
+header.top .who .signin,
+header.top .who .btn,
+header.top .actions a {
+  font-family: var(--font-body);
+  font-size: 14px;
+  line-height: 1.3;
+  letter-spacing: 0;
+}
+header.top .who .signin { padding: var(--ui-space-2) var(--ui-space-1); white-space: nowrap; }
+header.top .who .signup-action {
+  padding: var(--ui-space-2) var(--ui-space-3);
+  white-space: nowrap;
+  text-decoration: none;
+  font-weight: var(--ui-weight-bold);
+}
+header.top .navrow {
+  align-items: center;
+  gap: clamp(16px, 2vw, 28px);
+  padding-block: 0;
+}
+header.top .navrow > a:not(.all-cats) {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 12px 0 var(--ui-space-2);
+  font: 600 14px/1.4 var(--font-body);
+  letter-spacing: 0;
+  white-space: nowrap;
+}
+
+/* Removing the hero search also removes its reserved grid track, extra border
+   and vertical breathing room, without touching the managed heading or photo. */
+main .home-hero {
+  display: grid;
+  grid-template-areas: "copy art";
+  grid-template-columns: minmax(0, .82fr) minmax(0, 1.18fr);
+  grid-template-rows: minmax(0, auto);
+  align-items: center;
+  gap: clamp(18px, 2.2vw, 30px);
+  min-height: 0;
+  margin: 0 0 24px;
+  padding: clamp(22px, 2.2vw, 32px);
+}
+main .home-hero > .hero-copy {
+  min-width: 0;
+  align-self: center;
+}
+main .home-hero h1 {
+  margin: 0 0 var(--ui-space-5);
+  font-family: var(--font-heading);
+  font-size: clamp(50px, 5.5vw, 78px);
+  font-weight: 400;
+  line-height: 1;
+  letter-spacing: -.03em;
+}
+main .home-hero h1 .hero-line,
+main .home-hero h1 em { overflow-wrap: break-word; }
+main .home-hero .hero-eyebrow {
+  margin-bottom: 20px;
+  font-size: 12px;
+  line-height: 1.45;
+  letter-spacing: .18em;
+}
+main .home-hero p {
+  margin: 0;
+  max-width: 42ch;
+  font: 400 clamp(16px, 1.65vw, 18px)/1.55 var(--font-body);
+}
+main .home-hero > .hero-art {
+  min-width: 0;
+  height: clamp(365px, 40vw, 535px);
+}
+main .category-section { margin-top: 16px; }
+
+@media (min-width: 861px) and (max-width: 1100px) {
+  header.top .brand-long { display: none; }
+  header.top .brand-short { display: inline; }
+  header.top .masthead { gap: var(--ui-space-3); }
+  header.top .who .signup-action { padding-inline: var(--ui-space-2); }
+}
+@media (min-width: 701px) and (max-width: 900px) {
+  main .home-hero {
+    grid-template-areas: "copy art";
+    grid-template-columns: minmax(0, .95fr) minmax(0, 1.05fr);
+    gap: 20px;
+  }
+  main .home-hero h1 { font-size: clamp(46px, 5.7vw, 54px); }
+  main .home-hero > .hero-art { height: 350px; }
+}
+
+/* At mobile widths, retain brand and account controls on row one,
+   and give the search field the full second row, rather than hiding it. */
+@media (max-width: 860px) {
+  header.top .masthead,
+  header.top .masthead:has(.who-guest) {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto auto;
+    grid-template-rows: auto auto;
+    align-items: center;
+    gap: var(--ui-space-2) 8px;
+    min-height: 0;
+    padding: 10px max(16px, env(safe-area-inset-right, 0px)) 12px max(16px, env(safe-area-inset-left, 0px));
+  }
+  header.top .masthead > .brand {
+    grid-column: 1;
+    grid-row: 1;
+    min-width: 0;
+    width: auto;
+    margin-right: 0;
+    font-size: var(--ui-type-sm);
+  }
+  header.top .masthead > .head-search {
+    display: flex;
+    grid-column: 1 / -1;
+    grid-row: 2;
+    height: 48px;
+    min-height: 48px;
+    width: 100%;
+    max-width: none;
+    margin: 0;
+    padding: var(--ui-space-1);
+  }
+  header.top .head-search input {
+    height: 40px;
+    min-height: 40px;
+    padding-inline: 12px;
+    font-size: 16px;
+  }
+  header.top .head-search .btn { height: 40px; min-height: 40px; width: 44px; flex-basis: 44px; }
+  header.top .masthead > .actions {
+    grid-column: 2;
+    grid-row: 1;
+    justify-self: end;
+    gap: 0;
+  }
+  header.top .masthead > .who {
+    grid-column: 3;
+    grid-row: 1;
+    justify-self: end;
+    display: flex;
+    flex: 0 0 auto;
+    gap: var(--ui-space-1);
+  }
+  header.top .masthead > .who-guest { grid-template-columns: none; }
+  header.top .masthead .who .signin { padding: 8px var(--ui-space-1); font-size: var(--ui-type-xs); }
+  header.top .masthead .who .signup-action { min-height: 40px; padding: var(--ui-space-2) var(--ui-space-2); font-size: var(--ui-type-xs); }
+  header.top .masthead .who > button { padding: 8px; font-size: var(--ui-type-xs); }
+  header.top .actions a { padding: var(--ui-space-1); min-width: 40px; min-height: 40px; }
+  main .home-hero {
+    grid-template-areas: "copy" "art";
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto auto;
+    gap: var(--ui-space-4);
+    padding: var(--ui-space-5);
+    margin: 8px 0 var(--ui-space-4);
+  }
+  main .home-hero h1 { font-size: clamp(43px, 6.2vw, 54px); line-height: 1.015; }
+  main .home-hero > .hero-art { height: clamp(250px, 58vw, 420px); min-height: 0; }
+}
+@media (max-width: 560px) {
+  header.top .brand-long { display: none; }
+  header.top .brand-short { display: inline; }
+  header.top .brand-symbol { width: 30px; height: 30px; flex-basis: 30px; }
+  header.top .brand { gap: var(--ui-space-1); font-size: 14px; }
+  main .home-hero { padding: var(--ui-space-4); gap: 16px; }
+  main .home-hero h1 { font-size: clamp(38px, 9.8vw, 50px); }
+  main .home-hero > .hero-art { height: clamp(230px, 72vw, 320px); }
+  main .home-hero .hero-eyebrow { margin-bottom: var(--ui-space-3); font-size: var(--ui-type-xs); letter-spacing: .15em; }
+  main .home-hero h1 { margin-bottom: 16px; }
+  main .home-hero p { font-size: clamp(16px, 3.5vw, 17px); line-height: 1.53; }
+}
+@media (max-width: 359px) {
+  header.top .masthead,
+  header.top .masthead:has(.who-guest) { padding-inline: 12px; gap: 8px 4px; }
+  header.top .brand-symbol { display: none; }
+  header.top .brand { font-size: 14px; }
+  header.top .masthead .who .signin { padding-inline: var(--ui-space-1); }
+  header.top .masthead .who .signup-action { padding-inline: 8px; }
+  main .home-hero { padding: 16px; }
+  main .home-hero h1 { font-size: clamp(35px, 11vw, 38px); }
+}
+
+/* Tablet first-fold rhythm: use the split hero while retaining a two-row header.
+   Match the no-search hero selector from the preexisting layout layer. */
+@media (min-width: 701px) and (max-width: 900px) {
+  main .home-hero:not(:has(> .hero-search)) {
+    grid-template-areas: "copy art";
+    grid-template-columns: minmax(0, .95fr) minmax(0, 1.05fr);
+    grid-template-rows: auto;
+    gap: 20px;
+    padding: var(--ui-space-5);
+    min-height: 0;
+  }
+  main .home-hero h1 { font-size: clamp(43px, 6vw, 52px); }
+  main .home-hero > .hero-art { height: clamp(315px, 44vw, 400px); }
+  main .home-hero .hero-eyebrow { margin-bottom: var(--ui-space-4); }
+}
+/* Keep the category heading and its View all action on one baseline at 320px. */
+@media (max-width: 380px) {
+  main .category-section .category-head {
+    display: flex;
+    flex-wrap: nowrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--ui-space-2);
+  }
+  main .category-section .category-head h2 {
+    min-width: 0;
+    font-size: clamp(20px, 6.4vw, 24px);
+    line-height: 1.2;
+  }
+  main .category-section .category-head a {
+    flex: 0 0 auto;
+    min-height: 40px;
+    font-size: 12px;
+    white-space: nowrap;
+  }
+}
+
+
+/* Student discovery: one prominent search at the top, without removing the
+   existing Explore query field or its URL-based live filtering. On mobile the
+   Explore field reappears in the compact sticky controls after scrolling. */
+@media (min-width: 861px) {
+  .explore-control-header > .explore-toolbar { display: none; }
+}
+@media (max-width: 860px) {
+  .explore-control-header:not([data-compact="true"]) > .explore-toolbar { display: none; }
+  html { scroll-padding-bottom: calc(145px + env(safe-area-inset-bottom, 0px)); }
+}
+
+/* Legible, single-row category browsing on small screens. All actual category
+   links remain available by horizontal scrolling and normal keyboard focus. */
+@media (max-width: 700px) {
+  .cat-rail.home-category-grid {
+    display: flex;
+    grid-template-columns: none;
+    flex-wrap: nowrap;
+    gap: 8px;
+    width: 100%;
+    overflow-x: auto;
+    overflow-y: hidden;
+    scroll-snap-type: x proximity;
+    scroll-padding-inline: var(--ui-space-1);
+    padding: var(--ui-space-1) var(--ui-space-1) var(--ui-space-2);
+    scrollbar-width: thin;
+  }
+  .home-category-grid .cat {
+    flex: 0 0 clamp(88px, 24vw, 106px);
+    width: clamp(88px, 24vw, 106px);
+    min-width: 88px;
+    min-height: 88px;
+    padding: var(--ui-space-2) var(--ui-space-2);
+    gap: var(--ui-space-1);
+    border-radius: 12px;
+    font-size: 12px;
+    line-height: 1.25;
+    scroll-snap-align: start;
+  }
+  .home-category-grid .cat-ico { width: 30px; height: 30px; }
+  .home-category-grid .cat-ico svg { width: 19px; height: 19px; }
+  .home-category-grid .category-label-full { display: none; }
+  .home-category-grid .cat > .category-label-short {
+    display: block;
+    min-height: 0;
+    font-size: inherit;
+    font-weight: var(--ui-weight-bold);
+    overflow-wrap: normal;
+    word-break: normal;
+    line-height: 1.22;
+  }
+  .home-category-grid .cat:focus-visible {
+    outline: 3px solid var(--forest);
+    outline-offset: 2px;
+  }
+}

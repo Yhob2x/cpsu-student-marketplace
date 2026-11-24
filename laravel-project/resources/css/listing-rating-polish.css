@@ -1,0 +1,44 @@
+/* One rating accent across Home, Explore, store headers, and reviews. */
+:root { --rating-yellow: #F2B705; }
+
+/* Shared Home and Explore listing-card seller rating. Real published reviews only. */
+.product-card .listing-seller-row {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  gap: .4rem;
+}
+.product-card .listing-seller-row .listing-seller-name {
+  display: block;
+  flex: 0 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.product-card .listing-seller-row .listing-store-rating {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  gap: .25rem;
+  min-width: 0;
+  padding: .2rem .44rem;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--surface-soft);
+  color: var(--ink);
+  font-size: var(--ui-type-xs);
+  line-height: 1.25;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  overflow: visible;
+}
+.product-card .listing-store-rating svg { color: var(--rating-yellow); flex: 0 0 auto; }
+
+/* Review-entry stars and storefront hover share the exact same accent. */
+.store-review-picker .store-review-star-option span { color: var(--rating-yellow); }
+.storefront .storefront-rating-badge:hover { border-color: var(--rating-yellow); }

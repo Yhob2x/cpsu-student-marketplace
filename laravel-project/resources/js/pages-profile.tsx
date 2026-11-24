@@ -1,0 +1,498 @@
+import { LegacyButton } from './components/ui/legacy-button';
+import { Field, Panel } from './components/ui/primitives';
+import { FormEvent, useEffect, useRef, useState } from 'react';
+import { Link, useLocation } from 'react-router-dom';
+import { api, explain, timeAgo } from './api';
+import { useMe } from './main';
+import { showActionFeedback } from './action-feedback';
+import { useForegroundRefresh } from './foreground-refresh';
+import { Icon, type IconName } from './icons';
+import { IconAction } from './icon-action';
+import { PushSettings } from './push-settings';
+import { SellerStoreDetails } from './seller-store-details';
+import { SellerAvatarEditor } from './seller-avatar-editor';
+import { affiliationLabel, campusStatusSummary, displayNameChange } from './profile-presentation';
+import { FOLLOWED_STORE_NOTICE_KIND, followedStoreNoticeText, followedStoreNoticeTarget } from './followed-store-notice';
+
+type Notice = { id: number; type: string; payload: any; readAt: string | null; createdAt: string };
+
+const DECISION: Record<string, string> = { approved: 'was approved', changes_requested: 'needs changes', rejected: 'was rejected' };
+
+// Turns a stored notification row into one plain sentence. Unknown types stay visible but generic,
+// so adding an event on the server never leaves a blank entry here.
+export function noticeText(n: Notice): string {
+  const p = n.payload ?? {};
+  const title = typeof p.title === 'string' && p.title ? `"${p.title}"` : 'Your listing';
+  switch (n.type) {
+    case 'inquiry.new': return `New inquiry about ${p.listingTitle ?? 'your listing'}.`;
+    case 'inquiry.reply': return `New reply about ${p.listingTitle ?? 'your listing'}.`;
+    case 'store.new_listing': return followedStoreNoticeText(p);
+    case 'affiliation.decision':
+      return p.decision === 'verified'
+        ? 'Your CPSU affiliation was verified. You can open a store and publish listings.'
+        : `Your affiliation was rejected${p.reason ? `: ${p.reason}` : '.'}`;
+    case 'listing.decision':
+      return `${title} ${DECISION[p.decision] ?? 'was reviewed'}.${p.reason ? ` Reason: ${p.reason}` : ''}`;
+    case 'listing.suspended':
+      return `A listing of yours was suspended by a reviewer.${p.reason ? ` Reason: ${p.reason}` : ''}`;
+    case 'transaction.requested': return 'A student sent you a purchase or service request.';
+    case 'transaction.accepted': return 'The seller accepted your request.';
+    case 'transaction.rejected': return 'The seller rejected your request. Review the transaction history.';
+    case 'transaction.negotiating': return 'The other student marked your transaction as being discussed.';
+    case 'transaction.meetup_confirmed': return 'The other student confirmed meetup arrangements. Your confirmation may still be needed.';
+    case 'transaction.meetup_location_shared': return 'The other student shared a meetup location and time. View the map.';
+    case 'transaction.meetup_location_revised': return 'The meetup location changed. Both students need to confirm the new arrangement.';
+    case 'transaction.completion_confirmed': return 'The other student reported completion. Both confirmations are required.';
+    case 'transaction.cancelled': return 'The other student cancelled the transaction. Review the recorded reason.';
+    default: return 'Marketplace update.';
+  }
+}
+
+// Where a notification takes you when clicked; null keeps the row a plain, non-clickable article.
+export function noticeTarget(n: Notice): string | null {
+  const p = n.payload ?? {};
+  if (n.type === 'inquiry.new' || n.type === 'inquiry.reply') return p.threadId ? `/inquiries/${p.threadId}` : null;
+  if (n.type === 'listing.decision' || n.type === 'listing.suspended') return p.listingId ? `/listings/${p.listingId}` : null;
+  if (n.type === 'store.new_listing') return followedStoreNoticeTarget(p);
+  if (n.type === 'affiliation.decision') return '/profile';
+  if (n.type.startsWith('transaction.') && Number.isSafeInteger(p.transactionId) && p.transactionId > 0)
+    return `/transactions/${p.transactionId}`;
+  return null;
+}
+
+export function Profile() {
+  const { me, reload } = useMe();
+  const location = useLocation();
+  const [name, setName] = useState('');
+  const [storeDetailsVersion, setStoreDetailsVersion] = useState(0);
+  const storeProfileRef = useRef<HTMLDetailsElement>(null);
+  const storeProfileSummaryRef = useRef<HTMLElement>(null);
+  const [busy, setBusy] = useState(false);
+  const [ok, setOk] = useState('');
+  const [err, setErr] = useState('');
+
+  useEffect(() => { if (me) setName(me.displayName); }, [me?.displayName]);
+  useEffect(() => {
+    if (me?.storeId && location.hash === '#store-profile') {
+      if (storeProfileRef.current) storeProfileRef.current.open = true;
+      const frame = window.requestAnimationFrame(() => {
+        storeProfileSummaryRef.current?.focus();
+        storeProfileRef.current?.scrollIntoView({ block: 'start' });
+      });
+      return () => window.cancelAnimationFrame(frame);
+    }
+  }, [me?.storeId, location.hash]);
+
+  if (!me) return <p className="muted" role="status">Loading your profile.</p>;
+
+  const staff = me.roles.some(role => ['campus_reviewer', 'university_admin', 'system_admin', 'establishment'].includes(role.role));
+  const reviewer = me.roles.some(role => ['campus_reviewer', 'university_admin'].includes(role.role));
+  const status = campusStatusSummary(me.affiliations, Boolean(me.storeId));
+  const nameChange = displayNameChange(name, me.displayName);
+  const showNameError = nameChange.changed && !nameChange.valid;
+  const initials = me.displayName.trim().split(/\s+/).slice(0, 2).map(part => part.charAt(0)).join('').toUpperCase() || 'S';
+  const registeredCampuses = [...new Set(me.affiliations.map(a => a.campus.name))].join(', ');
+  const links: { to: string; label: string; icon: IconName }[] = staff
+    ? [...(reviewer ? [{ to: '/admin', label: 'Administration', icon: 'shield' as IconName }] : []),
+        { to: '/notifications', label: 'Notifications', icon: 'bell' }]
+    : [
+        { to: '/dashboard', label: 'My listings', icon: 'store' },
+        ...(me.storeId ? [{ to: '/profile#store-profile', label: 'Store profile', icon: 'user' as IconName }] : []),
+        { to: '/saved', label: 'Saved items', icon: 'heart' },
+        { to: '/transactions', label: 'Transactions', icon: 'tag' },
+        { to: '/notifications', label: 'Notifications', icon: 'bell' },
+      ];
+
+  const save = async (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    if (busy || !nameChange.canSave) return;
+    setBusy(true);
+    setOk('');
+    setErr('');
+    try {
+      await api('/me', { method: 'PATCH', body: { displayName: nameChange.trimmed } });
+      const updated = await reload();
+      if (updated) { setOk('Display name updated.'); showActionFeedback({ kind: 'success', title: 'Profile updated', message: 'Your display name was saved successfully.' }); }
+      else { setErr('Your name was saved, but your account could not refresh. Reload the page to check your profile.'); showActionFeedback({ kind: 'warning', title: 'Saved, but refresh failed', message: 'Reload your profile to see the latest account details.' }); }
+    } catch (x) {
+      setErr(explain(x));
+      showActionFeedback({ kind: 'error', title: 'Profile not updated', message: explain(x) });
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return <div className="profile-page">
+    <div className="page-head">
+      <div>
+        <h1>Profile</h1>
+        <p className="muted profile-page-intro">{staff ? 'Manage your staff account and notifications.' : me.storeId ? 'Manage your CPSU account, activity, and store.' : 'Manage your CPSU account and marketplace activity.'}</p>
+      </div>
+    </div>
+
+    <div className={`profile-grid ${staff ? "profile-grid--staff" : me.storeId ? "profile-grid--seller" : "profile-grid--student"}`}>
+      <Panel as="section" className="profile-account">
+        <h2>Your account</h2>
+        <div className="profile-identity">
+          <span className="profile-avatar" aria-hidden="true">{initials}</span>
+          <div className="profile-identity-copy">
+            <strong>{me.displayName}</strong>
+            <span>{staff ? 'Staff account' : 'CPSU student account'}</span>
+          </div>
+        </div>
+        <dl className="facts profile-account-facts">
+          <div><dt>Email address</dt><dd>{me.email}</dd></div>
+        </dl>
+        <p className="muted profile-privacy-note"><Icon name="shield" size={15} /> Your email is not displayed publicly.</p>
+      </Panel>
+
+      {!staff && <section className={'panel profile-affiliation profile-affiliation--' + status.state}>
+        <h2>CPSU affiliation</h2>
+        <div className="profile-review-state">
+          <span className={'profile-review-symbol profile-review-symbol--' + status.state} aria-hidden="true">
+            <Icon name={status.state === 'verified' ? 'check' : status.state === 'rejected' ? 'flag' : 'shield'} size={19} />
+          </span>
+          <h3>{status.title}</h3>
+        </div>
+        {me.affiliations.length > 0 && <ul className="profile-campus-list">
+          {me.affiliations.map(a => <li key={a.id}>
+            <span>{a.campus.name}</span>
+            <span className={'status ' + (['verified', 'pending', 'rejected'].includes(a.status) ? a.status : '')}>
+              {affiliationLabel(a.status)}
+            </span>
+          </li>)}
+        </ul>}
+        <p className="muted profile-review-description">{status.description}</p>
+        <Link className="profile-status-action" to={status.actionHref}>{status.actionLabel}<Icon name="arrow" size={16} /></Link>
+        {status.state === 'rejected' && <Link className="profile-status-secondary" to="/guidelines">Read marketplace guidelines</Link>}
+      </section>}
+
+      {!staff && <Panel as="section" className="profile-registration" aria-labelledby="profile-registration-heading">
+        <h2 id="profile-registration-heading">Registration information</h2>
+        <dl className="profile-registration-list">
+          <div><dt>Campus on record</dt><dd><strong>{registeredCampuses || 'No campus on record'}</strong></dd></div>
+        </dl>
+        <p className="profile-registration-note">Automated CISS checks of student ID, full name and enrollment are not active. Your current affiliation status appears above.</p>
+      </Panel>}
+
+      <Panel as="section" className="profile-settings" aria-labelledby="account-settings-heading">
+        <h2 id="account-settings-heading">Account settings</h2>
+        <form className="stack" onSubmit={save}>
+          <Field className="" htmlFor="profile-display-name">Display name</Field>
+          <input id="profile-display-name" value={name} disabled={busy} onChange={e => {
+            setName(e.target.value);
+            setOk('');
+            setErr('');
+          }} required minLength={2} maxLength={80} autoComplete="nickname"
+            aria-invalid={showNameError} aria-describedby={showNameError ? 'profile-name-help profile-name-error' : 'profile-name-help'} />
+          <p id="profile-name-help" className="muted profile-name-help">Shown to students and reviewers. Changes do not affect campus verification.</p>
+          {showNameError && <p className="profile-field-error" id="profile-name-error">Enter 2–80 characters for your display name.</p>}
+          <LegacyButton className="profile-save-button" disabled={busy || !nameChange.canSave}>{busy ? 'Saving...' : 'Save changes'}</LegacyButton>
+          {ok && <p className="profile-save-success" role="status"><Icon name="check" size={16} />{ok}</p>}
+          {err && <p className="err" role="alert">{err}</p>}
+        </form>
+      </Panel>
+
+      <Panel as="section" className="profile-shortcuts-panel">
+        <h2>Quick links</h2>
+        <nav aria-label="Profile shortcuts">
+          <ul className="profile-shortcuts">
+            {links.map(item => <li key={item.to}>
+              <Link to={item.to} className="profile-shortcut" onClick={item.to === '/profile#store-profile' ? () => {
+                if (storeProfileRef.current) storeProfileRef.current.open = true;
+                requestAnimationFrame(() => {
+                  storeProfileSummaryRef.current?.focus();
+                  storeProfileRef.current?.scrollIntoView({ block: 'start' });
+                });
+              } : undefined}>
+                <Icon name={item.icon} size={19} />
+                <span>{item.label}</span>
+                <Icon name="arrow" size={16} />
+              </Link>
+            </li>)}
+          </ul>
+        </nav>
+      </Panel>
+
+      <div className="profile-actions-row">
+        {!staff && me.storeId && <details id="store-profile" className="profile-store-disclosure" ref={storeProfileRef}>
+          <summary ref={storeProfileSummaryRef}>
+            <span><strong>Store profile</strong><small>Name, description and photo</small></span>
+            <Icon name="chevronDown" size={20} />
+          </summary>
+          <div className="profile-store-editors">
+            <SellerStoreDetails storeId={me.storeId} onSaved={() => setStoreDetailsVersion(n => n + 1)} />
+            <SellerAvatarEditor storeId={me.storeId} refreshVersion={storeDetailsVersion} />
+          </div>
+        </details>}
+      </div>
+    </div>
+  </div>;
+}
+
+type NoticeGroup = 'Today' | 'Yesterday' | 'Earlier';
+type NoticeFilter = 'all' | 'unread';
+
+function notificationGroup(createdAt: string): NoticeGroup {
+  const date = new Date(createdAt);
+  const today = new Date();
+  const dayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+  const yesterday = new Date(dayStart);
+  yesterday.setDate(yesterday.getDate() - 1);
+  if (date >= dayStart) return 'Today';
+  if (date >= yesterday) return 'Yesterday';
+  return 'Earlier';
+}
+
+export function notificationKind(n: Notice): { title: string; label: string; icon: IconName; tone: string } {
+  switch (n.type) {
+    case 'inquiry.new': return { title: 'New inquiry', label: 'Messages', icon: 'chat', tone: 'message' };
+    case 'inquiry.reply': return { title: 'New reply', label: 'Messages', icon: 'chat', tone: 'message' };
+    case 'store.new_listing': return FOLLOWED_STORE_NOTICE_KIND;
+    case 'listing.decision': {
+      const decision = n.payload?.decision;
+      const title = decision === 'approved' ? 'Listing approved'
+        : decision === 'changes_requested' ? 'Changes requested'
+        : decision === 'rejected' ? 'Listing rejected' : 'Listing review update';
+      return { title, label: 'Listings', icon: 'tag', tone: decision === 'rejected' ? 'attention' : 'listing' };
+    }
+    case 'listing.suspended':
+      return { title: 'Listing suspended', label: 'Listings', icon: 'flag', tone: 'attention' };
+    case 'affiliation.decision':
+      return {
+        title: n.payload?.decision === 'verified' ? 'Affiliation verified' : 'Affiliation update',
+        label: 'Account', icon: 'shield', tone: 'account',
+      };
+    default: return { title: 'Marketplace update', label: 'Marketplace', icon: 'bell', tone: 'general' };
+  }
+}
+
+export function Notifications() {
+  const preferencesRef = useRef<HTMLDetailsElement>(null);
+  const [preferencesPhase, setPreferencesPhase] = useState<'idle' | 'opening' | 'closing'>('idle');
+  const [preferencesInstant, setPreferencesInstant] = useState(false);
+  const { syncUnread, me } = useMe();
+  const [rows, setRows] = useState<Notice[] | null>(null);
+  const [err, setErr] = useState('');
+  const [feedback, setFeedback] = useState('');
+  const [filter, setFilter] = useState<NoticeFilter>('all');
+  const [busy, setBusy] = useState(false);
+  const [markingId, setMarkingId] = useState<number | null>(null);
+  const [refreshing, setRefreshing] = useState(false);
+
+  const noticeError = (error: unknown, fallback: string) => {
+    const explanation = explain(error);
+    return /^[a-z][a-z0-9_]+$/.test(explanation) ? fallback : explanation;
+  };
+
+  const load = async (manual = false) => {
+    if (manual) setRefreshing(true);
+    try {
+      const next = await api<Notice[]>('/notifications');
+      setRows(next);
+      setErr('');
+      if (manual) setFeedback('Notifications refreshed.');
+    } catch (x) {
+      // Preserve existing notifications on a refresh failure; never display a false empty state.
+      setErr(noticeError(x, 'Could not load notifications. Check your connection and try again.'));
+    } finally {
+      if (manual) setRefreshing(false);
+    }
+  };
+
+  // Wait until the login session has been restored to avoid an unnecessary token refresh.
+  useEffect(() => { if (me) void load(); }, [me?.id]);
+  // The open notification inbox follows new messages, approvals, and store publications.
+  // Skip automatic reloads during read actions to avoid a stale response overwriting them.
+  useForegroundRefresh(() => {
+    if (!busy && markingId === null && !refreshing) return load();
+  }, 4_000, Boolean(me));
+
+  const unread = (rows ?? []).filter(r => !r.readAt).length;
+  const visible = (rows ?? []).filter(r => filter === 'all' || !r.readAt);
+  const groups = (['Today', 'Yesterday', 'Earlier'] as const)
+    .map(label => ({ label, items: visible.filter(n => notificationGroup(n.createdAt) === label) }))
+    .filter(group => group.items.length > 0);
+
+  const markAll = async () => {
+    if (busy || markingId !== null || unread === 0) return;
+    setBusy(true);
+    setErr('');
+    setFeedback('');
+    try {
+      await api('/notifications/read', { method: 'POST', body: {} });
+      const readAt = new Date().toISOString();
+      setRows(prev => prev?.map(n => ({ ...n, readAt: n.readAt ?? readAt })) ?? null);
+      await syncUnread();
+      setFeedback('All notifications marked as read.');
+    } catch (x) {
+      setErr(noticeError(x, 'Could not mark notifications as read. Please try again.'));
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const markOne = async (id: number) => {
+    if (busy || markingId !== null) return;
+    setMarkingId(id);
+    setErr('');
+    setFeedback('');
+    try {
+      await api('/notifications/' + id + '/read', { method: 'POST', body: {} });
+      const readAt = new Date().toISOString();
+      setRows(prev => prev?.map(n => n.id === id ? { ...n, readAt: n.readAt ?? readAt } : n) ?? null);
+      await syncUnread();
+      setFeedback('Notification marked as read.');
+    } catch (x) {
+      setErr(noticeError(x, 'Could not mark this notification as read. Please try again.'));
+    } finally {
+      setMarkingId(null);
+    }
+  };
+
+  return <section className="notifications-page">
+    <header className="notifications-heading">
+      <div>
+        <h1>Notifications</h1>
+      </div>
+      <IconAction className="notifications-refresh" icon="refresh" label="Refresh notifications"
+        onClick={() => void load(true)} disabled={busy || markingId !== null} busy={refreshing} />
+    </header>
+
+    <div className="notifications-summary">
+      <span className="notifications-summary-icon" aria-hidden="true"><Icon name="bell" size={23} /></span>
+      <div className="notifications-summary-copy">
+        <strong>{rows === null ? (err ? 'Notifications unavailable' : 'Checking notifications…') : unread > 0
+          ? unread + ' unread' : 'You’re caught up'}</strong>
+        {rows === null && err && <p>Try again to load your notifications.</p>}
+      </div>
+      <LegacyButton type="button" className="notifications-mark-all" onClick={() => void markAll()}
+        disabled={rows === null || busy || markingId !== null || unread === 0} aria-busy={busy}
+        aria-label={busy ? 'Marking all notifications as read' : 'Mark all as read'}
+        title={busy ? 'Marking all notifications as read' : 'Mark all as read'}>
+        <Icon name="checks" size={19} />
+        <span className="sr-only">{busy ? 'Marking notifications read' : 'Mark all read'}</span>
+      </LegacyButton>
+    </div>
+
+    <div className="notifications-toolbar">
+      <div className="notifications-filters" role="group" aria-label="Filter notifications">
+        <button type="button" aria-pressed={filter === 'all'}
+          className={filter === 'all' ? 'is-selected' : ''} onClick={() => setFilter('all')}>
+          All <span>{rows?.length ?? 0}</span>
+        </button>
+        <button type="button" aria-pressed={filter === 'unread'}
+          className={filter === 'unread' ? 'is-selected' : ''} onClick={() => setFilter('unread')}>
+          Unread <span>{unread}</span>
+        </button>
+      </div>
+      <span className="notifications-recent-note">Most recent 50 notifications</span>
+    </div>
+
+    {err && <div className="notifications-error" role="alert">
+      <p>{err}</p>
+      <LegacyButton type="button" className="ghost" onClick={() => void load(true)} disabled={refreshing}>
+        Try again
+      </LegacyButton>
+    </div>}
+    <p className="notifications-feedback" role="status" aria-atomic="true">{feedback}</p>
+
+    {rows === null && !err && <div aria-label="Loading notifications" role="status" className="notifications-loading">
+      <span className="visually-hidden">Loading notifications…</span>
+      {Array.from({ length: 3 }, (_, i) => <div key={i} className="skel notifications-skeleton" />)}
+    </div>}
+
+    {rows !== null && rows.length === 0 && !err && <div className="notifications-empty">
+      <span className="notifications-empty-icon" aria-hidden="true"><Icon name="bell" size={28} /></span>
+      <h2>No notifications yet</h2>
+      <p>New listings from stores you follow, messages and account updates will appear here.</p>
+      <Link className="btn" to="/explore">Explore listings <Icon name="arrow" size={16} /></Link>
+    </div>}
+
+    {rows !== null && rows.length > 0 && visible.length === 0 && <div className="notifications-empty">
+      <span className="notifications-empty-icon" aria-hidden="true"><Icon name="check" size={28} /></span>
+      <h2>No unread notifications</h2>
+      <p>You’re all caught up. Your previous updates are still available.</p>
+      <LegacyButton type="button" className="ghost" onClick={() => setFilter('all')}>Show all notifications</LegacyButton>
+    </div>}
+
+    {groups.length > 0 && <div className="notifications-feed">
+      {groups.map(group => <section className="notifications-group" aria-label={group.label + ' notifications'} key={group.label}>
+        <div className="notifications-group-heading">
+          <h2>{group.label}</h2><span>{group.items.length}</span>
+        </div>
+        <div className="notifications-list">
+          {group.items.map(n => {
+            const to = noticeTarget(n);
+            const kind = notificationKind(n);
+            const absoluteTime = new Date(n.createdAt).toLocaleString('en-PH', {
+              month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit',
+            });
+            const content = <>
+              <span className={'notification-icon tone-' + kind.tone} aria-hidden="true">
+                <Icon name={kind.icon} size={21} />
+              </span>
+              <span className="notification-content">
+                <span className="notification-heading">
+                  <strong>{kind.title}</strong>
+                  <time dateTime={n.createdAt} title={absoluteTime}>{timeAgo(n.createdAt)}</time>
+                </span>
+                <span className="notification-description" id={`notice-description-${n.id}`}>{noticeText(n)}</span>
+                <span className="notification-meta">
+                  <span>{kind.label}</span>
+                  {!n.readAt && <span className="notification-new"><span className="notification-new-dot" aria-hidden="true" /> New</span>}
+                </span>
+              </span>
+            </>;
+            return <article className={'notification-item' + (!n.readAt ? ' is-unread' : '')} key={n.id}>
+              {to
+                ? <Link to={to} className="notification-body-link"
+                    onClick={() => { if (!n.readAt) void markOne(n.id); }}>{content}<Icon name="arrow" size={17} /></Link>
+                : <div className="notification-body-static">{content}</div>}
+              {!n.readAt && <div className="notification-actions">
+                <IconAction className="notification-mark-one" icon="check"
+                  label={'Mark ' + kind.title + ' as read'}
+                  aria-describedby={`notice-description-${n.id}`}
+                  onClick={() => void markOne(n.id)}
+                  disabled={busy || markingId !== null} busy={markingId === n.id} />
+              </div>}
+            </article>;
+          })}
+        </div>
+      </section>)}
+    </div>}
+    <details className="notifications-preferences" ref={preferencesRef} data-motion-phase={preferencesPhase} data-instant={preferencesInstant}>
+      <summary onClick={event => {
+        // Keyboard and reduced-motion users get the instant native disclosure.
+        if (event.detail === 0 || window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+          setPreferencesInstant(true);
+          setPreferencesPhase('idle');
+          return;
+        }
+        setPreferencesInstant(false);
+        event.preventDefault();
+        if (preferencesPhase === 'closing') {
+          setPreferencesPhase('opening'); // Reverse a quick repeated click.
+        } else if (preferencesRef.current?.open) {
+          setPreferencesPhase('closing');
+        } else if (preferencesRef.current) {
+          preferencesRef.current.open = true;
+          setPreferencesPhase('opening');
+        }
+      }}>Notification preferences <Icon name="chevronDown" size={19} /></summary>
+      <div className="notifications-preferences-content"
+        onAnimationEnd={event => {
+          if (event.target !== event.currentTarget) return;
+          if (event.animationName === 'cpsu-preferences-enter' && preferencesPhase === 'opening') {
+            setPreferencesPhase('idle');
+          }
+          if (event.animationName === 'cpsu-preferences-exit' && preferencesPhase === 'closing') {
+            if (preferencesRef.current) preferencesRef.current.open = false;
+            setPreferencesPhase('idle');
+          }
+        }}>
+        <PushSettings />
+      </div>
+    </details>
+  </section>;
+}

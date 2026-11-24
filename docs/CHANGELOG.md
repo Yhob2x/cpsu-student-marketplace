@@ -1,5 +1,15 @@
 # Changelog
 
+## 2026-11-24 — Laravel + React migration, Phase 2
+
+- Moved registration, login, refresh, logout, roles, security headers and rate limits to Laravel. Added 39 Eloquent models, 18 enums and a verified schema baseline. Other API routes still use Express through the local-only bridge.
+- 38/38 auth scenarios matched Express, and passwords, tokens and sessions work across both backends. No database schema or data changes. See `docs/LARAVEL_MIGRATION_PHASE2_2026-11-24.md`.
+
+## 2026-11-23 — Laravel + React migration, Phase 1
+
+- Added a Laravel 12 app in `laravel-project/` that serves the existing React TypeScript frontend from `resources/`. The API remains Express through a temporary local-only bridge.
+- 30/30 signed-out route and viewport comparisons were pixel-identical. Playwright: 187 passed, 5 failed, and the same 5 fail on the original build. See `docs/LARAVEL_MIGRATION_PHASE1_2026-11-23.md`.
+
 ## 2026-11-17 — Private student identity registration fields (prepared, collection OFF)
 
 - Added Full name and Student ID number inputs to Create account, with a clear private-data notice and fail-closed registration-policy check. Inputs are visible but disabled until CPSU privacy approval and a separately tested schema migration; the existing account registration flow stays available.

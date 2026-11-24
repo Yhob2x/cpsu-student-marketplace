@@ -1,0 +1,186 @@
+/* CPSU Market — shared light-mode presentation contract.
+   Uses existing palette tokens; does not alter routes, content or interactions. */
+:root {
+  --ui-space-1: 4px;
+  --ui-space-2: 8px;
+  --ui-space-3: 12px;
+  --ui-space-4: 16px;
+  --ui-space-5: 24px;
+  --ui-space-6: 32px;
+  --ui-space-7: 48px;
+  --ui-space-8: 64px;
+  --ui-type-xs: 12px;
+  --ui-type-sm: 14px;
+  --ui-type-md: 16px;
+  --ui-type-lg: 18px;
+  --ui-type-xl: 20px;
+  --ui-type-2xl: 24px;
+  --ui-type-3xl: 30px;
+  --ui-weight-regular: 400;
+  --ui-weight-medium: 500;
+  --ui-weight-bold: 700;
+  --ui-radius-sm: 6px;
+  --ui-radius-md: 12px;
+  --ui-radius-full: 9999px;
+  --ui-shadow-sm: 0 4px 8px var(--shadow-card);
+  --ui-shadow-md: 0 8px 24px var(--shadow-shot);
+  --ui-shadow-lg: 0 16px 48px var(--shadow-shot);
+  --ui-icon-sm: 16px;
+  --ui-icon-md: 20px;
+  --ui-icon-lg: 24px;
+  --ui-touch-target: 44px;
+  --ui-control-sm: 44px;
+  --ui-control-md: 48px;
+  --ui-control-lg: 56px;
+}
+
+/* The existing .btn API remains intact, including destructive decisions.
+   Text and icon buttons follow the same dimensions, focus and disabled contract. */
+:is(.btn, .icon-action) {
+  min-block-size: var(--ui-touch-target);
+  border-radius: var(--ui-radius-sm);
+  font-size: var(--ui-type-md);
+  font-weight: 700;
+  touch-action: manipulation;
+}
+:is(.btn):not(.icon-action) {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--ui-space-2);
+  text-align: center;
+}
+:is(.btn, .icon-action):focus-visible {
+  outline: 3px solid var(--color-focus);
+  outline-offset: 2px;
+}
+:is(.btn, .icon-action):disabled,
+:is(.btn, .icon-action)[aria-disabled="true"] {
+  opacity: .55;
+  cursor: not-allowed;
+}
+:is(.btn, .icon-action):not(:disabled):active {
+  filter: brightness(.94);
+}
+@media (hover: hover) and (pointer: fine) {
+  :is(.btn):not(:disabled):not(.ghost):not(.danger):not(.secondary):hover {
+    background-color: var(--color-primary-dark);
+  }
+  :is(.icon-action):not(:disabled):hover {
+    background-color: var(--color-primary-light);
+  }
+}
+
+/* Unify surface corners and form controls without changing image crops. */
+:is(.panel, .card, .product-card, .action-feedback) {
+  border-radius: var(--ui-radius-md);
+}
+:is(input:not([type="checkbox"]):not([type="radio"]):not([type="file"]), select, textarea) {
+  min-block-size: var(--ui-touch-target);
+  border-radius: var(--ui-radius-sm);
+  font-size: var(--ui-type-md);
+}
+:is(input, select, textarea):focus-visible {
+  outline: 3px solid var(--color-focus);
+  outline-offset: 2px;
+}
+:is(.chip, .badge) {
+  border-radius: var(--ui-radius-full);
+}
+:is(.icon-action, .store-edit-action, .page-nav-button, .notifications-mark-all.btn) {
+  min-inline-size: var(--ui-touch-target);
+  min-block-size: var(--ui-touch-target);
+  border-radius: var(--ui-radius-md);
+}
+header.top .head-search .btn,
+.explore-sort-options button,
+.messages-heading .btn,
+.conversation-actions .btn {
+  min-inline-size: var(--ui-touch-target);
+  min-block-size: var(--ui-touch-target);
+}
+.explore-sort-options button {
+  font-size: var(--ui-type-sm);
+  border-radius: var(--ui-radius-sm);
+}
+.explore-sort-options button:not(:disabled):active {
+  background: var(--color-primary-light);
+  color: var(--color-primary-dark);
+}
+
+/* Authenticated student controls use the same touch-sized hit area. */
+.transaction-filter,
+.storefront-follow-count {
+  min-inline-size: var(--ui-touch-target);
+  min-block-size: var(--ui-touch-target);
+}
+.storefront-follow-count {
+  display: inline-flex;
+  align-items: center;
+}
+/* Touch targets: navigation links, document breadcrumbs and filter option labels. */
+.tabbar a,
+header.top .navrow > a:not(.all-cats),
+main .category-section .category-head a,
+.guidelines-breadcrumb a,
+.explore-sidebar-show-more {
+  min-inline-size: var(--ui-touch-target);
+  min-block-size: var(--ui-touch-target);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.explore-checkbox-choice {
+  min-block-size: var(--ui-touch-target);
+  align-items: center;
+}
+/* Make the header brand and listing-section links proper touch targets. */
+header.top .brand,
+.home-listing-section .sec-head a,
+.category-section .category-head a {
+  min-block-size: var(--ui-touch-target);
+  display: inline-flex;
+  align-items: center;
+}
+@media (max-width: 860px) {
+  /* Negative margins keep the seller byline's visual baseline unchanged. */
+  .product-card .seller-store-link {
+    display: inline-flex;
+    align-items: center;
+    min-block-size: var(--ui-touch-target);
+    margin-block: calc(-1 * var(--ui-space-3));
+    position: relative;
+    z-index: 2;
+  }
+}
+@media (hover: hover) and (pointer: fine) {
+  :is(header.top .brand, .navrow a, .tabbar a, .home-listing-section .sec-head a):hover {
+    color: var(--color-primary-dark);
+  }
+}
+:is(header.top .brand, .navrow a, .tabbar a, .home-listing-section .sec-head a):active {
+  opacity: .8;
+}
+
+/* Preserve the single-line Explore sort toolbar at the tested tablet breakpoint. */
+@media (min-width: 760px) and (max-width: 900px) {
+  .explore-control-header .results.explore-results-toolbar {
+    flex-wrap: nowrap;
+    gap: var(--ui-space-3);
+  }
+  .explore-results-toolbar .explore-results-count { flex: 0 0 auto; }
+  .explore-results-toolbar .explore-sort-control { margin-inline-start: auto; }
+}
+
+/* Keep small screens usable without clipping accessible control labels. */
+@media (max-width: 640px) {
+  .explore-sort-options button {
+    min-block-size: var(--ui-touch-target);
+    padding-inline: var(--ui-space-1);
+    white-space: normal;
+  }
+  .head-search input { min-inline-size: 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .btn, .icon-action, .explore-sort-options button { transition: none; }
+}

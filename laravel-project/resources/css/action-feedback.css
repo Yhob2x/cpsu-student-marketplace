@@ -1,0 +1,140 @@
+/* CPSU action feedback: compact top-center toasts, opt-in centered milestone confirmations.
+   Emil design engineering: purposeful opacity/transform motion, no backdrop or focus trap. */
+.action-feedback-viewport {
+  position: fixed;
+  z-index: 1300;
+  inset-block-start: calc(14px + env(safe-area-inset-top, 0px));
+  inset-inline-start: 50%;
+  transform: translateX(-50%);
+  width: min(390px, calc(100% - 24px));
+  pointer-events: none;
+}
+.action-feedback-viewport--center {
+  inset: 0;
+  transform: none;
+  width: auto;
+  display: grid;
+  place-items: center;
+  padding: max(16px, env(safe-area-inset-top, 0px)) max(16px, env(safe-area-inset-right, 0px)) max(16px, env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px));
+}
+.action-feedback {
+  position: relative;
+  display: grid;
+  grid-template-columns: 48px minmax(0, 1fr) 44px;
+  align-items: center;
+  column-gap: 12px;
+  max-width: 100%;
+  padding: 12px 8px 12px 16px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--paper);
+  color: var(--ink);
+  box-shadow: var(--ui-shadow-lg);
+  pointer-events: auto;
+  opacity: 1;
+  transform: translateY(0) scale(1);
+  transition: opacity 200ms cubic-bezier(.23, 1, .32, 1), transform 200ms cubic-bezier(.23, 1, .32, 1);
+}
+.action-feedback-symbol {
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  border: 1px solid var(--mint);
+  border-radius: 50%;
+  background: var(--mango-soft);
+  color: var(--leaf);
+}
+.action-feedback--error { border-color: color-mix(in srgb, var(--danger) 36%, var(--line)); }
+.action-feedback--error .action-feedback-symbol {
+  border-color: color-mix(in srgb, var(--danger) 24%, var(--paper));
+  color: var(--danger);
+  background: color-mix(in srgb, var(--danger) 8%, var(--paper));
+}
+.action-feedback--warning .action-feedback-symbol {
+  border-color: var(--mango);
+  background: color-mix(in srgb, var(--mango) 25%, var(--paper));
+  color: var(--forest);
+}
+.action-feedback--info .action-feedback-symbol { color: var(--leaf); }
+.action-feedback-content { min-width: 0; }
+.action-feedback-content strong {
+  display: block;
+  color: var(--ink);
+  font-family: var(--font-heading);
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+.action-feedback-content p {
+  margin: var(--ui-space-1) 0 0;
+  color: var(--ink-soft);
+  font-size: 14px;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+.action-feedback-dismiss {
+  align-self: start;
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: 0;
+  border-radius: 12px;
+  background: transparent;
+  color: var(--ink-soft);
+  cursor: pointer;
+}
+@media (hover: hover) and (pointer: fine) {
+  .action-feedback-dismiss:hover { background: var(--mango-soft); color: var(--ink); }
+}
+.action-feedback-dismiss:focus-visible { outline: 3px solid var(--mango); outline-offset: 2px; }
+.action-feedback--center {
+  grid-template-columns: minmax(0, 1fr);
+  justify-items: center;
+  row-gap: 12px;
+  width: min(380px, 100%);
+  max-height: calc(100dvh - 32px);
+  overflow-y: auto;
+  padding: 32px 24px 24px;
+  text-align: center;
+  border-radius: 12px;
+}
+.action-feedback--center .action-feedback-symbol {
+  width: 64px;
+  height: 64px;
+  margin-bottom: 4px;
+  border: 1px solid var(--mint);
+  box-shadow: 0 0 0 8px var(--mango-soft);
+}
+.action-feedback--center .action-feedback-content strong { font-size: 20px; line-height: 1.3; }
+.action-feedback--center .action-feedback-content p { margin-top: var(--ui-space-2); font-size: 14px; }
+.action-feedback--center .action-feedback-dismiss {
+  position: absolute;
+  inset-block-start: 6px;
+  inset-inline-end: 6px;
+}
+.action-feedback--leaving {
+  opacity: 0;
+  transform: translateY(-5px) scale(.985);
+  pointer-events: none;
+  transition-duration: 140ms;
+}
+.action-feedback--center.action-feedback--leaving { transform: translateY(5px) scale(.985); }
+@starting-style {
+  .action-feedback { opacity: 0; transform: translateY(-7px) scale(.985); }
+  .action-feedback--center { opacity: 0; transform: translateY(9px) scale(.975); }
+}
+@media (max-width: 640px) {
+  .action-feedback-viewport { width: calc(100% - 24px); }
+  .action-feedback-viewport--center { width: auto; }
+  .action-feedback--center { padding: 24px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .action-feedback { transition: none; transform: none; }
+  @starting-style {
+    .action-feedback, .action-feedback--center { opacity: 1; transform: none; }
+  }
+}

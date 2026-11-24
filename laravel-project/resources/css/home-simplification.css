@@ -1,0 +1,238 @@
+/* Home-only hierarchy refinements. Loaded after the editorial hero layers.
+   Place the search AFTER the photograph in normal desktop flow so nothing covers it. */
+.hero {
+  display: grid;
+  grid-template-areas:
+    "copy art"
+    "search search";
+  grid-template-columns: minmax(0, .82fr) minmax(0, 1.18fr);
+  grid-template-rows: auto auto;
+  align-items: center;
+  column-gap: clamp(1.1rem, 2.3vw, 2rem);
+  row-gap: clamp(1.2rem, 2.5vw, 1.8rem);
+  min-height: 0;
+  margin: 0 0 1.65rem;
+  padding: clamp(1.15rem, 2.2vw, 2rem);
+  overflow: hidden;
+  border-radius: 0 0 18px 18px;
+}
+
+/* Remove the large green shape and the floating shapes over the image. */
+.hero::before,
+.hero::after,
+.hero > .hero-art::before,
+.hero > .hero-art::after {
+  content: none;
+}
+
+.hero > .hero-copy {
+  grid-area: copy;
+  position: relative;
+  z-index: 1;
+  max-width: none;
+  min-width: 0;
+}
+.hero h1 {
+  font-size: clamp(3rem, 5.2vw, 4.9rem);
+  line-height: .97;
+  overflow-wrap: normal;
+}
+.hero h1 .hero-line-connect { margin-left: 0; }
+.hero h1 em { padding-left: 0; }
+.hero h1 .hero-line,
+.hero h1 em { overflow-wrap: normal; }
+
+.hero > .hero-art {
+  grid-area: art;
+  position: relative;
+  inset: auto;
+  z-index: 1;
+  width: 100%;
+  height: clamp(365px, 40vw, 535px);
+  min-height: 0;
+  margin: 0;
+  overflow: hidden;
+  border-radius: 18px;
+}
+.hero > .hero-art .home-custom-hero {
+  inset: 0;
+  border-radius: 18px;
+}
+.hero > .hero-art .home-custom-hero img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.hero > .hero-search {
+  grid-area: search;
+  position: relative;
+  inset: auto;
+  z-index: 1;
+  grid-template-columns: minmax(150px, .55fr) minmax(0, 1.45fr);
+  gap: clamp(.8rem, 2vw, 1.5rem);
+  width: 100%;
+  max-width: none;
+  min-height: 0;
+  margin: 0;
+  padding: 1.15rem 1.3rem;
+  border-radius: 16px;
+  box-shadow: 0 7px 20px color-mix(in srgb, var(--color-warning-ink) 8%, transparent);
+}
+.hero-search-heading {
+  max-width: 17ch;
+  font-size: clamp(1.2rem, 2vw, 1.65rem);
+}
+
+.category-section {
+  margin-top: .75rem;
+  margin-bottom: var(--ui-space-4);
+}
+.home-category-grid .cat {
+  min-height: 92px;
+  padding-block: var(--ui-space-3);
+}
+.home-discovery-flow {
+  margin-top: 1.25rem;
+  gap: 1.8rem;
+}
+.home-listing-section .sec-head { margin-bottom: .75rem; }
+
+@media (max-width: 900px) {
+  /* Stack earlier than phone size: headline, search and image stay separate. */
+  .hero {
+    grid-template-areas: "copy" "search" "art";
+    grid-template-columns: minmax(0, 1fr);
+    gap: 1rem;
+    min-height: 0;
+    padding: clamp(1.2rem, 3.5vw, 1.8rem);
+  }
+  .hero h1 { font-size: clamp(2.7rem, 7vw, 4.2rem); }
+  .hero > .hero-search {
+    grid-template-columns: minmax(0, 1fr);
+    gap: .75rem;
+    padding: var(--ui-space-4);
+  }
+  .hero-search-heading {
+    max-width: none;
+    margin: 0;
+    font-size: var(--ui-type-xl);
+  }
+  .hero > .hero-art {
+    width: 100%;
+    height: clamp(270px, 54vw, 405px);
+    min-height: 0;
+    margin: 0;
+  }
+}
+@media (max-width: 700px) {
+  .hero {
+    display: grid;
+    grid-template-areas: "copy" "search" "art";
+    min-height: 0;
+    gap: var(--ui-space-4);
+    margin: var(--ui-space-1) 0 1.25rem;
+    padding: 1.2rem;
+    overflow: hidden;
+    border-radius: 16px;
+  }
+  .hero > .hero-copy { max-width: 100%; }
+  .hero h1 {
+    max-width: none;
+    font-size: clamp(2.4rem, 9.2vw, 3.8rem);
+    line-height: .99;
+  }
+  .hero > .hero-search {
+    position: relative;
+    inset: auto;
+    width: 100%;
+    margin: 0;
+    padding: var(--ui-space-3);
+    border-radius: var(--ui-radius-md);
+  }
+  .hero-search-heading { font-size: var(--ui-type-lg); }
+  .hero > .hero-art {
+    width: 100%;
+    height: clamp(230px, 70vw, 325px);
+    min-height: 0;
+    margin: 0;
+    border-radius: var(--ui-radius-md);
+  }
+  .hero > .hero-art .home-custom-hero { inset: 0; border-radius: var(--ui-radius-md); }
+  .category-section { margin-top: var(--ui-space-2); }
+  .home-discovery-flow { margin-top: 1.15rem; gap: var(--ui-space-5); }
+}
+@media (max-width: 380px) {
+  .hero { padding: 1rem; }
+  .hero h1 { font-size: clamp(2.18rem, 9.2vw, 2.65rem); }
+  .hero-search-heading { font-size: var(--ui-type-lg); }
+  .hero-search input { font-size: var(--ui-type-sm); }
+  .hero > .hero-art { height: 230px; }
+}
+
+/* Asymmetric editorial photo silhouette, inspired by the approved reference.
+   Accents sit BEHIND the crop, within the photo grid cell—not over text or search. */
+.hero > .hero-art {
+  border-radius: 0;
+  background: transparent;
+  isolation: isolate;
+}
+.hero-photo-mask-definition {
+  position: absolute;
+  width: 0;
+  height: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+.hero > .hero-art::before,
+.hero > .hero-art::after {
+  content: '';
+  position: absolute;
+  display: block;
+  pointer-events: none;
+  z-index: 0;
+}
+.hero > .hero-art::before {
+  left: 0;
+  top: 3%;
+  width: 45%;
+  height: 39%;
+  border-radius: 63% 37% 55% 45% / 60% 45% 55% 40%;
+  background: var(--color-accent);
+  transform: rotate(-16deg);
+}
+.hero > .hero-art::after {
+  left: 2%;
+  bottom: 2%;
+  width: 48%;
+  height: 27%;
+  border-radius: 58% 42% 55% 45% / 58% 48% 52% 42%;
+  background: var(--color-primary);
+  transform: rotate(-11deg);
+}
+.hero > .hero-art .home-custom-hero {
+  z-index: 1;
+  border-radius: 42% 45% 38% 40% / 42% 36% 46% 44%; /* fallback for browsers without SVG clip-path support */
+  clip-path: url('#cpsu-hero-organic-clip');
+  -webkit-clip-path: url('#cpsu-hero-organic-clip');
+}
+@media (max-width: 700px) {
+  .hero > .hero-art::before { left: 0; top: 4%; width: 44%; height: 36%; }
+  .hero > .hero-art::after { left: 3%; bottom: 3%; width: 46%; height: 28%; }
+  .hero > .hero-art .home-custom-hero {
+    border-radius: 42% 45% 38% 40% / 42% 36% 46% 44%;
+  }
+}
+
+
+/* When the global header owns search, do not reserve an empty hero search row. */
+.hero:not(:has(> .hero-search)) {
+  grid-template-areas: "copy art";
+  grid-template-rows: auto;
+}
+@media (max-width: 900px) {
+  .hero:not(:has(> .hero-search)) {
+    grid-template-areas: "copy" "art";
+  }
+}

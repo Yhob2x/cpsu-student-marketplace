@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 500" role="img" aria-label="Illustration of campus marketplace items">
+  <rect width="640" height="500" fill="#ead9c8"/>
+  <circle cx="514" cy="85" r="47" fill="#e6a923"/>
+  <path d="M0 301c83-40 151-38 224-11 88 33 152 5 233-12 76-16 130 3 183 32v190H0Z" fill="#d9c3ac"/>
+  <path d="M48 283h483V111H48Z" fill="#f8f1e7" stroke="#174a35" stroke-width="8"/>
+  <path d="M32 114 291 29l256 85Z" fill="#aa4725" stroke="#174a35" stroke-width="8"/>
+  <path d="M93 151h90v112H93Zm159 0h90v112h-90Zm159 0h90v112h-90Z" fill="#d6e4d9" stroke="#174a35" stroke-width="7"/>
+  <path d="M135 151v112m162-112v112m159-112v112" stroke="#174a35" stroke-width="5"/>
+  <rect x="185" y="286" width="250" height="137" rx="10" fill="#0f5132"/>
+  <path d="M166 286h288l-22-55H188Z" fill="#e8a824" stroke="#174a35" stroke-width="7"/>
+  <path d="M214 232v54m49-54v54m49-54v54m49-54v54m49-54v54" stroke="#174a35" stroke-width="7"/>
+  <rect x="224" y="330" width="73" height="66" rx="5" fill="#fbf6f0"/>
+  <path d="M224 340h73m-73 12h73m-73 12h73" stroke="#bd7747" stroke-width="5"/>
+  <path d="M334 396v-59c0-19 17-31 34-23 10 5 14 12 15 23v59Z" fill="#c7753b"/>
+  <path d="M347 324v-15a21 21 0 0 1 23-21 21 21 0 0 1 20 21v15" fill="none" stroke="#c7753b" stroke-width="8"/>
+  <path d="M0 433c136-34 265-28 381 0 83 20 174 14 259-4v71H0Z" fill="#0f5132"/>
+</svg>

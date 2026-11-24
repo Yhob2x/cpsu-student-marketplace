@@ -1,0 +1,411 @@
+/*
+ * CPSU message interaction polish. Presentation only: receipts come from the
+ * authenticated API, not from animation state or arbitrary elapsed time.
+ */
+.conversation-log {
+  background: var(--color-neutral-100);
+  border: 1px solid var(--line);
+  border-radius: var(--ui-radius-md);
+  padding: clamp(.75rem, 2vw, 1.15rem);
+  scroll-padding-block: .75rem;
+}
+.conversation-log .message-segment { min-width: 0; }
+.conversation-log .message-day-divider {
+  display: flex; align-items: center; gap: .75rem;
+  margin: 1rem 0 var(--ui-space-3);
+  color: var(--ink-soft);
+  font-size: var(--ui-type-xs); font-weight: 700; letter-spacing: .018em;
+  text-align: center;
+}
+.conversation-log .message-day-divider::before,
+.conversation-log .message-day-divider::after {
+  content: ""; height: 1px; background: var(--line); flex: 1;
+}
+.conversation-log .message-day-divider span {
+  flex: none; padding: var(--ui-space-1) var(--ui-space-3); border: 1px solid var(--line);
+  border-radius: var(--ui-radius-full); background: var(--paper);
+}
+.conversation-log .msg-row { margin: var(--ui-space-2) 0; align-items: flex-end; gap: var(--ui-space-2); }
+.conversation-log .msg-row.is-grouped { margin-top: var(--ui-space-1); }
+.conversation-log .msg-row .avatar.is-hidden { visibility: hidden; }
+.conversation-log .message-stack {
+  display: flex; flex-direction: column; align-items: flex-start;
+  gap: var(--ui-space-1); min-width: 0; max-width: min(82%, 54ch);
+}
+.conversation-log .msg-row.mine .message-stack { align-items: flex-end; }
+.conversation-log .message-stack .msg {
+  max-width: 100%; min-width: 0; padding: var(--ui-space-3) .85rem;
+  background: var(--color-card); color: var(--ink); border: 1px solid var(--color-primary-light);
+  border-radius: var(--ui-radius-md) var(--ui-radius-md) var(--ui-radius-md) var(--ui-radius-sm); line-height: 1.5;
+  box-shadow: 0 1px 2px color-mix(in srgb, var(--color-primary-dark) 3%, transparent);
+}
+.conversation-log .message-stack .msg.mine {
+  background: var(--forest); color: var(--color-card); border-color: var(--forest);
+  border-radius: var(--ui-radius-md) var(--ui-radius-md) var(--ui-radius-sm) var(--ui-radius-md); box-shadow: none;
+}
+.conversation-log .message-time {
+  display: block; margin-top: var(--ui-space-1); font-size: var(--ui-type-xs);
+  line-height: 1.2; color: var(--ink-soft); text-align: right;
+}
+.conversation-log .msg.mine .message-time { color: var(--color-primary-light); }
+.conversation-log .message-text { white-space: pre-wrap; overflow-wrap: anywhere; }
+.message-receipt {
+  display: inline-flex; align-items: center; gap: var(--ui-space-1);
+  color: var(--color-primary); font-size: var(--ui-type-xs); font-weight: 650; line-height: 1.25;
+  white-space: nowrap;
+}
+.message-receipt svg { flex: none; }
+.message-receipt.is-read { color: var(--leaf); }
+.conversation-log .msg-row.mine .message-receipt { margin: 0 var(--ui-space-1) .1rem 0; }
+.inq-details .message-receipt { margin-left: auto; font-size: var(--ui-type-xs); }
+.inq-details .message-receipt.is-compact { gap: var(--ui-space-1); }
+.typing-indicator {
+  display: inline-flex; align-items: center; gap: var(--ui-space-3);
+  margin: .75rem 0 var(--ui-space-1) 2.6rem; color: var(--ink-soft);
+  font-size: var(--ui-type-xs); font-weight: 650;
+}
+.typing-dots {
+  display: inline-flex; align-items: center; justify-content: center;
+  gap: var(--ui-space-1); height: 29px; padding: var(--ui-space-2) .65rem;
+  border-radius: var(--ui-radius-md) var(--ui-radius-md) var(--ui-radius-md) var(--ui-radius-sm);
+  background: var(--color-card); border: 1px solid var(--line);
+}
+.typing-dots span {
+  display: block; width: 5px; height: 5px; border-radius: 50%;
+  background: var(--leaf);
+  animation: cpsu-typing-pulse 1.05s ease-in-out infinite;
+}
+.typing-dots span:nth-child(2) { animation-delay: 140ms; }
+.typing-dots span:nth-child(3) { animation-delay: 280ms; }
+@keyframes cpsu-typing-pulse {
+  0%, 65%, 100% { opacity: .38; transform: translateY(0); }
+  28% { opacity: 1; transform: translateY(-4px); }
+}
+.conversation-log .msg-row.is-new {
+  animation: cpsu-message-enter 240ms cubic-bezier(.22,.75,.24,1) both;
+}
+@keyframes cpsu-message-enter {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.conversation-composer { background: var(--color-card); border-color: var(--line); }
+.conversation-composer .chat-send {
+  background: var(--forest); color: var(--color-card); flex: 0 0 44px;
+}
+@media (hover: hover) and (pointer: fine) { .conversation-composer .chat-send:hover:not(:disabled) { background: var(--leaf); } }
+.conversation-composer textarea:focus-visible { outline-color: var(--color-focus); }
+@media (max-width: 640px) {
+  .conversation-log .msg-row { gap: var(--ui-space-2); }
+  .conversation-log .message-stack { max-width: min(86%, 39ch); }
+  .conversation-log .msg-row .avatar { width: 30px; height: 30px; }
+  .conversation-log .message-stack .msg { padding: .58rem var(--ui-space-3); font-size: var(--ui-type-sm); }
+  .conversation-log .message-day-divider { margin: .75rem 0 var(--ui-space-3); }
+  .typing-indicator { margin-left: var(--ui-space-6); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .typing-dots span,
+  .conversation-log .msg-row.is-new {
+    animation: none !important;
+    transform: none !important;
+    opacity: 1 !important;
+  }
+}
+
+/* Conversation alignment: 4px within runs, 18px between runs, 20px radius. */
+.conversation-heading-info { display: flex; flex-direction: column; align-items: flex-start; gap: var(--ui-space-1); min-width: 0; }
+.conversation-heading-info h1 { margin: 0; }
+.conversation-heading p.conversation-presence {
+  display: inline-flex; align-items: center; gap: var(--ui-space-2); margin: 0;
+  color: var(--ink-soft); font: 650 .78rem/1.4 var(--font-body); min-height: 22px;
+}
+.conversation-presence .presence-dot { width: 8px; height: 8px; background: var(--color-primary); border-radius: 50%; flex: none; }
+.conversation-heading .conversation-presence.is-online { color: var(--leaf); }
+.conversation-presence.is-online .presence-dot { background: var(--leaf); box-shadow: 0 0 0 3px var(--color-primary-light); }
+.conversation-log .msg-row { margin: var(--ui-space-4) 0 0; gap: 0; justify-content: flex-start; align-items: flex-end; }
+.conversation-log .msg-row.mine { flex-direction: row-reverse; }
+.conversation-log .msg-row.is-grouped { margin-top: 4px; }
+.conversation-log .message-day-divider + .msg-row { margin-top: 0; }
+.conversation-log .message-stack { max-width: min(84%, 52ch); gap: var(--ui-space-1); }
+.conversation-log .message-stack .msg { border-radius: 20px 20px 20px var(--ui-radius-sm); padding: .75rem 1rem; }
+.conversation-log .message-stack .msg.mine {
+  background: var(--leaf); border-color: var(--leaf); color: var(--color-card);
+  border-radius: 20px 20px var(--ui-radius-sm) 20px;
+}
+.conversation-log .msg.mine .message-time { color: var(--color-primary-light); }
+.conversation-log .msg-row.mine .message-receipt { animation: cpsu-receipt-update 240ms ease-out both; }
+@keyframes cpsu-receipt-update {
+  from { opacity: .4; transform: translateY(3px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.conversation-composer .chat-send { background: var(--leaf); color: var(--color-card); }
+.conversation-composer .chat-send:hover:not(:disabled) { background: var(--forest); }
+@media (max-width: 640px) {
+  .conversation-heading-info { gap: var(--ui-space-1); }
+  .conversation-heading p.conversation-presence { display: inline-flex; font-size: var(--ui-type-xs); }
+  .conversation-log .message-stack { max-width: min(88%, 44ch); }
+  .conversation-log .message-stack .msg { padding: .62rem var(--ui-space-3); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .conversation-log .msg-row.mine .message-receipt { animation: none !important; opacity: 1 !important; transform: none !important; }
+}
+
+/* Inbox identity: the other student is primary, the listing stays secondary. */
+.inquiry-list .inq-top strong { overflow-wrap: anywhere; }
+.inquiry-list .inq-listing {
+  display: block;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  color: var(--leaf);
+  font-size: var(--ui-type-xs);
+  font-weight: 650;
+  line-height: 1.45;
+}
+.inquiry-list .inq-preview { color: var(--ink-soft); }
+.conversation-heading-info h1 { overflow-wrap: anywhere; }
+
+
+/* Listing context appears once, at the beginning of each conversation.
+   It uses existing listing data rather than order, payment or delivery claims. */
+.conversation-listing-card {
+  width: min(100%, 430px);
+  min-width: 0;
+  margin: 0 0 1rem;
+  padding: var(--ui-space-3);
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: var(--ui-radius-md);
+  color: var(--ink);
+  box-shadow: 0 1px 3px color-mix(in srgb, var(--color-primary-dark) 4%, transparent);
+}
+.conversation-listing-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--ui-space-3);
+  margin-bottom: var(--ui-space-3);
+  color: var(--ink-soft);
+  font-size: var(--ui-type-xs);
+  font-weight: 650;
+}
+.conversation-listing-kind {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 6px;
+  padding: var(--ui-space-1) var(--ui-space-2);
+  color: var(--color-primary-dark);
+  background: var(--color-primary-light);
+  font-size: var(--ui-type-xs);
+  white-space: nowrap;
+  flex: 0 0 auto;
+}
+.conversation-listing-content {
+  display: grid;
+  grid-template-columns: 76px minmax(0, 1fr);
+  align-items: start;
+  gap: .75rem;
+  min-width: 0;
+}
+.conversation-listing-photo {
+  width: 76px;
+  aspect-ratio: 1;
+  overflow: hidden;
+  border-radius: var(--ui-radius-sm);
+  background: var(--surface-neutral);
+}
+.conversation-listing-photo img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.conversation-listing-photo-empty {
+  display: flex;
+  width: 100%;
+  height: 100%;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--ui-space-1);
+  text-align: center;
+  color: var(--ink-soft);
+}
+.conversation-listing-photo-empty small { font-size: var(--ui-type-xs); line-height: 1.2; }
+.conversation-listing-info { display: grid; gap: var(--ui-space-1); min-width: 0; }
+.conversation-listing-info > strong {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  color: var(--ink);
+  font: 700 .88rem/1.35 var(--font-body);
+  overflow-wrap: anywhere;
+}
+.conversation-listing-price {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: var(--ui-space-1) var(--ui-space-2);
+  min-width: 0;
+  line-height: 1.35;
+}
+.conversation-listing-price b { color: var(--leaf); font-size: var(--ui-type-sm); font-variant-numeric: tabular-nums; }
+.conversation-listing-price span { color: var(--ink-soft); font-size: .75rem; overflow-wrap: anywhere; }
+.conversation-listing-meta {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--ui-space-1) .65rem;
+  color: var(--ink-soft);
+  font-size: var(--ui-type-xs);
+  line-height: 1.4;
+  text-transform: capitalize;
+}
+.conversation-listing-meta .is-available { color: var(--leaf); font-weight: 700; }
+.conversation-listing-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--ui-space-1) .75rem;
+  margin-top: var(--ui-space-3);
+  padding-top: var(--ui-space-2);
+  border-top: 1px solid var(--line);
+  color: var(--ink-soft);
+  font-size: var(--ui-type-xs);
+}
+.conversation-listing-foot strong { color: var(--ink); font-variant-numeric: tabular-nums; }
+.conversation-listing-foot a {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ui-space-1);
+  min-height: 44px;
+  color: var(--leaf);
+  font-weight: 700;
+  text-decoration: none;
+}
+.conversation-listing-foot a:hover { text-decoration: underline; }
+@media (max-width: 390px) {
+  .conversation-listing-card { padding: var(--ui-space-3); }
+  .conversation-listing-content { grid-template-columns: 64px minmax(0, 1fr); gap: var(--ui-space-2); }
+  .conversation-listing-photo { width: 64px; }
+}
+
+/* Incoming-message sound control: a full touch target, no extra dependencies. */
+.conversation-actions .conversation-sound-toggle {
+  min-height: 44px;
+  border-color: var(--line);
+}
+.conversation-actions .conversation-sound-toggle[aria-pressed="false"] {
+  color: var(--ink-soft);
+}
+@media (max-width: 640px) {
+  /* Give long student names and both chat controls their own rows on narrow iPhones. */
+  .conversation-heading:not(.is-closed) { flex-wrap: wrap; gap: var(--ui-space-2); }
+  .conversation-heading:not(.is-closed) .conversation-heading-info { flex: 1 1 100%; }
+  .conversation-heading:not(.is-closed) .conversation-actions {
+    display: flex; width: 100%; justify-content: space-between; flex-wrap: wrap;
+  }
+  .conversation-heading:not(.is-closed) .conversation-actions .btn { min-height: 44px; }
+}
+
+/*
+ * Mobile conversation viewport: only the history scrolls, never the composer.
+ * The latest bubbles/typing status rest at the bottom of the history and the
+ * reply stays above the app tab bar (or the onscreen keyboard when focused).
+ */
+@media (max-width: 860px) {
+  body:has(.conversation-page) { overflow: hidden; }
+  body:has(.conversation-page) #root {
+    display: flex;
+    flex-direction: column;
+    height: var(--chat-visible-height, 100dvh);
+    min-height: 0;
+    overflow: hidden;
+  }
+  body:has(.conversation-page) .top { flex: 0 0 auto; }
+  body:has(.conversation-page) .site-foot { display: none; }
+  body:has(.conversation-page) main {
+    flex: 1 1 auto;
+    min-height: 0;
+    padding: .45rem 0 calc(4.8rem + env(safe-area-inset-bottom, 0px));
+  }
+  body:has(.conversation-page) main > .wrap { height: 100%; min-height: 0; }
+  .conversation-page {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    min-height: 0;
+  }
+  .conversation-back { flex: 0 0 auto; align-self: flex-start; margin-bottom: var(--ui-space-1); }
+  .conversation-heading { flex: 0 0 auto; margin-bottom: var(--ui-space-3); }
+  .conversation-log {
+    display: flex;
+    flex-direction: column;
+    flex: 1 1 auto;
+    height: auto;
+    min-height: 0;
+    max-height: none;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+  /* Empty vertical space stays ABOVE messages, as in a native chat app. */
+  .conversation-log::before { content: ''; flex: 1 0 0; }
+  .conversation-log .typing-indicator { flex: 0 0 auto; align-self: flex-start; }
+  .conversation-page > .handoff-panel,
+  .conversation-page > .conversation-closed,
+  .conversation-page > .conversation-composer,
+  .conversation-page > .err { flex-shrink: 0; }
+  .conversation-composer { margin-top: .5rem; padding: .5rem; }
+  .conversation-reply-label {
+    position: absolute; width: 1px; height: 1px; overflow: hidden;
+    clip: rect(0, 0, 0, 0); white-space: nowrap; clip-path: inset(50%);
+  }
+  .conversation-composer textarea {
+    min-height: 48px;
+    height: 48px;
+    resize: none;
+    font-size: 16px;
+  }
+  .conversation-composer .chat-send { width: 48px; height: 48px; }
+  body:has(.conversation-page textarea:focus) main { padding-bottom: var(--ui-space-2); }
+  .conversation-page:has(.conversation-composer textarea:focus) { padding-bottom: 0; }
+  .conversation-page:has(.conversation-composer textarea:focus) .conversation-log { height: auto; }
+}
+
+/* Keep active typing visible above the reply box even during message scrollback. */
+.typing-indicator.conversation-typing-dock {
+  display: flex;
+  align-items: center;
+  align-self: stretch;
+  flex: 0 0 auto;
+  margin: .5rem 0 var(--ui-space-1);
+  padding: var(--ui-space-1) var(--ui-space-3);
+  min-height: 42px;
+  border-radius: var(--ui-radius-md);
+  background: var(--mango-soft);
+  color: var(--forest);
+  overflow-wrap: anywhere;
+}
+.conversation-typing-dock .typing-dots { flex: none; }
+@media (max-width: 860px) {
+  .typing-indicator.conversation-typing-dock {
+    margin-top: var(--ui-space-1);
+    margin-bottom: 0;
+    font-size: .75rem;
+  }
+}
+
+/* Inbox: compact incoming-sound controls, with iPhone-friendly hit targets. */
+.messages-audio-actions {
+  display: flex; flex-wrap: wrap; align-items: center;
+  justify-content: flex-end; gap: var(--ui-space-2);
+}
+.messages-audio-actions .btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: var(--ui-space-1);
+  min-height: 44px;
+}
+@media (max-width: 640px) {
+  .messages-audio-actions { width: 100%; justify-content: flex-start; }
+}

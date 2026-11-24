@@ -1,0 +1,28 @@
+/* Shared, accessible icon-only actions: reserved for universally recognizable controls.
+   Keep explicit text for consequential decisions, filter modes, and recovery actions. */
+.icon-action {
+  display: inline-grid;
+  place-items: center;
+  flex: 0 0 auto;
+  inline-size: 44px;
+  block-size: 44px;
+  min-inline-size: 44px;
+  min-block-size: 44px;
+  padding: 0;
+  border-radius: 12px;
+  line-height: 1;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+.icon-action svg { display: block; flex: none; }
+.icon-action:focus-visible { outline: 3px solid var(--color-focus); outline-offset: 2px; }
+.icon-action:disabled { opacity: .55; cursor: not-allowed; }
+@media (hover: hover) and (pointer: fine) {
+  .icon-action:not(:disabled):hover { border-color: var(--leaf); }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .icon-action[data-icon="refresh"][aria-busy="true"] svg {
+    animation: cpsu-refresh-spin .85s linear infinite;
+  }
+  @keyframes cpsu-refresh-spin { to { transform: rotate(360deg); } }
+}

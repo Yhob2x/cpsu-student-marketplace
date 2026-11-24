@@ -25,9 +25,7 @@ use Illuminate\Support\Facades\DB;
 /** Self-reported, mutually confirmed student transactions. No payment is processed. */
 class TransactionController extends Controller
 {
-    public function __construct(private readonly ListingStock $stock)
-    {
-    }
+    public function __construct(private readonly ListingStock $stock) {}
 
     public function create(Request $request): JsonResponse
     {

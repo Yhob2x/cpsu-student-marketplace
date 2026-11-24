@@ -8,12 +8,19 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class ListingAppreciation extends MarketplaceModel
 {
     protected $table = 'ListingAppreciation';
+
     protected $primaryKey = null;
+
     public $incrementing = false;
+
     public const COMPOSITE_KEY = ['userId', 'listingId'];
+
     public $timestamps = true;
+
     public const CREATED_AT = 'createdAt';
+
     public const UPDATED_AT = null;
+
     protected $fillable = ['userId', 'listingId', 'createdAt'];
 
     protected function casts(): array

@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, test } from 'bun:test';
 import { act, cleanup, render } from '@testing-library/react';
-import { useForegroundRefresh } from '../../../resources/js/foreground-refresh';
-import { hasNewIncomingMessage, messageReceiveSoundEnabled, setMessageReceiveSoundEnabled } from '../../../resources/js/message-receive-sound';
+import { useForegroundRefresh } from '../../../resources/js/hooks/use-foreground-refresh';
+import { hasNewIncomingMessage, messageReceiveSoundEnabled, setMessageReceiveSoundEnabled } from '../../../resources/js/lib/messaging/message-receive-sound';
 
 const nativeSetInterval = window.setInterval;
 const nativeClearInterval = window.clearInterval;

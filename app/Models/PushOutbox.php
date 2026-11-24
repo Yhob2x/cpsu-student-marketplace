@@ -9,11 +9,17 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class PushOutbox extends MarketplaceModel
 {
     protected $table = 'PushOutbox';
+
     protected $primaryKey = 'id';
+
     public $timestamps = true;
+
     public const CREATED_AT = 'createdAt';
+
     public const UPDATED_AT = 'updatedAt';
+
     protected $fillable = ['notificationId', 'userId', 'category', 'state', 'attemptCount', 'budgetReservedAt', 'nextAttemptAt', 'expiresAt', 'leaseToken', 'leasedUntil', 'lastStatus', 'sentAt', 'createdAt', 'updatedAt'];
+
     protected $hidden = ['leaseToken'];
 
     protected function casts(): array

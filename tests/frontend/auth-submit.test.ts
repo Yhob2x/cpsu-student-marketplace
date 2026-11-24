@@ -1,5 +1,5 @@
 import { test, expect } from 'bun:test';
-import { runExclusive } from '../../resources/js/auth-submit';
+import { runExclusive } from '../../resources/js/lib/auth/auth-submit';
 
 test('submits only once until the current request settles', async () => {
   const lock = { current: false };

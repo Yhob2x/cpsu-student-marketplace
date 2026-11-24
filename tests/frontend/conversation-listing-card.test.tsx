@@ -1,7 +1,7 @@
 import { describe, expect, test } from 'bun:test';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { StaticRouter } from 'react-router-dom/server';
-import { ConversationListingCard, type ConversationListing } from '../../resources/js/conversation-listing-card';
+import { ConversationListingCard, type ConversationListing } from '../../resources/js/components/chat/conversation-listing-card';
 
 const product: ConversationListing = {
   id: 71, title: 'Student laptop', type: 'physical_product',

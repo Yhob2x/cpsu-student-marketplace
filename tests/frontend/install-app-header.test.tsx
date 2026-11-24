@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, test } from 'bun:test';
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
-import { InstallApp } from '../../resources/js/install-app';
+import { InstallApp } from '../../resources/js/components/layout/install-app';
 
 const originalMatchMedia = window.matchMedia;
 const currentNav = Object.getOwnPropertyDescriptor(navigator, 'standalone');

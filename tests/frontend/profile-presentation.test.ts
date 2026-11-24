@@ -1,5 +1,5 @@
 import { test, expect, describe } from 'bun:test';
-import { affiliationLabel, campusStatusSummary, displayNameChange } from '../../resources/js/profile-presentation';
+import { affiliationLabel, campusStatusSummary, displayNameChange } from '../../resources/js/lib/account/profile-presentation';
 
 describe('CPSU affiliation presentation', () => {
   test('uses reviewer-owned verified state and the correct student next step', () => {

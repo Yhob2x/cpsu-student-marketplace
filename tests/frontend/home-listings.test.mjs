@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { selectHomeListings } from '../../resources/js/home-listings.ts';
+import { selectHomeListings } from '../../resources/js/lib/listings/home-listings';
 
 test('fresh listings include the newest items when there are no popular listings', () => {
   const newest = { id: 3 };

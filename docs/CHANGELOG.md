@@ -1,5 +1,10 @@
 # Changelog
 
+## 2026-11-24 — Frontend pages and structure
+
+- Every routed screen now has its own file in `resources/js/pages`, and the remaining code is grouped into `components`, `layouts`, `providers`, `hooks`, `lib` and `types`, following Laravel's React starter kit. See `docs/FRONTEND_STRUCTURE.md`.
+- Route access rules moved into guard components, the session state into `providers/session-provider.tsx`, and all stylesheets into one ordered `styles.ts`. Compiled CSS is byte-identical and no screen changed.
+
 ## 2026-11-24 — Laravel app moved to the repository root
 
 - The Laravel app, its documentation and tooling now sit directly in the repository root. The `laravel-project/` folder no longer exists. Deployment paths were updated.

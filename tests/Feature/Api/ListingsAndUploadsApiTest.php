@@ -14,6 +14,7 @@ use App\Models\User;
 use App\Models\UserRole;
 use App\Services\AccessTokens;
 use Illuminate\Http\Client\ConnectionException;
+use Illuminate\Http\Client\Factory;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
@@ -252,7 +253,7 @@ class ListingsAndUploadsApiTest extends TestCase
     public function test_explicit_or_uncertain_store_photo_is_not_published_or_kept(): void
     {
         foreach (['explicit' => 'avatar_explicit_content', 'uncertain' => 'avatar_uncertain_content'] as $verdict => $code) {
-            Http::swap(new \Illuminate\Http\Client\Factory);
+            Http::swap(new Factory);
             $this->fakePhotoService($verdict);
 
             $this->as($this->seller)->post('/api/v1/seller/store/avatar', ['image' => $this->image()])

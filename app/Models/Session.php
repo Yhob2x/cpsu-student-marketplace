@@ -8,11 +8,17 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class Session extends MarketplaceModel
 {
     protected $table = 'Session';
+
     protected $primaryKey = 'id';
+
     public $timestamps = true;
+
     public const CREATED_AT = 'createdAt';
+
     public const UPDATED_AT = null;
+
     protected $fillable = ['userId', 'refreshTokenHash', 'device', 'expiresAt', 'revokedAt', 'createdAt'];
+
     protected $hidden = ['refreshTokenHash'];
 
     protected function casts(): array

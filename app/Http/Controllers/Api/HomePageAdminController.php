@@ -29,8 +29,7 @@ class HomePageAdminController extends Controller
     public function __construct(
         private readonly MediaStorage $media,
         private readonly PhotoService $photos,
-    ) {
-    }
+    ) {}
 
     public function show(): JsonResponse
     {

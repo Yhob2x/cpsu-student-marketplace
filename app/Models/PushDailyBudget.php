@@ -8,12 +8,19 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class PushDailyBudget extends MarketplaceModel
 {
     protected $table = 'PushDailyBudget';
+
     protected $primaryKey = null;
+
     public $incrementing = false;
+
     public const COMPOSITE_KEY = ['userId', 'dayKey'];
+
     public $timestamps = true;
+
     public const CREATED_AT = 'createdAt';
+
     public const UPDATED_AT = 'updatedAt';
+
     protected $fillable = ['userId', 'dayKey', 'count', 'createdAt', 'updatedAt'];
 
     protected function casts(): array

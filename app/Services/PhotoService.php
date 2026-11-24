@@ -13,9 +13,7 @@ class PhotoService
 {
     private const MAX_STORED_BYTES = 3145728;
 
-    public function __construct(private readonly MediaStorage $media)
-    {
-    }
+    public function __construct(private readonly MediaStorage $media) {}
 
     public function sanitize(UploadedFile $file, bool $avatar = false): array
     {

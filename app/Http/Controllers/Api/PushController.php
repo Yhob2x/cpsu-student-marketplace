@@ -25,9 +25,7 @@ class PushController extends Controller
 
     private const MAX_DEVICES = 8;
 
-    public function __construct(private readonly PushPolicy $policy)
-    {
-    }
+    public function __construct(private readonly PushPolicy $policy) {}
 
     public function config(): JsonResponse
     {

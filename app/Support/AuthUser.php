@@ -11,6 +11,5 @@ final readonly class AuthUser
         public string $email,
         public string $displayName,
         public array $roles,
-    ) {
-    }
+    ) {}
 }

@@ -2,16 +2,22 @@
 
 namespace App\Models;
 
+use App\Enums\ReviewDecision;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /** Generated from the approved Prisma schema. Table and column names must not change. */
 class ListingReview extends MarketplaceModel
 {
     protected $table = 'ListingReview';
+
     protected $primaryKey = 'id';
+
     public $timestamps = true;
+
     public const CREATED_AT = 'createdAt';
+
     public const UPDATED_AT = null;
+
     protected $fillable = ['listingId', 'reviewerId', 'decision', 'reason', 'policyVersionId', 'createdAt'];
 
     protected function casts(): array
@@ -20,7 +26,7 @@ class ListingReview extends MarketplaceModel
             'id' => 'integer',
             'listingId' => 'integer',
             'reviewerId' => 'integer',
-            'decision' => \App\Enums\ReviewDecision::class,
+            'decision' => ReviewDecision::class,
             'policyVersionId' => 'integer',
             'createdAt' => 'datetime',
         ];

@@ -2,14 +2,18 @@
 
 namespace App\Models;
 
+use App\Enums\Role;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /** Generated from the approved Prisma schema. Table and column names must not change. */
 class UserRole extends MarketplaceModel
 {
     protected $table = 'UserRole';
+
     protected $primaryKey = 'id';
+
     public $timestamps = false;
+
     protected $fillable = ['userId', 'role', 'campusId'];
 
     protected function casts(): array
@@ -17,7 +21,7 @@ class UserRole extends MarketplaceModel
         return [
             'id' => 'integer',
             'userId' => 'integer',
-            'role' => \App\Enums\Role::class,
+            'role' => Role::class,
             'campusId' => 'integer',
         ];
     }

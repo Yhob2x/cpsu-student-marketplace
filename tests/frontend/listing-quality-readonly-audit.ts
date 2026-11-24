@@ -1,4 +1,4 @@
-import { assessListingReadability } from '../../resources/js/listing-quality';
+import { assessListingReadability } from '../../resources/js/lib/listings/listing-quality';
 // Authorized local development API only. No authenticated request, write or media fetch.
 const base = 'http://127.0.0.1:4000/api/v1/listings';
 let page = 1;

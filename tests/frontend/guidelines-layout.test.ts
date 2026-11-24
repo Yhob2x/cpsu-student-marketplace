@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'bun:test';
-import { parseGuidelineSections } from '../../resources/js/pages-public';
+import { parseGuidelineSections } from '../../resources/js/lib/content/guidelines';
 
 describe('marketplace guideline sections', () => {
   test('preserves the published rule wording while creating stable section anchors', () => {

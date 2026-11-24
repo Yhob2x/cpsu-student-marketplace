@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'bun:test';
-import { campusMapCenter, NEGROS_OVERVIEW, preferredCampusName } from '../../resources/js/meetup-campus';
+import { campusMapCenter, NEGROS_OVERVIEW, preferredCampusName } from '../../resources/js/lib/meetup/meetup-campus';
 
 describe('campus-aware meetup map defaults', () => {
   test('selects the correct university area instead of always showing Main Campus', () => {

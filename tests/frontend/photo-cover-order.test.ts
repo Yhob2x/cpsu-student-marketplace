@@ -1,5 +1,5 @@
 import { test, expect } from 'bun:test';
-import { coverFirst } from '../../resources/js/photo-cover-order';
+import { coverFirst } from '../../resources/js/lib/listings/photo-cover-order';
 
 test('selected cover uploads first without mutating the picker order', () => {
   const files = [new File(['a'], 'a.jpg'), new File(['b'], 'b.jpg'), new File(['c'], 'c.jpg')];

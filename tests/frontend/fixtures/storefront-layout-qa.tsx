@@ -1,9 +1,9 @@
 import React from 'react';
 import { createRoot } from 'react-dom/client';
 import { MemoryRouter } from 'react-router-dom';
-import { StorefrontView, type PublicStorefront } from '../../../resources/js/pages-storefront';
-import { Icon } from '../../../resources/js/icons';
-import type { Listing } from '../../../resources/js/pages-public';
+import { StorefrontView, type PublicStorefront } from '../../../resources/js/components/stores/storefront-view';
+import { Icon } from '../../../resources/js/components/icons';
+import type { Listing } from '../../../resources/js/types/listing';
 import '../../../resources/css/styles.css';
 import '../../../resources/css/storefront-theme.css';
 import '../../../resources/css/storefront.css';

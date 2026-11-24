@@ -2,16 +2,22 @@
 
 namespace App\Models;
 
+use App\Enums\ReportStatus;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /** Generated from the approved Prisma schema. Table and column names must not change. */
 class Report extends MarketplaceModel
 {
     protected $table = 'Report';
+
     protected $primaryKey = 'id';
+
     public $timestamps = true;
+
     public const CREATED_AT = 'createdAt';
+
     public const UPDATED_AT = null;
+
     protected $fillable = ['reporterUserId', 'listingId', 'sellerProfileId', 'reason', 'status', 'assignedReviewerId', 'createdAt'];
 
     protected function casts(): array
@@ -21,7 +27,7 @@ class Report extends MarketplaceModel
             'reporterUserId' => 'integer',
             'listingId' => 'integer',
             'sellerProfileId' => 'integer',
-            'status' => \App\Enums\ReportStatus::class,
+            'status' => ReportStatus::class,
             'assignedReviewerId' => 'integer',
             'createdAt' => 'datetime',
         ];

@@ -2,16 +2,22 @@
 
 namespace App\Models;
 
+use App\Enums\TransactionStatus;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /** Generated from the approved Prisma schema. Table and column names must not change. */
 class TransactionStatusLog extends MarketplaceModel
 {
     protected $table = 'TransactionStatusLog';
+
     protected $primaryKey = 'id';
+
     public $timestamps = true;
+
     public const CREATED_AT = 'createdAt';
+
     public const UPDATED_AT = null;
+
     protected $fillable = ['transactionId', 'actorUserId', 'fromStatus', 'toStatus', 'event', 'reason', 'createdAt'];
 
     protected function casts(): array
@@ -20,8 +26,8 @@ class TransactionStatusLog extends MarketplaceModel
             'id' => 'integer',
             'transactionId' => 'integer',
             'actorUserId' => 'integer',
-            'fromStatus' => \App\Enums\TransactionStatus::class,
-            'toStatus' => \App\Enums\TransactionStatus::class,
+            'fromStatus' => TransactionStatus::class,
+            'toStatus' => TransactionStatus::class,
             'createdAt' => 'datetime',
         ];
     }

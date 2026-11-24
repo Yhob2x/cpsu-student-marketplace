@@ -1,7 +1,7 @@
 import { describe, expect, test } from 'bun:test';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { StaticRouter } from 'react-router-dom/server';
-import { StoreFollowersView, type StoreFollowPage } from '../../resources/js/store-followers';
+import { StoreFollowersView, type StoreFollowPage } from '../../resources/js/components/stores/store-followers';
 
 const followers: StoreFollowPage = {
   total: 8, followingCount: 3, page: 1, pageSize: 6,

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\InquiryStatus;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
@@ -10,10 +11,15 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 class InquiryThread extends MarketplaceModel
 {
     protected $table = 'InquiryThread';
+
     protected $primaryKey = 'id';
+
     public $timestamps = true;
+
     public const CREATED_AT = 'createdAt';
+
     public const UPDATED_AT = null;
+
     protected $fillable = ['listingId', 'buyerUserId', 'sellerProfileId', 'status', 'createdAt'];
 
     protected function casts(): array
@@ -23,7 +29,7 @@ class InquiryThread extends MarketplaceModel
             'listingId' => 'integer',
             'buyerUserId' => 'integer',
             'sellerProfileId' => 'integer',
-            'status' => \App\Enums\InquiryStatus::class,
+            'status' => InquiryStatus::class,
             'createdAt' => 'datetime',
         ];
     }

@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, test } from 'bun:test';
 import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
-import { ListingAppreciation } from '../../resources/js/listing-appreciation';
+import { ListingAppreciation } from '../../resources/js/components/listings/listing-appreciation';
 
 const originalFetch = globalThis.fetch;
 afterEach(() => { cleanup(); globalThis.fetch = originalFetch; });

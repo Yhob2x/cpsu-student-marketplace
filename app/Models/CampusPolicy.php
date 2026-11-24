@@ -9,8 +9,11 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class CampusPolicy extends MarketplaceModel
 {
     protected $table = 'CampusPolicy';
+
     protected $primaryKey = 'id';
+
     public $timestamps = false;
+
     protected $fillable = ['campusId', 'version', 'effectiveDate', 'approvedBy', 'documentRef'];
 
     protected function casts(): array

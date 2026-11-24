@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, test } from 'bun:test';
 import { act, cleanup, render, screen, waitFor } from '@testing-library/react';
-import { ListingViews } from '../../resources/js/listing-views';
+import { ListingViews } from '../../resources/js/components/listings/listing-views';
 
 const originalFetch = globalThis.fetch;
 afterEach(() => { cleanup(); globalThis.fetch = originalFetch; });

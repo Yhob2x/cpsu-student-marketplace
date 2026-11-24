@@ -1,6 +1,7 @@
 import { test, expect } from 'bun:test';
 import { readFileSync } from 'node:fs';
-const account = readFileSync(new URL('../../resources/js/pages-account.tsx', import.meta.url), 'utf8');
+import { PAGE_GROUPS, readSource } from './support/source-files';
+const account = readSource(...PAGE_GROUPS.account);
 
 test('students can explicitly end the chat with confirmation and error feedback', () => {
   expect(account).toContain('End conversation');
@@ -11,7 +12,7 @@ test('students can explicitly end the chat with confirmation and error feedback'
 });
 
 test('closed chat errors explain that messaging is no longer available', () => {
-  const api = readFileSync(new URL('../../resources/js/api.ts', import.meta.url), 'utf8');
+  const api = readFileSync(new URL('../../resources/js/lib/api.ts', import.meta.url), 'utf8');
   expect(api).toContain("thread_closed: 'This conversation has ended");
 });
 

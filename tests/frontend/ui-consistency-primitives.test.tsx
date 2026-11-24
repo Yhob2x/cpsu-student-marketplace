@@ -1,5 +1,6 @@
 import { describe, expect, test } from 'bun:test';
 import { readFileSync } from 'node:fs';
+import { PAGE_GROUPS, readSource } from './support/source-files';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { Panel, Field } from '../../resources/js/components/ui/primitives';
 
@@ -39,22 +40,22 @@ describe('shared CPSU Market native wrappers', () => {
 
   test('student and admin screens reuse native Field and Panel without recreating HTML roles', () => {
     for (const [filename, fields, panels] of [
-      ['pages-admin.tsx', 11, 6],
-      ['pages-account.tsx', 26, 5],
-      ['pages-profile.tsx', 1, 4],
-      ['pages-public.tsx', 3, 4],
-      ['pages-transactions.tsx', 1, 5],
+      [['pages/admin/index.tsx'], 11, 6],
+      [PAGE_GROUPS.account, 26, 5],
+      [PAGE_GROUPS.profile, 1, 4],
+      [PAGE_GROUPS.public, 3, 4],
+      [PAGE_GROUPS.transactions, 1, 5],
     ] as const) {
-      const source = readFileSync(new URL('../../resources/js/' + filename, import.meta.url), 'utf8');
+      const source = readSource(...filename);
       expect((source.match(/<Field(?:\s|>)/g) ?? []).length).toBe(fields);
       expect((source.match(/<Panel(?:\s|>)/g) ?? []).length).toBe(panels);
-      expect(source).toContain("from './components/ui/primitives'");
+      expect(source).toContain("from '@/components/ui/primitives'");
     }
   });
 
   test('migration retains the previous admin field markup contract', () => {
-    for (const target of ['pages-managed-content.tsx','pages-reviewers.tsx','pages-catalog-admin.tsx']) {
-      const source = readFileSync(new URL('../../resources/js/'+target,import.meta.url),'utf8');
+    for (const target of ['components/admin/managed-content-admin.tsx','components/admin/reviewer-admin.tsx','components/admin/catalog-admin.tsx']) {
+      const source = readSource(target);
       expect(source).toContain("import { Field");
       expect(source).toContain('<Field>');
       expect(source).not.toContain('<label className="field">');

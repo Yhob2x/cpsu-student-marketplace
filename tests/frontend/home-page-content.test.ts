@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'bun:test';
-import { DEFAULT_HOME_PAGE, resolveHomePageContent, homePageDraftStatus } from '../../resources/js/home-page-content';
+import { DEFAULT_HOME_PAGE, resolveHomePageContent, homePageDraftStatus } from '../../resources/js/lib/content/home-page-content';
 
 describe('public homepage content', () => {
   test('uses shipped copy when a managed version is unavailable', () => {

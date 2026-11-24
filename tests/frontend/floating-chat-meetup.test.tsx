@@ -1,8 +1,8 @@
 import { afterEach, describe, expect, test } from 'bun:test';
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
-import { FloatingChatPanel } from '../../resources/js/floating-chat-panel';
-import { messageReceiveSoundEnabled, setMessageReceiveSoundEnabled } from '../../resources/js/message-receive-sound';
+import { FloatingChatPanel } from '../../resources/js/components/chat/floating-chat-panel';
+import { messageReceiveSoundEnabled, setMessageReceiveSoundEnabled } from '../../resources/js/lib/messaging/message-receive-sound';
 
 const originalFetch = globalThis.fetch;
 afterEach(() => { cleanup(); globalThis.fetch = originalFetch; });

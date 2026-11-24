@@ -1,5 +1,5 @@
 import { test, expect } from 'bun:test';
-import { safeLoginReturn } from '../../resources/js/auth-return';
+import { safeLoginReturn } from '../../resources/js/lib/auth/auth-return';
 
 test('sign-in accepts an exact listing URL and existing protected destinations', () => {
   expect(safeLoginReturn('/listings/42')).toBe('/listings/42');

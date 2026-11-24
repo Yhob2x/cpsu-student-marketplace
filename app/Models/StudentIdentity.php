@@ -8,12 +8,19 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class StudentIdentity extends MarketplaceModel
 {
     protected $table = 'StudentIdentity';
+
     protected $primaryKey = 'userId';
+
     public $incrementing = false;
+
     public $timestamps = true;
+
     public const CREATED_AT = 'createdAt';
+
     public const UPDATED_AT = null;
+
     protected $fillable = ['userId', 'fullName', 'studentIdNumber', 'createdAt'];
+
     protected $hidden = ['fullName', 'studentIdNumber'];
 
     protected function casts(): array

@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'bun:test';
-import { readFileSync } from 'node:fs';
+import { PAGE_GROUPS, readSource } from './support/source-files';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { LegacyButton } from '../../resources/js/components/ui/legacy-button';
 
@@ -29,23 +29,23 @@ describe('legacy button consolidation without design or behavior changes', () =>
 
   test('fourteen marketplace, chat, student, review, and admin files reuse the native button', () => {
     for (const [filename, expected] of [
-      ['pages-managed-content.tsx', 8],
-      ['pages-reviewers.tsx', 7],
-      ['pages-catalog-admin.tsx', 11],
-      ['pages-public.tsx', 13],
-      ['pages-transactions.tsx', 10],
-      ['pages-storefront.tsx', 6],
-      ['pages-account.tsx', 26],
-      ['pages-admin.tsx', 20],
-      ['pages-profile.tsx', 4],
-      ['store-review-widgets.tsx', 13],
-      ['meetup-location-card.tsx', 4],
-      ['seller-store-details.tsx', 2],
-      ['floating-chat-panel.tsx', 5],
-      ['main.tsx', 2],
+      [['components/admin/managed-content-admin.tsx'], 8],
+      [['components/admin/reviewer-admin.tsx'], 7],
+      [['components/admin/catalog-admin.tsx'], 11],
+      [PAGE_GROUPS.public, 13],
+      [PAGE_GROUPS.transactions, 10],
+      [['components/stores/storefront-view.tsx'], 6],
+      [PAGE_GROUPS.account, 26],
+      [['pages/admin/index.tsx'], 20],
+      [PAGE_GROUPS.profile, 4],
+      [['components/stores/store-review-widgets.tsx'], 13],
+      [['components/meetup/meetup-location-card.tsx'], 4],
+      [['components/stores/seller-store-details.tsx'], 2],
+      [['components/chat/floating-chat-panel.tsx'], 5],
+      [PAGE_GROUPS.shell, 2],
     ] as const) {
-      const source = readFileSync(new URL('../../resources/js/' + filename, import.meta.url), 'utf8');
-      expect(source).toContain("from './components/ui/legacy-button'");
+      const source = readSource(...filename);
+      expect(source).toContain("from '@/components/ui/legacy-button'");
       expect((source.match(/<LegacyButton(?:\s|>)/g) ?? []).length).toBe(expected);
       expect(source).not.toMatch(/<button[^>]+className="btn(?:\s|")/);
     }

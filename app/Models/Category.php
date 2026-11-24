@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\ListingType;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
@@ -9,8 +10,11 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class Category extends MarketplaceModel
 {
     protected $table = 'Category';
+
     protected $primaryKey = 'id';
+
     public $timestamps = false;
+
     protected $fillable = ['parentId', 'name', 'listingType', 'policyRiskLevel'];
 
     protected function casts(): array
@@ -18,7 +22,7 @@ class Category extends MarketplaceModel
         return [
             'id' => 'integer',
             'parentId' => 'integer',
-            'listingType' => \App\Enums\ListingType::class,
+            'listingType' => ListingType::class,
             'policyRiskLevel' => 'integer',
         ];
     }

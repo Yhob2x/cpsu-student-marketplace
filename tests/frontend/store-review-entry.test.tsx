@@ -1,8 +1,8 @@
 import { afterEach, describe, expect, test } from 'bun:test';
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
-import { StoreReviewEntry } from '../../resources/js/store-review-entry';
-import { StoreRatingsAndReviews } from '../../resources/js/store-review-widgets';
+import { StoreReviewEntry } from '../../resources/js/components/stores/store-review-entry';
+import { StoreRatingsAndReviews } from '../../resources/js/components/stores/store-review-widgets';
 
 const fetchOriginal = globalThis.fetch;
 afterEach(() => { cleanup(); globalThis.fetch = fetchOriginal; });

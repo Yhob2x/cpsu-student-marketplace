@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, test } from 'bun:test';
 import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
-import { ActionFeedbackHost, showActionFeedback } from '../../resources/js/action-feedback';
+import { ActionFeedbackHost, showActionFeedback } from '../../resources/js/components/action-feedback';
 
 afterEach(() => cleanup());
 

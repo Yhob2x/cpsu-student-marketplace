@@ -8,8 +8,11 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class Campus extends MarketplaceModel
 {
     protected $table = 'Campus';
+
     protected $primaryKey = 'id';
+
     public $timestamps = false;
+
     protected $fillable = ['code', 'name', 'active'];
 
     protected function casts(): array

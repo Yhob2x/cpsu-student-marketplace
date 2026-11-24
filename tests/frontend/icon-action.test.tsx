@@ -1,12 +1,13 @@
 import { describe, expect, test } from 'bun:test';
 import { readFileSync } from 'node:fs';
+import { PAGE_GROUPS, readSource } from './support/source-files';
 import { renderToStaticMarkup } from 'react-dom/server';
-import { IconAction } from '../../resources/js/icon-action';
+import { IconAction } from '../../resources/js/components/icon-action';
 
 describe('icon-only button accessibility', () => {
   test('mobile Alerts keeps accessible action names and filter wording', () => {
-    const page = readFileSync(new URL('../../resources/js/pages-profile.tsx', import.meta.url), 'utf8');
-    const shell = readFileSync(new URL('../../resources/js/main.tsx', import.meta.url), 'utf8');
+    const page = readSource(...PAGE_GROUPS.profile);
+    const shell = readSource(...PAGE_GROUPS.shell);
     const styles = readFileSync(new URL('../../resources/css/notifications.css', import.meta.url), 'utf8');
     // Icon-only actions keep an accessible name; main PWA tabs retain visible labels.
     expect(page).toContain('aria-label={busy ? \'Marking all notifications as read\' : \'Mark all as read\'}');
@@ -21,7 +22,7 @@ describe('icon-only button accessibility', () => {
     expect(styles).toContain('.notifications-summary-icon { display: none; }');
   });
   test('notification screen uses icon actions rather than duplicate visible text buttons', () => {
-    const source = readFileSync(new URL('../../resources/js/pages-profile.tsx', import.meta.url), 'utf8');
+    const source = readSource(...PAGE_GROUPS.profile);
     expect(source).toContain('<IconAction className="notifications-refresh" icon="refresh"');
     expect(source).toContain('<IconAction className="notification-mark-one" icon="check"');
     expect(source).not.toContain("'Mark read'");

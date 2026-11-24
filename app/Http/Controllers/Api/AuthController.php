@@ -33,8 +33,7 @@ class AuthController extends Controller
     public function __construct(
         private readonly AccessTokens $tokens,
         private readonly PasswordHasher $passwords,
-    ) {
-    }
+    ) {}
 
     public function registrationPolicy(): JsonResponse
     {

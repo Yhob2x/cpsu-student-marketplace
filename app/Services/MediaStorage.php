@@ -10,9 +10,7 @@ class MediaStorage
 {
     private const DRIVE_PREFIX = 'gdrive:';
 
-    public function __construct(private readonly GoogleDriveStorage $drive)
-    {
-    }
+    public function __construct(private readonly GoogleDriveStorage $drive) {}
 
     public function driveId(string $mediaPath): ?string
     {

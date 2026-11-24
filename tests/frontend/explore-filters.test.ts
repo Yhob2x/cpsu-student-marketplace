@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'bun:test';
-import { categoriesForExplore, cleanExploreQuery, DEFAULT_EXPLORE_FILTERS, exploreAdvancedSummary, explorePriceError, previewExploreOptions, updateExploreQuery } from '../../resources/js/explore-filters';
+import { categoriesForExplore, cleanExploreQuery, DEFAULT_EXPLORE_FILTERS, exploreAdvancedSummary, explorePriceError, previewExploreOptions, updateExploreQuery } from '../../resources/js/lib/listings/explore-filters';
 
 const cats = [
   {id: 1, name: 'Handmade goods', listingType: 'physical_product' as const},

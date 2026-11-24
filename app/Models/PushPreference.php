@@ -8,11 +8,17 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class PushPreference extends MarketplaceModel
 {
     protected $table = 'PushPreference';
+
     protected $primaryKey = 'userId';
+
     public $incrementing = false;
+
     public $timestamps = true;
+
     public const CREATED_AT = 'createdAt';
+
     public const UPDATED_AT = 'updatedAt';
+
     protected $fillable = ['userId', 'messages', 'listingReviews', 'accountUpdates', 'masterEnabled', 'quietStartMinute', 'quietEndMinute', 'createdAt', 'updatedAt'];
 
     protected function casts(): array

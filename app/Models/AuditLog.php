@@ -8,10 +8,15 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class AuditLog extends MarketplaceModel
 {
     protected $table = 'AuditLog';
+
     protected $primaryKey = 'id';
+
     public $timestamps = true;
+
     public const CREATED_AT = 'createdAt';
+
     public const UPDATED_AT = null;
+
     protected $fillable = ['actorUserId', 'action', 'targetType', 'targetId', 'metadata', 'createdAt'];
 
     protected function casts(): array

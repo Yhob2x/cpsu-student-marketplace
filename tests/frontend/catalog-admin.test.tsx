@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, test } from 'bun:test';
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
-import { CatalogAdmin } from '../../resources/js/pages-catalog-admin';
+import { CatalogAdmin } from '../../resources/js/components/admin/catalog-admin';
 
 const initial = {
   campuses: [{ id: 7, code: 'MAIN', name: 'Main Campus', active: true,

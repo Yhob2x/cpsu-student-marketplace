@@ -8,12 +8,19 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class StoreFollow extends MarketplaceModel
 {
     protected $table = 'StoreFollow';
+
     protected $primaryKey = null;
+
     public $incrementing = false;
+
     public const COMPOSITE_KEY = ['userId', 'sellerProfileId'];
+
     public $timestamps = true;
+
     public const CREATED_AT = 'createdAt';
+
     public const UPDATED_AT = null;
+
     protected $fillable = ['userId', 'sellerProfileId', 'createdAt'];
 
     protected function casts(): array

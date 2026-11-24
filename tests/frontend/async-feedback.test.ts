@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'bun:test';
-import { uploadEstimate, uploadPercent } from '../../resources/js/upload-feedback';
-import { withSavedListing } from '../../resources/js/saved-state';
+import { uploadEstimate, uploadPercent } from '../../resources/js/lib/listings/upload-feedback';
+import { withSavedListing } from '../../resources/js/lib/listings/saved-state';
 
 describe('truthful progress and optimistic saved items', () => {
   test('tracks only confirmed completed photos, never simulated byte progress', () => {

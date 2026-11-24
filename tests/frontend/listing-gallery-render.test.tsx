@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'bun:test';
 import { renderToStaticMarkup } from 'react-dom/server';
-import { ListingGallery } from '../../resources/js/listing-gallery';
+import { ListingGallery } from '../../resources/js/components/listings/listing-gallery';
 
 describe('product gallery rendering', () => {
   test('three photos create a swipeable carousel with counter, buttons and three thumbnails', () => {

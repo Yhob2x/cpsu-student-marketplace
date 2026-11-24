@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import { MemoryRouter } from 'react-router-dom';
-import { StoreFollowersView, type FollowTab, type StoreFollowPage } from '../../../resources/js/store-followers';
+import { StoreFollowersView, type FollowTab, type StoreFollowPage } from '../../../resources/js/components/stores/store-followers';
 import '../../../resources/css/styles.css';
 import '../../../resources/css/editorial-redesign.css';
 import '../../../resources/css/storefront.css';

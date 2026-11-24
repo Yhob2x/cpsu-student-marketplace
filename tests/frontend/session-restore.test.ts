@@ -1,5 +1,5 @@
 import { test, expect } from 'bun:test';
-import { setToken, tryRestoreSession } from '../../resources/js/api';
+import { setToken, tryRestoreSession } from '../../resources/js/lib/api';
 
 test('guest session probe treats HTTP 204 as signed out without parsing JSON', async () => {
   const originalFetch = globalThis.fetch;

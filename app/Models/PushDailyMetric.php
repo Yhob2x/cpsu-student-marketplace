@@ -6,12 +6,19 @@ namespace App\Models;
 class PushDailyMetric extends MarketplaceModel
 {
     protected $table = 'PushDailyMetric';
+
     protected $primaryKey = null;
+
     public $incrementing = false;
+
     public const COMPOSITE_KEY = ['dayKey', 'category', 'outcome'];
+
     public $timestamps = true;
+
     public const CREATED_AT = null;
+
     public const UPDATED_AT = 'updatedAt';
+
     protected $fillable = ['dayKey', 'category', 'outcome', 'count', 'updatedAt'];
 
     protected function casts(): array

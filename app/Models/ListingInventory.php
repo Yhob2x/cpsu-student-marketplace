@@ -8,9 +8,13 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class ListingInventory extends MarketplaceModel
 {
     protected $table = 'ListingInventory';
+
     protected $primaryKey = 'listingId';
+
     public $incrementing = false;
+
     public $timestamps = false;
+
     protected $fillable = ['listingId', 'availableQuantity', 'reservedQuantity'];
 
     protected function casts(): array

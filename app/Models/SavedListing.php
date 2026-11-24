@@ -8,10 +8,15 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class SavedListing extends MarketplaceModel
 {
     protected $table = 'SavedListing';
+
     protected $primaryKey = 'id';
+
     public $timestamps = true;
+
     public const CREATED_AT = 'createdAt';
+
     public const UPDATED_AT = null;
+
     protected $fillable = ['userId', 'listingId', 'createdAt'];
 
     protected function casts(): array

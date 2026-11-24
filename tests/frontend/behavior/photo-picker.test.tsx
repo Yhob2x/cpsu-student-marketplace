@@ -2,8 +2,8 @@ import { afterEach, beforeEach, describe, expect, test } from 'bun:test';
 import { useState } from 'react';
 import { cleanup, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { SelectedPhotoPreviews } from '../../../resources/js/selected-photo-previews';
-import { MAX_LISTING_PHOTOS, selectedPhotosError } from '../../../resources/js/listing-photo-uploads';
+import { SelectedPhotoPreviews } from '../../../resources/js/components/listings/selected-photo-previews';
+import { MAX_LISTING_PHOTOS, selectedPhotosError } from '../../../resources/js/lib/listings/listing-photo-uploads';
 
 function PhotoPicker() {
   const [files, setFiles] = useState<File[]>([]);

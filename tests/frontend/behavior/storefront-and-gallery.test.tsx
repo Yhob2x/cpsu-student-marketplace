@@ -2,10 +2,10 @@ import { afterEach, beforeEach, describe, expect, test } from 'bun:test';
 import { useState } from 'react';
 import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
-import { StorefrontView, type PublicStorefront } from '../../../resources/js/pages-storefront';
-import { ListingGallery } from '../../../resources/js/listing-gallery';
-import { FloatingChat } from '../../../resources/js/floating-chat';
-import type { Listing } from '../../../resources/js/pages-public';
+import { StorefrontView, type PublicStorefront } from '../../../resources/js/components/stores/storefront-view';
+import { ListingGallery } from '../../../resources/js/components/listings/listing-gallery';
+import { FloatingChat } from '../../../resources/js/components/chat/floating-chat';
+import type { Listing } from '../../../resources/js/types/listing';
 
 const listing = {
   id: 91, type: 'physical_product', title: 'Synthetic textbook',

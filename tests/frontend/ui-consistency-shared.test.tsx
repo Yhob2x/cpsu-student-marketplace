@@ -1,7 +1,7 @@
 import { describe, expect, test } from 'bun:test';
 import { readFileSync } from 'node:fs';
 import { renderToStaticMarkup } from 'react-dom/server';
-import { IconAction } from '../../resources/js/icon-action';
+import { IconAction } from '../../resources/js/components/icon-action';
 import { EmptyState, ErrorState, LoadingState } from '../../resources/js/components/ui/screen-state';
 
 describe('shared visual consistency components', () => {

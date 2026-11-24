@@ -8,10 +8,15 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class InquiryPreference extends MarketplaceModel
 {
     protected $table = 'InquiryPreference';
+
     protected $primaryKey = null;
+
     public $incrementing = false;
+
     public const COMPOSITE_KEY = ['threadId', 'userId'];
+
     public $timestamps = false;
+
     protected $fillable = ['threadId', 'userId', 'muted', 'hidden'];
 
     protected function casts(): array

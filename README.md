@@ -9,7 +9,7 @@ A **single mobile-first web application** for CPSU students, sellers and authori
 | Part | Stack | Location |
 |---|---|---|
 | Web app and REST API | Laravel 12, PHP 8.2, MySQL/MariaDB | `app/`, `routes/`, `database/` |
-| Frontend (mobile + desktop PWA) | React 18, TypeScript, Vite, Tailwind | `resources/js` and `resources/css` |
+| Frontend (mobile + desktop PWA) | React 18, TypeScript, Vite, Tailwind | `resources/js` (routed screens in `resources/js/pages`, see `docs/FRONTEND_STRUCTURE.md`) and `resources/css` |
 | Private photo service | Bun, `sharp`, `nsfwjs` (loopback only) | `photo-service/` |
 
 The Laravel app sits directly in the repository root, together with the blueprint, `docs/`, `progress/`, `infrastructure/` and `scripts/`. The browser always talks to the same origin and `/api/v1`. There is no separate API server to configure.

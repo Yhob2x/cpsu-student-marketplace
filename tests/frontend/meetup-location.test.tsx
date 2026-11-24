@@ -1,9 +1,9 @@
 import { describe, expect, test } from 'bun:test';
 import { renderToStaticMarkup } from 'react-dom/server';
-import { MeetupLocationCard } from '../../resources/js/meetup-location-card';
+import { MeetupLocationCard } from '../../resources/js/components/meetup/meetup-location-card';
 import {
   decodeMeetupLocation, encodeMeetupLocation, openStreetMapPinUrl, validMeetupPoint,
-} from '../../resources/js/meetup-location';
+} from '../../resources/js/lib/meetup/meetup-location';
 
 describe('private meetup map pin', () => {
   test('encodes and reads a pin without a database migration', () => {

@@ -17,7 +17,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:wght@400;500;600&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
   @viteReactRefresh
-  @vite('resources/js/app.ts')
+  @vite('resources/js/app.tsx')
 </head>
 <body><div id="root"></div></body>
 </html>

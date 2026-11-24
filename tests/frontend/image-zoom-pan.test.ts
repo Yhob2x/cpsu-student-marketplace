@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'bun:test';
-import { anchorPhotoZoom, clampZoom, fittedPhotoSize, limitPhotoPan } from '../../resources/js/image-zoom';
+import { anchorPhotoZoom, clampZoom, fittedPhotoSize, limitPhotoPan } from '../../resources/js/components/listings/image-zoom';
 
 describe('fullscreen image zoom geometry', () => {
   test('calculates the full contained image for landscape and portrait photos', () => {

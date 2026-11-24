@@ -5,8 +5,8 @@ namespace App\Http\Middleware;
 use App\Enums\UserStatus;
 use App\Models\User;
 use App\Services\AccessTokens;
-use App\Support\AuthUser;
 use App\Support\AuthCookies;
+use App\Support\AuthUser;
 use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -15,9 +15,7 @@ use Throwable;
 /** Resolves the account on every request. Status and roles always come from the database. */
 class AuthenticateAccessToken
 {
-    public function __construct(private readonly AccessTokens $tokens)
-    {
-    }
+    public function __construct(private readonly AccessTokens $tokens) {}
 
     public function handle(Request $request, Closure $next): Response
     {

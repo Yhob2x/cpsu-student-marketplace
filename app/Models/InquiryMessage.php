@@ -8,10 +8,15 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class InquiryMessage extends MarketplaceModel
 {
     protected $table = 'InquiryMessage';
+
     protected $primaryKey = 'id';
+
     public $timestamps = true;
+
     public const CREATED_AT = 'createdAt';
+
     public const UPDATED_AT = null;
+
     protected $fillable = ['threadId', 'authorUserId', 'body', 'deliveredAt', 'seenAt', 'createdAt'];
 
     protected function casts(): array

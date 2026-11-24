@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'bun:test';
-import { statusLabels, transactionNextStep, transactionPhase, type TransactionSnapshot } from '../../resources/js/transaction-flow';
+import { statusLabels, transactionNextStep, transactionPhase, type TransactionSnapshot } from '../../resources/js/lib/transactions/transaction-flow';
 
 const pending: TransactionSnapshot = {
   buyerUserId: 10, sellerUserId: 20, status: 'pending',

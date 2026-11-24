@@ -5,6 +5,7 @@ namespace App\Models;
 use DateTimeInterface;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Carbon;
 
 /** Keeps Eloquent compatible with the existing camelCase schema and API date format. */
 abstract class MarketplaceModel extends Model
@@ -15,7 +16,7 @@ abstract class MarketplaceModel extends Model
 
     protected function serializeDate(DateTimeInterface $date): string
     {
-        return \Illuminate\Support\Carbon::instance($date)->utc()->format('Y-m-d\TH:i:s.v\Z');
+        return Carbon::instance($date)->utc()->format('Y-m-d\TH:i:s.v\Z');
     }
 
     protected function setKeysForSaveQuery($query): Builder

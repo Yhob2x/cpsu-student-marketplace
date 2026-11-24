@@ -2,14 +2,18 @@
 
 namespace App\Models;
 
+use App\Enums\VerificationStatus;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /** Generated from the approved Prisma schema. Table and column names must not change. */
 class Affiliation extends MarketplaceModel
 {
     protected $table = 'Affiliation';
+
     protected $primaryKey = 'id';
+
     public $timestamps = false;
+
     protected $fillable = ['userId', 'campusId', 'verificationStatus', 'verifiedAt', 'expirationAt'];
 
     protected function casts(): array
@@ -18,7 +22,7 @@ class Affiliation extends MarketplaceModel
             'id' => 'integer',
             'userId' => 'integer',
             'campusId' => 'integer',
-            'verificationStatus' => \App\Enums\VerificationStatus::class,
+            'verificationStatus' => VerificationStatus::class,
             'verifiedAt' => 'datetime',
             'expirationAt' => 'datetime',
         ];

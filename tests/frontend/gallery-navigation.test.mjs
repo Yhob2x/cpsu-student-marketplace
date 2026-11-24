@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { photoIndexFromScroll, adjacentPhotoIndex, clampPhotoIndex } from '../../resources/js/gallery-navigation.ts';
+import { photoIndexFromScroll, adjacentPhotoIndex, clampPhotoIndex } from '../../resources/js/lib/listings/gallery-navigation';
 
 test('horizontal scroll position tracks the visible full-width photo', () => {
   assert.equal(photoIndexFromScroll(0, 320, 5), 0);

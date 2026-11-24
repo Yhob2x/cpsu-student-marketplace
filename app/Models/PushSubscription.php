@@ -8,11 +8,17 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class PushSubscription extends MarketplaceModel
 {
     protected $table = 'PushSubscription';
+
     protected $primaryKey = 'id';
+
     public $timestamps = true;
+
     public const CREATED_AT = 'createdAt';
+
     public const UPDATED_AT = 'updatedAt';
+
     protected $fillable = ['userId', 'endpointHash', 'endpoint', 'p256dh', 'auth', 'expiresAt', 'createdAt', 'updatedAt'];
+
     protected $hidden = ['endpoint', 'endpointHash', 'p256dh', 'auth'];
 
     protected function casts(): array

@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'bun:test';
-import { categoriesForKind, categoryMatchesKind } from '../../resources/js/listing-categories';
+import { categoriesForKind, categoryMatchesKind } from '../../resources/js/lib/listings/listing-categories';
 
 const categories = [
   { id: 1, name: 'Handmade goods', listingType: 'physical_product' },

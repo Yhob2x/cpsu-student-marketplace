@@ -1,11 +1,12 @@
 import { describe, expect, test } from 'bun:test';
 import { readFileSync } from 'node:fs';
-import { mergeInboxPages } from '../../resources/js/inbox-pages';
+import { PAGE_GROUPS, readSource } from './support/source-files';
+import { mergeInboxPages } from '../../resources/js/lib/messaging/inbox-pages';
 
-const inbox = readFileSync(new URL('../../resources/js/pages-account.tsx', import.meta.url), 'utf8');
-const floating = readFileSync(new URL('../../resources/js/floating-chat-panel.tsx', import.meta.url), 'utf8');
-const storefront = readFileSync(new URL('../../resources/js/pages-storefront.tsx', import.meta.url), 'utf8');
-const storePage = readFileSync(new URL('../../resources/js/pages-public.tsx', import.meta.url), 'utf8');
+const inbox = readSource(...PAGE_GROUPS.account);
+const floating = readFileSync(new URL('../../resources/js/components/chat/floating-chat-panel.tsx', import.meta.url), 'utf8');
+const storefront = readSource('components/stores/storefront-view.tsx');
+const storePage = readSource(...PAGE_GROUPS.public);
 
 describe('paged inbox and storefront readers', () => {
   test('repeated inbox refreshes keep old conversations and update new message previews', () => {

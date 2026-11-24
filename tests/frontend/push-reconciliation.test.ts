@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'bun:test';
-import { reconcilePushOwnership, revokePushOnDevice } from '../../resources/js/push-reconciliation';
+import { reconcilePushOwnership, revokePushOnDevice } from '../../resources/js/lib/push/push-reconciliation';
 
 describe('browser push ownership during account switching', () => {
   it('keeps a subscription only if the active account is confirmed to own it', async () => {

@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, test } from 'bun:test';
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
-import { StoreReviewModeration, TransactionStoreReview } from '../../resources/js/store-review-widgets';
+import { StoreReviewModeration, TransactionStoreReview } from '../../resources/js/components/stores/store-review-widgets';
 
 const originalFetch = globalThis.fetch;
 afterEach(() => { cleanup(); globalThis.fetch = originalFetch; });

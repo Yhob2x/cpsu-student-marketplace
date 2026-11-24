@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, test } from 'bun:test';
 import {
   hasNewIncomingMessage, messageReceiveSoundEnabled, playMessageReceiveSound,
   prepareMessageReceiveSound, setMessageReceiveSoundEnabled, unlockMessageReceiveSound,
-} from '../../resources/js/message-receive-sound';
+} from '../../resources/js/lib/messaging/message-receive-sound';
 
 const storage = new Map<string, string>();
 let plays = 0;

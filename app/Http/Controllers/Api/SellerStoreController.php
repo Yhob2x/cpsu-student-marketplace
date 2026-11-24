@@ -28,8 +28,7 @@ class SellerStoreController extends Controller
     public function __construct(
         private readonly MediaStorage $media,
         private readonly PhotoService $photos,
-    ) {
-    }
+    ) {}
 
     public function create(Request $request): JsonResponse
     {

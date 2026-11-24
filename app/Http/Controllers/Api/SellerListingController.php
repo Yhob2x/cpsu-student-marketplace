@@ -38,8 +38,7 @@ class SellerListingController extends Controller
         private readonly MediaStorage $media,
         private readonly PhotoService $photos,
         private readonly ListingRules $rules,
-    ) {
-    }
+    ) {}
 
     public function index(Request $request): JsonResponse
     {

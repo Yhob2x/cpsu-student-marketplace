@@ -9,10 +9,15 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 class Notification extends MarketplaceModel
 {
     protected $table = 'Notification';
+
     protected $primaryKey = 'id';
+
     public $timestamps = true;
+
     public const CREATED_AT = 'createdAt';
+
     public const UPDATED_AT = null;
+
     protected $fillable = ['userId', 'type', 'payload', 'readAt', 'createdAt'];
 
     protected function casts(): array

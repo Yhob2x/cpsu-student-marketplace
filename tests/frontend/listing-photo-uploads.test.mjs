@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'bun:test';
-import { MAX_LISTING_PHOTOS, selectedPhotosError, uploadListingPhotos } from '../../resources/js/listing-photo-uploads.ts';
+import { MAX_LISTING_PHOTOS, selectedPhotosError, uploadListingPhotos } from '../../resources/js/lib/listings/listing-photo-uploads';
 
 const photo = (n = 1, type = 'image/png') => new File([new Uint8Array(n)], 'synthetic.png', { type });
 const images = n => Array.from({ length: n }, () => photo());

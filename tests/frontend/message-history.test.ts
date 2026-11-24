@@ -1,9 +1,10 @@
 import { describe, expect, test } from 'bun:test';
 import { readFileSync } from 'node:fs';
-import { mergeMessageHistory } from '../../resources/js/message-history';
+import { PAGE_GROUPS, readSource } from './support/source-files';
+import { mergeMessageHistory } from '../../resources/js/lib/messaging/message-history';
 
-const fullChat = readFileSync(new URL('../../resources/js/pages-account.tsx', import.meta.url), 'utf8');
-const quickChat = readFileSync(new URL('../../resources/js/floating-chat-panel.tsx', import.meta.url), 'utf8');
+const fullChat = readSource(...PAGE_GROUPS.account);
+const quickChat = readFileSync(new URL('../../resources/js/components/chat/floating-chat-panel.tsx', import.meta.url), 'utf8');
 
 describe('paged conversation history', () => {
   test('joins older pages without duplicate messages, preserving chronological order', () => {

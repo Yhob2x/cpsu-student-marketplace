@@ -2,7 +2,7 @@ import { describe, expect, test } from 'bun:test';
 import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { StaticRouter } from 'react-router-dom/server';
-import { MostFollowedStores } from '../../resources/js/most-followed-stores';
+import { MostFollowedStores } from '../../resources/js/components/stores/most-followed-stores';
 
 const render = (stores: Parameters<typeof MostFollowedStores>[0]['stores']) =>
   renderToStaticMarkup(createElement(StaticRouter, { location: '/' }, createElement(MostFollowedStores, { stores })));

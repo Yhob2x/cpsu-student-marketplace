@@ -66,6 +66,7 @@ class StoreController extends Controller
         if ($number === null || ! is_finite($number) || floor($number) !== $number || $number < 1 || $number > 9007199254740991) {
             throw new ApiError(404, 'not_found');
         }
+
         return $this->publicStore($request, (int) $number);
     }
 

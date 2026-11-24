@@ -17,7 +17,5 @@ return new class extends Migration
     }
 
     /** Deliberately empty: rolling back must never drop marketplace data. */
-    public function down(): void
-    {
-    }
+    public function down(): void {}
 };

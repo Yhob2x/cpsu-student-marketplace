@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\UserStatus;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 
@@ -9,16 +10,20 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 class User extends MarketplaceModel
 {
     protected $table = 'User';
+
     protected $primaryKey = 'id';
+
     public $timestamps = false;
+
     protected $fillable = ['email', 'displayName', 'passwordHash', 'status'];
+
     protected $hidden = ['passwordHash'];
 
     protected function casts(): array
     {
         return [
             'id' => 'integer',
-            'status' => \App\Enums\UserStatus::class,
+            'status' => UserStatus::class,
         ];
     }
 

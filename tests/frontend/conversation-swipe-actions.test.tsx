@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, test } from 'bun:test';
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
-import { ConversationSwipeActions } from '../../resources/js/conversation-swipe-actions';
+import { ConversationSwipeActions } from '../../resources/js/components/chat/conversation-swipe-actions';
 
 afterEach(() => cleanup());
 

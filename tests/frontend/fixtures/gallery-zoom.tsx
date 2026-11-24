@@ -1,6 +1,6 @@
 import React from 'react';
 import { createRoot } from 'react-dom/client';
-import { ListingGallery } from '../../../resources/js/listing-gallery';
+import { ListingGallery } from '../../../resources/js/components/listings/listing-gallery';
 import '../../../resources/css/styles.css';
 import '../../../resources/css/listing-gallery.css';
 import '../../../resources/css/image-zoom.css';

@@ -3,6 +3,10 @@
 namespace App\Models;
 
 use App\Casts\PrismaDecimal;
+use App\Enums\AvailabilityState;
+use App\Enums\ListingCondition;
+use App\Enums\ListingStatus;
+use App\Enums\ListingType;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
@@ -11,10 +15,15 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 class Listing extends MarketplaceModel
 {
     protected $table = 'Listing';
+
     protected $primaryKey = 'id';
+
     public $timestamps = true;
+
     public const CREATED_AT = 'createdAt';
+
     public const UPDATED_AT = 'updatedAt';
+
     protected $fillable = ['sellerProfileId', 'campusId', 'categoryId', 'type', 'title', 'description', 'price', 'priceBasis', 'currency', 'availability', 'availabilityState', 'condition', 'deletedAt', 'reservationTransactionId', 'handoffNote', 'status', 'flags', 'createdAt', 'updatedAt'];
 
     protected function casts(): array
@@ -24,13 +33,13 @@ class Listing extends MarketplaceModel
             'sellerProfileId' => 'integer',
             'campusId' => 'integer',
             'categoryId' => 'integer',
-            'type' => \App\Enums\ListingType::class,
+            'type' => ListingType::class,
             'price' => PrismaDecimal::class,
-            'availabilityState' => \App\Enums\AvailabilityState::class,
-            'condition' => \App\Enums\ListingCondition::class,
+            'availabilityState' => AvailabilityState::class,
+            'condition' => ListingCondition::class,
             'deletedAt' => 'datetime',
             'reservationTransactionId' => 'integer',
-            'status' => \App\Enums\ListingStatus::class,
+            'status' => ListingStatus::class,
             'flags' => 'array',
             'createdAt' => 'datetime',
             'updatedAt' => 'datetime',

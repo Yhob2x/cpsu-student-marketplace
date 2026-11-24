@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'bun:test';
-import { filterStoreListings } from '../../resources/js/storefront-filter';
+import { filterStoreListings } from '../../resources/js/lib/stores/storefront-filter';
 
 const listings = [
   { id: 1, type: 'physical_product', title: 'Used physics book', description: 'A good review book', category: { name: 'Books' } },

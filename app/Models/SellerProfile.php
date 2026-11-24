@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use App\Enums\ApprovalStatus;
+use App\Enums\SellerType;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
@@ -9,10 +11,15 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class SellerProfile extends MarketplaceModel
 {
     protected $table = 'SellerProfile';
+
     protected $primaryKey = 'id';
+
     public $timestamps = true;
+
     public const CREATED_AT = 'createdAt';
+
     public const UPDATED_AT = null;
+
     protected $fillable = ['ownerUserId', 'campusId', 'storeName', 'description', 'sellerType', 'approvalStatus', 'avatarPath', 'createdAt'];
 
     protected function casts(): array
@@ -21,8 +28,8 @@ class SellerProfile extends MarketplaceModel
             'id' => 'integer',
             'ownerUserId' => 'integer',
             'campusId' => 'integer',
-            'sellerType' => \App\Enums\SellerType::class,
-            'approvalStatus' => \App\Enums\ApprovalStatus::class,
+            'sellerType' => SellerType::class,
+            'approvalStatus' => ApprovalStatus::class,
             'createdAt' => 'datetime',
         ];
     }

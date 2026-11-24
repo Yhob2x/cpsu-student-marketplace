@@ -1,7 +1,7 @@
 import { describe, expect, test } from 'bun:test';
 import {
   FOLLOWED_STORE_NOTICE_KIND, followedStoreNoticeTarget, followedStoreNoticeText,
-} from '../../resources/js/followed-store-notice';
+} from '../../resources/js/lib/stores/followed-store-notice';
 
 const item = (listingType: 'physical_product' | 'service', listingId: unknown = 47) => ({
   listingId, storeId: 12, storeName: 'CPSU Supplies', listingTitle: 'Notebook',

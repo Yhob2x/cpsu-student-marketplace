@@ -9,7 +9,7 @@ const manifest = JSON.parse(fs.readFileSync(path.join(publicDir, 'manifest.webma
 const index = fs.readFileSync(path.join(app, 'resources', 'views', 'app.blade.php'), 'utf8');
 const sw = fs.readFileSync(path.join(publicDir, 'sw.js'), 'utf8');
 const offline = fs.readFileSync(path.join(publicDir, 'offline.html'), 'utf8');
-const updateUi = fs.readFileSync(path.join(app, 'resources', 'js', 'pwa-status.tsx'), 'utf8');
+const updateUi = fs.readFileSync(path.join(app, 'resources', 'js', 'components', 'layout', 'pwa-status.tsx'), 'utf8');
 
 assert.equal(manifest.id, '/');
 assert.equal(manifest.scope, '/');

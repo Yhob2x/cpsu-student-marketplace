@@ -1,6 +1,6 @@
 import { test, expect } from 'bun:test';
-import { ApiError } from '../../resources/js/api';
-import { isPublicNotFound, publicResourceLoadMessage } from '../../resources/js/public-resource-error';
+import { ApiError } from '../../resources/js/lib/api';
+import { isPublicNotFound, publicResourceLoadMessage } from '../../resources/js/lib/public-resource-error';
 
 test('only a real 404 is shown as an unavailable public resource', () => {
   expect(isPublicNotFound(new ApiError(404, 'not_found'))).toBe(true);

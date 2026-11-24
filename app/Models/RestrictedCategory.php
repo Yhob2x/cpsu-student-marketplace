@@ -2,14 +2,18 @@
 
 namespace App\Models;
 
+use App\Enums\PolicyAction;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /** Generated from the approved Prisma schema. Table and column names must not change. */
 class RestrictedCategory extends MarketplaceModel
 {
     protected $table = 'RestrictedCategory';
+
     protected $primaryKey = 'id';
+
     public $timestamps = false;
+
     protected $fillable = ['campusId', 'categoryId', 'policyAction', 'policyVersionId'];
 
     protected function casts(): array
@@ -18,7 +22,7 @@ class RestrictedCategory extends MarketplaceModel
             'id' => 'integer',
             'campusId' => 'integer',
             'categoryId' => 'integer',
-            'policyAction' => \App\Enums\PolicyAction::class,
+            'policyAction' => PolicyAction::class,
             'policyVersionId' => 'integer',
         ];
     }

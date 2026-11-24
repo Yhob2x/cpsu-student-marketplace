@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'bun:test';
-import { assessListingReadability } from '../../resources/js/listing-quality';
+import { assessListingReadability } from '../../resources/js/lib/listings/listing-quality';
 
 describe('advisory listing readability audit', () => {
   test('flags placeholder names without rejecting or rewriting them', () => {

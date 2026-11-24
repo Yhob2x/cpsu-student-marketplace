@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { uploadEstimate, uploadPercent } from '../../upload-feedback';
+import { uploadEstimate, uploadPercent } from '@/lib/listings/upload-feedback';
 
 type PhotoProgress = { completed: number; total: number; startedAt: number; lastCompletedAt: number };
 

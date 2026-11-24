@@ -6,11 +6,17 @@ namespace App\Models;
 class HomePageContent extends MarketplaceModel
 {
     protected $table = 'HomePageContent';
+
     protected $primaryKey = 'id';
+
     public $incrementing = false;
+
     public $timestamps = true;
+
     public const CREATED_AT = null;
+
     public const UPDATED_AT = 'updatedAt';
+
     protected $fillable = ['id', 'draft', 'published', 'revision', 'publishedRevision', 'updatedAt', 'publishedAt'];
 
     protected function casts(): array

@@ -8,10 +8,15 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class PushAttempt extends MarketplaceModel
 {
     protected $table = 'PushAttempt';
+
     protected $primaryKey = 'id';
+
     public $timestamps = true;
+
     public const CREATED_AT = 'createdAt';
+
     public const UPDATED_AT = 'updatedAt';
+
     protected $fillable = ['outboxId', 'endpointHash', 'state', 'attemptCount', 'lastStatus', 'nextAttemptAt', 'createdAt', 'updatedAt'];
 
     protected function casts(): array

@@ -1,8 +1,8 @@
 import { describe, expect, test } from 'bun:test';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { StaticRouter } from 'react-router-dom/server';
-import { StorefrontView, type PublicStorefront } from '../../resources/js/pages-storefront';
-import type { Listing } from '../../resources/js/pages-public';
+import { StorefrontView, type PublicStorefront } from '../../resources/js/components/stores/storefront-view';
+import type { Listing } from '../../resources/js/types/listing';
 
 const sample = {
   id: 88, storeName: 'Synthetic Campus Store', description: 'For local tests only',

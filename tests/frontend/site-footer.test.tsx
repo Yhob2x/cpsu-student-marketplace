@@ -1,7 +1,7 @@
 import { describe, expect, test } from 'bun:test';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { StaticRouter } from 'react-router-dom/server';
-import { SiteFooter, type FooterAudience } from '../../resources/js/site-footer';
+import { SiteFooter, type FooterAudience } from '../../resources/js/components/layout/site-footer';
 
 function render(audience: FooterAudience, canReview = false) {
   return renderToStaticMarkup(<StaticRouter location="/"><SiteFooter audience={audience} canReview={canReview} /></StaticRouter>);

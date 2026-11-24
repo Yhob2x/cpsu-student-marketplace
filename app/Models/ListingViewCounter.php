@@ -8,9 +8,13 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class ListingViewCounter extends MarketplaceModel
 {
     protected $table = 'ListingViewCounter';
+
     protected $primaryKey = 'listingId';
+
     public $incrementing = false;
+
     public $timestamps = false;
+
     protected $fillable = ['listingId', 'viewCount'];
 
     protected function casts(): array

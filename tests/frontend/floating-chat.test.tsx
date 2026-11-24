@@ -1,7 +1,7 @@
 import { describe, expect, test } from 'bun:test';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { StaticRouter } from 'react-router-dom/server';
-import { FloatingChat, showFloatingChat } from '../../resources/js/floating-chat';
+import { FloatingChat, showFloatingChat } from '../../resources/js/components/chat/floating-chat';
 
 function html(path: string, ready: boolean, isStaff: boolean, signedIn: boolean, unread: number) {
   return renderToStaticMarkup(<StaticRouter location={path}>

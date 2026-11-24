@@ -8,8 +8,11 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class ListingMedia extends MarketplaceModel
 {
     protected $table = 'ListingMedia';
+
     protected $primaryKey = 'id';
+
     public $timestamps = false;
+
     protected $fillable = ['listingId', 'mediaPath', 'mimeType', 'position'];
 
     protected function casts(): array

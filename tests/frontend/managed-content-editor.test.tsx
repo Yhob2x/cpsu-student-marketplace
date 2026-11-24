@@ -1,8 +1,8 @@
 import { describe, expect, test } from 'bun:test';
 import React from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
-import { ApiError, explain } from '../../resources/js/api';
-import { ManagedContentAdmin } from '../../resources/js/pages-managed-content';
+import { ApiError, explain } from '../../resources/js/lib/api';
+import { ManagedContentAdmin } from '../../resources/js/components/admin/managed-content-admin';
 
 describe('admin content failure isolation', () => {
   test('guidelines and announcements have independent initial loading UI', () => {

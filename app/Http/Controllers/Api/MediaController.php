@@ -16,9 +16,7 @@ use Symfony\Component\HttpFoundation\Response;
 
 class MediaController extends Controller
 {
-    public function __construct(private readonly MediaStorage $media)
-    {
-    }
+    public function __construct(private readonly MediaStorage $media) {}
 
     /** A store photo is public only while the store and owner are active. */
     public function sellerAvatar(Request $request, string $id): Response

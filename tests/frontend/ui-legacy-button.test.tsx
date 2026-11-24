@@ -36,13 +36,13 @@ describe('legacy button consolidation without design or behavior changes', () =>
       [PAGE_GROUPS.transactions, 10],
       [['components/stores/storefront-view.tsx'], 6],
       [PAGE_GROUPS.account, 26],
-      [['pages/admin/index.tsx'], 20],
+      [['pages/admin/index.tsx'], 19],
       [PAGE_GROUPS.profile, 4],
       [['components/stores/store-review-widgets.tsx'], 13],
       [['components/meetup/meetup-location-card.tsx'], 4],
       [['components/stores/seller-store-details.tsx'], 2],
       [['components/chat/floating-chat-panel.tsx'], 5],
-      [PAGE_GROUPS.shell, 2],
+      [PAGE_GROUPS.shell, 1],
     ] as const) {
       const source = readSource(...filename);
       expect(source).toContain("from '@/components/ui/legacy-button'");

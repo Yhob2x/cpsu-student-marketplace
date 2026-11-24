@@ -63,3 +63,4 @@ import '../css/listing-rating-polish.css';
 import '../css/listing-card.css';
 import '../css/conversation-swipe-actions.css';
 import '../css/analytics.css';
+import '../css/concept-design.css';

@@ -23,16 +23,10 @@ for (const [label, path] of [['Home', '/'], ['Explore', '/explore']] as const) {
     await expect(price).toBeVisible();
     expect(await price.evaluate(el => getComputedStyle(el).color)).toBe(palette.primary);
 
-    const kind = page.locator('.product-card .listing-kind').first();
-    await expect(kind).toBeVisible();
-    const badge = await kind.evaluate(el => ({
-      foreground: getComputedStyle(el).color,
-      background: getComputedStyle(el).backgroundColor,
-    }));
-    expect(badge).toEqual({
-      foreground: palette['primary-dark'],
-      background: palette['primary-light'],
-    });
+    // Concept 2: the listing type is a solid badge on the photo, in the primary dark token.
+    const badge = page.locator('.product-card .market-card__badge--sale').first();
+    await expect(badge).toBeVisible();
+    expect(await badge.evaluate(el => getComputedStyle(el).backgroundColor)).toBe(palette['primary-dark']);
 
     if (label === 'Home') {
       const banner = page.locator('.cta-band');

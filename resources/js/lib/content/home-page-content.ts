@@ -49,3 +49,15 @@ export function homePageDraftStatus(state: Pick<HomePageEditorState, 'revision' 
     ? { pending: false, label: 'Homepage is live', detail: 'Students can see the latest published homepage.' }
     : { pending: false, label: 'Default homepage is live', detail: 'There are no unpublished draft changes.' };
 }
+
+/**
+ * Splits the managed hero copy into the concept layout: "Buy, Sell & Connect" / "on Campus",
+ * with the second line-1 word highlighted. A trailing comma before an "&" accent is dropped
+ * so "Buy, Sell," + "&" reads "Buy, Sell &".
+ */
+export function heroHeadline(copy: Pick<HomePageCopy, 'heroLine1' | 'heroAccent' | 'heroLine2' | 'heroLine3'>): { lead: string; highlight: string; tail: string } {
+  const line1 = copy.heroLine1.trim();
+  const accent = copy.heroAccent.trim();
+  const lead = accent === '&' ? `${line1.replace(/,$/, '')} &` : [line1, accent].filter(Boolean).join(' ');
+  return { lead, highlight: copy.heroLine2.trim(), tail: copy.heroLine3.trim() };
+}

@@ -23,6 +23,8 @@ for (const width of [360, 768, 1280]) {
       status: 200, contentType: 'application/json', body: JSON.stringify(catalog),
     }));
     await page.goto('/admin');
+    // Pages load as separate chunks; wait for the workspace before checking which navigation is shown.
+    await page.locator('.admin-workspace').waitFor();
     const mobilePicker = page.locator('.admin-workspace-mobile-nav select');
     if (await mobilePicker.isVisible()) await mobilePicker.selectOption('catalog');
     else await page.locator('.admin-workspace-nav-item').filter({ hasText: 'Campuses & categories' }).click();

@@ -2,28 +2,15 @@ import { test, expect } from '@playwright/test';
 import { mockMarketplace } from './support/mock-marketplace';
 
 // Synthetic browser acceptance only. No real student record or live DB mutation.
-test('listing card shows stock and its independent appreciation action', async ({ page }) => {
-  const state = await mockMarketplace(page, 'buyer');
+test('listing card shows low stock while appreciation lives on the listing page', async ({ page }) => {
+  await mockMarketplace(page, 'buyer');
   await page.goto('/explore');
   const card = page.locator('.product-card').filter({ hasText: 'Synthetic calculus textbook' }).first();
   await expect(card).toBeVisible();
-  await expect(card.getByText('3 in stock')).toBeVisible();
-  const appreciation = card.getByRole('button', { name: 'Appreciate this listing; 0 appreciations' });
-  await expect(appreciation).toBeVisible();
-  await expect(appreciation.locator('svg')).toHaveAttribute('fill', 'none');
-  await expect(appreciation).toHaveText('0');
-  await expect(card.getByRole('img', { name: '298 listing views' })).toBeVisible();
-  await appreciation.click();
-  const liked = card.getByRole('button', { name: 'Remove appreciation from this listing; 1 appreciations' });
-  await expect(liked).toHaveAttribute('aria-pressed', 'true');
-  await expect(liked).toHaveText('1');
-  await expect(liked.locator('svg')).toHaveAttribute('fill', 'currentColor');
-  expect(state.appreciatedListings.has(91)).toBe(true);
-  await liked.click();
-  await expect(card.getByRole('button', { name: 'Appreciate this listing; 0 appreciations' }))
-    .toHaveAttribute('aria-pressed', 'false');
-  await expect(appreciation.locator('svg')).toHaveAttribute('fill', 'none');
-  expect(state.appreciatedListings.has(91)).toBe(false);
+  // Concept 2 cards stay minimal: stock shows as a photo label, likes and views move to the detail page.
+  await expect(card.getByText('Only 3 left')).toBeVisible();
+  await expect(card.getByRole('button', { name: /Appreciate this listing/ })).toHaveCount(0);
+  await expect(card.getByRole('button', { name: 'Save for later' })).toBeVisible();
 });
 
 test('listing detail shows stock and appreciation from the same product', async ({ page }) => {

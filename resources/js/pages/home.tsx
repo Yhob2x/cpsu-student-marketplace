@@ -1,6 +1,10 @@
 import { type CSSProperties, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 
+import { CategoryChips } from '@/components/home/category-chips';
+import { ExploreWays, QuickActions } from '@/components/home/explore-ways';
+import { HomeHero } from '@/components/home/home-hero';
+import { HomeSearch } from '@/components/home/home-search';
 import { Icon } from '@/components/icons';
 import { ListingCard } from '@/components/listings/listing-card';
 import { SwipeableListingRail } from '@/components/listings/mobile-browse-controls';
@@ -13,8 +17,8 @@ import { selectHomeListings } from '@/lib/listings/home-listings';
 import { useMe } from '@/providers/session-provider';
 import type { Listing } from '@/types/listing';
 
-// Home is discovery-first: a concise hero, categories and uninterrupted listing sections come first.
-// Supporting information and optional installation follow the marketplace content.
+// Home follows the approved "Concept 2" layout: hero, search and categories, trending listings,
+// then ways to explore. Supporting information follows the marketplace content.
 export function Home() {
   const { me } = useMe();
   const staff = me?.roles.some(role => ['campus_reviewer', 'university_admin', 'system_admin', 'establishment'].includes(role.role));
@@ -25,32 +29,6 @@ export function Home() {
   const [managedContent, setManagedContent] = useState<HomePageView | null>(null);
   const [cats, setCats] = useState<any[]>([]);
   const [homeError, setHomeError] = useState('');
-  const shortCategoryName = (name: string) => ({
-    'Handmade goods': 'Hand-made',
-    'Pre-loved items': 'Pre-loved',
-    'Books & notes (pre-loved)': 'Books',
-    'Food & drinks': 'Food',
-    'Printing & school supplies': 'Printing',
-    'Design & creative': 'Design',
-    'Tutoring': 'Tutoring',
-    'Tech & IT help': 'Tech help',
-    'Photography & video': 'Photo & video',
-  } as Record<string, string>)[name] ?? name;
-  // Keep category discovery scannable without changing the existing category IDs or links.
-  const categoryIcon = (name: string) => {
-    const label = name.toLowerCase();
-    if (/print/.test(label)) return 'printer';
-    if (/book|notes|school supplies/.test(label)) return 'book';
-    if (/food|drink|snack|coffee/.test(label)) return 'utensils';
-    if (/design|creativ|\barts?\b/.test(label)) return 'palette';
-    if (/tutor|lesson|educat/.test(label)) return 'graduation';
-    if (/tech|digital|gadget|computer|it help/.test(label)) return 'laptop';
-    if (/photo|video/.test(label)) return 'camera';
-    if (/cloth|fashion|accessor/.test(label)) return 'shirt';
-    if (/handmade|craft|pre-loved|second.hand/.test(label)) return 'package';
-    if (/service|repair/.test(label)) return 'wrench';
-    return 'tag';
-  };
   const loadHome = () => {
     setHomeError('');
     const fail = (e: unknown) => setHomeError(explain(e));
@@ -75,7 +53,7 @@ export function Home() {
     return () => window.removeEventListener('listing-appreciation-committed', refreshPopular);
   }, []);
   const rail = (rows: Listing[], label: string) => <SwipeableListingRail itemCount={rows.length} label={label}>
-    {rows.map((l, index) => <ListingCard key={l.id} l={l} priority={label === 'Fresh listings' && index < 2} />)}
+    {rows.map((l, index) => <ListingCard key={l.id} l={l} priority={label === 'Trending on Campus' && index < 2} />)}
   </SwipeableListingRail>;
   const skeletons = <div className="rail">{Array.from({ length: 4 }, (_, i) => <div key={i} className="skel card" aria-hidden="true" />)}</div>;
   // Skeletons while loading; once loaded, an empty section disappears instead of leaving a dead heading.
@@ -86,60 +64,36 @@ export function Home() {
   const copy = homeContent.copy;
   // Fresh listings always show the newest public listings, even when one is also popular.
   const { popular: top, fresh, services: serviceRows } = selectHomeListings(feed, popular, services);
+  const canSell = Boolean(me) ? !staff : true;
+  // Trending prefers popular listings and falls back to the newest ones until likes accumulate.
+  const trending = top && top.length > 0 ? top : (fresh ?? []);
   return <>
     {homeError && <Panel className="" role="alert">Some marketplace content could not load. {homeError} <LegacyButton type="button" className="ghost" onClick={loadHome}>Retry</LegacyButton></Panel>}
-    <section className="hero home-hero">
-      <div className="hero-copy">
-        <span className="hero-eyebrow">{copy.heroEyebrow}</span>
-        <h1><span className="hero-line">{copy.heroLine1}</span>
-          <span className="hero-line hero-line-connect"><span className="hero-amp">{copy.heroAccent}</span> {copy.heroLine2}</span>
-          <em>{copy.heroLine3}</em></h1>
-        <p>{copy.heroBody}</p>
-        <div className="home-hero-actions">
-          <Link to="/explore" className="home-hero-explore">Explore listings <span aria-hidden="true"><Icon name="arrow" size={17} /></span></Link>
-          <Link to="/guidelines" className="home-hero-guide">How it works <Icon name="arrow" size={15} /></Link>
-        </div>
-        {/* Search stays in the global header; these links use existing routes. */}
+    <div className="home-top">
+      <HomeHero content={homeContent} canSell={canSell} />
+      <QuickActions canSell={canSell} />
+      <div className="home-discover">
+        <HomeSearch categories={cats} />
+        <CategoryChips categories={cats} />
       </div>
-      <div className="hero-art" aria-hidden="true">
-        {/* Scale-independent asymmetric crop; the admin-managed image remains unchanged. */}
-        <svg className="hero-photo-mask-definition" width="0" height="0" focusable="false" aria-hidden="true">
-          <defs>
-            <clipPath id="cpsu-hero-organic-clip" clipPathUnits="objectBoundingBox">
-              <path d="M .50 .035 C .67 .005 .82 .045 .91 .085 C .985 .125 .975 .23 .965 .355 C .955 .525 .99 .735 .93 .855 C .865 .985 .765 .99 .625 .95 C .49 .905 .405 .905 .29 .965 C .16 1 .065 .895 .045 .78 C .005 .625 .02 .395 .11 .255 C .205 .12 .34 .055 .50 .035 Z" />
-            </clipPath>
-          </defs>
-        </svg>
-        <figure className="shot shot-1 home-custom-hero">
-          <img src={homeContent.images.hero ?? '/illustrations/campus-abstract.svg'} alt="" decoding="async"
-            onError={e => { e.currentTarget.onerror = null; e.currentTarget.src = '/illustrations/campus-abstract.svg'; }} />
-        </figure>
-        <div className="home-hero-photo-signature" aria-hidden="true">
-          <span className="home-hero-photo-symbol"><Icon name="store" size={19} /></span>
-          <span><strong>CPSU Student Marketplace</strong><small>Our campus community</small></span>
-        </div>
-      </div>
-    </section>
-
-    <section className="category-section" aria-label="Browse by category">
-      <div className="sec-head category-head"><h2>{copy.categoryHeading}</h2><Link to="/explore">View all <Icon name="arrow" size={15} /></Link></div>
-      <div className="cat-rail home-category-grid" role="group" aria-label="All categories"
-        style={{ '--category-count': Math.max(1, cats.length) } as CSSProperties}>
-        {cats.map(c => <Link key={c.id} className="cat" to={`/explore?categoryId=${c.id}`}
-          aria-label={shortCategoryName(c.name) === c.name ? c.name : `${shortCategoryName(c.name)} — ${c.name}`} title={c.name}>
-          <span className="cat-ico" aria-hidden="true"><Icon name={categoryIcon(c.name)} size={20} /></span>
-          <span className="category-label-full" aria-hidden="true">{c.name}</span>
-          <span className="category-label-short" aria-hidden="true">{shortCategoryName(c.name)}</span>
-        </Link>)}
-      </div>
-    </section>
+    </div>
 
     <div className="home-discovery-flow">
-      {block('Fresh listings', '/explore', fresh)}
-      {block('Popular listings', '/explore', top)}
+      {feed === null || popular === null
+        ? <section className="home-listing-section trending" aria-label="Trending on Campus"><div className="sec-head"><h2>Trending on Campus</h2></div>{skeletons}</section>
+        : trending.length > 0 && <section className="home-listing-section trending" aria-labelledby="trending-title">
+          <div className="sec-head">
+            <div><h2 id="trending-title">Trending on Campus <span className="trending__flame" aria-hidden="true"><Icon name="flame" size={22} filled /></span></h2>
+              <p className="sec-sub">Popular items, services, and skills among CPSU students.</p></div>
+            <Link to="/explore">View more <Icon name="arrow" size={14} /></Link>
+          </div>
+          {rail(trending, 'Trending on Campus')}
+        </section>}
+      {top && top.length > 0 && block('Fresh listings', '/explore', fresh?.filter(item => !trending.some(shown => shown.id === item.id)) ?? null)}
       {block('Student services', '/explore?type=service', serviceRows)}
     </div>
 
+    <ExploreWays />
     <MostFollowedStores stores={mostFollowed} />
     <StudentAnnouncements />
 

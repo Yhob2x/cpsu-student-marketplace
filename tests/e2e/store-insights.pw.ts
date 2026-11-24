@@ -26,7 +26,7 @@ test('seller tracks orders and sales from My store and Store insights', async ({
   await expect(page.getByRole('table')).toContainText('Synthetic calculator');
 
   const request = page.waitForRequest(r => r.url().includes('/api/v1/seller/analytics?range=90d'));
-  await page.getByText('90 days', { exact: true }).click();
+  await page.getByRole('radio', { name: 'Last 90 days' }).click();
   await request;
   await expect(page).toHaveURL(/range=90d/);
   await expect(page.getByRole('radio', { name: 'Last 90 days' })).toBeChecked();
@@ -44,25 +44,30 @@ test('store insights stay readable on a 320px phone', async ({ page }) => {
   await page.goto('/dashboard/insights');
   await expect(page.getByRole('heading', { level: 1, name: 'Store insights' })).toBeVisible();
   expect(await noHorizontalScroll(page)).toBe(true);
-  for (const target of [page.getByText('7 days', { exact: true }), page.getByRole('combobox', { name: 'Show' })]) {
+  for (const target of [page.getByRole('radio', { name: 'Last 7 days' }), page.getByRole('combobox', { name: 'Show' })]) {
     const box = await target.evaluate(el => (el.closest('label') ?? el).getBoundingClientRect().height);
     expect(box, 'touch target height').toBeGreaterThanOrEqual(44);
   }
 });
 
-test('admin analytics show workload shortcuts and respect hidden small counts', async ({ page }) => {
+test('admin Overview dashboard shows charts, workload shortcuts and hidden small counts', async ({ page }) => {
   await mockMarketplace(page, 'admin');
   await page.goto('/admin');
-  await page.getByRole('navigation', { name: 'Administration sections' }).getByRole('button', { name: 'Analytics' }).click();
-  const section = page.getByRole('region', { name: 'Marketplace analytics' });
+  await expect(page.getByRole('heading', { level: 1, name: 'University administration' })).toBeVisible();
+  const mobileNav = page.locator('.admin-workspace-mobile-nav select');
+  if (await mobileNav.isVisible()) await mobileNav.selectOption('overview');
+  else await page.getByRole('navigation', { name: 'Administration sections' }).getByRole('button', { name: 'Overview' }).click();
+  const section = page.getByRole('region', { name: 'University dashboard' });
+  await expect(section.getByRole('figure', { name: /Review work waiting/ })).toBeVisible();
+  await expect(section.getByRole('figure', { name: 'Live listings by category' })).toBeVisible();
   await expect(section).toBeVisible();
   await expect(section.getByText('₱3,600').first()).toBeVisible();
-  await expect(section.getByText('Fewer than 5').first()).toBeVisible();
-  await expect(section.getByText('Oldest waiting 52 hours')).toBeVisible();
+  await expect(section.getByText('Hidden for privacy (1–4)').first()).toBeVisible();
+  await expect(section.getByText('Oldest waiting 2 days')).toBeVisible();
 
   const scan = await new AxeBuilder({ page }).include('.marketplace-analytics').withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa']).analyze();
   expect(scan.violations.map(v => v.id)).toEqual([]);
 
-  await section.getByRole('button', { name: /Listings to review/ }).click();
+  await section.getByRole('group', { name: 'Review work waiting' }).getByRole('button', { name: /Listings to review/ }).click();
   await expect(page.getByRole('heading', { name: 'Listings to review' })).toBeVisible();
 });

@@ -37,7 +37,7 @@ const AUDIT_ACTION_TEXT: Record<string, string> = {
 export function Admin() {
   const { syncQueue, me } = useMe();
   const accountAdmin = Boolean(me?.roles.some(role => role.role === 'university_admin' && role.campusId === null));
-  const [q, setQ] = useState<any>(null); const [stats, setStats] = useState<any>(null); const [err, setErr] = useState(''); const [reasons, setReasons] = useState<Record<string, string>>({});
+  const [q, setQ] = useState<any>(null); const [err, setErr] = useState(''); const [reasons, setReasons] = useState<Record<string, string>>({});
   const [pending, setPending] = useState('');
   const [pendingAction, setPendingAction] = useState('');
   const [activeSection, setActiveSection] = useState(() => accountAdmin ? 'overview' : 'listings');
@@ -54,7 +54,6 @@ export function Admin() {
   const [transactionPage, setTransactionPage] = useState(1);
   const [transactionLoading, setTransactionLoading] = useState(false);
   const [transactionError, setTransactionError] = useState('');
-  const [statsError, setStatsError] = useState('');
   const [studentQuery, setStudentQuery] = useState('');
   const [studentStatus, setStudentStatus] = useState('');
   const [studentVerification, setStudentVerification] = useState('');
@@ -81,18 +80,13 @@ export function Admin() {
     }).catch(e => setErr(explain(e))),
     api('/admin/reports').then(r => { setReports(r); setReportsError(''); }).catch(e => setReportsError(explain(e))),
   ]);
-  const refreshStats = () => api('/admin/analytics/overview')
-    .then(r => { setStats(r); setStatsError(''); }).catch(e => setStatsError(explain(e)));
-  const load = () => { void refreshQueues(); void refreshStats(); };
+  const load = () => { void refreshQueues(); };
   useEffect(() => { if (me) load(); }, [me?.id]);
   // Queue, verification and report cases must appear for a reviewer without navigation.
   // Do not touch in-progress decision text or photo confirmations.
   useForegroundRefresh(() => {
     if (!pending) refreshQueues();
   }, 5_000, Boolean(me));
-  useForegroundRefresh(() => {
-    if (!pending) return refreshStats();
-  }, 15_000, Boolean(me));
   const loadTransactions = async (page = 1) => {
     setTransactionLoading(true);
     try {
@@ -204,27 +198,32 @@ export function Admin() {
   const reasonOk = (k: string, min = 5) => (reasons[k] ?? '').trim().length >= min;
   const selectedStudent = students?.find(student => student.id === selectedStudentId);
   const selectedListing = q?.listings.find((listing: any) => listing.id === selectedListingId) ?? q?.listings[0];
-  type NavItem = { id: string; label: string; count?: number };
+  type NavItem = { id: string; label: string; icon: string; count?: number };
   const navGroups: { title: string; items: NavItem[] }[] = accountAdmin
     ? [
-      { title: 'Dashboard', items: [{ id: 'overview', label: 'Overview' }, { id: 'analytics', label: 'Analytics' }] },
-      { title: 'Management', items: [{ id: 'students', label: 'Students' }, { id: 'staff', label: 'Reviewer accounts' }, { id: 'catalog', label: 'Campuses & categories' }, { id: 'content', label: 'Content' }] },
-      { title: 'Review & safety', items: [
-        { id: 'listings', label: 'Listing reviews', count: q?.listings.length },
-        { id: 'affiliations', label: 'Verifications', count: q?.affiliations.length },
-        { id: 'reports', label: 'Reports', count: reports?.length },
-        { id: 'store-reviews', label: 'Store ratings' },
+      { title: 'Dashboard', items: [{ id: 'overview', label: 'Overview', icon: 'grid' }] },
+      { title: 'Management', items: [
+        { id: 'students', label: 'Students', icon: 'users' },
+        { id: 'staff', label: 'Reviewer accounts', icon: 'shield' },
+        { id: 'catalog', label: 'Campuses & categories', icon: 'folder' },
+        { id: 'content', label: 'Content', icon: 'edit' },
       ] },
-      { title: 'Monitoring', items: [{ id: 'transactions', label: 'Transactions' }, { id: 'audit', label: 'Audit history' }] },
+      { title: 'Review & safety', items: [
+        { id: 'listings', label: 'Listing reviews', icon: 'package', count: q?.listings.length },
+        { id: 'affiliations', label: 'Verifications', icon: 'userCheck', count: q?.affiliations.length },
+        { id: 'reports', label: 'Reports', icon: 'flag', count: reports?.length },
+        { id: 'store-reviews', label: 'Store ratings', icon: 'star' },
+      ] },
+      { title: 'Monitoring', items: [{ id: 'transactions', label: 'Transactions', icon: 'receipt' }, { id: 'audit', label: 'Audit history', icon: 'book' }] },
     ]
     : [
       { title: 'Review queue', items: [
-        { id: 'listings', label: 'Listing reviews', count: q?.listings.length },
-        { id: 'affiliations', label: 'Verifications', count: q?.affiliations.length },
-        { id: 'reports', label: 'Reports', count: reports?.length },
-        { id: 'store-reviews', label: 'Store ratings' },
+        { id: 'listings', label: 'Listing reviews', icon: 'package', count: q?.listings.length },
+        { id: 'affiliations', label: 'Verifications', icon: 'userCheck', count: q?.affiliations.length },
+        { id: 'reports', label: 'Reports', icon: 'flag', count: reports?.length },
+        { id: 'store-reviews', label: 'Store ratings', icon: 'star' },
       ] },
-      { title: 'Monitoring', items: [{ id: 'transactions', label: 'Transactions' }, { id: 'analytics', label: 'Campus analytics' }, { id: 'overview', label: 'Campus overview' }] },
+      { title: 'Monitoring', items: [{ id: 'transactions', label: 'Transactions', icon: 'receipt' }, { id: 'overview', label: 'Campus overview', icon: 'grid' }] },
     ];
   const changeSection = (id: string) => { setActiveSection(id); setNotice(''); };
   return <div className="admin-workspace">
@@ -245,7 +244,8 @@ export function Admin() {
           {group.items.map(item => <button type="button" key={item.id}
             aria-current={activeSection === item.id ? 'page' : undefined}
             className="admin-workspace-nav-item" onClick={() => changeSection(item.id)}>
-            <span>{item.label}</span>{item.count !== undefined && <span className="admin-workspace-count">{item.count}</span>}
+            <span className="admin-workspace-nav-icon" aria-hidden="true"><Icon name={item.icon} size={18} /></span>
+            <span className="admin-workspace-nav-label">{item.label}</span>{item.count !== undefined && <span className="admin-workspace-count">{item.count}</span>}
           </button>)}
         </div>)}
       </nav>
@@ -432,20 +432,8 @@ export function Admin() {
       {auditLoading && <p role="status" className="muted">Loading audit history…</p>}
       {auditCursor !== null && !auditLoading && !auditError && <LegacyButton type="button" className="ghost" onClick={() => void loadAudit(auditCursor)}>Load older events</LegacyButton>}
     </section>}
-    {activeSection === 'analytics' && <MarketplaceAnalytics accountAdmin={accountAdmin} onOpenSection={changeSection} />}
-    <div hidden={activeSection !== 'overview'}>
-    <h2 id="admin-overview">{accountAdmin ? 'University dashboard' : 'Campus overview'}</h2>
-    {accountAdmin && <div className="admin-overview-shortcuts" role="group" aria-label="Pending administration work">
-      <button type="button" onClick={() => changeSection('listings')}><strong>{q?.listings.length ?? '—'}</strong><span>Listing reviews</span></button>
-      <button type="button" onClick={() => changeSection('affiliations')}><strong>{q?.affiliations.length ?? '—'}</strong><span>Verifications</span></button>
-      <button type="button" onClick={() => changeSection('reports')}><strong>{reports?.length ?? '—'}</strong><span>Open reports</span></button>
-    </div>}
-    {statsError && <p className="err" role="alert">Campus overview could not load: {statsError} <LegacyButton type="button" className="ghost" onClick={load}>Retry</LegacyButton></p>}
-    {!stats && !statsError && <p className="muted" role="status">Loading campus overview…</p>}
-    {stats && !statsError && <><p className="muted">{stats.note}</p>
-      <div className="grid">{stats.campuses.map((c: any) => <Panel key={c.campus} className=""><h3>{c.campus}</h3>
-        <p>Storefronts: {c.activeStorefronts}<br />Published listings: {c.publishedListings}<br />Services: {c.serviceListings}<br />Pending review: {c.pendingReview}<br />Inquiries: {c.inquiries}</p></Panel>)}</div></>}
-    </div>
+    {activeSection === 'overview' && <MarketplaceAnalytics heading={accountAdmin ? 'University dashboard' : 'Campus overview'}
+      accountAdmin={accountAdmin} onOpenSection={changeSection} />}
       </div>
     </div>
   </div>;

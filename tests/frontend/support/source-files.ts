@@ -24,5 +24,5 @@ export const PAGE_GROUPS = {
   public: ['components/listings/listing-card.tsx', 'pages/home.tsx', 'pages/explore.tsx', 'pages/listings/show.tsx', 'pages/stores/show.tsx', 'pages/guidelines.tsx'],
   profile: ['pages/profile.tsx', 'pages/notifications.tsx', 'lib/account/notifications.ts'],
   transactions: ['pages/transactions/index.tsx', 'pages/transactions/show.tsx', 'components/transactions/status-pill.tsx'],
-  shell: ['layouts/app-layout.tsx', 'components/layout/header-search.tsx', 'routes.tsx', 'providers/session-provider.tsx'],
+  shell: ['layouts/app-layout.tsx', 'components/layout/account-menu.tsx', 'routes.tsx', 'providers/session-provider.tsx'],
 } as const;

@@ -50,6 +50,17 @@ const PATHS: Record<string, ReactNode> = {
   refresh: <><path d="M20 7v5h-5" /><path d="M4 17v-5h5" /><path d="M6.2 9A7 7 0 0 1 18.5 7L20 12M4 12l1.5 5A7 7 0 0 0 17.8 15" /></>,
   check: <path d="m5 12.5 4.5 4.5L19 7" />,
   checks: <><path d="m2.5 12.5 4.5 4.5L16 7" /><path d="m10 16.5 2.5 2.5L22 8" /></>,
+  cart: <><path d="M3 4h2.2l2.3 11h10.8l2-8H6.4" /><circle cx="9.5" cy="19.5" r="1.4" /><circle cx="17" cy="19.5" r="1.4" /></>,
+  bag: <><path d="M5 8h14l-1 12H6Z" /><path d="M9 8V6.5a3 3 0 0 1 6 0V8" /></>,
+  users: <><circle cx="9" cy="8.5" r="3.2" /><path d="M3 19.5c.6-3.3 3-5.2 6-5.2s5.4 1.9 6 5.2" /><path d="M15.5 5.6a3 3 0 0 1 0 5.8M17.5 14.6c1.8.6 3 2.3 3.4 4.9" /></>,
+  bolt: <path d="M13 3 5 13.5h6L10 21l8-10.5h-6Z" />,
+  flame: <path d="M12 21c3.9 0 6.5-2.6 6.5-6.2 0-3.9-2.8-6-4.2-9.8-.4 2.6-1.6 3.9-3 4.8.1-2.1-.6-4.1-2.2-5.8C9 8 5.5 10.5 5.5 14.8 5.5 18.4 8.1 21 12 21Z" />,
+  receipt: <><path d="M6 3h12v18l-3-2-3 2-3-2-3 2Z" /><path d="M9 8h6M9 12h6M9 16h3" /></>,
+  compass: <><circle cx="12" cy="12" r="9" /><path d="m15.5 8.5-2.2 4.8-4.8 2.2 2.2-4.8Z" /></>,
+  inbox: <><path d="M4 5.5A1.5 1.5 0 0 1 5.5 4h13A1.5 1.5 0 0 1 20 5.5v9a1.5 1.5 0 0 1-1.5 1.5H10l-4.5 4v-4h0A1.5 1.5 0 0 1 4 14.5Z" /><path d="M8 8.5h8M8 12h5" /></>,
+  homeSolid: <><path d="M3 10.2 12 3l9 7.2V20a1 1 0 0 1-1 1h-5v-6.5H9V21H4a1 1 0 0 1-1-1Z" fill="currentColor" /></>,
+  more: <><circle cx="5" cy="12" r="1.3" fill="currentColor" /><circle cx="12" cy="12" r="1.3" fill="currentColor" /><circle cx="19" cy="12" r="1.3" fill="currentColor" /></>,
+  verified: <><path d="M12 2.8 14.5 4.6 17.6 4.5 18.6 7.4 21.1 9.2 20.1 12.1 21.1 15 18.6 16.8 17.6 19.7 14.5 19.6 12 21.4 9.5 19.6 6.4 19.7 5.4 16.8 2.9 15 3.9 12.1 2.9 9.2 5.4 7.4 6.4 4.5 9.5 4.6Z" fill="currentColor" stroke="none" /><path d="m8.3 12.2 2.5 2.5 4.9-5" stroke="var(--paper)" strokeWidth="2" /></>,
 };
 
 export type IconName = keyof typeof PATHS;

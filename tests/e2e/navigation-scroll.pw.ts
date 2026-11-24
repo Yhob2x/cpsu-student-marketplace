@@ -10,7 +10,7 @@ async function scrollDown(page: Page) {
 }
 
 async function activatePrimaryTab(page: Page, pathname: string) {
-  const area = (page.viewportSize()?.width ?? 1280) <= 600 ? '.tabbar' : '.navrow';
+  const area = (page.viewportSize()?.width ?? 1280) <= 600 ? '.tabbar' : '.site-nav';
   // Clicking via the DOM avoids Playwright automatically scrolling the desktop header into view.
   await page.evaluate(selector => {
     const anchor = document.querySelector<HTMLAnchorElement>(selector);

@@ -1,5 +1,14 @@
 # Changelog
 
+## 2026-11-24 — Concept 2 redesign
+
+- New app shell: a one-row desktop header with an Explore menu and an avatar account menu, and on phones a compact header with a floating bottom bar (Home, Explore, raised Sell, Inbox with unread badge, Profile).
+- New home page: editorial hero with floating Buy, Sell and Connect shortcuts, a search card with category and filters, icon category chips, Trending on Campus and More Ways to Explore. Phones get the search bar first, a hero card and quick actions.
+- New listing cards with a type badge, heart save button and verified seller row. Explore has its own search.
+- Smooth page entrance animation that respects reduced motion. Pages load as separate chunks prefetched in the background, so the main bundle is smaller.
+- Admin: icons on every navigation item, and Overview is now a chart dashboard (workload donut, activity chart, category and campus bars, order pipeline, campus table) that refreshes itself.
+- See `docs/DESIGN_CONCEPT2_2026-11-24.md`.
+
 ## 2026-11-24 — Order tracking and analytics
 
 - **Sellers:** My store shows a 30-day performance summary and the orders waiting on the seller. A new Store insights page (`/dashboard/insights`) adds reported sales, completed, new and cancelled orders with changes from the previous period, a trend chart, the order pipeline, the view-to-sale funnel, store rating, low stock and per-listing performance for 7 days, 30 days, 90 days or 12 months.

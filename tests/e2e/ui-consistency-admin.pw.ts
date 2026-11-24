@@ -21,6 +21,8 @@ for (const [section, heading, navigationLabel] of sections) {
   test('admin UI consistency: ' + section, async ({ page }) => {
     await mockMarketplace(page, 'admin');
     await page.goto('/admin');
+    // Pages load as separate chunks; wait for the workspace before checking which navigation is shown.
+    await page.locator('.admin-workspace').waitFor();
 
     const mobileNav = page.locator('.admin-workspace-mobile-nav select');
     if (await mobileNav.isVisible()) {

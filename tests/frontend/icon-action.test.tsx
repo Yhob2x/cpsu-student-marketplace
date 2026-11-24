@@ -14,8 +14,10 @@ describe('icon-only button accessibility', () => {
     expect(page).toContain('<span className="sr-only">{busy ? \'Marking notifications read\' : \'Mark all read\'}</span>');
     expect(page).toContain('role="group" aria-label="Filter notifications"');
     expect(shell).toContain('aria-label={unread > 0 ? `Notifications, ${unread} unread` : \'Notifications\'}');
-    expect(shell).toContain('aria-label="Saved listings" title="Saved listings"');
-    expect(shell).toContain('<Icon name="home" size={19} /><span>Home</span>');
+    // Concept 2: Saved moved into the account menu; bottom tabs keep icon plus visible label.
+    expect(shell).toContain('<Link to="/saved"><Icon name="heart" size={17} /> Saved listings</Link>');
+    expect(shell).toContain("<Icon name={isActive ? 'homeSolid' : 'home'} size={24} /><span>Home</span>");
+    expect(shell).toContain('`Inbox, ${unreadMessages} unread');
     expect(shell).toContain('className="nav-badge" aria-hidden="true"');
     expect(styles).toContain('.actions .alerts .nav-badge {');
     expect(styles).toContain('.notifications-mark-all.btn {');

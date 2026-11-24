@@ -3,6 +3,7 @@ import { useSearchParams } from 'react-router-dom';
 
 import { IconAction } from '@/components/icon-action';
 import { Icon } from '@/components/icons';
+import { ExploreSearch } from '@/components/listings/explore-search';
 import { ListingCard } from '@/components/listings/listing-card';
 import { StoresInResults } from '@/components/stores/stores-in-results';
 import { LegacyButton } from '@/components/ui/legacy-button';
@@ -131,6 +132,7 @@ export function Discover() {
         Filters{activeFilters.count + (f.type ? 1 : 0) > 0 ? ` (${activeFilters.count + (f.type ? 1 : 0)})` : ''}
       </button>
     </div>
+    <ExploreSearch />
     <div className="explore-sidebar-layout">
       <aside id="explore-filter-sidebar" className="explore-filter-sidebar"
         data-mobile-open={mobileFiltersOpen} aria-label="Filter listings">

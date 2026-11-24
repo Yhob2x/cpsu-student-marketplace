@@ -3,6 +3,7 @@
 namespace App\Support;
 
 use Illuminate\Http\Request;
+use RuntimeException;
 
 /** Strict JSON input helpers matching the validation rules used by the Express API. */
 class ApiInput
@@ -65,6 +66,69 @@ class ApiInput
         }
 
         return $value;
+    }
+
+    public static function enum(array $body, string $field, array $allowed): string
+    {
+        $value = $body[$field] ?? null;
+        if (! is_string($value) || ! in_array($value, $allowed, true)) {
+            throw self::invalid($field, 'Invalid enum value', 'invalid_enum_value');
+        }
+
+        return $value;
+    }
+
+    public static function strictKeys(array $body, array $allowed): void
+    {
+        foreach (array_keys($body) as $key) {
+            if (! in_array((string) $key, $allowed, true)) {
+                throw self::invalid((string) $key, 'Unrecognized key', 'unrecognized_keys');
+            }
+        }
+    }
+
+    /** JavaScript Number(text). Returns null for NaN. */
+    public static function jsNumber(string $value): ?float
+    {
+        $text = self::trim($value);
+        if ($text === '') {
+            return 0.0;
+        }
+        if (preg_match('/^0[xX]([0-9a-fA-F]+)\z/', $text, $match)) {
+            return (float) hexdec($match[1]);
+        }
+        if (preg_match('/^0[oO]([0-7]+)\z/', $text, $match)) {
+            return (float) octdec($match[1]);
+        }
+        if (preg_match('/^0[bB]([01]+)\z/', $text, $match)) {
+            return (float) bindec($match[1]);
+        }
+        if (preg_match('/^[+-]?Infinity\z/', $text)) {
+            return $text[0] === '-' ? -INF : INF;
+        }
+
+        return preg_match('/^[+-]?(\d+\.?\d*|\.\d+)([eE][+-]?\d+)?\z/', $text) === 1 ? (float) $text : null;
+    }
+
+    /** Non-numeric ids fail as they did under Prisma. Out-of-range ids simply match no row. */
+    public static function routeInt(string $value): int
+    {
+        $number = self::jsNumber($value);
+        if ($number === null || ! is_finite($number)) {
+            throw new RuntimeException('Invalid numeric route parameter.');
+        }
+
+        return abs($number) > 9007199254740991 ? PHP_INT_MAX : (int) $number;
+    }
+
+    public static function positiveId(mixed $value, string $field = 'id'): int
+    {
+        $number = is_string($value) ? self::jsNumber($value) : null;
+        if ($number === null || ! is_finite($number) || floor($number) !== $number || $number <= 0) {
+            throw self::invalid($field, 'Expected a positive integer');
+        }
+
+        return $number > 9007199254740991 ? PHP_INT_MAX : (int) $number;
     }
 
     public static function trim(string $value): string

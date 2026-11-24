@@ -9,6 +9,8 @@ use Illuminate\Database\Eloquent\Model;
 /** Keeps Eloquent compatible with the existing camelCase schema and API date format. */
 abstract class MarketplaceModel extends Model
 {
+    public static $snakeAttributes = false;
+
     protected $dateFormat = 'Y-m-d H:i:s.v';
 
     protected function serializeDate(DateTimeInterface $date): string

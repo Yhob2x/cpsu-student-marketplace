@@ -60,6 +60,8 @@ return [
             'timezone' => '+00:00',
             'engine' => null,
             'options' => extension_loaded('pdo_mysql') ? array_filter([
+                // Conditional writes must count matched rows, as Prisma did.
+                PDO::MYSQL_ATTR_FOUND_ROWS => true,
                 PDO::MYSQL_ATTR_SSL_CA => env('MYSQL_ATTR_SSL_CA'),
             ]) : [],
         ],

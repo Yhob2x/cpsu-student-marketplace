@@ -1,5 +1,10 @@
 # Changelog
 
+## 2026-11-24 — Laravel + React migration, Phase 3
+
+- Moved public browsing, listings, stores, follows, appreciations, views, seller tools and photo delivery to Laravel. Added a private local photo service for sanitization and safety screening.
+- 343/343 compared requests, their database effects and sanitized photo bytes matched Express. Testing also found and fixed a public-cache header on private photos. See `docs/LARAVEL_MIGRATION_PHASE3_2026-11-24.md`.
+
 ## 2026-11-24 — Laravel + React migration, Phase 2
 
 - Moved registration, login, refresh, logout, roles, security headers and rate limits to Laravel. Added 39 Eloquent models, 18 enums and a verified schema baseline. Other API routes still use Express through the local-only bridge.

@@ -63,7 +63,8 @@ class InquiryController extends Controller
             }
             $query->orderByDesc('id')->limit($limit + 1);
         } else {
-            $query->orderByDesc('createdAt')->orderBy('id');
+            // Same ordering as the original query, so equal timestamps keep the same order.
+            $query->orderByDesc('createdAt');
         }
         $rows = $query->get();
 
@@ -163,7 +164,7 @@ class InquiryController extends Controller
             }
         } else {
             InquiryMessage::query()->where('threadId', $thread->id)->where('authorUserId', '!=', $userId)->whereNull('deliveredAt')->update(['deliveredAt' => $stamp]);
-            $messages = InquiryMessage::query()->where('threadId', $thread->id)->with('author:id,displayName')->orderBy('createdAt')->orderBy('id')->get();
+            $messages = InquiryMessage::query()->where('threadId', $thread->id)->with('author:id,displayName')->orderBy('createdAt')->get();
         }
 
         $handoff = Handoff::query()->where('inquiryThreadId', $thread->id)->first();

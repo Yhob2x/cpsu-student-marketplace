@@ -4,7 +4,8 @@
 @import "tailwindcss/utilities.css" layer(utilities) source(none);
 @source "../js";
 @source "../css";
-@source inline("relative top-1 top-2 shrink outline");
+/* Candidates the original Vite root also scanned, kept so compiled CSS stays rule-for-rule identical. */
+@source inline("relative top-1 top-2 shrink outline [geo:9.82759,122.82719] [geo:999.99999,0.00000]");
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
 

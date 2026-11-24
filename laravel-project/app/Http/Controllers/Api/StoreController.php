@@ -142,7 +142,7 @@ class StoreController extends Controller
             }
             $listingQuery->orderByDesc('id')->limit($limit + 1);
         } else {
-            $listingQuery->orderByDesc('createdAt')->orderBy('id');
+            $listingQuery->orderByDesc('createdAt');
         }
         $rows = $listingQuery->with(ListingPresenter::RELATIONS)->get();
 

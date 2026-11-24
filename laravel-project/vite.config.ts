@@ -12,7 +12,7 @@ process.chdir(root);
 
 export default defineConfig({
   root,
-  plugins: [laravel({ input: [`${root}/resources/js/main.tsx`], refresh: true }), react(), tailwindcss()],
+  plugins: [laravel({ input: [`${root}/resources/js/app.ts`], refresh: true }), react(), tailwindcss()],
   resolve: { alias: { '@': resolve(root, 'resources/js') } },
   server: { host: '127.0.0.1', port: 5174, strictPort: true },
 });

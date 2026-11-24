@@ -11,6 +11,7 @@ use App\Support\ApiInput;
 use App\Support\ApiResponse;
 use App\Support\ListingAccess;
 use App\Support\ManagedContent;
+use App\Support\PublicReadCache;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -50,6 +51,7 @@ class AdminContentController extends Controller
         if ($changed !== 1) {
             throw new ApiError(409, 'draft_changed');
         }
+        PublicReadCache::forget(PublicReadCache::GUIDELINES);
         $this->audit($request, 'guidelines.published', 'guidelines', 1);
 
         return ApiResponse::json(GuidelineContent::query()->findOrFail(1)->toArray());
@@ -103,6 +105,7 @@ class AdminContentController extends Controller
         if ($changed !== 1) {
             throw new ApiError(409, 'draft_changed');
         }
+        PublicReadCache::forget(PublicReadCache::ANNOUNCEMENTS);
         $this->audit($request, 'announcement.published', 'announcement', $announcementId);
 
         return ApiResponse::json(Announcement::query()->findOrFail($announcementId)->toArray());
@@ -113,6 +116,7 @@ class AdminContentController extends Controller
         $announcementId = ApiInput::positiveId($id);
         $this->editable($announcementId);
         Announcement::query()->whereKey($announcementId)->update(['status' => 'archived']);
+        PublicReadCache::forget(PublicReadCache::ANNOUNCEMENTS);
         $this->audit($request, 'announcement.archived', 'announcement', $announcementId);
 
         return ApiResponse::json(Announcement::query()->findOrFail($announcementId)->toArray());

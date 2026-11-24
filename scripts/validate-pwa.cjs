@@ -3,19 +3,19 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
 
-const web = path.resolve(__dirname, '..', 'apps', 'web');
-const publicDir = path.join(web, 'public');
+const app = path.resolve(__dirname, '..', 'laravel-project');
+const publicDir = path.join(app, 'public');
 const manifest = JSON.parse(fs.readFileSync(path.join(publicDir, 'manifest.webmanifest'), 'utf8'));
-const index = fs.readFileSync(path.join(web, 'index.html'), 'utf8');
+const index = fs.readFileSync(path.join(app, 'resources', 'views', 'app.blade.php'), 'utf8');
 const sw = fs.readFileSync(path.join(publicDir, 'sw.js'), 'utf8');
 const offline = fs.readFileSync(path.join(publicDir, 'offline.html'), 'utf8');
-const updateUi = fs.readFileSync(path.join(web, 'src', 'pwa-status.tsx'), 'utf8');
+const updateUi = fs.readFileSync(path.join(app, 'resources', 'js', 'pwa-status.tsx'), 'utf8');
 
 assert.equal(manifest.id, '/');
 assert.equal(manifest.scope, '/');
 assert.equal(manifest.start_url, '/');
 assert.equal(manifest.display, 'standalone');
-const theme = fs.readFileSync(path.join(web, '..', 'shared', 'theme.css'), 'utf8');
+const theme = fs.readFileSync(path.join(app, 'resources', 'shared', 'theme.css'), 'utf8');
 const primary = theme.match(/--color-primary:\s*(#[a-fA-F0-9]{6})\s*;/)?.[1];
 assert.ok(primary, 'Shared CPSU primary token must exist');
 assert.equal(manifest.theme_color.toUpperCase(), primary.toUpperCase());

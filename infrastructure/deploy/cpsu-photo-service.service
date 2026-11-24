@@ -1,0 +1,19 @@
+[Unit]
+Description=CPSU Student Marketplace private photo service (sanitizing and safety screening)
+After=network.target
+
+[Service]
+WorkingDirectory=/var/www/cpsu-marketplace/laravel-project/photo-service
+# Contains PHOTO_SERVICE_TOKEN (same value as Laravel) and optionally PHOTO_SERVICE_PORT.
+EnvironmentFile=/etc/cpsu-marketplace/photo-service.env
+ExecStart=/usr/local/bin/bun server.mjs
+Restart=on-failure
+User=marketplace
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+MemoryMax=1G
+
+[Install]
+WantedBy=multi-user.target

@@ -3,7 +3,9 @@
 namespace App\Support;
 
 use Illuminate\Contracts\Database\Eloquent\Builder;
+use Illuminate\Database\Query\Builder as QueryBuilder;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\DB;
 
 /** Row visibility rules enforced in every query. Ported from row-access.ts and store-visibility.ts. */
 final class ListingAccess
@@ -31,11 +33,36 @@ final class ListingAccess
                     ->whereHas('campus', fn ($campus) => $campus->where('active', true))));
     }
 
+    /**
+     * The same eligibility rule as visibleStore(), as a set of store ids. Listing queries use
+     * this so each store is evaluated once rather than once for every listing row.
+     */
+    public static function visibleStoreIds(?string $sellerType = null): QueryBuilder
+    {
+        $now = self::now();
+        $stores = DB::table('SellerProfile as visible_store')
+            ->select('visible_store.id')
+            ->join('User as visible_owner', 'visible_owner.id', '=', 'visible_store.ownerUserId')
+            ->where('visible_store.approvalStatus', 'approved')
+            ->where('visible_store.sellerType', 'student')
+            ->where('visible_owner.status', 'active')
+            ->whereNotExists(fn ($role) => $role->selectRaw('1')->from('UserRole as visible_role')->whereColumn('visible_role.userId', 'visible_owner.id'))
+            ->whereExists(fn ($affiliation) => $affiliation->selectRaw('1')
+                ->from('Affiliation as visible_affiliation')
+                ->join('Campus as visible_campus', 'visible_campus.id', '=', 'visible_affiliation.campusId')
+                ->whereColumn('visible_affiliation.userId', 'visible_owner.id')
+                ->where('visible_affiliation.verificationStatus', 'verified')
+                ->where('visible_campus.active', true)
+                ->where(fn ($expiry) => $expiry->whereNull('visible_affiliation.expirationAt')->orWhere('visible_affiliation.expirationAt', '>', $now)));
+
+        return $sellerType === null ? $stores : $stores->where('visible_store.sellerType', $sellerType);
+    }
+
     public static function publicListing(Builder $query): Builder
     {
         return $query->where('status', 'published')
             ->whereNull('deletedAt')
-            ->whereHas('seller', fn ($seller) => self::visibleStore($seller));
+            ->whereIn('Listing.sellerProfileId', self::visibleStoreIds());
     }
 
     public static function availablePublicListing(Builder $query): Builder

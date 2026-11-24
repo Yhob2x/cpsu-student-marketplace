@@ -3,6 +3,7 @@
 namespace App\Http\Middleware;
 
 use App\Support\ApiInput;
+use App\Support\AtomicRateLimit;
 use App\Support\ManagedContent;
 use Closure;
 use Illuminate\Http\Request;
@@ -23,7 +24,7 @@ class AccountRateLimit
 
         $maximum = (int) $limit;
         $key = "{$bucket}:".$request->attributes->get('authUser')->id;
-        $hits = RateLimiter::hit($key, self::WINDOW_SECONDS);
+        $hits = AtomicRateLimit::hit($key, self::WINDOW_SECONDS);
         $retryAfter = max(1, RateLimiter::availableIn($key));
         $policy = sprintf('limit=%d, remaining=%d, reset=%d', $maximum, max(0, $maximum - $hits), $retryAfter);
         if ($hits > $maximum) {

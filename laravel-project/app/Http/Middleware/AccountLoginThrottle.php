@@ -3,6 +3,7 @@
 namespace App\Http\Middleware;
 
 use App\Support\ApiInput;
+use App\Support\AtomicRateLimit;
 use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\RateLimiter;
@@ -26,7 +27,7 @@ class AccountLoginThrottle
         $key = "api-login-account:{$digest}";
 
         // Count before verifying so parallel guesses cannot exceed the limit.
-        $hits = RateLimiter::hit($key, self::WINDOW_SECONDS);
+        $hits = AtomicRateLimit::hit($key, self::WINDOW_SECONDS);
         $retryAfter = max(1, RateLimiter::availableIn($key));
         $policy = sprintf('limit=%d, remaining=%d, reset=%d', $limit, max(0, $limit - $hits), $retryAfter);
         if ($hits > $limit) {
@@ -35,7 +36,7 @@ class AccountLoginThrottle
 
         $response = $next($request);
         if ($response->getStatusCode() < 400) {
-            RateLimiter::decrement($key, self::WINDOW_SECONDS);
+            AtomicRateLimit::decrement($key, self::WINDOW_SECONDS);
         }
         $response->headers->set('RateLimit', $policy);
 

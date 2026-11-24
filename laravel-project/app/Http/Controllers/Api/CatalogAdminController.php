@@ -9,6 +9,7 @@ use App\Models\Category;
 use App\Support\ApiError;
 use App\Support\ApiInput;
 use App\Support\ApiResponse;
+use App\Support\PublicReadCache;
 use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -55,6 +56,8 @@ class CatalogAdminController extends Controller
         } catch (UniqueConstraintViolationException) {
             throw new ApiError(409, 'catalog_duplicate');
         }
+
+        PublicReadCache::forget(PublicReadCache::CAMPUSES);
 
         return ApiResponse::json($campus->toArray(), 201);
     }
@@ -105,6 +108,8 @@ class CatalogAdminController extends Controller
             throw new ApiError(409, 'catalog_duplicate');
         }
 
+        PublicReadCache::forget(PublicReadCache::CAMPUSES);
+
         return ApiResponse::json($campus->toArray());
     }
 
@@ -124,6 +129,8 @@ class CatalogAdminController extends Controller
 
             return $category->fresh();
         });
+
+        PublicReadCache::forget(PublicReadCache::CATEGORIES);
 
         return ApiResponse::json($category->toArray(), 201);
     }
@@ -152,6 +159,8 @@ class CatalogAdminController extends Controller
             return $updated;
         });
 
+        PublicReadCache::forget(PublicReadCache::CATEGORIES);
+
         return ApiResponse::json($category->toArray());
     }
 
@@ -172,6 +181,8 @@ class CatalogAdminController extends Controller
 
             return $created->fresh();
         });
+
+        PublicReadCache::forget(PublicReadCache::CATEGORIES);
 
         return ApiResponse::json($category->toArray(), 201);
     }
@@ -201,6 +212,8 @@ class CatalogAdminController extends Controller
 
             return $updated;
         });
+
+        PublicReadCache::forget(PublicReadCache::CATEGORIES);
 
         return ApiResponse::json($category->toArray());
     }

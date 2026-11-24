@@ -194,7 +194,7 @@ class AdminReviewController extends Controller
     public function reports(Request $request): JsonResponse
     {
         $rows = $this->reportScope(Report::query(), $request->attributes->get('authUser'))->whereIn('status', ['open', 'reviewing'])
-            ->orderBy('createdAt')->orderBy('id')->limit(100)->get();
+            ->orderBy('createdAt')->limit(100)->get();
 
         return ApiResponse::json($rows->toArray());
     }

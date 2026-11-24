@@ -62,6 +62,8 @@ return [
             'options' => extension_loaded('pdo_mysql') ? array_filter([
                 // Conditional writes must count matched rows, as Prisma did.
                 PDO::MYSQL_ATTR_FOUND_ROWS => true,
+                // Reuses database connections so high traffic cannot exhaust local TCP ports.
+                PDO::ATTR_PERSISTENT => filter_var(env('DB_PERSISTENT', false), FILTER_VALIDATE_BOOLEAN),
                 PDO::MYSQL_ATTR_SSL_CA => env('MYSQL_ATTR_SSL_CA'),
             ]) : [],
         ],

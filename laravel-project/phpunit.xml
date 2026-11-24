@@ -32,7 +32,6 @@
         <env name="JWT_SECRET" value="phpunit-only-secret-not-used-anywhere-0123456789" force="true"/>
         <env name="COOKIE_SECURE" value="false" force="true"/>
         <env name="STUDENT_ID_COLLECTION_ENABLED" value="false" force="true"/>
-        <env name="LEGACY_API_URL" value="" force="true"/>
         <env name="MAIL_MAILER" value="array"/>
         <env name="PULSE_ENABLED" value="false"/>
         <env name="QUEUE_CONNECTION" value="sync" force="true"/>

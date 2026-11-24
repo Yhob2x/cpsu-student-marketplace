@@ -19,7 +19,6 @@ use App\Http\Controllers\Api\StoreController;
 use App\Http\Controllers\Api\StoreFollowController;
 use App\Http\Controllers\Api\StoreReviewController;
 use App\Http\Controllers\Api\TransactionController;
-use App\Http\Controllers\LegacyApiProxyController;
 use App\Http\Middleware\AccountLoginThrottle;
 use App\Http\Middleware\AccountRateLimit;
 use App\Http\Middleware\ApiRateLimit;
@@ -205,8 +204,3 @@ Route::prefix('v1')
             });
         });
     });
-
-// Temporary migration bridge: unmatched API paths still reach Express locally until cutover.
-if (app()->environment('local') && config('services.legacy_api.url')) {
-    Route::any('{path}', LegacyApiProxyController::class)->where('path', '.*');
-}

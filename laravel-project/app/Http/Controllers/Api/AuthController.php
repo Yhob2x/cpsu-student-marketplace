@@ -18,6 +18,7 @@ use App\Support\ApiError;
 use App\Support\ApiInput;
 use App\Support\ApiResponse;
 use App\Support\AuthCookies;
+use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -62,15 +63,20 @@ class AuthController extends Controller
         }
 
         $passwordHash = $this->passwords->hash($password);
-        $user = DB::transaction(function () use ($email, $displayName, $passwordHash, $campusId, $identity) {
-            $user = User::create(['email' => $email, 'displayName' => $displayName, 'passwordHash' => $passwordHash]);
-            Affiliation::create(['userId' => $user->id, 'campusId' => $campusId, 'verificationStatus' => VerificationStatus::pending]);
-            if ($identity !== null) {
-                StudentIdentity::create(['userId' => $user->id] + $identity);
-            }
+        try {
+            $user = DB::transaction(function () use ($email, $displayName, $passwordHash, $campusId, $identity) {
+                $user = User::create(['email' => $email, 'displayName' => $displayName, 'passwordHash' => $passwordHash]);
+                Affiliation::create(['userId' => $user->id, 'campusId' => $campusId, 'verificationStatus' => VerificationStatus::pending]);
+                if ($identity !== null) {
+                    StudentIdentity::create(['userId' => $user->id] + $identity);
+                }
 
-            return $user;
-        });
+                return $user;
+            });
+        } catch (UniqueConstraintViolationException) {
+            // A simultaneous sign-up won the race for this address.
+            throw new ApiError(409, 'email_taken');
+        }
 
         return $this->issue($request, $user->id, 201);
     }

@@ -41,6 +41,11 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withExceptions(function (Exceptions $exceptions) {
         $exceptions->dontReport([ApiError::class, ApiValidationError::class]);
 
+        // Lock conflicts are expected under load and are returned to the client as a retryable 409.
+        $exceptions->report(function (QueryException $error) {
+            return in_array((int) ($error->errorInfo[1] ?? 0), [1205, 1213], true) ? false : null;
+        });
+
         $exceptions->render(function (Throwable $error, Request $request) {
             if (! $request->is('api/*')) {
                 return null;

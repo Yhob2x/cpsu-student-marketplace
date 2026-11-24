@@ -1,5 +1,15 @@
 # Changelog
 
+## 2026-11-24 — Laravel + React migration, Phase 6
+
+- Laravel is now the only active app. The Express API, the React + Vite app and their Express-only tooling moved to `legacy/`. The temporary Express bridge was removed.
+- Frontend unit and browser tests, the database seeder and the deployment templates now live with Laravel. Root `bun run` scripts start, build, migrate, seed and test Laravel.
+- Design parity was confirmed on 625 screens, with rule-identical compiled CSS. See `docs/LARAVEL_MIGRATION_PHASE6_2026-11-24.md`.
+
+## 2026-11-24 — Laravel + React migration, Phase 5
+
+- Verified Laravel with Express stopped. Fixed cross-worker rate limits, the photo limit under concurrent uploads and simultaneous sign-ups. Restored the 30-second public reference-data cache. See `docs/LARAVEL_MIGRATION_PHASE5_2026-11-24.md`.
+
 ## 2026-11-24 — Laravel + React migration, Phase 4
 
 - Moved messaging, transactions, stock holds, store reviews, moderation, university admin tools, notifications and push enrollment to Laravel. All 121 Express API routes now exist in Laravel. Outbound push remains disabled.

@@ -13,6 +13,7 @@ use App\Support\ApiError;
 use App\Support\ApiInput;
 use App\Support\ApiResponse;
 use App\Support\ManagedContent;
+use App\Support\PublicReadCache;
 use Illuminate\Http\JsonResponse;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -20,29 +21,31 @@ class CatalogController extends Controller
 {
     public function campuses(): JsonResponse
     {
-        return ApiResponse::json(Campus::query()->where('active', true)->orderBy('id')->get(['id', 'code', 'name'])->toArray());
+        return ApiResponse::json(PublicReadCache::read(PublicReadCache::CAMPUSES, fn () => Campus::query()->where('active', true)->orderBy('id')->get(['id', 'code', 'name'])->toArray()));
     }
 
     public function categories(): JsonResponse
     {
-        return ApiResponse::json(Category::query()->orderBy('id')->get(['id', 'parentId', 'name', 'listingType'])->toArray());
+        return ApiResponse::json(PublicReadCache::read(PublicReadCache::CATEGORIES, fn () => Category::query()->orderBy('id')->get(['id', 'parentId', 'name', 'listingType'])->toArray()));
     }
 
     public function guidelines(): JsonResponse
     {
-        $content = GuidelineContent::query()->whereKey(1)->first(['publishedBody', 'publishedAt']);
+        return ApiResponse::json(PublicReadCache::read(PublicReadCache::GUIDELINES, function () {
+            $content = GuidelineContent::query()->whereKey(1)->first(['publishedBody', 'publishedAt']);
 
-        return ApiResponse::json([
-            'body' => $content?->publishedBody ?? ManagedContent::DEFAULT_GUIDELINES,
-            'publishedAt' => ApiResponse::date($content?->publishedAt),
-        ]);
+            return [
+                'body' => $content?->publishedBody ?? ManagedContent::DEFAULT_GUIDELINES,
+                'publishedAt' => ApiResponse::date($content?->publishedAt),
+            ];
+        }));
     }
 
     public function announcements(): JsonResponse
     {
-        $items = Announcement::query()->where('status', 'published')->orderByDesc('publishedAt')->limit(10)->get(['id', 'title', 'body', 'publishedAt']);
-
-        return ApiResponse::json(['items' => $items->toArray()]);
+        return ApiResponse::json(PublicReadCache::read(PublicReadCache::ANNOUNCEMENTS, fn () => [
+            'items' => Announcement::query()->where('status', 'published')->orderByDesc('publishedAt')->limit(10)->get(['id', 'title', 'body', 'publishedAt'])->toArray(),
+        ]));
     }
 
     public function homePage(): JsonResponse

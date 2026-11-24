@@ -183,6 +183,8 @@ class SellerListingController extends Controller
         $safe = $this->media->storeSanitized($this->photos->sanitize($this->listingFile($request)));
         try {
             $media = DB::transaction(function () use ($userId, $listingId, $safe) {
+                // Serializes uploads per listing so simultaneous requests cannot exceed the photo limit.
+                Listing::query()->whereKey($listingId)->lockForUpdate()->first(['id']);
                 $current = Listing::query()->whereKey($listingId)->whereHas('seller', fn ($seller) => $seller->where('ownerUserId', $userId))->with('media')->first();
                 if ($current === null) {
                     throw new ApiError(404, 'not_found');

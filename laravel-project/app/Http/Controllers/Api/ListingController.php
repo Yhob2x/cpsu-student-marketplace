@@ -34,12 +34,7 @@ class ListingController extends Controller
         $pageSize = ApiQuery::int($input, 'pageSize', 20, 1, 50);
 
         $query = Listing::query()->where('status', 'published')->where('availabilityState', 'available')->whereNull('deletedAt')
-            ->whereHas('seller', function ($seller) use ($sellerType) {
-                ListingAccess::visibleStore($seller);
-                if ($sellerType !== null) {
-                    $seller->where('sellerType', $sellerType);
-                }
-            });
+            ->whereIn('Listing.sellerProfileId', ListingAccess::visibleStoreIds($sellerType));
 
         if ($text !== null && $text !== '') {
             $query->where(fn ($match) => $match->where('title', 'like', "%{$text}%")->orWhere('description', 'like', "%{$text}%"));

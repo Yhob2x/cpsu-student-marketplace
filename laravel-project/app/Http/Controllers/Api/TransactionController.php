@@ -105,7 +105,7 @@ class TransactionController extends Controller
             default => $this->participantQuery($userId),
         };
         $items = $where()->with('listing:id,title,type', 'buyer:id,displayName', 'seller:id,displayName')
-            ->orderByDesc('createdAt')->orderBy('id')->offset(($page - 1) * $pageSize)->limit($pageSize)->get();
+            ->orderByDesc('createdAt')->offset(($page - 1) * $pageSize)->limit($pageSize)->get();
 
         return ApiResponse::json([
             'items' => $items->map(function ($transaction) {

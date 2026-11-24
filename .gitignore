@@ -6,8 +6,8 @@ uploads
 # Playwright CLI output (may contain credentials)
 .playwright-cli/
 # Playwright acceptance output may include synthetic or private browser captures.
-/apps/web/test-results/
-/apps/web/playwright-report/
+/laravel-project/test-results/
+/laravel-project/playwright-report/
 /graphify-out/
 /.tmp/
 
@@ -42,4 +42,4 @@ Thumbs.db
 *.db
 
 # One-off local browser inspection scripts.
-/apps/web/.cpsu-*.mjs
+/laravel-project/.cpsu-*.mjs

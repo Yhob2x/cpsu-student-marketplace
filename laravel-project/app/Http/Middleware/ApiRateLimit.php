@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Support\AtomicRateLimit;
 use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\RateLimiter;
@@ -20,7 +21,7 @@ class ApiRateLimit
         };
 
         $key = "api-rate:{$bucket}:".$request->ip();
-        $hits = RateLimiter::hit($key, $decay);
+        $hits = AtomicRateLimit::hit($key, $decay);
         $retryAfter = max(1, RateLimiter::availableIn($key));
         $headers = [
             'X-RateLimit-Limit' => (string) $limit,

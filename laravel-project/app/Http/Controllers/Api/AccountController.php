@@ -65,7 +65,7 @@ class AccountController extends Controller
 
     public function notifications(Request $request): JsonResponse
     {
-        $rows = Notification::query()->where('userId', $request->attributes->get('authUser')->id)->orderByDesc('createdAt')->orderBy('id')->limit(50)->get();
+        $rows = Notification::query()->where('userId', $request->attributes->get('authUser')->id)->orderByDesc('createdAt')->limit(50)->get();
 
         return ApiResponse::json($rows->map(function ($row) {
             $raw = $row->getRawOriginal('payload');

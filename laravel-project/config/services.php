@@ -35,8 +35,4 @@ return [
         ],
     ],
 
-    'legacy_api' => [
-        'url' => env('LEGACY_API_URL'),
-    ],
-
 ];

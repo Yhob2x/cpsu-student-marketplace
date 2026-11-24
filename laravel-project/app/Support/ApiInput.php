@@ -121,10 +121,50 @@ class ApiInput
         return abs($number) > 9007199254740991 ? PHP_INT_MAX : (int) $number;
     }
 
-    public static function positiveId(mixed $value, string $field = 'id'): int
+    public static function boolean(array $body, string $field): bool
+    {
+        $value = $body[$field] ?? null;
+        if (! is_bool($value)) {
+            throw self::invalid($field, 'Expected boolean');
+        }
+
+        return $value;
+    }
+
+    public static function positiveInteger(array $body, string $field): int
+    {
+        $value = self::integer($body, $field);
+        if ($value <= 0) {
+            throw self::invalid($field, 'Expected a positive integer', 'too_small');
+        }
+
+        return $value;
+    }
+
+    /** Accepts a missing body or {}, and rejects anything else. */
+    public static function emptyObject(Request $request): void
+    {
+        if (self::hasBody($request)) {
+            self::strictKeys(self::object($request), []);
+        }
+    }
+
+    /** JavaScript Number(value) for JSON or form input, as used by z.coerce.number(). */
+    public static function coerceNumber(mixed $value): ?float
+    {
+        return match (true) {
+            $value === null => 0.0,
+            is_bool($value) => $value ? 1.0 : 0.0,
+            is_int($value), is_float($value) => (float) $value,
+            is_string($value) => self::jsNumber($value),
+            default => null,
+        };
+    }
+
+    public static function positiveId(mixed $value, string $field = 'id', ?int $max = null): int
     {
         $number = is_string($value) ? self::jsNumber($value) : null;
-        if ($number === null || ! is_finite($number) || floor($number) !== $number || $number <= 0) {
+        if ($number === null || ! is_finite($number) || floor($number) !== $number || $number <= 0 || ($max !== null && $number > $max)) {
             throw self::invalid($field, 'Expected a positive integer');
         }
 

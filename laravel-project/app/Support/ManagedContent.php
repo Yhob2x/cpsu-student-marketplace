@@ -35,6 +35,12 @@ TEXT;
         'trustHeading', 'trustAccent', 'trustItems', 'stepsEyebrow', 'stepsHeading', 'stepsAccent', 'steps', 'ctaHeading', 'ctaBody',
     ];
 
+    /** Validated plain-text admin input. HTML markup is rejected. */
+    public static function plainInput(array $body, string $field, int $max): string
+    {
+        return self::plain($body[$field] ?? null, $max) ?? throw ApiInput::invalid($field, 'HTML markup is not allowed', 'custom');
+    }
+
     private static function plain(mixed $value, int $max): ?string
     {
         if (! is_string($value)) {
@@ -66,11 +72,33 @@ TEXT;
     /** Returns the cleaned snapshot, or null when stored content is invalid. */
     public static function parseHomePage(mixed $snapshot): ?array
     {
-        if (! self::sameKeys($snapshot, ['copy', 'images']) || ! self::sameKeys($snapshot['copy'], self::COPY_KEYS) || ! self::sameKeys($snapshot['images'], self::IMAGE_SLOTS)) {
+        if (! self::sameKeys($snapshot, ['copy', 'images']) || ! self::sameKeys($snapshot['images'], self::IMAGE_SLOTS)) {
             return null;
         }
 
-        $source = $snapshot['copy'];
+        $copy = self::parseCopy($snapshot['copy']);
+        if ($copy === null) {
+            return null;
+        }
+
+        $images = [];
+        foreach (self::IMAGE_SLOTS as $slot) {
+            $image = $snapshot['images'][$slot];
+            if ($image !== null && (! is_string($image) || ApiInput::length($image) < 1 || ApiInput::length($image) > 512)) {
+                return null;
+            }
+            $images[$slot] = $image;
+        }
+
+        return ['copy' => $copy, 'images' => $images];
+    }
+
+    public static function parseCopy(mixed $source): ?array
+    {
+        if (! self::sameKeys($source, self::COPY_KEYS)) {
+            return null;
+        }
+
         $copy = [];
         foreach (self::COPY_KEYS as $key) {
             if (isset(self::LINES[$key])) {
@@ -114,16 +142,7 @@ TEXT;
             $copy['steps'][] = ['title' => $title, 'body' => $body];
         }
 
-        $images = [];
-        foreach (self::IMAGE_SLOTS as $slot) {
-            $image = $snapshot['images'][$slot];
-            if ($image !== null && (! is_string($image) || ApiInput::length($image) < 1 || ApiInput::length($image) > 512)) {
-                return null;
-            }
-            $images[$slot] = $image;
-        }
-
-        return ['copy' => array_replace(array_flip(self::COPY_KEYS), $copy), 'images' => $images];
+        return array_replace(array_flip(self::COPY_KEYS), $copy);
     }
 
     public static function defaultHomePage(): array
@@ -133,11 +152,11 @@ TEXT;
         return self::parseHomePage($defaults) ?? throw new \RuntimeException('Default home page content is invalid.');
     }
 
-    public static function publicHomePage(array $snapshot, int $revision): array
+    public static function publicHomePage(array $snapshot, int $revision, string $imageBase = '/api/v1/home-page/images'): array
     {
         $images = [];
         foreach (self::IMAGE_SLOTS as $slot) {
-            $images[$slot] = $snapshot['images'][$slot] ? "/api/v1/home-page/images/{$slot}?v={$revision}" : null;
+            $images[$slot] = $snapshot['images'][$slot] ? "{$imageBase}/{$slot}?v={$revision}" : null;
         }
 
         return ['copy' => $snapshot['copy'], 'images' => $images];

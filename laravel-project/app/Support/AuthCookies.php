@@ -25,7 +25,7 @@ class AuthCookies
 
     public static function clear(Response $response): void
     {
-        $response->headers->clearCookie(self::REFRESH, self::REFRESH_PATH);
-        $response->headers->clearCookie(self::MEDIA, self::MEDIA_PATH);
+        $response->headers->clearCookie(self::REFRESH, self::REFRESH_PATH, null, false, false);
+        $response->headers->clearCookie(self::MEDIA, self::MEDIA_PATH, null, false, false);
     }
 }

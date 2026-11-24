@@ -27,6 +27,28 @@ final class ApiQuery
         return $query;
     }
 
+    public static function strictKeys(array $query, array $allowed): void
+    {
+        ApiInput::strictKeys($query, $allowed);
+    }
+
+    public static function trimmed(array $query, string $key, int $max): ?string
+    {
+        if (! array_key_exists($key, $query)) {
+            return null;
+        }
+        if (! is_string($query[$key])) {
+            throw ApiInput::invalid($key, 'Invalid value');
+        }
+
+        $value = ApiInput::trim($query[$key]);
+        if (ApiInput::length($value) > $max) {
+            throw ApiInput::invalid($key, 'Invalid value', 'too_big');
+        }
+
+        return $value;
+    }
+
     public static function string(array $query, string $key, int $max): ?string
     {
         if (! array_key_exists($key, $query)) {

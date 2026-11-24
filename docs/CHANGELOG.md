@@ -1,5 +1,10 @@
 # Changelog
 
+## 2026-11-24 — Laravel + React migration, Phase 4
+
+- Moved messaging, transactions, stock holds, store reviews, moderation, university admin tools, notifications and push enrollment to Laravel. All 121 Express API routes now exist in Laravel. Outbound push remains disabled.
+- 1,061/1,061 compared requests and their database effects matched Express. See `docs/LARAVEL_MIGRATION_PHASE4_2026-11-24.md`.
+
 ## 2026-11-24 — Laravel + React migration, Phase 3
 
 - Moved public browsing, listings, stores, follows, appreciations, views, seller tools and photo delivery to Laravel. Added a private local photo service for sanitization and safety screening.

@@ -22,6 +22,13 @@ return [
         'url' => env('PHOTO_SERVICE_URL', 'http://127.0.0.1:4310'),
         'token' => env('PHOTO_SERVICE_TOKEN'),
     ],
+    'push' => [
+        'subscriptions_enabled' => filter_var(env('PUSH_SUBSCRIPTIONS_ENABLED', false), FILTER_VALIDATE_BOOLEAN),
+        'vapid_public_key' => env('VAPID_PUBLIC_KEY'),
+        'vapid_private_key' => env('VAPID_PRIVATE_KEY'),
+        'vapid_subject' => env('VAPID_SUBJECT'),
+        'origins' => (string) env('CORS_ORIGINS', 'http://localhost:5173'),
+    ],
     'rate_limits' => [
         'reads_per_minute' => 900,
         'writes_per_minute' => 300,

@@ -1,6 +1,6 @@
 # Implementation status
 
-**Laravel migration (2026-11-24):** Phases 1 to 3 of 6 are complete on `feature/laravel-migration`. Laravel serves the React frontend from `laravel-project/resources/` and owns authentication, roles, API security, public browsing, listings, stores, seller tools and photo uploads. **Messages, transactions, notifications, account, push, store reviews and admin routes are still Express**, and `apps/api` and `apps/web` remain the working application until parity is proven and Express removal is approved. See the `docs/LARAVEL_MIGRATION_PHASE*_2026-11-2*.md` reports.
+**Laravel migration (2026-11-24):** Phases 1 to 4 of 6 are complete on `feature/laravel-migration`. Laravel serves the React frontend from `laravel-project/resources/` and implements all 121 Express API routes. Outbound push remains disabled. `apps/api` and `apps/web` stay in place until Laravel-only verification passes and the project owner approves removing them. See the `docs/LARAVEL_MIGRATION_PHASE*_2026-11-2*.md` reports.
 
 **Platform consolidation (2026-11-12):** The primary interface for desktop, tablets and phones is now **one responsive React/Vite PWA** (`apps/web`), supported by `apps/api`. The prior Expo app and its local uncommitted source are safely archived at `legacy/expo-mobile` and removed from the workspaces. `npm run mobile`/`bun run mobile` and the `extra.apiUrl` setup are no longer required. See `README.md`, `docs/SYSTEM_OVERVIEW.md` and `docs/UNIFIED_WEB_PWA_2026-11-12.md`. Older entries below describe historical work.
 

@@ -8,6 +8,7 @@ import { ListingAppreciation } from '@/components/listings/listing-appreciation'
 import { ExistingPhotoChoices, SelectedPhotoPreviews } from '@/components/listings/selected-photo-previews';
 import { SellerAvatar } from '@/components/stores/seller-avatar';
 import { StoreFollowers } from '@/components/stores/store-followers';
+import { StorePerformanceSummary } from '@/components/stores/store-performance-summary';
 import { ListingCardsSkeleton, OperationProgress } from '@/components/ui/async-feedback';
 import { LegacyButton } from '@/components/ui/legacy-button';
 import { Field, Panel } from '@/components/ui/primitives';
@@ -293,6 +294,7 @@ export function Dashboard() {
         <p className="muted">Manage listings and see who follows your store.</p>
       </div>
     </div>}
+    {me.storeId && <StorePerformanceSummary />}
     {!me.storeId && <Panel className="store-affiliation">
       <h2 className="panel-heading-small">CPSU affiliation</h2>
       {me.affiliations.map(a => <p key={a.id}>{a.campus.name} <span className={`status ${a.status}`}>{a.status}</span></p>)}

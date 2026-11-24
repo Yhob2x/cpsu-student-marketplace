@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\AccountController;
+use App\Http\Controllers\Api\AdminAnalyticsController;
 use App\Http\Controllers\Api\AdminContentController;
 use App\Http\Controllers\Api\AdminReviewController;
 use App\Http\Controllers\Api\AdminUserController;
@@ -13,6 +14,7 @@ use App\Http\Controllers\Api\ListingController;
 use App\Http\Controllers\Api\ListingEngagementController;
 use App\Http\Controllers\Api\MediaController;
 use App\Http\Controllers\Api\PushController;
+use App\Http\Controllers\Api\SellerAnalyticsController;
 use App\Http\Controllers\Api\SellerListingController;
 use App\Http\Controllers\Api\SellerStoreController;
 use App\Http\Controllers\Api\StoreController;
@@ -104,6 +106,7 @@ Route::prefix('v1')
             Route::post('transactions/{id}/store-review', [StoreReviewController::class, 'submit']);
 
             Route::prefix('seller')->group(function () {
+                Route::get('analytics', [SellerAnalyticsController::class, 'show']);
                 Route::post('store', [SellerStoreController::class, 'create']);
                 Route::get('store', [SellerStoreController::class, 'show']);
                 Route::patch('store', [SellerStoreController::class, 'update']);
@@ -201,6 +204,7 @@ Route::prefix('v1')
                 Route::get('reports', [AdminReviewController::class, 'reports']);
                 Route::post('reports/{id}/resolve', [AdminReviewController::class, 'resolveReport']);
                 Route::get('analytics/overview', [AdminReviewController::class, 'analytics']);
+                Route::get('analytics/dashboard', [AdminAnalyticsController::class, 'show']);
             });
         });
     });

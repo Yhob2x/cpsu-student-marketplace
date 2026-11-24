@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 
 import { showActionFeedback } from '@/components/action-feedback';
 import { CatalogAdmin } from '@/components/admin/catalog-admin';
+import { MarketplaceAnalytics } from '@/components/admin/marketplace-analytics';
 import { ManagedContentAdmin } from '@/components/admin/managed-content-admin';
 import { ReviewerAdmin } from '@/components/admin/reviewer-admin';
 import { Icon } from '@/components/icons';
@@ -206,7 +207,7 @@ export function Admin() {
   type NavItem = { id: string; label: string; count?: number };
   const navGroups: { title: string; items: NavItem[] }[] = accountAdmin
     ? [
-      { title: 'Dashboard', items: [{ id: 'overview', label: 'Overview' }] },
+      { title: 'Dashboard', items: [{ id: 'overview', label: 'Overview' }, { id: 'analytics', label: 'Analytics' }] },
       { title: 'Management', items: [{ id: 'students', label: 'Students' }, { id: 'staff', label: 'Reviewer accounts' }, { id: 'catalog', label: 'Campuses & categories' }, { id: 'content', label: 'Content' }] },
       { title: 'Review & safety', items: [
         { id: 'listings', label: 'Listing reviews', count: q?.listings.length },
@@ -223,7 +224,7 @@ export function Admin() {
         { id: 'reports', label: 'Reports', count: reports?.length },
         { id: 'store-reviews', label: 'Store ratings' },
       ] },
-      { title: 'Monitoring', items: [{ id: 'transactions', label: 'Transactions' }, { id: 'overview', label: 'Campus overview' }] },
+      { title: 'Monitoring', items: [{ id: 'transactions', label: 'Transactions' }, { id: 'analytics', label: 'Campus analytics' }, { id: 'overview', label: 'Campus overview' }] },
     ];
   const changeSection = (id: string) => { setActiveSection(id); setNotice(''); };
   return <div className="admin-workspace">
@@ -431,6 +432,7 @@ export function Admin() {
       {auditLoading && <p role="status" className="muted">Loading audit history…</p>}
       {auditCursor !== null && !auditLoading && !auditError && <LegacyButton type="button" className="ghost" onClick={() => void loadAudit(auditCursor)}>Load older events</LegacyButton>}
     </section>}
+    {activeSection === 'analytics' && <MarketplaceAnalytics accountAdmin={accountAdmin} onOpenSection={changeSection} />}
     <div hidden={activeSection !== 'overview'}>
     <h2 id="admin-overview">{accountAdmin ? 'University dashboard' : 'Campus overview'}</h2>
     {accountAdmin && <div className="admin-overview-shortcuts" role="group" aria-label="Pending administration work">

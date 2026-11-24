@@ -14,6 +14,7 @@ import { NotFound } from '@/pages/not-found';
 import { Notifications } from '@/pages/notifications';
 import { Profile } from '@/pages/profile';
 import { Saved } from '@/pages/saved';
+import { StoreInsights } from '@/pages/seller/insights';
 import { StorePage } from '@/pages/stores/show';
 import { Transactions } from '@/pages/transactions';
 import { TransactionDetail } from '@/pages/transactions/show';
@@ -56,6 +57,7 @@ export function AppRoutes() {
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Navigate to="/login" replace />} />
       <Route path="/dashboard" element={<RequireStudent next="%2Fdashboard"><Dashboard /></RequireStudent>} />
+      <Route path="/dashboard/insights" element={<RequireStudent next="%2Fdashboard%2Finsights"><StoreInsights /></RequireStudent>} />
       <Route path="/inquiries" element={<RequireStudent next="%2Finquiries"><Inquiries /></RequireStudent>} />
       <Route path="/inquiries/:id" element={<RequireStudent><Thread /></RequireStudent>} />
       <Route path="/saved" element={<RequireStudent next="%2Fsaved"><Saved /></RequireStudent>} />

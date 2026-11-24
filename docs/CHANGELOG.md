@@ -1,5 +1,12 @@
 # Changelog
 
+## 2026-11-24 — Order tracking and analytics
+
+- **Sellers:** My store shows a 30-day performance summary and the orders waiting on the seller. A new Store insights page (`/dashboard/insights`) adds reported sales, completed, new and cancelled orders with changes from the previous period, a trend chart, the order pipeline, the view-to-sale funnel, store rating, low stock and per-listing performance for 7 days, 30 days, 90 days or 12 months.
+- **Reviewers and admins:** a new Analytics section shows campus-scoped order trends, the order pipeline, review workload with shortcuts, top categories and a campus table. Counts of 1–4 still show as "<5", and peso totals appear only from 5 completed orders.
+- "Sales" are the agreed prices of orders both students confirmed as completed. The marketplace still processes no payments.
+- New table `ListingViewDaily` records unique views per day, from now on.
+
 ## 2026-11-24 — Frontend pages and structure
 
 - Every routed screen now has its own file in `resources/js/pages`, and the remaining code is grouped into `components`, `layouts`, `providers`, `hooks`, `lib` and `types`, following Laravel's React starter kit. See `docs/FRONTEND_STRUCTURE.md`.

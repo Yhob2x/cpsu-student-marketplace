@@ -185,6 +185,10 @@ export async function mockMarketplace(page: Page, initialPersona: Persona = 'gue
       state.verified = body().decision === 'verified'; data = { ok: true };
     } else if (path === '/admin/reports') {
       data = [];
+    } else if (path === '/seller/analytics') {
+      data = syntheticSellerAnalytics(url.searchParams.get('range') ?? '30d');
+    } else if (path === '/admin/analytics/dashboard') {
+      data = syntheticMarketplaceAnalytics(url.searchParams.get('range') ?? '30d');
     } else if (path === '/admin/analytics/overview') {
       data = { note: 'Synthetic browser test', campuses: [] };
     } else if (path.startsWith('/admin/reviewers') && method === 'GET') {
@@ -219,4 +223,46 @@ export async function mockMarketplace(page: Page, initialPersona: Persona = 'gue
       ...(status === 204 ? {} : { body: JSON.stringify(data) }) });
   });
   return state;
+}
+
+const syntheticTrend = (range: string, fields: (index: number) => Record<string, number | string>) => {
+  const count = range === '7d' ? 7 : range === '90d' ? 13 : range === '12m' ? 12 : 30;
+  return Array.from({ length: count }, (_, index) => ({ key: `bucket-${index}`, label: `Day ${index + 1}`, ...fields(index) }));
+};
+
+/** Seller insights for the synthetic store, with one order of each kind waiting on the seller. */
+export function syntheticSellerAnalytics(range: string) {
+  const summary = { reportedSales: 1250, completedOrders: 5, averageOrderValue: 250, averageHoursToComplete: 30, ordersCreated: 8, cancelledOrders: 1, cancellationRate: 0.167, inquiries: 14, views: 120 };
+  return {
+    range: { key: range, bucket: range === '90d' ? 'week' : range === '12m' ? 'month' : 'day', timezone: 'Asia/Manila', start: '2026-10-26', end: '2026-11-24' },
+    note: 'Sales are the agreed prices of orders that both students confirmed as completed. Payments happen between students and are not processed by the marketplace.',
+    summary: { current: summary, previous: { ...summary, reportedSales: 1000, completedOrders: 4, cancellationRate: 0.2 } },
+    trend: syntheticTrend(range, index => ({ ordersCreated: index % 3, ordersCompleted: index % 5 === 0 ? 1 : 0, reportedSales: index % 5 === 0 ? 250 : 0, inquiries: index % 2, views: 4 })),
+    pipeline: { pending: 1, accepted: 1, negotiating: 0, for_meetup: 1 },
+    needsAction: [
+      { id: 501, listingId: 1, listingTitle: 'Synthetic calculator', buyerName: 'Synthetic Buyer', status: 'pending', price: 250, action: 'decide', createdAt: '2026-11-22T02:00:00.000Z', updatedAt: '2026-11-22T02:00:00.000Z' },
+      { id: 502, listingId: 1, listingTitle: 'Synthetic calculator', buyerName: 'Second Buyer', status: 'for_meetup', price: 250, action: 'confirm_completion', createdAt: '2026-11-20T02:00:00.000Z', updatedAt: '2026-11-23T02:00:00.000Z' },
+    ],
+    waitingOnBuyer: 1,
+    listings: [{ id: 1, title: 'Synthetic calculator', type: 'physical_product', status: 'published', availabilityState: 'available', price: 250, stock: 1, lowStock: true, views: 120, totalViews: 300, inquiries: 14, orders: 8, completedOrders: 5, reportedSales: 1250, saves: 6, likes: 9 }],
+    lowStock: [{ id: 1, title: 'Synthetic calculator', type: 'physical_product', status: 'published', availabilityState: 'available', price: 250, stock: 1, lowStock: true, views: 120, totalViews: 300, inquiries: 14, orders: 8, completedOrders: 5, reportedSales: 1250, saves: 6, likes: 9 }],
+    rating: { average: 4.6, count: 5, distribution: { 5: 3, 4: 2, 3: 0, 2: 0, 1: 0 } },
+    viewsTrackedSince: '2026-11-01',
+  };
+}
+
+/** Campus analytics with a mix of visible and hidden ("<5") figures. */
+export function syntheticMarketplaceAnalytics(range: string) {
+  const summary = { ordersCreated: 24, completedOrders: 12, cancelledOrders: '<5', cancellationRate: 0.143, reportedSales: 3600, averageOrderValue: 300, averageHoursToComplete: 40, listingsApproved: 9, studentsVerified: '<5', inquiries: 60 };
+  return {
+    range: { key: range, bucket: range === '90d' ? 'week' : range === '12m' ? 'month' : 'day', timezone: 'Asia/Manila', start: '2026-10-26', end: '2026-11-24' },
+    note: 'Sales are the agreed prices of orders that both students confirmed as completed. Payments happen between students and are not processed by the marketplace.',
+    privacyNote: 'Counts from 1 to 4 show as <5, and peso totals appear only when at least 5 completed orders are included.',
+    summary: { current: summary, previous: { ...summary, completedOrders: 10, reportedSales: 3000 } },
+    trend: syntheticTrend(range, index => ({ ordersCreated: index % 4 === 0 ? 6 : 0, ordersCompleted: index % 6 === 0 ? 5 : index % 3 === 0 ? '<5' : 0, listingsApproved: index % 7 === 0 ? 5 : 0 })),
+    pipeline: { pending: 5, accepted: '<5', negotiating: 0, for_meetup: 6 },
+    workload: { pendingListings: 3, oldestPendingListingHours: 52, pendingAffiliations: 2, openReports: 1, pendingStoreReviews: 0 },
+    categories: [{ id: 1, name: 'Pre-loved', completedOrders: 12, publishedListings: 18, reportedSales: 3600 }, { id: 2, name: 'Tech & IT help', completedOrders: '<5', publishedListings: 6, reportedSales: null }],
+    campuses: [{ campus: 'MAIN', name: 'Main Campus', activeStorefronts: 14, publishedListings: 24, ordersCreated: 24, completedOrders: 12, reportedSales: 3600 }],
+  };
 }

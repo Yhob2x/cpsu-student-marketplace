@@ -26,6 +26,7 @@ The React TypeScript app lives in `resources/js` and follows the layout of Larav
 | `/guidelines` | `pages/guidelines.tsx` |
 | `/login` | `pages/auth/login.tsx` |
 | `/dashboard` | `pages/dashboard.tsx` |
+| `/dashboard/insights` | `pages/seller/insights.tsx` |
 | `/inquiries`, `/inquiries/:id` | `pages/inquiries/index.tsx`, `pages/inquiries/show.tsx` |
 | `/saved` | `pages/saved.tsx` |
 | `/transactions`, `/transactions/:id` | `pages/transactions/index.tsx`, `pages/transactions/show.tsx` |

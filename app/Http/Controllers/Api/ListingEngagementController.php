@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Affiliation;
 use App\Models\Listing;
 use App\Models\ListingAppreciation;
+use App\Support\AnalyticsRange;
 use App\Support\ApiError;
 use App\Support\ApiInput;
 use App\Support\ApiQuery;
@@ -105,6 +106,8 @@ class ListingEngagementController extends Controller
             $inserted = DB::affectingStatement('INSERT IGNORE INTO `ListingViewDedup` (listingId, viewerHash, createdAt) VALUES (?, ?, UTC_TIMESTAMP(3))', [$listingId, $digest]);
             if ($inserted === 1) {
                 DB::statement('INSERT INTO `ListingViewCounter` (listingId, viewCount) VALUES (?, 1) ON DUPLICATE KEY UPDATE viewCount = viewCount + 1', [$listingId]);
+                // Daily unique views (Asia/Manila calendar day) for seller insights.
+                DB::statement('INSERT INTO `ListingViewDaily` (listingId, day, viewCount) VALUES (?, '.AnalyticsRange::localDay('UTC_TIMESTAMP(3)').', 1) ON DUPLICATE KEY UPDATE viewCount = viewCount + 1', [$listingId]);
             }
             $row = DB::selectOne('SELECT viewCount FROM `ListingViewCounter` WHERE listingId = ?', [$listingId]);
 

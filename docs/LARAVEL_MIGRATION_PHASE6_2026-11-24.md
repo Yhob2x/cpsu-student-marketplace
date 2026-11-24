@@ -66,6 +66,21 @@ The owner approved deleting `legacy/` from disk. Its code remains in git history
 | `bun run pwa:check` | Passed |
 | Seeder | Same data as the Prisma seed, safe to rerun, refuses production |
 
+## Verification after moving to the repository root
+
+| Check | Result |
+|---|---|
+| Fresh install: `migrate`, `db:seed` twice, `migrate` again | Passed |
+| Live walkthrough on the fresh database, every role, real photo service | 126/126 checks passed |
+| Real-browser crawl of a copy of the local database, 5 roles, desktop and phone | 108 pages, 977 API responses, 121 photo loads, no failures or console errors |
+| Laravel tests | 43 passed |
+| Frontend unit tests | 208 passed, same 4 existing failures |
+| Playwright | 187 passed, same 5 existing failures (KI-038) |
+| Build output | Byte-identical to the build before the move |
+| `php artisan optimize`, `bun run pwa:check`, 121 API routes | Passed |
+
+The walkthrough covered sign-in, registration, refresh-token rotation and reuse revocation, store and listing creation, photo sanitizing and rejection of fake images, review approval, saving, likes, follows, chat, a full transaction with stock reduction, store reviews, reports, admin tools, announcement publishing with cache invalidation, audit logging and access rules. The local database was only read.
+
 ## Remaining before production
 
 See `progress/KNOWN_ISSUES.md`. The main gates are physical-device acceptance, an approved deployment on HTTPS, a shared cache if several servers are used, push delivery (KI-037), Laravel versions of the archived push-staging and iPhone LAN tooling (KI-039), and the existing CPSU approvals.

@@ -1,6 +1,7 @@
 import { useEffect, useId, useState, type FormEvent } from 'react';
 
 import { showActionFeedback } from '@/components/action-feedback';
+import { Icon } from '@/components/icons';
 import { LegacyButton } from '@/components/ui/legacy-button';
 import { Field, Panel } from '@/components/ui/primitives';
 import { api, explain } from '@/lib/api';
@@ -19,6 +20,8 @@ const campusFieldMessages = {
   code: 'Enter a campus code of 2–24 characters. Use letters, numbers, hyphens and underscores.',
   name: 'Enter a campus name of 2–100 characters.',
 };
+
+const plural = (count: number, noun: string) => `${count} ${noun}${count === 1 ? '' : 's'}`;
 
 function campusFieldError(draft: CampusDraft): CampusField | null {
   if (!/^[A-Za-z0-9_-]{2,24}$/.test(draft.code.trim())) return 'code';
@@ -60,6 +63,9 @@ export function CatalogAdmin({ onCampusesChange }: { onCampusesChange: () => voi
   const [campusDraft, setCampusDraft] = useState({ code: '', name: '' });
   const [campusDraftError, setCampusDraftError] = useState<CampusField | null>(null);
   const [categoryDraft, setCategoryDraft] = useState('');
+  const [showCampusForm, setShowCampusForm] = useState(false);
+  const [showCategoryForm, setShowCategoryForm] = useState(false);
+  const [categoryQuery, setCategoryQuery] = useState('');
 
   const load = async () => {
     setLoading(true);
@@ -98,7 +104,7 @@ export function CatalogAdmin({ onCampusesChange }: { onCampusesChange: () => voi
     if (!validateCampus(event, newCampus, setNewCampusError)) return;
     if (await save('add-campus', () => api('/admin/catalog/campuses', {
       body: { code: newCampus.code.trim(), name: newCampus.name.trim() },
-    }), 'The campus is now available to the marketplace.', true)) setNewCampus({ code: '', name: '' });
+    }), 'The campus is now available to the marketplace.', true)) { setNewCampus({ code: '', name: '' }); setShowCampusForm(false); }
   };
   const addCategory = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -127,32 +133,40 @@ export function CatalogAdmin({ onCampusesChange }: { onCampusesChange: () => voi
     'The category name is updated wherever it appears.');
     if (success) setEditCategory(null);
   };
-  const filteredCategories = data?.categories.filter(category => category.listingType === selectedKind) ?? [];
+  const kindCategories = data?.categories.filter(category => category.listingType === selectedKind) ?? [];
+  const query = categoryQuery.trim().toLowerCase();
+  const filteredCategories = query ? kindCategories.filter(category => category.name.toLowerCase().includes(query)) : kindCategories;
   const categoryLabel = selectedKind === 'service' ? 'Service' : 'Product';
+  const activeCampuses = data?.campuses.filter(campus => campus.active).length ?? 0;
 
-  return <section className="catalog-admin" aria-labelledby="catalog-admin-heading">
+  return <section className="catalog-admin catalog-admin--compact" aria-labelledby="catalog-admin-heading">
     <div className="catalog-admin-heading">
       <div><h2 id="catalog-admin-heading">Campuses &amp; categories</h2>
         <p className="muted">Manage what students can choose when posting and exploring listings.</p></div>
-      <LegacyButton type="button" className="ghost" onClick={() => void load()} disabled={loading || Boolean(busy)}>Refresh</LegacyButton>
+      <LegacyButton type="button" className="ghost catalog-icon-btn" aria-label="Refresh campuses and categories" title="Refresh"
+        onClick={() => void load()} disabled={loading || Boolean(busy)}><Icon name="refresh" size={18} /></LegacyButton>
     </div>
     {error && <p role="alert" className="err">Couldn't load the catalog. {error} <LegacyButton type="button" className="ghost" onClick={() => void load()}>Retry</LegacyButton></p>}
     {actionError && <p role="alert" className="err">Not saved. {actionError}</p>}
     {loading && !data && <p role="status">Loading campuses and categories…</p>}
     {data && <div className="catalog-admin-grid">
       <Panel className="catalog-admin-panel">
-        <div className="catalog-admin-title"><div><h3>Campuses</h3>
-          <p className="muted">Update names, codes, or availability. Existing records are never deleted.</p></div>
-          <span className="catalog-admin-count">{data.campuses.length}</span></div>
-        <form className="catalog-admin-add" noValidate onSubmit={event => void addCampus(event)}>
-          <strong>Add campus</strong>
+        <div className="catalog-admin-title">
+          <div><h3>Campuses <span className="catalog-admin-count">{data.campuses.length}</span></h3>
+            <p className="muted">{activeCampuses} active · records are never deleted</p></div>
+          <LegacyButton type="button" className={showCampusForm ? 'ghost' : ''} aria-expanded={showCampusForm} aria-controls="catalog-new-campus"
+            onClick={() => { setShowCampusForm(open => !open); setNewCampusError(null); }}>
+            <Icon name={showCampusForm ? 'close' : 'plus'} size={18} /> New campus
+          </LegacyButton>
+        </div>
+        {showCampusForm && <form id="catalog-new-campus" className="catalog-admin-add" noValidate onSubmit={event => void addCampus(event)}>
           <CampusFields draft={newCampus} error={newCampusError}
             onChange={draft => { setNewCampus(draft); setNewCampusError(null); }} />
           <LegacyButton className="" disabled={Boolean(busy) || !newCampus.name.trim() || !newCampus.code.trim()} type="submit">{busy === 'add-campus' ? 'Adding…' : 'Add campus'}</LegacyButton>
-        </form>
-        <div className="catalog-admin-rows">
-          {data.campuses.map(campus => <div className="catalog-admin-item" key={campus.id}>
-            {editCampus === campus.id ? <form noValidate onSubmit={event => {
+        </form>}
+        <ul className="catalog-admin-rows" aria-label="Campuses">
+          {data.campuses.map(campus => <li className={'catalog-admin-item' + (campus.active ? '' : ' is-inactive')} key={campus.id}>
+            {editCampus === campus.id ? <form className="catalog-admin-edit" noValidate onSubmit={event => {
               if (validateCampus(event, campusDraft, setCampusDraftError)) void updateCampus(campus, campusDraft);
             }}>
               <CampusFields draft={campusDraft} error={campusDraftError}
@@ -160,38 +174,53 @@ export function CatalogAdmin({ onCampusesChange }: { onCampusesChange: () => voi
               <div className="catalog-admin-actions"><LegacyButton className="" type="submit" disabled={Boolean(busy)}>Save</LegacyButton>
                 <LegacyButton className="ghost" type="button" onClick={() => setEditCampus(null)} disabled={Boolean(busy)}>Cancel</LegacyButton></div>
             </form> : <>
-              <div className="catalog-admin-item-header"><div>
-                <strong>{campus.name}</strong><div className="catalog-admin-meta"><span>{campus.code}</span><span>{campus.active ? 'Active' : 'Inactive'}</span></div>
-                <p className="muted">{campus._count.listings} listings · {campus._count.affiliations} affiliations</p>
-              </div></div>
+              <div className="catalog-admin-item-main">
+                <strong>{campus.name}</strong>
+                <span className="catalog-admin-meta"><span className="catalog-admin-code">{campus.code}</span>
+                  <span>{plural(campus._count.listings, 'listing')}</span><span>{plural(campus._count.affiliations, 'student')}</span></span>
+              </div>
+              <span className={'catalog-admin-status' + (campus.active ? ' is-active' : '')}>{campus.active ? 'Active' : 'Inactive'}</span>
               <div className="catalog-admin-actions">
-                <LegacyButton type="button" className="ghost" aria-label={`Edit campus ${campus.name}`} disabled={Boolean(busy)}
-                  onClick={() => { setEditCampus(campus.id); setEditCategory(null); setCampusDraftError(null); setCampusDraft({ code: campus.code, name: campus.name }); }}>Edit</LegacyButton>
-                <LegacyButton type="button" className="ghost" aria-label={`${campus.active ? 'Deactivate' : 'Reactivate'} campus ${campus.name}`} disabled={Boolean(busy)}
-                  onClick={() => void toggleCampus(campus)}>{busy === 'campus-' + campus.id ? 'Saving…' : campus.active ? 'Deactivate' : 'Reactivate'}</LegacyButton>
+                <LegacyButton type="button" className="ghost catalog-icon-btn" aria-label={`Edit campus ${campus.name}`} title="Edit" disabled={Boolean(busy)}
+                  onClick={() => { setEditCampus(campus.id); setEditCategory(null); setCampusDraftError(null); setCampusDraft({ code: campus.code, name: campus.name }); }}>
+                  <Icon name="edit" size={18} /></LegacyButton>
+                <LegacyButton type="button" className={'ghost catalog-icon-btn' + (campus.active ? ' catalog-icon-btn--danger' : ' catalog-icon-btn--positive')}
+                  aria-label={`${campus.active ? 'Deactivate' : 'Reactivate'} campus ${campus.name}`} title={campus.active ? 'Deactivate' : 'Reactivate'}
+                  aria-busy={busy === 'campus-' + campus.id} disabled={Boolean(busy)} onClick={() => void toggleCampus(campus)}>
+                  <Icon name="power" size={18} /></LegacyButton>
               </div>
             </>}
-          </div>)}
-          {!data.campuses.length && <p className="muted">No campuses yet.</p>}
-        </div>
+          </li>)}
+          {!data.campuses.length && <li className="muted">No campuses yet.</li>}
+        </ul>
       </Panel>
       <Panel className="catalog-admin-panel">
-        <div className="catalog-admin-title"><div><h3>Product &amp; service categories</h3>
-          <p className="muted">Choose a listing type, then add or edit its categories.</p></div>
-          <span className="catalog-admin-count">{data.categories.length}</span></div>
-        <div className="catalog-admin-kind" role="group" aria-label="Category type">
-          <button type="button" aria-pressed={selectedKind === 'physical_product'}
-            className={selectedKind === 'physical_product' ? 'catalog-admin-kind-active' : ''}
-            disabled={Boolean(busy)}
-            onClick={() => { setSelectedKind('physical_product'); setEditCategory(null); setActionError(''); }}>Products</button>
-          <button type="button" aria-pressed={selectedKind === 'service'}
-            className={selectedKind === 'service' ? 'catalog-admin-kind-active' : ''}
-            disabled={Boolean(busy)}
-            onClick={() => { setSelectedKind('service'); setEditCategory(null); setActionError(''); }}>Services</button>
+        <div className="catalog-admin-title">
+          <div><h3>Categories <span className="catalog-admin-count">{data.categories.length}</span></h3>
+            <p className="muted">What students choose when posting a listing</p></div>
+          <LegacyButton type="button" className={showCategoryForm ? 'ghost' : ''} aria-expanded={showCategoryForm} aria-controls="catalog-new-category"
+            onClick={() => setShowCategoryForm(open => !open)}>
+            <Icon name={showCategoryForm ? 'close' : 'plus'} size={18} /> New category
+          </LegacyButton>
         </div>
-        <form className="catalog-admin-add" onSubmit={event => void addCategory(event)}>
-          <strong>Add {categoryLabel.toLowerCase()} category</strong>
-          <Field>What {categoryLabel.toLowerCase()} category would you like to add?
+        <div className="catalog-admin-toolbar">
+          <div className="catalog-admin-kind" role="group" aria-label="Category type">
+            <button type="button" aria-pressed={selectedKind === 'physical_product'}
+              className={selectedKind === 'physical_product' ? 'catalog-admin-kind-active' : ''}
+              disabled={Boolean(busy)}
+              onClick={() => { setSelectedKind('physical_product'); setEditCategory(null); setActionError(''); }}>Products</button>
+            <button type="button" aria-pressed={selectedKind === 'service'}
+              className={selectedKind === 'service' ? 'catalog-admin-kind-active' : ''}
+              disabled={Boolean(busy)}
+              onClick={() => { setSelectedKind('service'); setEditCategory(null); setActionError(''); }}>Services</button>
+          </div>
+          <label className="catalog-admin-filter">
+            <Icon name="search" size={16} /><span className="sr-only">Filter categories</span>
+            <input type="search" value={categoryQuery} placeholder="Filter" onChange={event => setCategoryQuery(event.target.value)} />
+          </label>
+        </div>
+        {showCategoryForm && <form id="catalog-new-category" className="catalog-admin-add" onSubmit={event => void addCategory(event)}>
+          <Field>New {categoryLabel.toLowerCase()} category
             <input required minLength={2} maxLength={80}
               placeholder={selectedKind === 'service' ? 'e.g. Event photography' : 'e.g. School supplies'}
               value={newCategory[selectedKind]}
@@ -200,25 +229,26 @@ export function CatalogAdmin({ onCampusesChange }: { onCampusesChange: () => voi
           <LegacyButton className="" type="submit" disabled={Boolean(busy) || newCategory[selectedKind].trim().length < 2}>
             {busy === 'add-category' ? 'Adding…' : 'Add ' + categoryLabel.toLowerCase() + ' category'}
           </LegacyButton>
-        </form>
-        <div className="catalog-admin-rows">
-          <p className="catalog-admin-subtitle">{categoryLabel} categories ({filteredCategories.length})</p>
-          {filteredCategories.map(category => <div className="catalog-admin-item" key={category.id}>
-            {editCategory === category.id ? <form onSubmit={event => { event.preventDefault(); void updateCategory(category); }}>
+        </form>}
+        <ul className="catalog-admin-rows" aria-label={`${categoryLabel} categories (${filteredCategories.length})`}>
+          {filteredCategories.map(category => <li className="catalog-admin-item" key={category.id}>
+            {editCategory === category.id ? <form className="catalog-admin-edit" onSubmit={event => { event.preventDefault(); void updateCategory(category); }}>
               <Field>Category name<input required minLength={2} maxLength={80} value={categoryDraft}
                 onChange={event => setCategoryDraft(event.target.value)} /></Field>
               <div className="catalog-admin-actions"><LegacyButton type="submit" className="" disabled={Boolean(busy) || categoryDraft.trim().length < 2}>Save</LegacyButton>
                 <LegacyButton className="ghost" type="button" onClick={() => setEditCategory(null)} disabled={Boolean(busy)}>Cancel</LegacyButton></div>
             </form> : <>
-              <div className="catalog-admin-item-header"><div><strong>{category.name}</strong>
-                <p className="muted">{category._count.listings} listings</p></div></div>
-              <div className="catalog-admin-actions"><LegacyButton type="button" className="ghost" aria-label={`Edit ${categoryLabel.toLowerCase()} category ${category.name}`} disabled={Boolean(busy)}
-                onClick={() => { setEditCategory(category.id); setEditCampus(null); setCategoryDraft(category.name); }}>Edit</LegacyButton></div>
+              <div className="catalog-admin-item-main"><strong>{category.name}</strong>
+                <span className="catalog-admin-meta"><span>{plural(category._count.listings, 'listing')}</span></span></div>
+              <div className="catalog-admin-actions">
+                <LegacyButton type="button" className="ghost catalog-icon-btn" aria-label={`Edit ${categoryLabel.toLowerCase()} category ${category.name}`} title="Edit" disabled={Boolean(busy)}
+                  onClick={() => { setEditCategory(category.id); setEditCampus(null); setCategoryDraft(category.name); }}><Icon name="edit" size={18} /></LegacyButton>
+              </div>
             </>}
-          </div>)}
-          {!filteredCategories.length && <p className="muted">No {categoryLabel.toLowerCase()} categories yet.</p>}
-        </div>
-        <p className="muted catalog-admin-footnote">Renaming a category preserves existing listings. Its product or service type cannot be changed after creation.</p>
+          </li>)}
+          {!filteredCategories.length && <li className="muted">{query ? 'No categories match this filter.' : `No ${categoryLabel.toLowerCase()} categories yet.`}</li>}
+        </ul>
+        <p className="muted catalog-admin-footnote">Renaming keeps existing listings. A category's product or service type cannot be changed.</p>
       </Panel>
     </div>}
   </section>;

@@ -31,7 +31,7 @@ describe('legacy button consolidation without design or behavior changes', () =>
     for (const [filename, expected] of [
       [['components/admin/managed-content-admin.tsx'], 8],
       [['components/admin/reviewer-admin.tsx'], 7],
-      [['components/admin/catalog-admin.tsx'], 11],
+      [['components/admin/catalog-admin.tsx'], 13],
       [PAGE_GROUPS.public, 13],
       [PAGE_GROUPS.transactions, 10],
       [['components/stores/storefront-view.tsx'], 6],

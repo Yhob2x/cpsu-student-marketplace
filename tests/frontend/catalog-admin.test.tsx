@@ -30,6 +30,8 @@ test('identifies invalid campus fields and saves the corrected campus', async ()
   }) as typeof fetch;
 
   render(<CatalogAdmin onCampusesChange={() => {}} />);
+  // Add forms stay folded until requested, to keep the catalog compact.
+  fireEvent.click(await screen.findByRole('button', { name: 'New campus' }));
   const add = await screen.findByRole('button', { name: 'Add campus' });
   const code = screen.getByLabelText('Code');
   const name = screen.getByLabelText('Campus name');
@@ -86,6 +88,7 @@ describe('admin product and service category editing', () => {
     expect(screen.getByText('Notebooks')).toBeTruthy();
     expect(screen.queryByText('Photography')).toBeNull();
 
+    fireEvent.click(screen.getByRole('button', { name: 'New category' }));
     fireEvent.change(screen.getByPlaceholderText('e.g. School supplies'), { target: { value: 'Textbooks' } });
     fireEvent.click(screen.getByRole('button', { name: 'Add product category' }));
     await waitFor(() => expect(screen.getByText('Textbooks')).toBeTruthy());

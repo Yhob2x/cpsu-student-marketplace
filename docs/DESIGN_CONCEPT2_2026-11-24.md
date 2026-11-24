@@ -15,6 +15,7 @@
 | Explore | Its own keyword search, because search left the header. |
 | Admin workspace | Every navigation item has an icon, and the active item has a filled tile. Overview is now a chart dashboard: review workload shortcuts, headline figures with period change, an activity chart, a review-workload donut, the order pipeline, top categories and live listings per campus as bars, and a campus table. It refreshes every 30 seconds while visible. Small student-activity counts stay hidden as <5. |
 | Motion | Each new page fades and rises 10 px over 280 ms. Hero shortcuts, menus and cards have short entrances and hover lifts. All of it stops when the device asks for reduced motion. |
+| Campuses & categories | Compact rows with a code chip, counts and status badge. Edit and Deactivate or Reactivate are icon-only buttons (pencil, power) with spoken labels and tooltips. Add forms stay folded behind New campus and New category, and categories have a quick filter. Campuses are deactivated, never deleted. |
 | Speed | Every page except Home is a separate chunk, prefetched while the browser is idle, so the first load is smaller and later navigation does not wait for the network. |
 
 ## Deliberate differences from the mockup

@@ -4,6 +4,13 @@
     "version":  "1.0.0",
     "type":  "module",
     "scripts":  {
+                    "setup":  "composer install && bun install && cd photo-service && bun install",
+                    "serve":  "php artisan serve",
+                    "photo":  "cd photo-service && bun run start",
+                    "db:migrate":  "php artisan migrate",
+                    "db:seed":  "php artisan db:seed",
+                    "test":  "php artisan test",
+                    "pwa:check":  "node scripts/validate-pwa.cjs",
                     "dev":  "vite",
                     "build":  "tsc --noEmit \u0026\u0026 vite build",
                     "typecheck":  "tsc --noEmit",

@@ -1,3 +1,0 @@
-{ "expo": { "name": "CPSU Marketplace", "slug": "cpsu-marketplace", "version": "1.0.0", "orientation": "portrait", "userInterfaceStyle": "automatic",
-  "ios": { "bundleIdentifier": "ph.edu.cpsu.marketplace" }, "android": { "package": "ph.edu.cpsu.marketplace" },
-  "extra": { "apiUrl": "http://10.0.2.2:4000/api/v1" } } }

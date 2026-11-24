@@ -22,3 +22,36 @@ yarn-error.log
 /.vscode
 /.zed
 /photo-service/node_modules
+
+# Project rules carried over from the former repository root.
+dist
+uploads
+.expo
+.env.*
+!.env.example
+!.env.*.example
+package-lock.json
+# Playwright output may contain credentials or private browser captures.
+.playwright-cli/
+test-results/
+playwright-report/
+/graphify-out/
+/.tmp/
+# One-off local browser inspection scripts.
+/.cpsu-*.mjs
+# Generated logs, bytecode, caches and OS metadata.
+*.log
+*.log.*
+__pycache__/
+*.py[cod]
+*.tsbuildinfo
+.cache/
+.turbo/
+.nyc_output/
+coverage/
+.DS_Store
+Thumbs.db
+# Local database files.
+*.sqlite
+*.sqlite3
+*.db

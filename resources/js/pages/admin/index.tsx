@@ -12,6 +12,7 @@ import { LegacyButton } from '@/components/ui/legacy-button';
 import { Field, Panel } from '@/components/ui/primitives';
 import { useForegroundRefresh } from '@/hooks/use-foreground-refresh';
 import { api, explain, peso } from '@/lib/api';
+import { initialsOf } from '@/lib/initials';
 import { assessListingReadability } from '@/lib/listings/listing-quality';
 import { statusLabels, type TransactionStatus } from '@/lib/transactions/transaction-flow';
 import { useMe } from '@/providers/session-provider';
@@ -227,7 +228,7 @@ export function Admin() {
     ];
   const changeSection = (id: string) => { setActiveSection(id); setNotice(''); };
   return <div className="admin-workspace">
-    <div className="page-head"><div><h1>{accountAdmin ? 'University administration' : 'Campus review workspace'}</h1>
+    <div className="page-head"><div><p className="admin-eyebrow"><Icon name="shield" size={14} /> {accountAdmin ? 'Admin console' : 'Reviewer console'}</p><h1>{accountAdmin ? 'University administration' : 'Campus review workspace'}</h1>
       <p className="muted">{accountAdmin ? 'Manage students, reviews and campus activity.' : 'Review listings, affiliations and reports for your campus.'}</p></div>
       <Link className="btn ghost admin-marketplace-search" to="/explore" aria-label="Search marketplace listings"><Icon name="search" size={17} /> Search marketplace</Link></div>
     {notice && <p className="admin-action-notice" role="status">{notice}</p>}
@@ -245,7 +246,7 @@ export function Admin() {
             aria-current={activeSection === item.id ? 'page' : undefined}
             className="admin-workspace-nav-item" onClick={() => changeSection(item.id)}>
             <span className="admin-workspace-nav-icon" aria-hidden="true"><Icon name={item.icon} size={18} /></span>
-            <span className="admin-workspace-nav-label">{item.label}</span>{item.count !== undefined && <span className="admin-workspace-count">{item.count}</span>}
+            <span className="admin-workspace-nav-label">{item.label}</span>{item.count !== undefined && <span className={'admin-workspace-count' + (Number(item.count) > 0 ? ' is-alert' : '')}>{item.count}</span>}
           </button>)}
         </div>)}
       </nav>
@@ -386,10 +387,10 @@ export function Admin() {
       {!studentsLoading && students && !studentsError && <p className="muted" role="status">{studentTotal === 0 ? 'No matching students.' : `Showing ${(studentPage - 1) * 25 + 1}–${(studentPage - 1) * 25 + students.length} of ${studentTotal} students`}</p>}
       {!studentsError && students && students.length > 0 && <div className="admin-student-layout">
         <div className="admin-student-list" aria-label="Student results">{students.map(student => <button key={student.id} type="button" className="admin-student-row" aria-pressed={selectedStudentId === student.id} onClick={() => { setSelectedStudentId(student.id); setReviewerCampusId(''); setReviewerReason(''); }}>
-          <span className="admin-student-name">{student.displayName}<small>{student.email}</small></span>
-          <span>{student.affiliations.map((a: any) => a.campus.code).join(', ') || 'No campus'}</span>
-          <span>{student.affiliations.some((a: any) => a.verificationStatus === 'verified') ? 'Verified' : 'Unverified'}</span>
-          <span className="status">{student.status === 'active' ? 'Active' : 'Suspended'}</span>
+          <span className="admin-student-name"><span className="admin-avatar" data-initials={initialsOf(student.displayName)} aria-hidden="true" /><span className="admin-student-ident">{student.displayName}<small>{student.email}</small></span></span>
+          <span className="admin-student-campus">{student.affiliations.map((a: any) => a.campus.code).join(', ') || 'No campus'}</span>
+          <span className={'admin-pill' + (student.affiliations.some((a: any) => a.verificationStatus === 'verified') ? ' is-verified' : ' is-muted')}>{student.affiliations.some((a: any) => a.verificationStatus === 'verified') ? 'Verified' : 'Unverified'}</span>
+          <span className={'status admin-pill' + (student.status === 'active' ? ' is-active' : ' is-danger')}>{student.status === 'active' ? 'Active' : 'Suspended'}</span>
         </button>)}</div>
         <Panel as="aside" className="admin-student-detail" aria-label="Selected student account">
           {!selectedStudent && <p className="muted">Select a student to view account actions.</p>}

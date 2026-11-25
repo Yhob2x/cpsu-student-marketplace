@@ -3,12 +3,8 @@ import { Link, useLocation } from 'react-router-dom';
 
 import { Icon } from '@/components/icons';
 import { LegacyButton } from '@/components/ui/legacy-button';
+import { initialsOf } from '@/lib/initials';
 import { useMe } from '@/providers/session-provider';
-
-function initialsOf(name: string): string {
-  const words = name.trim().split(/\s+/).filter(Boolean);
-  return (words.length > 1 ? words[0][0] + words[words.length - 1][0] : words[0]?.slice(0, 2) || 'U').toLocaleUpperCase();
-}
 
 /** Avatar button that opens account links and sign-out. A disclosure, so links keep native keyboard behavior. */
 export function AccountMenu() {

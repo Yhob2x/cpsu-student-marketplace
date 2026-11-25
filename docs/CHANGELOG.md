@@ -1,5 +1,10 @@
 # Changelog
 
+## 2026-11-25 — Modern admin console
+
+- The admin workspace (`/admin`) has a new look based on the ui-ux-pro-max "data-dense dashboard" guidance, in CPSU green: a card sidebar with grouped sections, an active marker and amber badges for waiting work; compact section headers; student rows with initials avatars and status pills; transactions in one list; and audit history as a timeline.
+- Works at phone width with no sideways scrolling and at 200% text. Styles live in `resources/css/admin-console.css` and apply only inside the admin workspace.
+
 ## 2026-11-24 — Concept 2 redesign
 
 - New app shell: a one-row desktop header with an Explore menu and an avatar account menu, and on phones a compact header with a floating bottom bar (Home, Explore, raised Sell, Inbox with unread badge, Profile).

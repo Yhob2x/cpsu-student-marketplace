@@ -1,6 +1,0 @@
-results/
-fixtures.local.json
-fixtures.*.local.json
-*.secret.json
-perf-approval.local.json
-.build-check/

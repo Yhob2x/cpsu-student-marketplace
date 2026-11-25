@@ -1,0 +1,14 @@
+{
+  "name": "@cpsu/photo-service",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "start": "bun --env-file=../.env server.mjs"
+  },
+  "dependencies": {
+    "@tensorflow/tfjs": "4.22.0",
+    "nsfwjs": "4.4.0",
+    "sharp": "0.35.5"
+  }
+}

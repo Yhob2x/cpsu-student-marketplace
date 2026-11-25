@@ -1,0 +1,155 @@
+/*
+ * Admin console (2026-11-25) — data-dense dashboard style from ui-ux-pro-max:
+ * card sidebar, compact section headers, table-like rows with hover highlight,
+ * pill statuses and a timeline audit log. Brand tokens stay CPSU forest green.
+ * Everything is scoped to .admin-workspace so student pages are unaffected.
+ */
+.admin-workspace {
+  --admin-radius: 14px;
+  --admin-card: var(--paper);
+  --admin-border: color-mix(in srgb, var(--line) 85%, transparent);
+  --admin-hover: color-mix(in srgb, var(--color-primary-light) 45%, var(--paper));
+  --admin-shadow: 0 1px 2px color-mix(in srgb, var(--color-text) 5%, transparent), 0 6px 18px -12px color-mix(in srgb, var(--color-text) 22%, transparent);
+  --admin-ease: cubic-bezier(.2, .7, .2, 1);
+  --admin-sticky-top: 112px; /* clears the sticky site header (97px) */
+}
+
+/* ---------- Page header ---------- */
+.admin-workspace > .page-head { align-items: end; margin-bottom: var(--ui-space-5); padding-bottom: var(--ui-space-4); border-bottom: 1px solid var(--admin-border); }
+.admin-workspace > .page-head > div:first-child { min-width: 0; }
+.admin-workspace > .page-head h1 { margin: 6px 0 4px; overflow-wrap: break-word; }
+.admin-workspace > .page-head p.muted { margin: 0; }
+.admin-eyebrow { display: inline-flex; align-items: center; gap: 6px; margin: 0; padding: 3px 10px 3px 8px; border-radius: 999px;
+  background: var(--color-primary-light); color: var(--color-primary-dark, var(--color-primary)); font-size: 12px; font-weight: 700; letter-spacing: .02em; }
+
+/* ---------- Layout + sidebar card ---------- */
+.admin-workspace .admin-workspace-layout { grid-template-columns: 248px minmax(0, 1fr); gap: clamp(1rem, 2vw, 1.75rem); }
+.admin-workspace .admin-workspace-nav {
+  top: calc(var(--admin-sticky-top, 88px)); max-height: calc(100vh - var(--admin-sticky-top, 88px) - 16px); overflow-y: auto; overscroll-behavior: contain;
+  gap: var(--ui-space-4); padding: var(--ui-space-3); border: 1px solid var(--admin-border); border-radius: var(--admin-radius);
+  background: var(--admin-card); box-shadow: var(--admin-shadow); scrollbar-width: thin;
+}
+.admin-workspace .admin-workspace-nav-group { gap: 2px; }
+.admin-workspace .admin-workspace-nav-group + .admin-workspace-nav-group { padding-top: var(--ui-space-3); border-top: 1px solid var(--admin-border); }
+.admin-workspace .admin-workspace-nav-title { margin: 0 0 4px; padding: 0 10px; font-size: 12px; text-transform: uppercase; letter-spacing: .07em; color: var(--ink-soft); }
+.admin-workspace .admin-workspace-nav-item {
+  position: relative; min-height: 44px; padding: 6px 10px 6px 8px; gap: 10px; border: 0; border-radius: 10px;
+  color: var(--ink); font-weight: 600; transition: background-color .18s var(--admin-ease), color .18s var(--admin-ease);
+}
+.admin-workspace .admin-workspace-nav-item:hover { background: var(--admin-hover); color: var(--color-primary); }
+.admin-workspace .admin-workspace-nav-item[aria-current="page"] { background: var(--color-primary-light); border: 0; color: var(--color-primary-dark, var(--color-primary)); font-weight: 700; }
+.admin-workspace .admin-workspace-nav-item[aria-current="page"]::before {
+  content: ''; position: absolute; left: -12px; top: 8px; bottom: 8px; width: 3px; border-radius: 0 3px 3px 0; background: var(--color-primary);
+}
+.admin-workspace .admin-workspace-nav-icon { width: 30px; height: 30px; border-radius: 8px; background: var(--surface-soft); color: var(--color-primary); transition: background-color .18s var(--admin-ease), color .18s var(--admin-ease); }
+.admin-workspace .admin-workspace-nav-item:hover .admin-workspace-nav-icon { background: var(--paper); }
+.admin-workspace .admin-workspace-nav-item[aria-current="page"] .admin-workspace-nav-icon { background: var(--color-primary); color: var(--color-on-primary); }
+.admin-workspace .admin-workspace-nav-label { line-height: 1.25; }
+.admin-workspace .admin-workspace-count {
+  min-width: 24px; min-height: 22px; padding: 0 7px; border-radius: 999px; background: var(--surface-soft); color: var(--ink-soft);
+  font-size: 12px; font-weight: 700;
+}
+.admin-workspace .admin-workspace-count.is-alert { background: color-mix(in srgb, var(--color-accent) 26%, var(--paper)); color: var(--ink); }
+.admin-workspace .admin-workspace-nav-item[aria-current="page"] .admin-workspace-count { background: var(--paper); color: var(--color-primary-dark, var(--color-primary)); }
+
+/* ---------- Main column: section headers ---------- */
+.admin-workspace-main > section > h2:first-child,
+.admin-workspace-main > div > h2:first-of-type,
+.admin-workspace-main > section > .catalog-admin-heading h2 {
+  margin: 0 0 4px; font-size: clamp(1.2rem, 1rem + .6vw, 1.45rem); letter-spacing: -.015em;
+}
+.admin-workspace-main > section > h2:first-child + p.muted,
+.admin-workspace-main > div > h2 + p.muted { margin: 0 0 var(--ui-space-4); font-size: var(--ui-type-sm); max-width: 72ch; }
+.admin-workspace-main > div > h2:not(:first-of-type) { margin-top: var(--ui-space-6, 2rem); padding-top: var(--ui-space-5); border-top: 1px solid var(--admin-border); }
+.admin-workspace-main .panel { border-color: var(--admin-border); border-radius: var(--admin-radius); box-shadow: var(--admin-shadow); }
+.admin-workspace-main p[role="status"].muted { font-size: var(--ui-type-sm); }
+
+/* ---------- Students: filter toolbar + data rows ---------- */
+.admin-workspace .admin-student-filters {
+  grid-template-columns: minmax(0, 1.6fr) repeat(3, minmax(0, 1fr)) auto; gap: var(--ui-space-3); margin: 0 0 var(--ui-space-3);
+  padding: var(--ui-space-3) var(--ui-space-4); background: var(--admin-card);
+}
+.admin-workspace .admin-student-filters .field { font-size: 12px; font-weight: 700; color: var(--ink-soft); }
+.admin-workspace .admin-student-filters input, .admin-workspace .admin-student-filters select { min-height: 44px; font-size: var(--ui-type-sm); font-weight: 500; color: var(--ink); }
+.admin-workspace .admin-student-filters .btn { min-height: 44px; padding-inline: 1.1rem; font-size: var(--ui-type-sm); }
+.admin-workspace .admin-student-layout { grid-template-columns: minmax(0, 1fr) minmax(260px, 320px); gap: var(--ui-space-4); }
+.admin-workspace .admin-student-list { border-color: var(--admin-border); border-radius: var(--admin-radius); background: var(--admin-card); box-shadow: var(--admin-shadow); }
+.admin-workspace .admin-student-row {
+  position: relative; grid-template-columns: minmax(0, 2.2fr) minmax(0, .9fr) auto auto; min-height: 60px; padding: 8px 14px; gap: 12px;
+  border-bottom-color: var(--admin-border); transition: background-color .16s var(--admin-ease);
+}
+.admin-workspace .admin-student-row:hover { background: var(--admin-hover); }
+.admin-workspace .admin-student-row[aria-pressed="true"] { background: var(--color-primary-light); }
+.admin-workspace .admin-student-row[aria-pressed="true"]::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; background: var(--color-primary); }
+.admin-workspace .admin-student-name { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.admin-workspace .admin-student-ident { display: grid; min-width: 0; font-weight: 700; }
+.admin-workspace .admin-student-ident, .admin-workspace .admin-student-ident small { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.admin-workspace .admin-student-ident small { margin-top: 1px; }
+.admin-workspace .admin-student-campus { font-size: 12px; font-weight: 700; letter-spacing: .04em; color: var(--ink-soft); }
+.admin-avatar { display: grid; place-items: center; flex: none; width: 36px; height: 36px; border-radius: 50%; background: var(--color-primary-light); color: var(--color-primary-dark, var(--color-primary)); }
+.admin-avatar::before { content: attr(data-initials); font-size: 13px; font-weight: 800; letter-spacing: .02em; }
+.admin-pill { display: inline-flex; align-items: center; gap: 5px; justify-self: start; padding: 3px 10px; border-radius: 999px; font-size: 12px; font-weight: 700; line-height: 1.4; white-space: nowrap; background: var(--surface-soft); color: var(--ink-soft); }
+.admin-pill::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+.admin-workspace .admin-student-row .status.admin-pill { border: 0; }
+.admin-pill.is-active, .admin-pill.is-verified { background: var(--color-primary-light); color: var(--color-primary-dark, var(--color-primary)); }
+.admin-pill.is-danger { background: color-mix(in srgb, var(--danger) 12%, var(--paper)); color: var(--danger); }
+.admin-workspace .admin-student-detail { position: sticky; top: var(--admin-sticky-top, 88px); padding: var(--ui-space-4); }
+.admin-workspace .admin-student-detail h3 { margin: 0 0 2px; }
+.admin-workspace .admin-student-detail > p { margin: 0 0 6px; font-size: var(--ui-type-sm); }
+.admin-workspace .admin-student-detail h4 { margin: var(--ui-space-3) 0 0; padding-top: var(--ui-space-3); border-top: 1px solid var(--admin-border); }
+
+/* ---------- Transactions: one bordered list instead of floating cards ---------- */
+.admin-workspace-main .admin-transaction-list { gap: 0; border: 1px solid var(--admin-border); border-radius: var(--admin-radius); background: var(--admin-card); box-shadow: var(--admin-shadow); overflow: hidden; }
+.admin-workspace-main .admin-transaction-list:empty { display: none; }
+.admin-workspace-main .admin-transaction-list > .admin-transaction-row {
+  align-items: center; padding: 10px 14px; border: 0; border-bottom: 1px solid var(--admin-border); border-radius: 0; box-shadow: none; transition: background-color .16s var(--admin-ease);
+}
+.admin-workspace-main .admin-transaction-list > .admin-transaction-row:last-child { border-bottom: 0; }
+.admin-workspace-main .admin-transaction-list > .admin-transaction-row:hover { background: var(--admin-hover); }
+.admin-workspace-main .admin-transaction-row strong { font-size: var(--ui-type-sm); }
+.admin-workspace-main .admin-transaction-row p { margin: 2px 0 0; font-size: 12px; }
+
+/* ---------- Audit history: timeline ---------- */
+.admin-workspace .admin-audit-list { position: relative; padding: 6px 0; border-color: var(--admin-border); border-radius: var(--admin-radius); background: var(--admin-card); box-shadow: var(--admin-shadow); }
+.admin-workspace .admin-audit-event { position: relative; padding: 12px 16px 12px 44px; border-bottom: 0; background: transparent; transition: background-color .16s var(--admin-ease); }
+.admin-workspace .admin-audit-event:hover { background: var(--admin-hover); }
+.admin-workspace .admin-audit-event::before { content: ''; position: absolute; left: 22px; top: 0; bottom: 0; width: 2px; background: color-mix(in srgb, var(--color-primary) 22%, var(--line)); }
+.admin-workspace .admin-audit-event:first-child::before { top: 18px; }
+.admin-workspace .admin-audit-event:last-child::before { bottom: calc(100% - 18px); }
+.admin-workspace .admin-audit-event::after { content: ''; position: absolute; left: 17px; top: 15px; width: 8px; height: 8px; border: 2px solid var(--paper); border-radius: 50%; background: var(--color-primary); box-shadow: 0 0 0 1px var(--color-primary); }
+.admin-workspace .admin-audit-main strong { font-size: var(--ui-type-sm); text-transform: capitalize; }
+.admin-workspace .admin-audit-main span { font: 600 12px/1.5 ui-monospace, SFMono-Regular, Consolas, monospace; }
+.admin-workspace .admin-audit-byline { font-size: 12px; }
+.admin-workspace .admin-audit-reason { padding: 6px 10px; border-radius: 8px; background: var(--surface-soft); font-size: var(--ui-type-sm); }
+
+/* ---------- Listing / affiliation / report queues ---------- */
+.admin-workspace .admin-review-queue-item { border-color: var(--admin-border); border-radius: 12px; transition: background-color .16s var(--admin-ease), border-color .16s var(--admin-ease); }
+.admin-workspace .admin-review-queue-item:hover { background: var(--admin-hover); }
+.admin-workspace .admin-review-queue-item[aria-pressed="true"] { border-color: var(--color-primary); background: var(--color-primary-light); box-shadow: inset 3px 0 0 var(--color-primary); }
+.admin-workspace .admin-action-notice { display: flex; align-items: center; gap: 8px; border: 1px solid color-mix(in srgb, var(--color-primary) 25%, transparent); border-radius: 12px; background: var(--color-primary-light); }
+
+/* ---------- Responsive ---------- */
+@media (max-width: 1180px) {
+  .admin-workspace .admin-workspace-layout { grid-template-columns: 220px minmax(0, 1fr); }
+  .admin-workspace .admin-student-filters { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .admin-workspace .admin-student-filters .field:first-child { grid-column: 1 / -1; }
+  .admin-workspace .admin-student-layout { grid-template-columns: minmax(0, 1fr); }
+  .admin-workspace .admin-student-detail { position: static; }
+}
+@media (max-width: 860px) {
+  .admin-workspace .admin-workspace-layout { display: block; }
+  .admin-workspace .admin-workspace-mobile-nav select { min-height: 48px; border-radius: 12px; font-weight: 700; box-shadow: var(--admin-shadow); }
+  .admin-workspace .admin-student-row { grid-template-columns: minmax(0, 1fr) auto; }
+  .admin-workspace .admin-student-row > .admin-student-campus, .admin-workspace .admin-student-row > .admin-pill:not(.status) { display: none; }
+}
+@media (max-width: 560px) {
+  .admin-workspace > .page-head { padding-bottom: var(--ui-space-3); margin-bottom: var(--ui-space-4); }
+  .admin-workspace .admin-student-filters { grid-template-columns: minmax(0, 1fr); padding: var(--ui-space-3); }
+  .admin-workspace .admin-student-filters .btn { width: 100%; }
+  .admin-workspace .admin-audit-event { padding-left: 38px; }
+  .admin-workspace .admin-audit-event::before { left: 17px; }
+  .admin-workspace .admin-audit-event::after { left: 12px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .admin-workspace *, .admin-workspace *::before { transition: none !important; }
+}

@@ -1,6 +1,6 @@
 # Original CPSU Student Marketplace icon; no university seal or external image assets.
 # Regenerate icons from PowerShell on Windows: powershell -File scripts/generate-pwa-icons.ps1
-param([string]$OutputDirectory = (Join-Path $PSScriptRoot '..\apps\web\public\icons'))
+param([string]$OutputDirectory = (Join-Path $PSScriptRoot '..\public\icons'))
 $ErrorActionPreference = 'Stop'
 Add-Type -AssemblyName System.Drawing
 $directory = [IO.Path]::GetFullPath($OutputDirectory)

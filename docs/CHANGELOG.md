@@ -1,5 +1,70 @@
 # Changelog
 
+## 2026-11-25 — Modern admin console
+
+- The admin workspace (`/admin`) has a new look based on the ui-ux-pro-max "data-dense dashboard" guidance, in CPSU green: a card sidebar with grouped sections, an active marker and amber badges for waiting work; compact section headers; student rows with initials avatars and status pills; transactions in one list; and audit history as a timeline.
+- Works at phone width with no sideways scrolling and at 200% text. Styles live in `resources/css/admin-console.css` and apply only inside the admin workspace.
+
+## 2026-11-24 — Concept 2 redesign
+
+- New app shell: a one-row desktop header with an Explore menu and an avatar account menu, and on phones a compact header with a floating bottom bar (Home, Explore, raised Sell, Inbox with unread badge, Profile).
+- New home page: editorial hero with floating Buy, Sell and Connect shortcuts, a search card with category and filters, icon category chips, Trending on Campus and More Ways to Explore. Phones get the search bar first, a hero card and quick actions.
+- New listing cards with a type badge, heart save button and verified seller row. Explore has its own search.
+- Smooth page entrance animation that respects reduced motion. Pages load as separate chunks prefetched in the background, so the main bundle is smaller.
+- Admin: icons on every navigation item, and Overview is now a chart dashboard (workload donut, activity chart, category and campus bars, order pipeline, campus table) that refreshes itself.
+- See `docs/DESIGN_CONCEPT2_2026-11-24.md`.
+
+## 2026-11-24 — Order tracking and analytics
+
+- **Sellers:** My store shows a 30-day performance summary and the orders waiting on the seller. A new Store insights page (`/dashboard/insights`) adds reported sales, completed, new and cancelled orders with changes from the previous period, a trend chart, the order pipeline, the view-to-sale funnel, store rating, low stock and per-listing performance for 7 days, 30 days, 90 days or 12 months.
+- **Reviewers and admins:** a new Analytics section shows campus-scoped order trends, the order pipeline, review workload with shortcuts, top categories and a campus table. Counts of 1–4 still show as "<5", and peso totals appear only from 5 completed orders.
+- "Sales" are the agreed prices of orders both students confirmed as completed. The marketplace still processes no payments.
+- New table `ListingViewDaily` records unique views per day, from now on.
+
+## 2026-11-24 — Frontend pages and structure
+
+- Every routed screen now has its own file in `resources/js/pages`, and the remaining code is grouped into `components`, `layouts`, `providers`, `hooks`, `lib` and `types`, following Laravel's React starter kit. See `docs/FRONTEND_STRUCTURE.md`.
+- Route access rules moved into guard components, the session state into `providers/session-provider.tsx`, and all stylesheets into one ordered `styles.ts`. Compiled CSS is byte-identical and no screen changed.
+
+## 2026-11-24 — Laravel app moved to the repository root
+
+- The Laravel app, its documentation and tooling now sit directly in the repository root. The `laravel-project/` folder no longer exists. Deployment paths were updated.
+
+## 2026-11-24 — Single-folder layout
+
+- The repository now contains only `laravel-project/`. Documentation, tooling and agent folders moved into it, and the old version was deleted from disk (still in git history at `7bfeba0`).
+- Fixed: 6 existing photos had not been copied from the old upload folder, so they were missing in Laravel. They are copied and load again.
+
+## 2026-11-24 — Laravel + React migration, Phase 6
+
+- Laravel is now the only active app. The Express API, the React + Vite app and their Express-only tooling moved to `legacy/`. The temporary Express bridge was removed.
+- Frontend unit and browser tests, the database seeder and the deployment templates now live with Laravel. Root `bun run` scripts start, build, migrate, seed and test Laravel.
+- Design parity was confirmed on 625 screens, with rule-identical compiled CSS. See `docs/LARAVEL_MIGRATION_PHASE6_2026-11-24.md`.
+
+## 2026-11-24 — Laravel + React migration, Phase 5
+
+- Verified Laravel with Express stopped. Fixed cross-worker rate limits, the photo limit under concurrent uploads and simultaneous sign-ups. Restored the 30-second public reference-data cache. See `docs/LARAVEL_MIGRATION_PHASE5_2026-11-24.md`.
+
+## 2026-11-24 — Laravel + React migration, Phase 4
+
+- Moved messaging, transactions, stock holds, store reviews, moderation, university admin tools, notifications and push enrollment to Laravel. All 121 Express API routes now exist in Laravel. Outbound push remains disabled.
+- 1,061/1,061 compared requests and their database effects matched Express. See `docs/LARAVEL_MIGRATION_PHASE4_2026-11-24.md`.
+
+## 2026-11-24 — Laravel + React migration, Phase 3
+
+- Moved public browsing, listings, stores, follows, appreciations, views, seller tools and photo delivery to Laravel. Added a private local photo service for sanitization and safety screening.
+- 343/343 compared requests, their database effects and sanitized photo bytes matched Express. Testing also found and fixed a public-cache header on private photos. See `docs/LARAVEL_MIGRATION_PHASE3_2026-11-24.md`.
+
+## 2026-11-24 — Laravel + React migration, Phase 2
+
+- Moved registration, login, refresh, logout, roles, security headers and rate limits to Laravel. Added 39 Eloquent models, 18 enums and a verified schema baseline. Other API routes still use Express through the local-only bridge.
+- 38/38 auth scenarios matched Express, and passwords, tokens and sessions work across both backends. No database schema or data changes. See `docs/LARAVEL_MIGRATION_PHASE2_2026-11-24.md`.
+
+## 2026-11-23 — Laravel + React migration, Phase 1
+
+- Added a Laravel 12 app in `laravel-project/` that serves the existing React TypeScript frontend from `resources/`. The API remains Express through a temporary local-only bridge.
+- 30/30 signed-out route and viewport comparisons were pixel-identical. Playwright: 187 passed, 5 failed, and the same 5 fail on the original build. See `docs/LARAVEL_MIGRATION_PHASE1_2026-11-23.md`.
+
 ## 2026-11-17 — Private student identity registration fields (prepared, collection OFF)
 
 - Added Full name and Student ID number inputs to Create account, with a clear private-data notice and fail-closed registration-policy check. Inputs are visible but disabled until CPSU privacy approval and a separately tested schema migration; the existing account registration flow stays available.

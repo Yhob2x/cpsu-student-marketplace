@@ -93,6 +93,9 @@ Append-only by convention; nothing prevents `UPDATE`/`DELETE` at the database le
 ### Notification
 `id`, `userId`, `type`, `payload` JSON, `readAt`, `createdAt`. No FK; no index on `(userId, readAt)`.
 
+### ListingViewDaily *(added 2026-11-24, Laravel migration `2026_11_24_000000_create_listing_view_daily_table`)*
+`listingId` (FK `Listing`, cascade), `day` DATE in Asia/Manila, `viewCount`. Primary key `(listingId, day)`, index on `day`. Incremented in the same database transaction as `ListingViewCounter` when a visitor's first view of the day is recorded. Feeds the seller insights funnel and trend. The migration only creates the table and changes no existing rows.
+
 ## 2. Blueprint entity coverage
 
 | Blueprint table | As-built | Verdict |

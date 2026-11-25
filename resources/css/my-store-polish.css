@@ -99,14 +99,6 @@
   background: var(--paper);
   scroll-margin-top: 16px;
 }
-.my-store .store-create summary {
-  min-height: 56px;
-  padding: 12px var(--ui-space-4);
-  font: 650 .97rem/1.3 var(--font-body);
-}
-.my-store .store-create[open] > summary {
-  border-bottom: 1px solid var(--line);
-}
 .my-store .store-create .seller-composer { padding: var(--ui-space-4); }
 .my-store .store-create .seller-composer .field { min-width: 0; }
 .my-store .store-create .seller-composer :is(input, select, textarea) {

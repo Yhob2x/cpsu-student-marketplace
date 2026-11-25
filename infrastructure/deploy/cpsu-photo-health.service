@@ -1,0 +1,6 @@
+[Unit]
+Description=Check CPSU photo service and recover an unhealthy process
+
+[Service]
+Type=oneshot
+ExecStart=/bin/sh -c 'if ! /usr/bin/curl --fail --silent --max-time 5 http://127.0.0.1:4310/health >/dev/null; then /usr/bin/systemctl restart cpsu-photo-service.service; fi'

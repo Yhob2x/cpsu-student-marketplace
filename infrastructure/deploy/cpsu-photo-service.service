@@ -7,7 +7,9 @@ WorkingDirectory=/var/www/cpsu-marketplace/photo-service
 # Contains PHOTO_SERVICE_TOKEN (same value as Laravel) and optionally PHOTO_SERVICE_PORT.
 EnvironmentFile=/etc/cpsu-marketplace/photo-service.env
 ExecStart=/usr/local/bin/bun server.mjs
-Restart=on-failure
+Restart=always
+RestartSec=3
+TimeoutStopSec=15
 User=marketplace
 NoNewPrivileges=true
 PrivateTmp=true

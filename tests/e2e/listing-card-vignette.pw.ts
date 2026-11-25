@@ -19,16 +19,29 @@ for (const path of ['/', '/explore']) {
     const vignetteOpacity = () => card.locator('.product-photo').evaluate(el => getComputedStyle(el, '::after').opacity);
     await expect(image).toBeVisible();
     const save = card.getByRole('button', { name: 'Save for later' });
+    const canHover = await page.evaluate(() => matchMedia('(hover: hover) and (pointer: fine)').matches);
     await page.mouse.move(0, 0);
     await expect.poll(vignetteOpacity).toBe('0');
-    // Concept 2: the heart save button is always visible, not revealed on hover.
+    if (canHover) {
+      await expect(save).toHaveCSS('opacity', '0');
+      await card.hover();
+      await expect.poll(vignetteOpacity).toBe('1');
+    }
     await expect(save).toHaveCSS('opacity', '1');
-    await card.hover();
-    await expect.poll(vignetteOpacity).toBe('1');
-    await expect(save).toHaveCSS('opacity', '1');
-    expect(await save.evaluate(el => el.getBoundingClientRect().height)).toBeGreaterThanOrEqual(40);
-    await expect(save).toContainText('Save');
+    await expect(save).toHaveCSS('min-height', canHover ? '32px' : '44px');
+    const compactSave = !canHover && (page.viewportSize()?.width ?? 0) <= 700;
+    await expect(save).toHaveCSS('left', compactSave ? '0px' : '9px');
+    if (compactSave) await expect(save.getByText('Save', { exact: true })).toBeHidden();
+    else await expect(save.getByText('Save', { exact: true })).toBeVisible();
     await expect(image).toHaveCSS('transform', 'none');
+    await expect(card).toHaveCSS('transform', 'none');
     await expect(card.locator('.product-photo-multiple')).toBeVisible();
+    if (canHover) {
+      await page.mouse.move(0, 0);
+      await expect.poll(vignetteOpacity).toBe('0');
+      await expect(save).toHaveCSS('opacity', '0');
+      await save.focus();
+      await expect(save).toHaveCSS('opacity', '1');
+    }
   });
 }

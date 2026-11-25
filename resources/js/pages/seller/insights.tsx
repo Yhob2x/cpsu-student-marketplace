@@ -41,7 +41,8 @@ export function StoreInsights() {
   const [metric, setMetric] = useState<Metric>('reportedSales');
   const hasStore = Boolean(me?.storeId);
   const { data, loading, error, errorCode, retry } = useAnalytics<SellerAnalytics>('/seller/analytics', range, hasStore);
-  const rangeLabel = RANGE_OPTIONS.find(option => option.key === range)!.label.toLowerCase();
+  const requestedLabel = RANGE_OPTIONS.find(option => option.key === range)!.label.toLowerCase();
+  const displayedLabel = RANGE_OPTIONS.find(option => option.key === (data?.range.key ?? range))!.label.toLowerCase();
 
   const chart = useMemo<BarDatum[]>(() => {
     const money = METRICS.find(item => item.key === metric)?.money;
@@ -61,23 +62,33 @@ export function StoreInsights() {
   const previous = data?.summary.previous;
   const metricInfo = METRICS.find(item => item.key === metric)!;
 
-  return <div className="store-insights" aria-busy={loading}>
+  return <div className="store-insights">
     <div className="page-head analytics-head">
       <div>
         <Link className="analytics-back" to="/dashboard"><Icon name="chevronLeft" size={16} /> My store</Link>
         <h1>Store insights</h1>
-        <p className="muted">Track orders, reported sales and how students find your listings.</p>
+        <p className="muted">Track orders, reported sales and listing views.</p>
       </div>
       <RangePicker value={range} onChange={changeRange} />
     </div>
 
-    {error && <p className="err" role="alert">Store insights could not load: {error} <LegacyButton type="button" className="ghost" onClick={() => void retry()}>Retry</LegacyButton></p>}
-    {!data && loading && <p className="muted" role="status">Loading store insights…</p>}
-    {data && loading && <p className="analytics-updating" role="status">Updating figures…</p>}
+    {error && <Panel className="analytics-feedback">
+      <div role="alert">
+        <strong>Store insights could not load</strong>
+        <p className="muted">Try again to load the {requestedLabel}.{data && data.range.key !== range && ` Showing figures for the ${displayedLabel}.`}</p>
+      </div>
+      <LegacyButton type="button" className="ghost" onClick={() => void retry()}><Icon name="refresh" size={16} /> Retry</LegacyButton>
+    </Panel>}
+    {loading && <div className="analytics-section">
+      <p className="analytics-updating" role="status">Loading insights for the {requestedLabel}…</p>
+      {!data && <div className="analytics-skeleton" aria-hidden="true">
+        {Array.from({ length: 6 }, (_, index) => <span key={index} />)}
+      </div>}
+    </div>}
 
     {data && current && previous && <>
       <section className="analytics-section" aria-labelledby="insights-overview">
-        <h2 id="insights-overview">Overview <span className="analytics-period">{rangeLabel}</span></h2>
+        <h2 id="insights-overview">Overview <span className="analytics-period">{displayedLabel}</span></h2>
         <div className="analytics-kpis">
           <KpiCard label="Reported sales" value={formatPeso(current.reportedSales)} change={periodChange(current.reportedSales, previous.reportedSales)} />
           <KpiCard label="Completed orders" value={formatCount(current.completedOrders)} change={periodChange(current.completedOrders, previous.completedOrders)} />
@@ -122,14 +133,14 @@ export function StoreInsights() {
             </select>
           </label>
         </div>
-        <Panel><BarChart title={`${metricInfo.label}, ${rangeLabel}`} data={chart} format={metricInfo.money ? formatPeso : formatCount} /></Panel>
+        <Panel><BarChart title={`${metricInfo.label}, ${displayedLabel}`} data={chart} format={metricInfo.money ? formatPeso : formatCount} /></Panel>
       </section>
 
       <div className="analytics-two-col">
         <section className="analytics-section" aria-labelledby="insights-funnel">
           <h2 id="insights-funnel">From view to sale</h2>
           <Panel>
-            <ConversionFunnel label={`Conversion, ${rangeLabel}`} steps={[
+            <ConversionFunnel label={`Conversion, ${displayedLabel}`} steps={[
               { label: 'Listing views', value: current.views },
               { label: 'Inquiries', value: current.inquiries },
               { label: 'Orders', value: current.ordersCreated },
@@ -162,7 +173,7 @@ export function StoreInsights() {
       </section>}
 
       <section className="analytics-section" aria-labelledby="insights-listings">
-        <h2 id="insights-listings">Listing performance <span className="analytics-period">{rangeLabel}</span></h2>
+        <h2 id="insights-listings">Listing performance <span className="analytics-period">{displayedLabel}</span></h2>
         {data.listings.length === 0 ? <Panel className="analytics-empty"><p>No listings yet.</p><Link className="btn" to="/dashboard">Create a listing</Link></Panel>
           : <div className="analytics-table-wrap"><table className="analytics-table">
             <thead><tr><th scope="col">Listing</th><th scope="col">Views</th><th scope="col">Inquiries</th><th scope="col">Orders</th><th scope="col">Completed</th><th scope="col">Reported sales</th><th scope="col">Stock</th></tr></thead>

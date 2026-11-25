@@ -4,8 +4,8 @@ namespace App\Services;
 
 /**
  * Fail-closed release gates for browser push. Enrollment needs valid keys, an approved contact
- * and a production HTTPS origin. Outbound delivery stays off: no sender exists in Laravel,
- * matching the disabled durable worker in the Express API.
+ * and a production HTTPS origin. Outbound delivery additionally requires explicit
+ * configuration and a recorded institutional delivery approval.
  */
 class PushPolicy
 {
@@ -22,7 +22,9 @@ class PushPolicy
 
     public function deliveryEnabled(): bool
     {
-        return false;
+        $push = config('marketplace.push');
+        return $this->subscriptionsEnabled() && (bool) ($push['delivery_enabled'] ?? false)
+            && trim((string) ($push['delivery_approval_ref'] ?? '')) !== '';
     }
 
     public function publicKey(): ?string

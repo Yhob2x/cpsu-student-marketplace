@@ -24,6 +24,8 @@ return [
     ],
     'push' => [
         'subscriptions_enabled' => filter_var(env('PUSH_SUBSCRIPTIONS_ENABLED', false), FILTER_VALIDATE_BOOLEAN),
+        'delivery_enabled' => filter_var(env('PUSH_DELIVERY_ENABLED', false), FILTER_VALIDATE_BOOLEAN),
+        'delivery_approval_ref' => env('PUSH_DELIVERY_APPROVAL_REF', ''),
         'vapid_public_key' => env('VAPID_PUBLIC_KEY'),
         'vapid_private_key' => env('VAPID_PRIVATE_KEY'),
         'vapid_subject' => env('VAPID_SUBJECT'),

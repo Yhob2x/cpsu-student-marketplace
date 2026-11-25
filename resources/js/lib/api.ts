@@ -1,10 +1,10 @@
 let token: string | null = null;
 export class ApiError extends Error { constructor(public status: number, public code: string, msg?: string) { super(msg || code); } }
 
-async function raw(path: string, init: RequestInit) {
+async function raw(path: string, init: RequestInit, unversioned = false) {
   const headers = new Headers(init.headers);
   if (token) headers.set('Authorization', `Bearer ${token}`);
-  return fetch(`/api/v1${path}`, { ...init, headers, credentials: 'include' });
+  return fetch(`${unversioned ? '/api' : '/api/v1'}${path}`, { ...init, headers, credentials: 'include' });
 }
 async function refreshNow() {
   const r = await fetch('/api/v1/auth/refresh', { method: 'POST', credentials: 'include' });
@@ -17,12 +17,13 @@ async function refreshNow() {
 // presented, so two parallel calls look like theft and log the user out. React StrictMode double-mounts effects, which
 // made that race routine on a hard reload of a signed-in page.
 let restoring: Promise<boolean> | null = null;
-export async function api<T = any>(path: string, opts: { method?: string; body?: unknown; form?: FormData } = {}): Promise<T> {
+export async function api<T = any>(path: string, opts: { method?: string; body?: unknown; form?: FormData; unversioned?: boolean } = {}): Promise<T> {
   const init: RequestInit = { method: opts.method ?? (opts.body || opts.form ? 'POST' : 'GET') };
   if (opts.form) init.body = opts.form;
   else if (opts.body !== undefined) { init.body = JSON.stringify(opts.body); init.headers = { 'Content-Type': 'application/json' }; }
-  let res = await raw(path, init);
-  if (res.status === 401 && !path.startsWith('/auth/') && await tryRestoreSession()) res = await raw(path, init);
+  const send = () => raw(path, init, opts.unversioned);
+  let res = await send();
+  if (res.status === 401 && !path.startsWith('/auth/') && await tryRestoreSession()) res = await send();
   if (res.status === 204) return undefined as T;
   const data = await res.json().catch(() => ({}));
   if (res.status === 429) throw new ApiError(429, 'rate_limited');

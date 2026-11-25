@@ -1,0 +1,18 @@
+[Unit]
+Description=CPSU Market approved Web Push outbox worker
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=marketplace
+WorkingDirectory=/var/www/cpsu-marketplace
+ExecStart=/usr/bin/php artisan marketplace:push-drain --watch
+Restart=on-failure
+RestartSec=10
+NoNewPrivileges=true
+PrivateTmp=true
+TimeoutStopSec=120
+
+[Install]
+WantedBy=multi-user.target

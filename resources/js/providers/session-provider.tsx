@@ -2,6 +2,7 @@ import { createContext, useContext, useEffect, useRef, useState, type ReactNode 
 
 import { showActionFeedback } from '@/components/action-feedback';
 import { useForegroundRefresh } from '@/hooks/use-foreground-refresh';
+import { connectRealtime } from '@/lib/realtime';
 import { api, setToken, tryRestoreSession } from '@/lib/api';
 import { withSavedListing } from '@/lib/listings/saved-state';
 import { disconnectPushOnLogout, reconcilePushForActiveAccount, updateAppBadge } from '@/lib/push/push-client';
@@ -50,7 +51,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => { (async () => { if (await tryRestoreSession()) await reload(); setReady(true); })(); }, []);
   const isStaff = me?.roles.some(r => STAFF_ROLES.includes(r.role));
-  // One shared source of saved-listing ids: fetched at sign-in, so hearts on cards and the listing page stay in sync.
+  // One shared source of saved-listing ids keeps cards and the listing page in sync.
   const syncSaved = async () => {
     if (isStaff) { setSavedIds([]); return; }
     const before = savedRevision.current;
@@ -65,7 +66,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     savedPending.current.add(id);
     setPendingSavedIds(previous => withSavedListing(previous, id, true));
     savedRevision.current++;
-    // Update the heart immediately; only confirm success after server acknowledgement.
+    // Update the saved state immediately; only confirm success after server acknowledgement.
     setSavedIds(previous => withSavedListing(previous, id, saved));
     try {
       await api(`/saved/${id}`, { method: saved ? 'PUT' : 'DELETE' });
@@ -75,7 +76,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
       // Keep other cards' saves intact; rollback this listing alone.
       savedRevision.current++;
       setSavedIds(previous => withSavedListing(previous, id, !saved));
-      showActionFeedback({ kind: 'error', title: 'Save not synced', message: 'The heart was restored. Check your connection and retry.' });
+      showActionFeedback({ kind: 'error', title: 'Save not synced', message: 'Your previous saved state was restored. Check your connection and retry.' });
       return false;
     } finally {
       savedPending.current.delete(id);
@@ -83,8 +84,10 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     }
   };
   const isReviewer = me?.roles.some(r => REVIEWER_ROLES.includes(r.role));
+  const usesCampusQueueBadge = isReviewer && !me?.roles.some(r => r.role === 'university_admin' && r.campusId === null);
   // Pending affiliations plus listings, so reviewers see the queue depth before opening it.
   const syncQueue = async (known?: number) => {
+    if (!usesCampusQueueBadge) return;
     if (known !== undefined) { setQueue(known); return; }
     try {
       const r = await api<{ listings: unknown[]; affiliations: unknown[]; reportsPending?: number }>('/admin/review-queue');
@@ -93,7 +96,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   };
   useEffect(() => {
     if (!me) { savedRevision.current++; savedPending.current.clear(); setPendingSavedIds([]); setUnread(0); setUnreadMessages(0); setSavedIds([]); setQueue(0); return; }
-    syncUnread(); syncSaved(); if (isReviewer) syncQueue();
+    syncUnread(); syncSaved(); if (usesCampusQueueBadge) syncQueue(); else setQueue(0);
   }, [me]);
 
   // On login/account switching, detach old browser subscriptions rather than
@@ -130,7 +133,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
   // Keep unread messages, followed-store alerts and review/report counts current.
   useForegroundRefresh(async () => {
     await syncUnread();
-    if (isReviewer) await syncQueue();
+    if (usesCampusQueueBadge) await syncQueue();
   }, 5_000, Boolean(me));
   // Affiliation decisions also update the profile and seller permissions without navigation.
   useForegroundRefresh(async () => {
@@ -147,6 +150,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     navigator.serviceWorker?.addEventListener('message', onPush);
     return () => navigator.serviceWorker?.removeEventListener('message', onPush);
   }, [me?.id]);
+  useEffect(() => me ? connectRealtime(me.id) : undefined, [me?.id]);
   const signedOut = ready && !me;
 
   return (

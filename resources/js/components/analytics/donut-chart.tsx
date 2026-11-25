@@ -17,19 +17,19 @@ export function DonutChart({ title, slices, centerLabel, emptyText = 'Nothing to
   let offset = 0;
 
   return <figure className="analytics-donut" aria-labelledby={titleId}>
-    <figcaption id={titleId} className="sr-only">{title}: {total === 0 ? emptyText : slices.map(slice => `${slice.label} ${slice.value}`).join(', ')}.</figcaption>
+    <figcaption id={titleId} className="sr-only">{title}: {total === 0 ? emptyText : `${slices.map(slice => `${slice.label} ${slice.value}`).join(', ')}.`}</figcaption>
     <div className="analytics-donut__ring" aria-hidden="true">
       <svg viewBox="0 0 100 100" width="100%" height="100%">
         <circle cx="50" cy="50" r={RADIUS} fill="none" stroke="var(--surface-soft)" strokeWidth="12" />
         {total > 0 && slices.filter(slice => slice.value > 0).map(slice => {
           const length = (slice.value / total) * CIRCUMFERENCE;
-          const circle = <circle key={slice.key} cx="50" cy="50" r={RADIUS} fill="none" stroke={slice.color} strokeWidth="12"
+          const circle = <circle key={slice.key} className="analytics-donut__slice" cx="50" cy="50" r={RADIUS} fill="none" stroke={slice.color} strokeWidth="12"
             strokeDasharray={`${length} ${CIRCUMFERENCE - length}`} strokeDashoffset={-offset} transform="rotate(-90 50 50)" />;
           offset += length;
           return circle;
         })}
       </svg>
-      <span className="analytics-donut__center"><strong>{total.toLocaleString('en-PH')}</strong><small>{centerLabel}</small></span>
+      <span className="analytics-donut__center"><strong>{total.toLocaleString('en-PH')}</strong><small>{total === 0 ? emptyText : centerLabel}</small></span>
     </div>
     <ul className="analytics-donut__legend">
       {slices.map(slice => {

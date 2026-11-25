@@ -24,7 +24,7 @@ const METRICS: { key: Metric; label: string }[] = [
 
 const WORKLOAD = [
   { key: 'listings', label: 'Listings to review', icon: 'package', color: 'var(--color-primary)' },
-  { key: 'affiliations', label: 'Verifications', icon: 'userCheck', color: 'var(--gold)' },
+  { key: 'affiliations', label: 'Verifications', icon: 'userCheck', color: 'var(--color-info)' },
   { key: 'reports', label: 'Open reports', icon: 'flag', color: 'var(--danger)' },
   { key: 'store-reviews', label: 'Store reviews', icon: 'star', color: 'var(--mango)' },
 ] as const;
@@ -38,7 +38,8 @@ export function MarketplaceAnalytics({ heading, accountAdmin, onOpenSection }: P
   const { data, loading, error, retry } = useAnalytics<Analytics>('/admin/analytics/dashboard', range);
   // Keep workload and counts current while staff keep the dashboard open, as the old overview did.
   useForegroundRefresh(() => retry(), 30_000, true);
-  const rangeLabel = RANGE_OPTIONS.find(option => option.key === range)!.label.toLowerCase();
+  const displayedRange = RANGE_OPTIONS.find(option => option.key === (data?.range.key ?? range))!.label;
+  const rangeLabel = displayedRange.toLowerCase();
   const metricLabel = METRICS.find(item => item.key === metric)!.label;
 
   const trend = useMemo<BarDatum[]>(() => (data?.trend ?? []).map(bucket => ({
@@ -49,34 +50,55 @@ export function MarketplaceAnalytics({ heading, accountAdmin, onOpenSection }: P
     listings: data.workload.pendingListings, affiliations: data.workload.pendingAffiliations,
     reports: data.workload.openReports, 'store-reviews': data.workload.pendingStoreReviews,
   } : null;
+  const waitingCount = workloadCounts ? Object.values(workloadCounts).reduce((total, value) => total + value, 0) : 0;
   const count = (value: number | '<5') => formatShortCount(value);
   const privacyHint = (value: number | '<5') => value === '<5' ? 'Hidden for privacy (1–4)' : undefined;
   const current = data?.summary.current;
   const previous = data?.summary.previous;
 
-  return <section className="marketplace-analytics" aria-labelledby="admin-overview" aria-busy={loading}>
+  return <section className="marketplace-analytics" aria-labelledby="admin-overview">
     <div className="analytics-head">
       <div>
         <h2 id="admin-overview">{heading}</h2>
         <p className="muted">Orders, listings and review work for {accountAdmin ? 'all campuses' : 'your campus'}.</p>
       </div>
-      <RangePicker value={range} onChange={setRange} />
     </div>
 
-    {error && <p className="err" role="alert">The dashboard could not load: {error} <LegacyButton type="button" className="ghost" onClick={() => void retry()}>Retry</LegacyButton></p>}
-    {!data && loading && <div className="analytics-skeleton" role="status" aria-label="Loading dashboard"><span /><span /><span /><span /></div>}
-    {data && loading && <p className="analytics-updating" role="status">Updating figures…</p>}
-
-    {data && current && previous && workloadCounts && <>
+    {data && workloadCounts && <section className="analytics-overview-group" aria-labelledby="admin-review-queues">
+      <div className="analytics-overview-heading">
+        <h3 id="admin-review-queues">Review queues</h3>
+        <p className="analytics-queue-status">
+          {waitingCount ? `${formatCount(waitingCount)} waiting` : 'All caught up'}
+        </p>
+      </div>
       <div className="analytics-workload" role="group" aria-label="Review work waiting">
         {WORKLOAD.map(item => <button type="button" key={item.key} onClick={() => onOpenSection(item.key)}>
           <span className="analytics-workload__icon" aria-hidden="true" style={{ color: item.color }}><Icon name={item.icon} size={20} /></span>
-          <strong>{formatCount(workloadCounts[item.key])}</strong><span>{item.label}</span>
-          {item.key === 'listings' && data.workload.oldestPendingListingHours !== null && <small>Oldest waiting {formatHours(data.workload.oldestPendingListingHours)}</small>}
+          <span className="analytics-workload__body">
+            <strong>{formatCount(workloadCounts[item.key])}</strong>
+            <span className="analytics-workload__label">{item.label}</span>
+            {item.key === 'listings' && data.workload.oldestPendingListingHours !== null && <small>Oldest waiting {formatHours(data.workload.oldestPendingListingHours)}</small>}
+          </span>
+          <span className="analytics-workload__arrow" aria-hidden="true"><Icon name="chevronRight" size={16} /></span>
         </button>)}
       </div>
+    </section>}
 
-      <div className="analytics-kpis">
+    <section className="analytics-overview-group" aria-labelledby="admin-period-summary">
+      <div className="analytics-reporting-head">
+        <div className="analytics-overview-heading">
+          <h3 id="admin-period-summary">Period summary</h3>
+          {data && <p>{displayedRange} · Compared with the previous period</p>}
+        </div>
+        <RangePicker value={range} onChange={setRange} />
+        <p className="analytics-updating" role="status">{data && loading && 'Updating figures…'}</p>
+      </div>
+      {error && <div className="analytics-feedback">
+        <p role="alert">{data ? `Could not update figures. Showing ${rangeLabel}.` : `The dashboard could not load: ${error}`}</p>
+        <LegacyButton type="button" className="ghost" onClick={() => void retry()}>Retry</LegacyButton>
+      </div>}
+      {!data && loading && <div className="analytics-skeleton" role="status" aria-label="Loading dashboard"><span /><span /><span /><span /></div>}
+      {current && previous && <div className="analytics-kpis" aria-busy={loading}>
         <KpiCard label="Completed orders" value={count(current.completedOrders)} hint={privacyHint(current.completedOrders)} change={periodChange(current.completedOrders, previous.completedOrders)} />
         <KpiCard label="Reported sales" value={current.reportedSales === null ? 'Hidden' : formatPeso(current.reportedSales)} change={periodChange(current.reportedSales, previous.reportedSales)}
           hint={current.reportedSales === null ? 'Shown from 5 completed orders' : undefined} />
@@ -86,9 +108,11 @@ export function MarketplaceAnalytics({ heading, accountAdmin, onOpenSection }: P
         <KpiCard label="Students verified" value={count(current.studentsVerified)} hint={privacyHint(current.studentsVerified)} change={periodChange(current.studentsVerified, previous.studentsVerified)} />
         <KpiCard label="Inquiries" value={count(current.inquiries)} hint={privacyHint(current.inquiries)} change={periodChange(current.inquiries, previous.inquiries)} />
         <KpiCard label="Time to complete" value={formatHours(current.averageHoursToComplete)} change={periodChange(current.averageHoursToComplete, previous.averageHoursToComplete)} invertChange />
-      </div>
+      </div>}
+    </section>
 
-      <div className="analytics-dashboard-grid">
+    {data && workloadCounts && <>
+      <div className="analytics-dashboard-grid" aria-busy={loading}>
         <Panel className="analytics-card analytics-card--wide">
           <div className="analytics-section-head">
             <h3><Icon name="grid" size={18} /> Activity over time <span className="analytics-period">{rangeLabel}</span></h3>
@@ -98,7 +122,7 @@ export function MarketplaceAnalytics({ heading, accountAdmin, onOpenSection }: P
               </select>
             </label>
           </div>
-          <BarChart title={`${metricLabel}, ${rangeLabel}`} data={trend} format={value => formatCount(value)} />
+          <BarChart title={`${metricLabel}, ${rangeLabel}`} plotKey={`${data.range.key}:${metric}`} data={trend} format={formatCount} showScale />
         </Panel>
 
         <Panel className="analytics-card">

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 
 import { showActionFeedback } from '@/components/action-feedback';
@@ -6,6 +6,7 @@ import { CatalogAdmin } from '@/components/admin/catalog-admin';
 import { MarketplaceAnalytics } from '@/components/admin/marketplace-analytics';
 import { ManagedContentAdmin } from '@/components/admin/managed-content-admin';
 import { ReviewerAdmin } from '@/components/admin/reviewer-admin';
+import { UniversityDashboardOverview } from '@/components/admin/university-dashboard-overview';
 import { Icon } from '@/components/icons';
 import { StoreReviewModeration } from '@/components/stores/store-review-widgets';
 import { LegacyButton } from '@/components/ui/legacy-button';
@@ -35,6 +36,11 @@ const AUDIT_ACTION_TEXT: Record<string, string> = {
   'category.created': 'Listing category added', 'category.updated': 'Listing category renamed',
 };
 
+function studentStoreLabel(storeNames: string[] = []) {
+  if (storeNames.length === 0) return 'No store';
+  return `${storeNames.length === 1 ? 'Store' : 'Stores'}: ${storeNames.join(', ')}`;
+}
+
 export function Admin() {
   const { syncQueue, me } = useMe();
   const accountAdmin = Boolean(me?.roles.some(role => role.role === 'university_admin' && role.campusId === null));
@@ -43,6 +49,14 @@ export function Admin() {
   const [pendingAction, setPendingAction] = useState('');
   const [activeSection, setActiveSection] = useState(() => accountAdmin ? 'overview' : 'listings');
   useEffect(() => { if (me) setActiveSection(accountAdmin ? 'overview' : 'listings'); }, [me?.id, accountAdmin]);
+  const reviewHeadingToFocus = useRef<string | null>(null);
+  useEffect(() => {
+    if (reviewHeadingToFocus.current !== activeSection) return;
+    document.getElementById(`admin-${activeSection}`)?.focus();
+    reviewHeadingToFocus.current = null;
+  }, [activeSection]);
+  const universityOverview = accountAdmin && activeSection === 'overview';
+  const needsReviewDetails = !accountAdmin || ['listings', 'affiliations', 'reports'].includes(activeSection);
   const [selectedListingId, setSelectedListingId] = useState<number | null>(null);
   const [photosReviewed, setPhotosReviewed] = useState<Record<number, boolean>>({});
   const [reports, setReports] = useState<any[] | null>(null);
@@ -82,12 +96,12 @@ export function Admin() {
     api('/admin/reports').then(r => { setReports(r); setReportsError(''); }).catch(e => setReportsError(explain(e))),
   ]);
   const load = () => { void refreshQueues(); };
-  useEffect(() => { if (me) load(); }, [me?.id]);
+  useEffect(() => { if (me && needsReviewDetails) load(); }, [me?.id, needsReviewDetails]);
   // Queue, verification and report cases must appear for a reviewer without navigation.
   // Do not touch in-progress decision text or photo confirmations.
   useForegroundRefresh(() => {
     if (!pending) refreshQueues();
-  }, 5_000, Boolean(me));
+  }, 5_000, Boolean(me) && needsReviewDetails);
   const loadTransactions = async (page = 1) => {
     setTransactionLoading(true);
     try {
@@ -97,7 +111,8 @@ export function Admin() {
     } catch (e) { setTransactionError(explain(e)); }
     finally { setTransactionLoading(false); }
   };
-  useEffect(() => { if (me) void loadTransactions(); }, [me?.id]);
+  const needsTransactionDetails = !accountAdmin || activeSection === 'transactions';
+  useEffect(() => { if (me && needsTransactionDetails) void loadTransactions(); }, [me?.id, needsTransactionDetails]);
   const searchStudents = async (filters = studentApplied, page = 1, keepSelection = false) => {
     setStudentsLoading(true);
     try {
@@ -131,7 +146,12 @@ export function Admin() {
     try { setCampuses(await api<{ id: number; name: string }[]>('/campuses')); setCampusesError(''); }
     catch (e) { setCampusesError(explain(e)); }
   };
-  useEffect(() => { if (accountAdmin) { void searchStudents(); void loadAudit(); void loadCampuses(); } }, [accountAdmin]);
+  useEffect(() => {
+    if (accountAdmin && activeSection === 'students') void searchStudents(studentApplied, studentPage, true);
+    if (accountAdmin && activeSection === 'audit') void loadAudit();
+  }, [accountAdmin, activeSection]);
+  const needsCampusOptions = accountAdmin && (activeSection === 'students' || activeSection === 'staff');
+  useEffect(() => { if (needsCampusOptions) void loadCampuses(); }, [needsCampusOptions]);
   const assignStudentReviewer = async (id: number) => {
     if (!reviewerCampusId || reviewerReason.trim().length < 10) return;
     setPending(`reviewer-${id}`);
@@ -210,9 +230,9 @@ export function Admin() {
         { id: 'content', label: 'Content', icon: 'edit' },
       ] },
       { title: 'Review & safety', items: [
-        { id: 'listings', label: 'Listing reviews', icon: 'package', count: q?.listings.length },
-        { id: 'affiliations', label: 'Verifications', icon: 'userCheck', count: q?.affiliations.length },
-        { id: 'reports', label: 'Reports', icon: 'flag', count: reports?.length },
+        { id: 'listings', label: 'Listing reviews', icon: 'package', count: universityOverview ? undefined : q?.listings.length },
+        { id: 'affiliations', label: 'Verifications', icon: 'userCheck', count: universityOverview ? undefined : q?.affiliations.length },
+        { id: 'reports', label: 'Reports', icon: 'flag', count: universityOverview ? undefined : reports?.length },
         { id: 'store-reviews', label: 'Store ratings', icon: 'star' },
       ] },
       { title: 'Monitoring', items: [{ id: 'transactions', label: 'Transactions', icon: 'receipt' }, { id: 'audit', label: 'Audit history', icon: 'book' }] },
@@ -227,6 +247,10 @@ export function Admin() {
       { title: 'Monitoring', items: [{ id: 'transactions', label: 'Transactions', icon: 'receipt' }, { id: 'overview', label: 'Campus overview', icon: 'grid' }] },
     ];
   const changeSection = (id: string) => { setActiveSection(id); setNotice(''); };
+  const openDashboardQueue = (id: string) => {
+    reviewHeadingToFocus.current = id;
+    changeSection(id);
+  };
   return <div className="admin-workspace">
     <div className="page-head"><div><p className="admin-eyebrow"><Icon name="shield" size={14} /> {accountAdmin ? 'Admin console' : 'Reviewer console'}</p><h1>{accountAdmin ? 'University administration' : 'Campus review workspace'}</h1>
       <p className="muted">{accountAdmin ? 'Manage students, reviews and campus activity.' : 'Review listings, affiliations and reports for your campus.'}</p></div>
@@ -251,10 +275,10 @@ export function Admin() {
         </div>)}
       </nav>
       <div className="admin-workspace-main" id="admin-workspace-main">
-    <div hidden={activeSection !== 'affiliations'}>
+    {activeSection === 'affiliations' && <div>
     {err && <p className="err" role="alert">{err} <LegacyButton type="button" className="ghost" onClick={load}>Retry</LegacyButton></p>}
     {q === null && !err && <p role="status" className="muted">Loading review queue…</p>}
-    <h2 id="admin-affiliations">Affiliations to verify</h2><p className="muted">This queue does not contain proof of enrollment. Confirm affiliation using authorized campus records before deciding.</p>{q?.affiliations.length === 0 && <p className="muted">All caught up.</p>}
+    <h2 id="admin-affiliations" tabIndex={-1}>Affiliations to verify</h2><p className="muted">This queue does not contain proof of enrollment. Confirm affiliation using authorized campus records before deciding.</p>{q?.affiliations.length === 0 && <p className="muted">All caught up.</p>}
     {q?.affiliations.map((a: any) => <Panel key={a.id} className="row"><div style={{ flex: 1 }}><h3>{a.user.displayName}</h3><span className="muted">{a.campus} · {a.user.email} · Affiliation #{a.id}</span></div>
       {field(`a${a.id}`, 'Reason (5+ characters)')}
       <div className="admin-inline-actions">
@@ -269,11 +293,11 @@ export function Admin() {
           {pending === `a${a.id}` && pendingAction === 'rejected' ? 'Rejecting…' : 'Reject'}
         </LegacyButton>
       </div></Panel>)}
-    </div>
-    <div hidden={activeSection !== 'listings'}>
+    </div>}
+    {activeSection === 'listings' && <div>
     {err && <p className="err" role="alert">{err} <LegacyButton type="button" className="ghost" onClick={load}>Retry</LegacyButton></p>}
     {q === null && !err && <p role="status" className="muted">Loading review queue…</p>}
-    <h2 id="admin-listings">Listings to review</h2>{q?.listings.length === 0 && <p className="muted">No listings waiting.</p>}
+    <h2 id="admin-listings" tabIndex={-1}>Listings to review</h2>{q?.listings.length === 0 && <p className="muted">No listings waiting.</p>}
     {q?.listings.length > 0 && <div className="admin-review-layout">
       <Field className="admin-review-mobile-picker">Choose a listing to review
         <select value={selectedListing?.id ?? ''} onChange={event => setSelectedListingId(Number(event.target.value))}>
@@ -326,8 +350,8 @@ export function Admin() {
         </div></div></Panel>)}
       </div>
     </div>}
-    </div>
-    <div hidden={activeSection !== 'reports'}>
+    </div>}
+    {activeSection === 'reports' && <div>
     <h2 id="admin-reports">Reports from students</h2><p className="muted">Review the report and record your findings. Closing it does not suspend the subject.</p>{reportsError && <p className="err" role="alert">Reports could not load: {reportsError} <LegacyButton type="button" className="ghost" onClick={load}>Retry</LegacyButton></p>}{reportActionError && <p className="err" role="alert">Could not save the report decision: {reportActionError}. Your findings are retained; check and retry the decision.</p>}
     {reports === null && !reportsError && <p className="muted" role="status">Loading reports…</p>}
     {reports?.length === 0 && !reportsError && <p className="muted">No open reports.</p>}
@@ -353,9 +377,9 @@ export function Admin() {
           {pending === `r${rep.id}` && pendingAction === 'dismissed' ? 'Dismissing…' : 'Dismiss'}
         </LegacyButton>
       </div></Panel>)}
-    </div>
+    </div>}
     {activeSection === 'store-reviews' && <StoreReviewModeration />}
-    <section hidden={activeSection !== 'transactions'} aria-labelledby="admin-transactions-heading">
+    {activeSection === 'transactions' && <section aria-labelledby="admin-transactions-heading">
       <h2 id="admin-transactions-heading">Transaction monitoring</h2>
       <p className="muted">Read-only campus records. Completed means both students confirmed; payments are unverified. Private messages are hidden.</p>
       {transactionError && <p role="alert" className="err">Transactions could not load: {transactionError} <LegacyButton type="button" className="ghost" onClick={() => void loadTransactions(transactionPage)}>Retry</LegacyButton></p>}
@@ -371,12 +395,12 @@ export function Admin() {
       </Panel>)}</div>
       {transactionLoading && <p role="status" className="muted">Loading transaction records…</p>}
       {!transactionLoading && !transactionError && monitoredTransactions.length < transactionCount && <LegacyButton type="button" className="ghost" onClick={() => void loadTransactions(transactionPage + 1)}>Load more transactions</LegacyButton>}
-    </section>
-    {accountAdmin && <section hidden={activeSection !== 'students'} aria-labelledby="student-management-heading">
+    </section>}
+    {accountAdmin && activeSection === 'students' && <section aria-labelledby="student-management-heading">
       <h2 id="student-management-heading">Student accounts</h2>
       <p className="muted">Suspending a student signs them out and hides their public listings.</p>
       <form className="panel admin-student-filters" role="search" aria-label="Search student accounts" onSubmit={e => { e.preventDefault(); void searchStudents({ q: studentQuery, status: studentStatus, verification: studentVerification, campusId: studentCampusId }); }}>
-        <Field className="">Name or email<input type="search" value={studentQuery} onChange={e => setStudentQuery(e.target.value)} maxLength={80} placeholder="Search students" /></Field>
+        <Field className="">Name, email, or store<input type="search" value={studentQuery} onChange={e => setStudentQuery(e.target.value)} maxLength={80} placeholder="Search by name, email, or store" /></Field>
         <Field className="">Campus<select value={studentCampusId} onChange={e => setStudentCampusId(e.target.value)}><option value="">All campuses</option>{campuses.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}</select></Field>
         <Field className="">Account<select value={studentStatus} onChange={e => setStudentStatus(e.target.value)}><option value="">Any status</option><option value="active">Active</option><option value="suspended">Suspended</option></select></Field>
         <Field className="">Verification<select value={studentVerification} onChange={e => setStudentVerification(e.target.value)}><option value="">Any status</option><option value="unverified">Unverified</option><option value="pending">Pending</option><option value="verified">Verified</option><option value="rejected">Rejected</option><option value="suspended">Suspended</option></select></Field>
@@ -387,14 +411,14 @@ export function Admin() {
       {!studentsLoading && students && !studentsError && <p className="muted" role="status">{studentTotal === 0 ? 'No matching students.' : `Showing ${(studentPage - 1) * 25 + 1}–${(studentPage - 1) * 25 + students.length} of ${studentTotal} students`}</p>}
       {!studentsError && students && students.length > 0 && <div className="admin-student-layout">
         <div className="admin-student-list" aria-label="Student results">{students.map(student => <button key={student.id} type="button" className="admin-student-row" aria-pressed={selectedStudentId === student.id} onClick={() => { setSelectedStudentId(student.id); setReviewerCampusId(''); setReviewerReason(''); }}>
-          <span className="admin-student-name"><span className="admin-avatar" data-initials={initialsOf(student.displayName)} aria-hidden="true" /><span className="admin-student-ident">{student.displayName}<small>{student.email}</small></span></span>
+          <span className="admin-student-name"><span className="admin-avatar" data-initials={initialsOf(student.displayName)} aria-hidden="true" /><span className="admin-student-ident">{student.displayName}<small>{student.email}</small><small>{studentStoreLabel(student.storeNames)}</small></span></span>
           <span className="admin-student-campus">{student.affiliations.map((a: any) => a.campus.code).join(', ') || 'No campus'}</span>
           <span className={'admin-pill' + (student.affiliations.some((a: any) => a.verificationStatus === 'verified') ? ' is-verified' : ' is-muted')}>{student.affiliations.some((a: any) => a.verificationStatus === 'verified') ? 'Verified' : 'Unverified'}</span>
           <span className={'status admin-pill' + (student.status === 'active' ? ' is-active' : ' is-danger')}>{student.status === 'active' ? 'Active' : 'Suspended'}</span>
         </button>)}</div>
         <Panel as="aside" className="admin-student-detail" aria-label="Selected student account">
           {!selectedStudent && <p className="muted">Select a student to view account actions.</p>}
-          {selectedStudent && <><h3>{selectedStudent.displayName}</h3><p className="muted">{selectedStudent.email}</p><p>Account: {selectedStudent.status}</p><p>Campus: {selectedStudent.affiliations.map((a: any) => `${a.campus.code} (${a.verificationStatus})`).join(', ') || 'None'}</p>
+          {selectedStudent && <><h3>{selectedStudent.displayName}</h3><p className="muted">{selectedStudent.email}</p><p className="admin-student-store-names">{studentStoreLabel(selectedStudent.storeNames)}</p><p>Account: {selectedStudent.status}</p><p>Campus: {selectedStudent.affiliations.map((a: any) => `${a.campus.code} (${a.verificationStatus})`).join(', ') || 'None'}</p>
             {selectedStudent.roles.some((role: any) => ['campus_reviewer', 'university_admin', 'system_admin'].includes(role.role)) ? <p className="muted">Protected staff account — changes require a separate administrative review.</p> : selectedStudent.id !== me?.id && <div className="stack"><Field className="">Reason for account decision<input value={reasons[`u${selectedStudent.id}`] ?? ''} onChange={e => setReasons(previous => ({ ...previous, [`u${selectedStudent.id}`]: e.target.value }))} placeholder="Required reason (10+ characters)" maxLength={500} minLength={10} /></Field><button className={selectedStudent.status === 'active' ? 'btn danger' : 'btn'} type="button" disabled={pending === `u${selectedStudent.id}` || (reasons[`u${selectedStudent.id}`] ?? '').trim().length < 10} onClick={() => void changeAccountStatus(selectedStudent.id, selectedStudent.status === 'active' ? 'suspended' : 'active')}>{selectedStudent.status === 'active' ? 'Suspend student' : 'Reactivate student'}</button></div>}
             {selectedStudent.status === 'active' && selectedStudent.roles.length === 0 && selectedStudent.id !== me?.id && <div className="stack">
               <h4>Assign campus reviewer</h4>
@@ -414,7 +438,7 @@ export function Admin() {
     {accountAdmin && activeSection === 'staff' && <ReviewerAdmin active campuses={campuses} campusesError={campusesError} onRetryCampuses={() => void loadCampuses()} />}
     {accountAdmin && activeSection === 'content' && <ManagedContentAdmin />}
     {accountAdmin && activeSection === 'catalog' && <CatalogAdmin onCampusesChange={() => { void loadCampuses(); }} />}
-    {accountAdmin && <section hidden={activeSection !== 'audit'} aria-labelledby="audit-history-heading">
+    {accountAdmin && activeSection === 'audit' && <section aria-labelledby="audit-history-heading">
       <h2 id="audit-history-heading">Administrative audit history</h2>
       <p className="muted">Newest first.</p>
       {auditError && <p role="alert" className="err">Audit history could not load: {auditError}
@@ -433,8 +457,9 @@ export function Admin() {
       {auditLoading && <p role="status" className="muted">Loading audit history…</p>}
       {auditCursor !== null && !auditLoading && !auditError && <LegacyButton type="button" className="ghost" onClick={() => void loadAudit(auditCursor)}>Load older events</LegacyButton>}
     </section>}
-    {activeSection === 'overview' && <MarketplaceAnalytics heading={accountAdmin ? 'University dashboard' : 'Campus overview'}
-      accountAdmin={accountAdmin} onOpenSection={changeSection} />}
+    {activeSection === 'overview' && (universityOverview
+      ? <UniversityDashboardOverview onOpenSection={openDashboardQueue} />
+      : <MarketplaceAnalytics heading="Campus overview" accountAdmin={false} onOpenSection={changeSection} />)}
       </div>
     </div>
   </div>;

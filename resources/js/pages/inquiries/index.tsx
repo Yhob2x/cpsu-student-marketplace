@@ -9,6 +9,7 @@ import { Icon } from '@/components/icons';
 import { LegacyButton } from '@/components/ui/legacy-button';
 import { EmptyState, ErrorState, LoadingState } from '@/components/ui/screen-state';
 import { api, explain, timeAgo } from '@/lib/api';
+import { listenRealtime, shouldPollRealtime } from '@/lib/realtime';
 import { mergeInboxPages, type InboxPage } from '@/lib/messaging/inbox-pages';
 import { hasNewIncomingMessage, messageReceiveSoundEnabled, playMessageReceiveSound, prepareMessageReceiveSound, setMessageReceiveSoundEnabled, unlockMessageReceiveSound } from '@/lib/messaging/message-receive-sound';
 import { useMe } from '@/providers/session-provider';
@@ -74,9 +75,14 @@ export function Inquiries() {
     window.addEventListener('blur', onBlur);
     document.addEventListener('visibilitychange', onVisibility);
     void load();
-    const timer = window.setInterval(() => { if (!document.hidden) void load(); }, 5000);
+    const stopRealtime = listenRealtime(() => void load(), ['chat', 'transaction']);
+    let lastPollAt = Date.now();
+    const timer = window.setInterval(() => {
+      if (!document.hidden && shouldPollRealtime(lastPollAt)) { lastPollAt = Date.now(); void load(); }
+    }, 5000);
     return () => {
       requestRef.current++;
+      stopRealtime();
       window.clearInterval(timer);
       window.removeEventListener('blur', onBlur);
       document.removeEventListener('visibilitychange', onVisibility);

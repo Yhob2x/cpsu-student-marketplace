@@ -81,7 +81,8 @@ function RequireSignedIn({ next, children }: { next: string; children: ReactNode
 /** Review workspace for campus reviewers and university admins. */
 function RequireReviewer({ children }: { children: ReactNode }) {
   const { ready, isReviewer } = useMe();
-  return ready && !isReviewer ? <Navigate to="/" /> : children;
+  if (!ready) return <p role="status">Checking session…</p>;
+  return isReviewer ? children : <Navigate to="/" replace />;
 }
 
 export function AppRoutes() {

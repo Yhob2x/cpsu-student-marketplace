@@ -1,10 +1,10 @@
 import type { AnalyticsRangeKey, CountValue } from '@/types/analytics';
 
-export const RANGE_OPTIONS: { key: AnalyticsRangeKey; label: string; short: string }[] = [
-  { key: '7d', label: 'Last 7 days', short: '7 days' },
-  { key: '30d', label: 'Last 30 days', short: '30 days' },
-  { key: '90d', label: 'Last 90 days', short: '90 days' },
-  { key: '12m', label: 'Last 12 months', short: '12 months' },
+export const RANGE_OPTIONS: { key: AnalyticsRangeKey; label: string }[] = [
+  { key: '7d', label: 'Last 7 days' },
+  { key: '30d', label: 'Last 30 days' },
+  { key: '90d', label: 'Last 90 days' },
+  { key: '12m', label: 'Last 12 months' },
 ];
 
 const wholePeso = new Intl.NumberFormat('en-PH', { style: 'currency', currency: 'PHP', maximumFractionDigits: 0 });

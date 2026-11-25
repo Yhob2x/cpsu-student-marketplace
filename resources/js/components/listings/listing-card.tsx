@@ -2,6 +2,8 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 
 import { Icon } from '@/components/icons';
+import { ListingAppreciation } from '@/components/listings/listing-appreciation';
+import { ListingViews } from '@/components/listings/listing-views';
 import { SellerAvatar } from '@/components/stores/seller-avatar';
 import { peso } from '@/lib/api';
 import { useMe } from '@/providers/session-provider';
@@ -37,6 +39,7 @@ export function ListingCard({ l, priority = false }: { l: Listing; priority?: bo
     } finally { setBusy(false); }
   };
   const lowStock = l.type === 'physical_product' && typeof l.stockQuantity === 'number' && l.stockQuantity <= 3;
+  const categoryLabel = l.condition ? `${l.category.name} · ${l.condition.replace('_', ' ')}` : l.category.name;
   // Whole-card link and a separate save control. Labels and prices reflect real listing data only.
   return (
     <article className="card product-card market-card">
@@ -45,14 +48,10 @@ export function ListingCard({ l, priority = false }: { l: Listing; priority?: bo
         {showImage
           ? <img src={imageSrc} alt="" loading={priority ? 'eager' : 'lazy'} decoding="async" onError={() => setFailedImageSrc(imageSrc)} />
           : <span className="photo-placeholder"><Icon name="tag" size={30} /><span>{imageSrc ? 'Photo unavailable' : 'No photo yet'}</span></span>}
-        <span className={`market-card__badge market-card__badge--${l.type === 'service' ? 'service' : 'sale'}`}>{l.type === 'service' ? 'Service' : 'For Sale'}</span>
-        {l.availability !== 'available'
-          ? <span className="market-card__status">{l.availability.replaceAll('_', ' ')}</span>
-          : lowStock && <span className={'market-card__status' + (l.stockQuantity === 0 ? ' is-empty' : '')}>{l.stockQuantity === 0 ? 'Out of stock' : `Only ${l.stockQuantity} left`}</span>}
         {l.images.length > 1 && <span className="product-photo-multiple">{l.images.length} photos</span>}
         {!staff && <button type="button" className="listing-save-btn market-card__save" aria-pressed={saved} aria-label={saveLabel}
           title={saveLabel} aria-busy={busy || saveSyncing} disabled={busy || saveSyncing || !canSave} onClick={flip}>
-          <Icon name={saved ? 'heartSolid' : 'heart'} size={18} /><span className="sr-only">{saved ? 'Saved' : 'Save'}</span></button>}
+          <Icon name="folder" size={14} filled={saved} /><span>{saved ? 'Saved' : 'Save'}</span></button>}
       </div>
       <div className="listing-card-body market-card__body">
         <h3 title={l.title}>{l.title}</h3>
@@ -72,9 +71,21 @@ export function ListingCard({ l, priority = false }: { l: Listing; priority?: bo
               <Icon name="star" size={12} filled />
               <span>{l.seller.rating.average.toFixed(1)}</span>
             </span>}
-          <span className="market-card__campus" title={l.campus.name}>{l.campus.name.replace(/\s*campus$/i, '')}</span>
         </p>
-        <p className="market-card__category">{l.category.name}{l.condition && <> · {l.condition.replace('_', ' ')}</>}</p>
+        <div className="market-card__details">
+          <span className="market-card__badge">{l.type === 'service' ? 'Service' : 'For Sale'}</span>
+          <span className="market-card__category" title={categoryLabel}>{categoryLabel}</span>
+          {l.availability !== 'available'
+            ? <span className="market-card__status">{l.availability.replaceAll('_', ' ')}</span>
+            : lowStock && <span className={'market-card__status' + (l.stockQuantity === 0 ? ' is-empty' : '')}>{l.stockQuantity === 0 ? 'Out of stock' : `Only ${l.stockQuantity} left`}</span>}
+        </div>
+        <div className="market-card__footer">
+          <span className="market-card__campus" title={l.campus.name}><Icon name="pin" size={14} /><span>{l.campus.name}</span></span>
+          <div className="listing-card-engagement">
+            <ListingAppreciation listingId={l.id} signedIn={Boolean(me)} readOnly={isOwner || Boolean(staff)} compact showCount />
+            <ListingViews listingId={l.id} compact />
+          </div>
+        </div>
         {saveError && <p className="card-save-feedback" role="alert">{saveError}</p>}
       </div>
     </article>

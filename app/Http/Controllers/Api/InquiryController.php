@@ -156,6 +156,7 @@ class InquiryController extends Controller
             if ($ids !== []) {
                 InquiryMessage::query()->where('threadId', $thread->id)->whereIn('id', $ids)->where('authorUserId', '!=', $userId)
                     ->whereNull('deliveredAt')->update(['deliveredAt' => $stamp]);
+                \App\Services\Realtime::changed($thread->buyerUserId === $userId ? $thread->seller->ownerUserId : $thread->buyerUserId, 'chat');
                 $messages->each(function ($message) use ($ids, $deliveredAt) {
                     if (in_array($message->id, $ids, true)) {
                         $message->deliveredAt = $deliveredAt;
@@ -234,7 +235,8 @@ class InquiryController extends Controller
         $now = ListingAccess::now();
         $incoming = fn () => InquiryMessage::query()->where('threadId', $thread->id)->where('authorUserId', '!=', $userId)->where('id', '<=', $upToId);
         $incoming()->whereNull('deliveredAt')->update(['deliveredAt' => $now]);
-        $incoming()->whereNull('seenAt')->update(['seenAt' => $now]);
+        $changed = $incoming()->whereNull('seenAt')->update(['seenAt' => $now]);
+        if ($changed > 0) \App\Services\Realtime::changed($thread->buyerUserId === $userId ? $thread->seller->ownerUserId : $thread->buyerUserId, 'chat');
 
         // Clear only notices for messages that were actually visible.
         $pending = Notification::query()->where('userId', $userId)->whereNull('readAt')->whereIn('type', self::MESSAGE_TYPES)
@@ -319,6 +321,7 @@ class InquiryController extends Controller
         });
 
         foreach ([$thread->buyerUserId, $thread->seller->ownerUserId] as $participant) {
+            \App\Services\Realtime::changed($participant, 'chat');
             Cache::forget($this->activityKey('typing', $thread->id, $participant));
             Cache::forget($this->activityKey('presence', $thread->id, $participant));
         }
@@ -357,6 +360,8 @@ class InquiryController extends Controller
             return Handoff::query()->updateOrCreate(['inquiryThreadId' => $thread->id], $data)->fresh();
         });
 
+        \App\Services\Realtime::changed($thread->buyerUserId, 'transaction');
+        \App\Services\Realtime::changed($thread->seller->ownerUserId, 'transaction');
         return ApiResponse::json($handoff->toArray());
     }
 
@@ -413,6 +418,7 @@ class InquiryController extends Controller
 
     private function notifyUnlessMuted(int $recipient, int $threadId, string $type, int $messageId, string $title): void
     {
+        \App\Services\Realtime::changed($recipient, 'chat');
         if (! $this->muted($recipient, $threadId)) {
             Notification::create(['userId' => $recipient, 'type' => $type, 'payload' => ['threadId' => $threadId, 'messageId' => $messageId, 'listingTitle' => $title]]);
         }
@@ -426,7 +432,9 @@ class InquiryController extends Controller
             throw new ApiError(409, 'thread_closed');
         }
 
+        $wasActive = $this->active($kind, $thread->id, $userId);
         Cache::put($this->activityKey($kind, $thread->id, $userId), (int) (microtime(true) * 1000) + $milliseconds, (int) ceil($milliseconds / 1000) + 1);
+        if (! $wasActive) \App\Services\Realtime::changed($thread->buyerUserId === $userId ? $thread->seller->ownerUserId : $thread->buyerUserId, 'chat');
 
         return response()->noContent();
     }

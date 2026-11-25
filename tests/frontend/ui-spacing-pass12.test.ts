@@ -19,7 +19,7 @@ const steps = [4, 8, 12, 16, 24, 32, 48, 64];
 test('new seller, notifications and filters spacing uses shared tokens at near-scale values', () => {
   const offenders: string[] = [];
   for (const file of scopedStyles) {
-    const text = readFileSync(new URL('../../resources/js/' + file, import.meta.url), 'utf8');
+    const text = readFileSync(new URL('../../resources/css/' + file, import.meta.url), 'utf8');
     const sheet = postcss.parse(text, { from: file });
     sheet.walkDecls(decl => {
       if (!/^(?:padding|margin|gap|row-gap|column-gap)(?:-|$)/.test(decl.prop)) return;

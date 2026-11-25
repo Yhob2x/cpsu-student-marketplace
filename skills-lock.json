@@ -1,0 +1,33 @@
+{
+  "version": 2,
+  "skills": {
+    "animated-chart": {
+      "source": "charlie947/motion-graphics-skills",
+      "commit": "229022ebca76972e119e36ada23a1648d51665ab",
+      "sourceType": "github",
+      "skillPath": "skills/animated-chart/SKILL.md",
+      "computedHash": "bf7f8644e66c3f9101d582642fb21b4c409011144741784323e7fb946c25a077"
+    },
+    "design-taste-frontend": {
+      "source": "Leonxlnx/taste-skill",
+      "commit": "d1a2bb41d927083ac7118f60cfc9cdf711810ea0",
+      "sourceType": "github",
+      "skillPath": "skills/taste-skill/SKILL.md",
+      "computedHash": "b10eab0a9684cd09cf34c31ef04a3bf530a5f4404422f9c520d42372d670c7fc"
+    },
+    "grill-me": {
+      "source": "mattpocock/skills",
+      "commit": "d65391149dbb5fe76478e76fa8d5122b2aa5a70e",
+      "sourceType": "github",
+      "skillPath": "skills/productivity/grill-me/SKILL.md",
+      "computedHash": "ab1acb9fbd9eaee03da254abb8a8de228d1e7a07475fe959da4a5eefa34ea4b9"
+    },
+    "ui-ux-pro-max": {
+      "source": "nextlevelbuilder/ui-ux-pro-max-skill",
+      "commit": "8db36338810d0942567b97ce439affd1619fcf31",
+      "sourceType": "github",
+      "skillPath": ".claude/skills/ui-ux-pro-max/SKILL.md",
+      "computedHash": "f583fab0f9bfd86aad1baede1c4f6719d70d0b007398b5cbbd2a75936ffcecd1"
+    }
+  }
+}

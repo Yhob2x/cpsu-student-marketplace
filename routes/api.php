@@ -21,6 +21,7 @@ use App\Http\Controllers\Api\StoreController;
 use App\Http\Controllers\Api\StoreFollowController;
 use App\Http\Controllers\Api\StoreReviewController;
 use App\Http\Controllers\Api\TransactionController;
+use App\Http\Controllers\Api\UniversityDashboardController;
 use App\Http\Middleware\AccountLoginThrottle;
 use App\Http\Middleware\AccountRateLimit;
 use App\Http\Middleware\ApiRateLimit;
@@ -34,8 +35,13 @@ use App\Http\Middleware\RequireStudent;
 use App\Http\Middleware\RequireUniversityAdmin;
 use Illuminate\Support\Facades\Route;
 
+$marketplaceApiMiddleware = [ApiResponseHeaders::class, ParseJsonBody::class, ApiRateLimit::class.':global', AuthenticateAccessToken::class];
+
+Route::get('admin/dashboard', [UniversityDashboardController::class, 'show'])
+    ->middleware([...$marketplaceApiMiddleware, RequireUniversityAdmin::class]);
+
 Route::prefix('v1')
-    ->middleware([ApiResponseHeaders::class, ParseJsonBody::class, ApiRateLimit::class.':global', AuthenticateAccessToken::class])
+    ->middleware($marketplaceApiMiddleware)
     ->group(function () {
         Route::prefix('auth')->middleware(ApiRateLimit::class.':auth')->group(function () {
             Route::get('registration-policy', [AuthController::class, 'registrationPolicy']);
@@ -71,6 +77,8 @@ Route::prefix('v1')
         Route::get('media/{id}', [MediaController::class, 'listingMedia']);
 
         Route::middleware(RequireAuth::class)->group(function () {
+            Route::get('realtime/config', [\App\Http\Controllers\Api\RealtimeController::class, 'config']);
+            Route::post('realtime/auth', [\App\Http\Controllers\Api\RealtimeController::class, 'authorize']);
             Route::get('me', [AccountController::class, 'me']);
             Route::patch('me', [AccountController::class, 'updateMe']);
             Route::get('notifications/unread-count', [AccountController::class, 'unreadCount']);

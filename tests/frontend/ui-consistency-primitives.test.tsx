@@ -40,8 +40,9 @@ describe('shared CPSU Market native wrappers', () => {
 
   test('student and admin screens reuse native Field and Panel without recreating HTML roles', () => {
     for (const [filename, fields, panels] of [
-      [['pages/admin/index.tsx'], 11, 6],
-      [PAGE_GROUPS.account, 26, 5],
+      [['pages/admin/index.tsx'], 11, 5],
+      [['components/admin/university-dashboard.tsx'], 0, 6],
+      [PAGE_GROUPS.account, 28, 5],
       [PAGE_GROUPS.profile, 1, 4],
       [PAGE_GROUPS.public, 3, 4],
       [PAGE_GROUPS.transactions, 1, 5],

@@ -5,14 +5,19 @@ namespace Tests\Feature\Api;
 use App\Models\Affiliation;
 use App\Models\Campus;
 use App\Models\Category;
+use App\Models\InquiryThread;
 use App\Models\Listing;
 use App\Models\ListingInventory;
+use App\Models\ListingReview;
 use App\Models\SellerProfile;
+use App\Models\Transaction;
+use App\Models\TransactionStatusLog;
 use App\Models\User;
 use App\Models\UserRole;
 use App\Services\AccessTokens;
 use App\Support\AnalyticsRange;
 use Carbon\CarbonImmutable;
+use DateTimeInterface;
 use Illuminate\Support\Facades\DB;
 use RuntimeException;
 use Tests\TestCase;
@@ -256,6 +261,179 @@ class AnalyticsApiTest extends TestCase
             ->assertJsonPath('categories.0.name', 'Pre-loved')
             ->assertJsonPath('categories.0.reportedSales', 1250)
             ->assertJsonPath('workload.pendingListings', 1);
+    }
+
+    public function test_university_dashboard_requires_a_university_admin_and_a_valid_period(): void
+    {
+        $path = '/api/admin/dashboard';
+        $this->getJson($path)->assertUnauthorized();
+        $this->as($this->buyer)->getJson($path)->assertForbidden();
+        $this->as($this->reviewer)->getJson($path)->assertForbidden();
+        $this->as($this->reviewer)->getJson('/api/v1/admin/analytics/dashboard')->assertOk();
+        $this->as($this->admin)->getJson($path.'?period=forever')->assertBadRequest()
+            ->assertJsonPath('error.issues.0.path.0', 'period');
+        $this->as($this->admin)->getJson($path.'?period=7d&campusId=1')->assertBadRequest();
+
+        foreach ([
+            '' => ['30d', 'previous 30 days', 'day', 30],
+            '?period=7d' => ['7d', 'previous 7 days', 'day', 7],
+            '?period=90d' => ['90d', 'previous 90 days', 'week', 13],
+            '?period=12m' => ['12m', 'previous 12 months', 'month', 12],
+        ] as $query => [$period, $previousLabel, $bucket, $points]) {
+            $this->as($this->admin)->getJson($path.$query)->assertOk()
+                ->assertHeader('Cache-Control', 'no-store, private')
+                ->assertJsonPath('period', $period)
+                ->assertJsonPath('previousPeriodLabel', $previousLabel)
+                ->assertJsonPath('series.granularity', $bucket)
+                ->assertJsonCount($points, 'series.points');
+        }
+    }
+
+    public function test_university_dashboard_masks_small_counts_and_excludes_unavailable_listings(): void
+    {
+        $this->travelTo(now()->setTimezone('Asia/Manila')->setTime(12, 0)->addDay()->utc());
+        $published = $this->listing();
+        $pending = $this->listing();
+        $pending->update(['status' => 'pending_review']);
+        $this->listing()->update(['availabilityState' => 'sold']);
+        $this->listing()->update(['deletedAt' => now()]);
+        $this->listing()->update(['status' => 'draft']);
+        $this->listing()->update(['sellerProfileId' => SellerProfile::create([
+            'ownerUserId' => $this->buyer->id, 'campusId' => $this->campus->id, 'storeName' => 'Pending Store',
+            'description' => 'A store for tests', 'sellerType' => 'student', 'approvalStatus' => 'pending',
+        ])->id]);
+        Affiliation::create(['userId' => $this->buyer->id, 'campusId' => $this->otherCampus->id, 'verificationStatus' => 'pending']);
+        Affiliation::create(['userId' => $this->seller->id, 'campusId' => $this->otherCampus->id, 'verificationStatus' => 'verified', 'verifiedAt' => now()->subSecond()]);
+        foreach (range(1, 2) as $number) {
+            $student = $this->student("new{$number}@example.test");
+            $student->affiliations()->update(['verifiedAt' => now()->subSecond()]);
+        }
+        for ($review = 0; $review < 5; $review++) {
+            ListingReview::create([
+                'listingId' => $published->id, 'reviewerId' => $this->admin->id, 'decision' => 'approved',
+                'reason' => 'Approved', 'createdAt' => now()->subSecond(),
+            ]);
+        }
+        $this->recordDashboardOrder($published, 'completed', now()->subHour(), now()->subSecond());
+        $this->recordDashboardOrder($published, 'accepted', now()->subMinutes(2));
+        $this->recordDashboardOrder($published, 'negotiating', now()->subMinutes(2));
+        $this->recordDashboardOrder($published, 'for_meetup', now()->subMinutes(2));
+
+        $response = $this->as($this->admin)->getJson('/api/admin/dashboard?period=7d')->assertOk();
+        $response->assertJsonPath('reviewQueue', ['listings' => '<5', 'verifications' => '<5'])
+            ->assertJsonPath('kpis.liveListings', '<5')->assertJsonPath('kpis.newOrders', '<5')
+            ->assertJsonPath('kpis.completedOrders', '<5')->assertJsonPath('kpis.inquiries', '<5')
+            ->assertJsonPath('kpis.listingsApproved', '<5')->assertJsonPath('kpis.studentsVerified', '<5')
+            ->assertJsonPath('kpis.changes', array_fill_keys(['newOrders', 'completedOrders', 'inquiries', 'listingsApproved', 'studentsVerified'], null))
+            ->assertJsonPath('funnel', array_fill_keys(['liveListings', 'inquiries', 'orders', 'completed'], '<5'))
+            ->assertJsonPath('ordersInProgress', ['awaitingSeller' => 0, 'accepted' => '<5', 'arrangingMeetup' => '<5', 'meetupAgreed' => '<5'])
+            ->assertJsonPath('quality', null)->assertJsonPath('series.points.0.completed', 0)
+            ->assertJsonPath('series.points.6.completed', '<5')
+            ->assertJsonPath('categories', [['name' => 'Pre-loved', 'liveListings' => '<5']])
+            ->assertJsonPath('campuses', [[
+                'name' => 'Main Campus', 'storefronts' => '<5', 'liveListings' => '<5', 'newOrders' => '<5',
+                'completed' => '<5', 'reportedSales' => null,
+            ]])
+            ->assertJsonPath('inactiveCampusCount', '<5');
+        $this->assertSame(
+            ['period', 'previousPeriodLabel', 'generatedAt', 'reviewQueue', 'kpis', 'funnel', 'ordersInProgress', 'series', 'quality', 'categories', 'campuses', 'inactiveCampusCount'],
+            array_keys($response->json()),
+        );
+    }
+
+    public function test_university_dashboard_counts_completed_orders_once_and_totals_only_confirmed_sales(): void
+    {
+        $this->travelTo(now()->setTimezone('Asia/Manila')->setTime(12, 0)->addDay()->utc());
+        $listing = $this->listing(10, '999.99');
+        for ($number = 0; $number < 5; $number++) {
+            $order = $this->recordDashboardOrder($listing, 'completed', now()->subDays(2), now()->subDay());
+            TransactionStatusLog::create([
+                'transactionId' => $order->id, 'actorUserId' => $this->buyer->id, 'toStatus' => 'completed',
+                'event' => 'completed', 'createdAt' => now()->subHour(),
+            ]);
+            $past = $this->recordDashboardOrder($listing, 'completed', now()->subDays(9), now()->subDays(8));
+            TransactionStatusLog::create([
+                'transactionId' => $past->id, 'actorUserId' => $this->buyer->id, 'toStatus' => 'completed',
+                'event' => 'completed', 'createdAt' => now()->subHour(),
+            ]);
+        }
+        $unconfirmed = $this->recordDashboardOrder($listing, 'completed', now()->subDays(2), now()->subDay());
+        $unconfirmed->update(['buyerCompletionConfirmedAt' => null]);
+        $this->recordDashboardOrder($listing, 'cancelled', now()->subDays(2), now()->subDay());
+
+        $this->as($this->admin)->getJson('/api/admin/dashboard?period=7d')->assertOk()
+            ->assertJsonPath('kpis.newOrders', 7)
+            ->assertJsonPath('kpis.completedOrders', 5)
+            ->assertJsonPath('kpis.changes.newOrders', 40)
+            ->assertJsonPath('kpis.changes.completedOrders', 0)
+            ->assertJsonPath('quality.reportedSales', 1250)
+            ->assertJsonPath('quality.cancellationRatePct', null)
+            ->assertJsonPath('quality.avgDaysToComplete', 1)
+            ->assertJsonPath('series.points.5.completed', 5)
+            ->assertJsonPath('series.points.6.completed', 0)
+            ->assertJsonPath('campuses.0.completed', 5)
+            ->assertJsonPath('campuses.0.reportedSales', 1250);
+
+        for ($number = 0; $number < 4; $number++) {
+            $this->recordDashboardOrder($listing, 'cancelled', now()->subDays(2), now()->subDay());
+        }
+        $this->travel(60)->seconds();
+        $this->as($this->admin)->getJson('/api/admin/dashboard?period=7d')->assertOk()
+            ->assertJsonPath('quality.cancellationRatePct', 50);
+    }
+
+    public function test_university_dashboard_caches_each_period_for_sixty_seconds(): void
+    {
+        $this->travelTo(now()->setTimezone('Asia/Manila')->setTime(12, 0)->addDay()->utc());
+        $first = $this->as($this->admin)->getJson('/api/admin/dashboard?period=30d')->assertOk()->json();
+        $this->listing();
+
+        $this->travel(59)->seconds();
+        $this->as($this->admin)->getJson('/api/admin/dashboard')->assertOk()->assertExactJson($first);
+        $this->as($this->admin)->getJson('/api/admin/dashboard?period=7d')->assertOk()->assertJsonPath('kpis.liveListings', '<5');
+
+        $this->travel(1)->seconds();
+        $this->as($this->admin)->getJson('/api/admin/dashboard')->assertOk()->assertJsonPath('kpis.liveListings', '<5');
+    }
+
+    public function test_university_dashboard_observes_completion_through_the_order_workflow(): void
+    {
+        $id = $this->order($this->listing());
+        $this->as($this->seller)->postJson("/api/v1/transactions/{$id}/decision", ['action' => 'accept'])->assertOk();
+        $this->as($this->buyer)->post("/api/v1/transactions/{$id}/confirm-meetup")->assertOk();
+        $this->as($this->seller)->post("/api/v1/transactions/{$id}/confirm-meetup")->assertOk();
+        $this->as($this->buyer)->post("/api/v1/transactions/{$id}/confirm-completion")->assertOk();
+
+        $this->as($this->admin)->getJson('/api/admin/dashboard?period=30d')->assertOk()
+            ->assertJsonPath('kpis.completedOrders', 0)->assertJsonPath('ordersInProgress.meetupAgreed', '<5');
+
+        $this->as($this->seller)->post("/api/v1/transactions/{$id}/confirm-completion")->assertOk()->assertJsonPath('status', 'completed');
+        $this->travel(1)->seconds();
+        $this->as($this->admin)->getJson('/api/admin/dashboard?period=7d')->assertOk()
+            ->assertJsonPath('kpis.completedOrders', '<5')->assertJsonPath('ordersInProgress.meetupAgreed', 0)
+            ->assertJsonPath('quality', null);
+    }
+
+    private function recordDashboardOrder(Listing $listing, string $status, DateTimeInterface $createdAt, ?DateTimeInterface $transitionAt = null): Transaction
+    {
+        $thread = InquiryThread::firstOrCreate(
+            ['listingId' => $listing->id, 'buyerUserId' => $this->buyer->id],
+            ['sellerProfileId' => $this->store->id, 'createdAt' => $createdAt],
+        );
+        $order = Transaction::create([
+            'inquiryThreadId' => $thread->id, 'listingId' => $listing->id, 'buyerUserId' => $this->buyer->id,
+            'sellerUserId' => $this->seller->id, 'status' => $status, 'price' => '250.00', 'createdAt' => $createdAt,
+            'buyerCompletionConfirmedAt' => $status === 'completed' ? $transitionAt : null,
+            'sellerCompletionConfirmedAt' => $status === 'completed' ? $transitionAt : null,
+        ]);
+        if ($transitionAt !== null) {
+            TransactionStatusLog::create([
+                'transactionId' => $order->id, 'actorUserId' => $this->buyer->id, 'toStatus' => $status,
+                'event' => $status, 'createdAt' => $transitionAt,
+            ]);
+        }
+
+        return $order;
     }
 
     public function test_ranges_use_campus_local_days_and_do_not_overlap(): void

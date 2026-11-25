@@ -11,6 +11,7 @@
   --admin-hover: color-mix(in srgb, var(--color-primary-light) 45%, var(--paper));
   --admin-shadow: 0 1px 2px color-mix(in srgb, var(--color-text) 5%, transparent), 0 6px 18px -12px color-mix(in srgb, var(--color-text) 22%, transparent);
   --admin-ease: cubic-bezier(.2, .7, .2, 1);
+  --admin-section-title-size: clamp(1.2rem, 1rem + .6vw, 1.45rem);
   --admin-sticky-top: 112px; /* clears the sticky site header (97px) */
 }
 
@@ -56,7 +57,7 @@
 .admin-workspace-main > section > h2:first-child,
 .admin-workspace-main > div > h2:first-of-type,
 .admin-workspace-main > section > .catalog-admin-heading h2 {
-  margin: 0 0 4px; font-size: clamp(1.2rem, 1rem + .6vw, 1.45rem); letter-spacing: -.015em;
+  margin: 0 0 4px; font-size: var(--admin-section-title-size); letter-spacing: -.015em;
 }
 .admin-workspace-main > section > h2:first-child + p.muted,
 .admin-workspace-main > div > h2 + p.muted { margin: 0 0 var(--ui-space-4); font-size: var(--ui-type-sm); max-width: 72ch; }
@@ -95,6 +96,7 @@
 .admin-pill.is-danger { background: color-mix(in srgb, var(--danger) 12%, var(--paper)); color: var(--danger); }
 .admin-workspace .admin-student-detail { position: sticky; top: var(--admin-sticky-top, 88px); padding: var(--ui-space-4); }
 .admin-workspace .admin-student-detail h3 { margin: 0 0 2px; }
+.admin-student-store-names { overflow-wrap: anywhere; }
 .admin-workspace .admin-student-detail > p { margin: 0 0 6px; font-size: var(--ui-type-sm); }
 .admin-workspace .admin-student-detail h4 { margin: var(--ui-space-3) 0 0; padding-top: var(--ui-space-3); border-top: 1px solid var(--admin-border); }
 

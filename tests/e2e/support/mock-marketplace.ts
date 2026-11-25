@@ -47,6 +47,12 @@ export async function mockMarketplace(page: Page, initialPersona: Persona = 'gue
       storeId: isSeller ? 30 : null,
     };
   };
+  await page.route(/\/api\/admin\/dashboard(?:\?.*)?$/, async route => {
+    if (state.persona !== 'admin') return route.fulfill({ status: 403 });
+    const period = new URL(route.request().url()).searchParams.get('period') ?? '30d';
+    await route.fulfill({ json: syntheticUniversityDashboard(period) });
+  });
+
   await page.route('**/api/v1/**', async route => {
     const request = route.request();
     const url = new URL(request.url());
@@ -264,5 +270,26 @@ export function syntheticMarketplaceAnalytics(range: string) {
     workload: { pendingListings: 3, oldestPendingListingHours: 52, pendingAffiliations: 2, openReports: 1, pendingStoreReviews: 0 },
     categories: [{ id: 1, name: 'Pre-loved', completedOrders: 12, publishedListings: 18, reportedSales: 3600 }, { id: 2, name: 'Tech & IT help', completedOrders: '<5', publishedListings: 6, reportedSales: null }],
     campuses: [{ campus: 'MAIN', name: 'Main Campus', activeStorefronts: 14, publishedListings: 24, ordersCreated: 24, completedOrders: 12, reportedSales: 3600 }],
+  };
+}
+
+export function syntheticUniversityDashboard(period: string) {
+  const { summary, trend, range } = syntheticMarketplaceAnalytics(period);
+  return {
+    period, previousPeriodLabel: ({ '7d': 'previous 7 days', '30d': 'previous 30 days', '90d': 'previous 90 days', '12m': 'previous 12 months' } as Record<string, string>)[period],
+    generatedAt: '2026-11-25T05:00:00Z',
+    reviewQueue: { listings: '<5', verifications: 0 },
+    kpis: {
+      liveListings: 25, newOrders: summary.current.ordersCreated, completedOrders: summary.current.completedOrders,
+      inquiries: summary.current.inquiries, listingsApproved: summary.current.listingsApproved, studentsVerified: '<5',
+      changes: { newOrders: 0, completedOrders: 20, inquiries: 12, listingsApproved: null, studentsVerified: null },
+    },
+    funnel: { liveListings: 25, inquiries: 60, orders: 24, completed: 12 },
+    ordersInProgress: { awaitingSeller: 5, accepted: '<5', arrangingMeetup: 0, meetupAgreed: 6 },
+    series: { granularity: range.bucket, points: trend.map(point => ({ label: point.label, completed: point.ordersCompleted })) },
+    quality: { reportedSales: 3600, cancellationRatePct: 14.3, avgDaysToComplete: 1.7 },
+    categories: [{ name: 'Pre-loved', liveListings: 18 }, { name: 'Tech & IT help', liveListings: 7 }],
+    campuses: [{ name: 'Main Campus', storefronts: 14, liveListings: 24, newOrders: 24, completed: 12, reportedSales: 3600 }],
+    inactiveCampusCount: 8,
   };
 }

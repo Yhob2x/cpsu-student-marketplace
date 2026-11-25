@@ -1,14 +1,9 @@
 /* Quiet, per-listing signals: compact like and view counts, never save totals. */
-.product-card .listing-card-summary {
-  grid-template-areas: "price price" "meta metrics";
-  grid-template-columns: minmax(0, 1fr) auto;
-  column-gap: 5px;
-}
 .product-card .listing-card-engagement {
-  grid-area: metrics;
   display: inline-flex;
   align-items: center;
-  justify-self: end;
+  justify-content: flex-end;
+  flex-wrap: wrap;
   gap: 3px;
   min-width: 0;
   color: var(--color-text-muted, var(--ink-soft));
@@ -21,8 +16,8 @@
   background: none;
   width: auto;
 }
-.product-card .listing-card-engagement .listing-appreciation-action,
-.product-card .listing-card-engagement .listing-appreciation-static {
+.product-card .listing-card-engagement .is-compact .listing-appreciation-action,
+.product-card .listing-card-engagement .is-compact .listing-appreciation-static {
   width: auto;
   min-width: 44px;
   min-height: 44px;
@@ -31,7 +26,7 @@
   padding: 0 4px;
   display: inline-flex;
   gap: 4px;
-  font-size: .72rem;
+  font-size: var(--ui-type-xs);
   font-weight: 650;
 }
 .product-card .listing-card-engagement .listing-appreciation-action svg,
@@ -49,10 +44,10 @@
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
 }
-.listing-view-count.is-compact { font-size: .72rem; min-height: 34px; }
+.listing-view-count.is-compact { font-size: var(--ui-type-xs); min-height: 34px; }
 .listing-view-count.is-detail { min-height: 44px; gap: 6px; }
 @media (max-width: 360px) {
   .product-card .listing-card-engagement { gap: 1px; }
-  .product-card .listing-card-engagement .listing-appreciation-action,
-  .product-card .listing-card-engagement .listing-appreciation-static { padding-inline: 2px; }
+  .product-card .listing-card-engagement .is-compact .listing-appreciation-action,
+  .product-card .listing-card-engagement .is-compact .listing-appreciation-static { padding-inline: 2px; }
 }

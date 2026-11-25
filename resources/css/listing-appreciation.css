@@ -45,7 +45,7 @@
 .listing-stock-label.is-empty { color: var(--color-error, #a43d2b); }
 .listing-detail-stock-actions { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-top: 12px; }
 .listing-detail-stock-actions .listing-stock-label { font-size: .85rem; }
-.seller-listing-appreciations { display: inline-flex; align-items: center; gap: 4px; font-size: .74rem; color: var(--ink-soft); }
+.seller-listing-appreciations { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; color: var(--ink-soft); }
 .seller-listing-appreciations .listing-appreciation-static { padding: 0; min-height: 26px; }
 .product-card .listing-appreciation-static { pointer-events: none; }
 @media (prefers-reduced-motion: reduce) { .listing-appreciation-action { transition: none; } }

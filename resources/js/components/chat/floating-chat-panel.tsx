@@ -7,6 +7,7 @@ import { Icon } from '@/components/icons';
 import { MeetupLocationCard, type MeetupHandoff } from '@/components/meetup/meetup-location-card';
 import { LegacyButton } from '@/components/ui/legacy-button';
 import { ApiError, api, explain, timeAgo } from '@/lib/api';
+import { listenRealtime, shouldPollRealtime } from '@/lib/realtime';
 import { decodeMeetupLocation } from '@/lib/meetup/meetup-location';
 import type { InboxPage } from '@/lib/messaging/inbox-pages';
 import { hasNewIncomingMessage, messageReceiveSoundEnabled, playMessageReceiveSound, prepareMessageReceiveSound, setMessageReceiveSoundEnabled, unlockMessageReceiveSound } from '@/lib/messaging/message-receive-sound';
@@ -160,8 +161,12 @@ export function FloatingChatPanel({ onClose, onUnreadChanged, motionState, motio
     };
     refreshRef.current = refresh;
     void refresh();
-    const timer = window.setInterval(() => { if (!document.hidden) void refresh(); }, threadId === null ? 5000 : 3000);
-    return () => { active = false; ++issued; window.clearInterval(timer); refreshRef.current = async () => {}; };
+    const stopRealtime = listenRealtime(() => void refresh(), ['chat', 'transaction']);
+    let lastPollAt = Date.now();
+    const timer = window.setInterval(() => {
+      if (!document.hidden && shouldPollRealtime(lastPollAt)) { lastPollAt = Date.now(); void refresh(); }
+    }, threadId === null ? 5000 : 3000);
+    return () => { stopRealtime(); active = false; ++issued; window.clearInterval(timer); refreshRef.current = async () => {}; };
   }, [threadId]);
 
   useLayoutEffect(() => {

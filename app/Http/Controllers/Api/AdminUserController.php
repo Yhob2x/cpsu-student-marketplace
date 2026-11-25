@@ -66,8 +66,12 @@ class AdminUserController extends Controller
 
         $where = function () use ($q, $status, $verification, $campusId) {
             $query = User::query()->whereDoesntHave('roles', fn ($role) => $role->whereIn('role', Permissions::STAFF_ROLES));
-            if ($q) {
-                $query->where(fn ($match) => $match->where('displayName', 'like', "%{$q}%")->orWhere('email', 'like', "%{$q}%"));
+            if ($q !== null && $q !== '') {
+                $pattern = "%{$q}%";
+                $query->where(fn ($match) => $match
+                    ->where('displayName', 'like', $pattern)
+                    ->orWhere('email', 'like', $pattern)
+                    ->orWhereHas('sellerProfiles', fn ($store) => $store->where('storeName', 'like', $pattern)));
             }
             if ($status) {
                 $query->where('status', $status);
@@ -86,7 +90,12 @@ class AdminUserController extends Controller
             return $query;
         };
 
-        $items = $where()->with(['roles:userId,role', 'affiliations' => fn ($affiliation) => $affiliation->orderBy('id'), 'affiliations.campus:id,code'])
+        $items = $where()->with([
+            'roles:userId,role',
+            'affiliations' => fn ($affiliation) => $affiliation->orderBy('id'),
+            'affiliations.campus:id,code',
+            'sellerProfiles' => fn ($store) => $store->select(['id', 'ownerUserId', 'storeName'])->orderBy('id'),
+        ])
             ->orderByDesc('id')->offset(($page - 1) * $pageSize)->limit($pageSize)->get(['id', 'displayName', 'email', 'status']);
 
         return ApiResponse::json([
@@ -96,6 +105,7 @@ class AdminUserController extends Controller
                 'email' => $user->email,
                 'status' => $user->status->value,
                 'roles' => $user->roles->map(fn ($role) => ['role' => $role->role->value])->all(),
+                'storeNames' => $user->sellerProfiles->pluck('storeName')->all(),
                 'affiliations' => $user->affiliations->map(fn ($row) => [
                     'campus' => ['id' => $row->campus->id, 'code' => $row->campus->code],
                     'verificationStatus' => $row->verificationStatus->value,

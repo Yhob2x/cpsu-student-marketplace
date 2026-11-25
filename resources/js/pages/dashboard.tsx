@@ -60,13 +60,17 @@ export function Dashboard() {
   const [listingStatus, setListingStatus] = useState('all');
   const [listingPage, setListingPage] = useState(1);
   const [repeatListing, setRepeatListing] = useState<RepeatListing | null>(null);
+  const [composerOpen, setComposerOpen] = useState(false);
   const [createDirty, setCreateDirty] = useState(false);
   const [editDirty, setEditDirty] = useState(false);
   const listingRequest = useRef(0);
   const createInFlight = useRef(false);
   const editInFlight = useRef(false);
   const listingsHeading = useRef<HTMLHeadingElement>(null);
-  const createDetails = useRef<HTMLDetailsElement>(null);
+  const listingSearch = useRef<HTMLInputElement>(null);
+  const composerHeading = useRef<HTMLHeadingElement>(null);
+  const composerOpener = useRef<HTMLButtonElement | null>(null);
+  const newListingAction = useRef<HTMLButtonElement>(null);
   const createTitle = useRef<HTMLInputElement>(null);
   const load = (quiet = false) => {
     const request = ++listingRequest.current;
@@ -113,23 +117,30 @@ export function Dashboard() {
     setListingPage(nextPage);
     requestAnimationFrame(() => listingsHeading.current?.focus());
   };
-  const sellAgain = (listing: RepeatListing) => {
+  const clearListingFilters = () => {
+    setListingQuery('');
+    setListingStatus('all');
+    setListingPage(1);
+    listingSearch.current?.focus();
+  };
+  const openListingComposer = (opener: HTMLButtonElement) => {
+    composerOpener.current = opener;
+    setComposerOpen(true);
+    requestAnimationFrame(() => composerHeading.current?.focus());
+  };
+  const closeListingComposer = () => {
+    setComposerOpen(false);
+    const opener = composerOpener.current?.isConnected ? composerOpener.current : newListingAction.current;
+    opener?.focus();
+  };
+  const sellAgain = (listing: RepeatListing, opener: HTMLButtonElement) => {
     if (createDirty && !window.confirm('Replace the unsaved details in your new listing form?')) return;
     setRepeatListing(listing);
     setNewListingKind(listing.type);
     setNewCategoryId(String(listing.categoryId));
     setNewFiles([]); setNewCoverIndex(0); setNewSelectionError('');
     setCreateDirty(false);
-    if (createDetails.current) createDetails.current.open = true;
-    requestAnimationFrame(() => createTitle.current?.focus());
-  };
-  const openListingComposer = () => {
-    if (!createDetails.current) return;
-    createDetails.current.open = true;
-    requestAnimationFrame(() => {
-      createDetails.current?.scrollIntoView({ block: 'start' });
-      createTitle.current?.focus({ preventScroll: true });
-    });
+    openListingComposer(opener);
   };
   const startBlankListing = () => {
     if (createDirty && !window.confirm('Clear the unsaved details in your new listing form?')) return;
@@ -265,28 +276,28 @@ export function Dashboard() {
   const campus = me.affiliations.find(a => a.status === 'verified') ?? me.affiliations[0];
   return <div className="my-store">
     {me.storeId ? <section className="storefront-identity store-dashboard-identity" aria-labelledby="store-dashboard-name">
-      <div className="storefront-banner" aria-hidden="true"><Icon name="store" size={32} /></div>
       <div className="storefront-identity-content">
         <div className="storefront-primary">
           <SellerAvatar name={ownerStore?.storeName ?? me.displayName} src={ownerStore?.avatarUrl} size="large" />
           <div className="storefront-primary-text">
             <h1 id="store-dashboard-name">{ownerStore?.storeName ?? 'My store'}</h1>
-            {campus && <p className="storefront-campus"><Icon name="pin" size={16} /> {campus.campus.name}</p>}
-            <span className="storefront-affiliation" title={ownerStore?.badgeReason}><Icon name={verified ? 'store' : 'shield'} size={14} /> {verified ? (ownerStore?.badge ?? (ownerStoreLoadError ? 'Activity unavailable' : 'Checking activity…')) : 'Verification pending'}</span>
+            <div className="store-dashboard-meta">
+              {campus && <p className="storefront-campus"><Icon name="pin" size={16} /> {campus.campus.name}</p>}
+              <span className="storefront-affiliation" title={ownerStore?.badgeReason}><Icon name="shield" size={14} /> {verified ? (ownerStore?.badge ?? (ownerStoreLoadError ? 'Activity unavailable' : ownerStore ? 'Verified seller' : 'Checking activity…')) : 'Verification pending'}</span>
+            </div>
           </div>
         </div>
         <div className="storefront-owner-actions store-dashboard-actions">
-          <LegacyButton type="button" className="store-new-listing-action" onClick={openListingComposer}>
+          <LegacyButton ref={newListingAction} type="button" className="store-new-listing-action" aria-expanded={composerOpen} aria-controls="store-listing-composer" onClick={event => openListingComposer(event.currentTarget)}>
             <Icon name="plus" size={18} /> {repeatListing ? 'Continue draft' : 'New listing'}
           </LegacyButton>
-          <Link className="btn ghost" to={`/stores/${me.storeId}`}>View public store</Link>
-          <Link className="btn ghost" to="/profile#store-profile">Store settings</Link>
+          <Link className="btn ghost" to={`/stores/${me.storeId}`}><Icon name="eye" size={17} /> View public store</Link>
+          <Link className="btn ghost" to="/profile#store-profile"><Icon name="sliders" size={17} /> Store settings</Link>
         </div>
       </div>
       <div className="storefront-facts">
-        <div><span>Your listings</span><strong>{listingsLoading || listingLoadError ? '—' : visibleListings.length.toLocaleString('en-PH')}</strong></div>
+        <div><span>Listings</span><strong>{listingsLoading || listingLoadError ? '—' : visibleListings.length.toLocaleString('en-PH')}</strong></div>
         <StoreFollowers key={me.id} storeId={me.storeId} />
-        {campus && <div><span>Campus</span><strong>{campus.campus.name}</strong></div>}
       </div>
     </section> : <div className="page-head store-workspace-head">
       <div className="store-workspace-title">
@@ -306,9 +317,13 @@ export function Dashboard() {
       <Field className="">Store description<textarea name="description" placeholder="What do you make or offer?" required minLength={10} maxLength={1000} /></Field>
       <LegacyButton className="">Open store</LegacyButton></form>}
     {me.storeId && <>
-      <details className="panel store-create" ref={createDetails}><summary><span>{repeatListing ? 'Sell again' : 'New listing'}</span><span className="store-create-hint">Save a draft</span></summary>
+      <section className="panel store-create" id="store-listing-composer" aria-labelledby="store-composer-heading" hidden={!composerOpen}>
+      <div className="store-composer-head">
+        <h2 id="store-composer-heading" ref={composerHeading} tabIndex={-1}>{repeatListing ? 'Sell again' : 'New listing'}</h2>
+        <IconAction icon="close" label="Close listing form" disabled={creatingListing} onClick={closeListingComposer} />
+      </div>
       <form key={repeatListing?.id ?? 'new'} className="stack seller-composer listing-composer" onChange={() => setCreateDirty(true)} onSubmit={createListing}>
-        <div className="listing-composer-intro"><span>YOUR NEXT LISTING</span><p>{repeatListing ? 'Create a fresh draft from this sold listing. The original stays sold.' : 'Add the details, save your draft, then submit it for campus review.'}</p></div>
+        <p className="muted">{repeatListing ? 'Create a new draft using the details from this sold listing.' : 'Add the details, save your draft, then submit it for campus review.'}</p>
         {categoriesError && <p className="err" role="alert">Could not load categories: {categoriesError} <LegacyButton type="button" className="ghost" onClick={() => { void loadCategories(); }}>Retry categories</LegacyButton></p>}
         {categoriesLoading && <p className="muted" role="status">Loading categories…</p>}
         {repeatListing && <LegacyButton type="button" className="ghost store-start-blank" onClick={startBlankListing}>Start blank instead</LegacyButton>}
@@ -350,17 +365,18 @@ export function Dashboard() {
           <p><strong>Drafts do not need photos.</strong> Add 1–{MAX_LISTING_PHOTOS} photos before submitting for review. Select your cover before saving; it uploads first.</p>
           <p><Icon name="shield" size={17} /> Show the actual item or your own service work. Do not use unrelated photos or misleading promotional images. Pornography, sexual imagery, graphic violence and other prohibited content are not allowed; campus reviewers check photos before publication.</p>
         </div>
-        <div className="listing-composer-footer"><p>Saving creates a private draft, not a public listing.</p><LegacyButton className="" disabled={creatingListing || categoriesLoading || Boolean(categoriesError) || (newListingKind !== '' && categoriesForKind(cats, newListingKind).length === 0)}>{creatingListing ? 'Saving draft…' : 'Save draft'}</LegacyButton></div></form></details>
-      <div className="store-listings-head"><div><h2 ref={listingsHeading} tabIndex={-1}>Your listings</h2></div>{!listingsLoading && !listingLoadError && <span className="store-listing-count">{visibleListings.length} {visibleListings.length === 1 ? 'listing' : 'listings'}</span>}</div>
+        <div className="listing-composer-footer"><LegacyButton className="" disabled={creatingListing || categoriesLoading || Boolean(categoriesError) || (newListingKind !== '' && categoriesForKind(cats, newListingKind).length === 0)}>{creatingListing ? 'Saving draft…' : 'Save draft'}</LegacyButton></div></form></section>
+      <section className="store-inventory" aria-labelledby="store-listings-heading">
+      <div className="store-listings-head"><h2 id="store-listings-heading" ref={listingsHeading} tabIndex={-1}>Your listings</h2>{!listingsLoading && !listingLoadError && <span className="store-listing-count">{visibleListings.length} {visibleListings.length === 1 ? 'listing' : 'listings'}</span>}</div>
       {listingsLoading && <ListingCardsSkeleton />}
       {listingLoadError && <p className="err" role="alert">Could not load your listings: {listingLoadError} <LegacyButton type="button" className="ghost" onClick={() => { void load(); }}>Retry</LegacyButton></p>}
-      {!listingsLoading && !listingLoadError && visibleListings.length === 0 && <Panel className="store-empty"><h3>No listings yet</h3><p className="muted">Create a draft, then submit it for campus review.</p></Panel>}
+      {!listingsLoading && !listingLoadError && visibleListings.length === 0 && <Panel className="store-empty"><h3>No listings yet</h3><p className="muted">Create a draft, then submit it for campus review.</p><LegacyButton type="button" className="ghost" onClick={event => openListingComposer(event.currentTarget)}>Create your first listing</LegacyButton></Panel>}
       {!listingsLoading && !listingLoadError && visibleListings.length > 0 && <>
         <div className="store-listing-filters">
-          <Field className="">Find a listing<input type="search" value={listingQuery} onChange={e => { setListingQuery(e.target.value); setListingPage(1); }} placeholder="Search by title" /></Field>
+          <Field className="">Find a listing<span className="store-listing-search"><Icon name="search" size={18} /><input ref={listingSearch} type="search" value={listingQuery} onChange={e => { setListingQuery(e.target.value); setListingPage(1); }} placeholder="Search by title" /></span></Field>
           <Field className="">Status<select value={listingStatus} onChange={e => { setListingStatus(e.target.value); setListingPage(1); }}><option value="all">All statuses</option><option value="draft">Draft</option><option value="changes_requested">Changes requested</option><option value="pending_review">Pending review</option><option value="published">Published</option><option value="rejected">Rejected</option><option value="suspended">Suspended</option></select></Field>
         </div>
-        {matchingListings.length === 0 ? <Panel className="store-empty"><h3>No matching listings</h3><p className="muted">Try another title or status to find your listing.</p><LegacyButton type="button" className="ghost" onClick={() => { setListingQuery(''); setListingStatus('all'); setListingPage(1); }}>Clear filters</LegacyButton></Panel> : <p className="store-listing-range" role="status">Showing {(currentPage - 1) * pageSize + 1}–{Math.min(currentPage * pageSize, matchingListings.length)} of {matchingListings.length} {matchingListings.length === 1 ? 'listing' : 'listings'}</p>}
+        {matchingListings.length === 0 ? <Panel className="store-empty"><h3>No matching listings</h3><p className="muted">Try another title or status to find your listing.</p><LegacyButton type="button" className="ghost" onClick={clearListingFilters}>Clear filters</LegacyButton></Panel> : <p className="store-listing-range" role="status">Showing {(currentPage - 1) * pageSize + 1}–{Math.min(currentPage * pageSize, matchingListings.length)} of {matchingListings.length} {matchingListings.length === 1 ? 'listing' : 'listings'}</p>}
       </>}
       {!listingsLoading && !listingLoadError && pageListings.length > 0 && <div className="store-card-grid">{pageListings.map(l => editing?.id === l.id
         ? <form key={l.id} className="panel stack store-edit-form" onChange={() => setEditDirty(true)} onSubmit={saveEdit}><h2>Edit listing</h2>
@@ -396,14 +412,32 @@ export function Dashboard() {
             {savingEdit && <OperationProgress stage={saveStage} progress={photoProgress} />}
             <p className="muted" id="edit-photo-policy">Choose a cover from existing or new photos. Explicit or harmful images are prohibited. Adding photos to a published listing sends it back for review.</p>
             <div className="row"><LegacyButton className="" disabled={savingEdit || categoriesLoading || Boolean(categoriesError)}>{savingEdit ? 'Saving…' : 'Save changes'}</LegacyButton><LegacyButton type="button" className="ghost" disabled={savingEdit} onClick={() => closeEditor()}>Cancel</LegacyButton></div></form>
-        : <Panel as="article" key={l.id} id={`store-listing-${l.id}`} tabIndex={-1} className="store-listing"><StoreListingPhoto media={l.media} title={l.title} type={l.type} /><div className="store-listing-main"><div className="store-listing-title"><h3>{l.title}</h3><strong>{peso(Number(l.price))}</strong></div><p className="store-listing-category">{l.category?.name}</p>{l.type === 'physical_product' && typeof l.stockQuantity === 'number' && <p className="listing-stock-label">{l.stockQuantity} in stock{l.reservedQuantity ? ` · ${l.reservedQuantity} reserved` : ''}</p>}<div className="store-listing-meta">{l.status === 'published' && <span className="seller-listing-appreciations" title="Appreciations for this listing"><ListingAppreciation listingId={l.id} signedIn readOnly compact showCount /> <span>appreciations</span></span>}<span className={`status ${l.status}`}>{l.status.replace('_', ' ')}</span>{l.status === 'published' && <span className="status">{l.availabilityState || 'available'}</span>}</div>
-            <p className="muted store-listing-help">{l.status === 'draft' ? 'Draft only · submit for campus review when ready.' : l.status === 'changes_requested' ? 'Changes requested · edit and resubmit for review.' : l.status === 'pending_review' ? 'Waiting for a campus reviewer.' : l.status === 'published' ? l.availabilityState === 'sold' ? 'Sold · use Sell again to make a new draft.' : 'Published · manage availability below.' : l.status === 'rejected' ? 'Not approved for publication.' : l.status === 'suspended' ? 'Removed from public browsing by a reviewer.' : 'Check this listing’s review status.'}</p>{l.status === 'published' && <Link className="store-listing-view" to={`/listings/${l.id}`}>View listing <Icon name="arrow" size={15} /></Link>}</div>
+        : <Panel as="article" key={l.id} id={`store-listing-${l.id}`} tabIndex={-1} className="store-listing">
+            <StoreListingPhoto media={l.media} title={l.title} type={l.type} />
+            <div className="store-listing-main">
+              <div className="store-listing-title">
+                <h3 title={l.title}>{l.title}</h3>
+                <strong>{peso(Number(l.price))}</strong>
+              </div>
+              <div className="store-listing-details">
+                <p className="store-listing-category">{l.category?.name}</p>
+                {l.type === 'physical_product' && typeof l.stockQuantity === 'number' && <p className="listing-stock-label">{l.stockQuantity} in stock{l.reservedQuantity ? ` · ${l.reservedQuantity} reserved` : ''}</p>}
+              </div>
+              <div className="store-listing-meta">
+                <span className={`status ${l.status}`}>{l.status.replaceAll('_', ' ')}</span>
+                {l.status === 'published' && l.availabilityState === 'sold' && <span className="status">Sold</span>}
+                {l.status === 'published' && <span className="seller-listing-appreciations" title="Appreciations for this listing"><ListingAppreciation listingId={l.id} signedIn readOnly compact showCount /><span>appreciations</span></span>}
+              </div>
+              {l.status !== 'published' && <p className="muted store-listing-help">{l.status === 'draft' ? 'Submit for campus review when ready.' : l.status === 'changes_requested' ? 'Edit and resubmit for review.' : l.status === 'pending_review' ? 'Waiting for a campus reviewer.' : l.status === 'rejected' ? 'Not approved for publication.' : l.status === 'suspended' ? 'Removed from public browsing by a reviewer.' : "Check this listing's review status."}</p>}
+              {l.status === 'published' && <Link className="store-listing-view" to={`/listings/${l.id}`} aria-label={`View listing: ${l.title}`}>View listing <Icon name="arrow" size={15} /></Link>}
+            </div>
             <div className="store-listing-actions">{!['pending_review', 'suspended', 'rejected'].includes(l.status) && l.availabilityState !== 'sold' && <IconAction className="store-edit-action" icon="edit" label={`Edit ${l.title}`} onClick={() => openEditor(l)} />}
             {['draft', 'changes_requested'].includes(l.status) && <LegacyButton type="button" className="" disabled={pending === l.id} onClick={() => submit(l.id)}>{pending === l.id ? 'Submitting…' : 'Submit for review'}</LegacyButton>}
             {l.status === 'published' && l.availabilityState !== 'sold' && <select aria-label={`Availability for ${l.title}`} value={l.availabilityState || 'available'} disabled={pending === l.id} onChange={async e => { const next = e.target.value as 'available' | 'reserved' | 'sold'; if (!(await changeAvailability(l.id, next))) e.target.value = l.availabilityState || 'available'; }}><option value="available">Available</option><option value="reserved">Reserved</option><option value="sold">Sold (final)</option></select>}
-            {l.status === 'published' && l.availabilityState === 'sold' && <LegacyButton type="button" className="" aria-label={`Sell ${l.title} again`} disabled={creatingListing} onClick={() => sellAgain(l)}>Sell again</LegacyButton>}
+            {l.status === 'published' && l.availabilityState === 'sold' && <LegacyButton type="button" className="" aria-label={`Sell ${l.title} again`} disabled={creatingListing} onClick={event => sellAgain(l, event.currentTarget)}>Sell again</LegacyButton>}
             <LegacyButton type="button" className="ghost store-remove" disabled={pending === l.id} onClick={() => removeListing(l.id)}>Remove</LegacyButton></div></Panel>)}</div>}
       {!listingsLoading && !listingLoadError && pageCount > 1 && <nav className="store-pagination" aria-label="Your listings pages"><IconAction className="page-nav-button" icon="chevronLeft" label="Previous listings page" disabled={currentPage === 1} onClick={() => changeListingPage(currentPage - 1)} /><span>Page {currentPage} of {pageCount}</span><IconAction className="page-nav-button" icon="chevronRight" label="Next listings page" disabled={currentPage === pageCount} onClick={() => changeListingPage(currentPage + 1)} /></nav>}
+      </section>
     </>}
   </div>;
 }

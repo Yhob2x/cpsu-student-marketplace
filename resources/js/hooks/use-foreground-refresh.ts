@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react';
+import { listenRealtime } from '@/lib/realtime';
 
 /**
  * Keep mounted private views current without a full-page reload.
@@ -29,11 +30,13 @@ export function useForegroundRefresh(
       }
     };
     const resume = () => { void run(); };
+    const stopRealtime = listenRealtime(resume, ['account', 'transaction']);
     const timer = window.setInterval(resume, intervalMs);
     window.addEventListener('focus', resume);
     document.addEventListener('visibilitychange', resume);
     return () => {
       active = false;
+      stopRealtime();
       window.clearInterval(timer);
       window.removeEventListener('focus', resume);
       document.removeEventListener('visibilitychange', resume);

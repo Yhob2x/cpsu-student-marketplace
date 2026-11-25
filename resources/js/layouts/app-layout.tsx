@@ -81,10 +81,10 @@ export function AppLayout() {
       <SiteFooter audience={!ready ? 'checking' : !me ? 'guest' : isStaff ? 'staff' : 'student'} canReview={Boolean(isReviewer)} />
       <FloatingChat ready={ready} isStaff={Boolean(isStaff)} signedIn={Boolean(me)} unreadMessages={unreadMessages}
           campusName={preferredCampusName(me?.affiliations)} onUnreadChanged={syncUnread} />
-      <nav className={'tabbar site-tabbar' + (isStaff ? ' site-tabbar--staff' : '')} aria-label="Primary">
+      <nav className="tabbar site-tabbar" aria-label="Primary">
         <NavLink to="/" end onClick={scrollNavigationToTop}>{({ isActive }) => <><Icon name={isActive ? 'homeSolid' : 'home'} size={24} /><span>Home</span></>}</NavLink>
         <NavLink to="/explore" onClick={scrollNavigationToTop}><Icon name="compass" size={24} /><span>Explore</span></NavLink>
-        {!isStaff && <NavLink to="/dashboard" onClick={scrollNavigationToTop} className="site-tabbar__sell" aria-label="Sell">
+        {!isStaff && <NavLink to="/dashboard" onClick={scrollNavigationToTop} className="site-tabbar__sell">
           <span className="site-tabbar__sell-button" aria-hidden="true"><Icon name="plus" size={30} /></span><span>Sell</span></NavLink>}
         {!isStaff && <NavLink to="/inquiries" onClick={scrollNavigationToTop} className="site-tabbar__inbox"
           aria-label={unreadMessages > 0 ? `Inbox, ${unreadMessages} unread ${unreadMessages === 1 ? 'message' : 'messages'}` : 'Inbox'}>

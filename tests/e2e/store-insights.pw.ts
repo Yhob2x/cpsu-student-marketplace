@@ -50,7 +50,27 @@ test('store insights stay readable on a 320px phone', async ({ page }) => {
   }
 });
 
-test('admin Overview dashboard shows charts, workload shortcuts and hidden small counts', async ({ page }) => {
+test('store insights keeps the displayed period accurate when a range request fails', async ({ page }) => {
+  await mockMarketplace(page, 'seller');
+  await page.route('**/api/v1/seller/analytics?range=90d', route => route.fulfill({
+    status: 500,
+    json: { error: { code: 'internal_error' } },
+  }), { times: 1 });
+
+  await page.goto('/dashboard/insights');
+  await expect(page.getByRole('heading', { name: 'Overview last 30 days' })).toBeVisible();
+  await page.getByRole('radio', { name: 'Last 90 days' }).click();
+
+  const alert = page.getByRole('alert').filter({ hasText: 'Store insights could not load' });
+  await expect(alert).toContainText('Try again to load the last 90 days.');
+  await expect(page.getByRole('heading', { name: 'Overview last 30 days' })).toBeVisible();
+
+  await page.getByRole('button', { name: 'Retry' }).click();
+  await expect(alert).toHaveCount(0);
+  await expect(page.getByRole('heading', { name: 'Overview last 90 days' })).toBeVisible();
+});
+
+test('admin Overview shows aggregate activity and opens the review queue', async ({ page }) => {
   await mockMarketplace(page, 'admin');
   await page.goto('/admin');
   await expect(page.getByRole('heading', { level: 1, name: 'University administration' })).toBeVisible();
@@ -58,16 +78,16 @@ test('admin Overview dashboard shows charts, workload shortcuts and hidden small
   if (await mobileNav.isVisible()) await mobileNav.selectOption('overview');
   else await page.getByRole('navigation', { name: 'Administration sections' }).getByRole('button', { name: 'Overview' }).click();
   const section = page.getByRole('region', { name: 'University dashboard' });
-  await expect(section.getByRole('figure', { name: /Review work waiting/ })).toBeVisible();
-  await expect(section.getByRole('figure', { name: 'Live listings by category' })).toBeVisible();
-  await expect(section).toBeVisible();
+  await expect(section.getByRole('heading', { name: 'From listing to sale' })).toBeVisible();
+  await expect(section.getByRole('heading', { name: 'Completed orders over time' })).toBeVisible();
+  await expect(section.getByRole('heading', { name: 'Live listings by category' })).toBeVisible();
   await expect(section.getByText('₱3,600').first()).toBeVisible();
-  await expect(section.getByText('Hidden for privacy (1–4)').first()).toBeVisible();
-  await expect(section.getByText('Oldest waiting 2 days')).toBeVisible();
+  await expect(section.getByText('Too few to compare').first()).toBeVisible();
+  await expect(section.getByText('Items need review', { exact: true })).toBeVisible();
 
-  const scan = await new AxeBuilder({ page }).include('.marketplace-analytics').withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa']).analyze();
+  const scan = await new AxeBuilder({ page }).include('.university-dashboard').withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa']).analyze();
   expect(scan.violations.map(v => v.id)).toEqual([]);
 
-  await section.getByRole('group', { name: 'Review work waiting' }).getByRole('button', { name: /Listings to review/ }).click();
-  await expect(page.getByRole('heading', { name: 'Listings to review' })).toBeVisible();
+  await section.getByRole('button', { name: /listing/i }).click();
+  await expect(page.getByRole('heading', { name: 'Listings to review' })).toBeFocused();
 });

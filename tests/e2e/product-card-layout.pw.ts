@@ -21,6 +21,7 @@ test('Concept 2 listing card stays legible, with touch-sized actions that never 
   await page.goto('/');
   const card = page.locator('.home-listing-section .product-card').first();
   await expect(card).toBeVisible();
+  await expect(card).toHaveCSS('box-shadow', 'none');
   const title = card.getByRole('heading', { level: 3 });
   // Long titles clamp to two lines inside the card instead of overflowing.
   expect(await title.evaluate(el => Math.round(el.getBoundingClientRect().height / parseFloat(getComputedStyle(el).lineHeight)))).toBeLessThanOrEqual(2);
@@ -47,18 +48,51 @@ test('Concept 2 listing card stays legible, with touch-sized actions that never 
   expect(collides(bounds.badge, bounds.photos)).toBe(false);
   expect(collides(bounds.status, bounds.save)).toBe(false);
   expect(bounds.save.w).toBeGreaterThanOrEqual(40);
-  expect(bounds.save.h).toBeGreaterThanOrEqual(40);
+  const canHover = await page.evaluate(() => matchMedia('(hover: hover) and (pointer: fine)').matches);
+  expect(bounds.save.h).toBe(canHover ? 32 : 44);
   expect(bounds.title.y + bounds.title.h).toBeLessThanOrEqual(bounds.price.y);
   expect(bounds.price.y + bounds.price.h).toBeLessThanOrEqual(bounds.seller.y);
   expect(bounds.campus.x + bounds.campus.w).toBeLessThanOrEqual(bounds.card.x + bounds.card.w);
   expect(bounds.card.w).toBeGreaterThan(160);
 });
 
+test('mobile listing rail uses compact cards for services with unavailable photos', async ({ page }) => {
+  test.skip(test.info().project.name !== 'mobile-chrome', 'Checks the touch layout');
+  await mockMarketplace(page, 'buyer');
+  const service = {
+    ...syntheticListing, title: 'Graduation photoshoot', type: 'service', price: 400, priceBasis: 'per session',
+    condition: null, stockQuantity: null, category: { ...syntheticListing.category, name: 'Photography and video services' },
+    images: Array(5).fill('/unavailable-product-photo.png'),
+  };
+  await homeListings(page, [service, { ...service, id: 92 }, { ...service, id: 93 }]);
+  await page.goto('/');
+
+  const card = page.locator('.home-listing-section .product-card').first();
+  await expect(card.getByText('Photo unavailable')).toBeVisible();
+  await expect(card.locator('.market-card__badge')).toBeHidden();
+  await expect(card.locator('.market-card__seller .seller-avatar')).toBeHidden();
+  const title = await card.getByRole('heading', { level: 3 }).boundingBox();
+  const price = await card.locator('.market-card__price').boundingBox();
+  const seller = await card.locator('.market-card__seller').boundingBox();
+  expect(price!.y - (title!.y + title!.height)).toBeGreaterThanOrEqual(4);
+  expect(seller!.y - (price!.y + price!.height)).toBeGreaterThanOrEqual(4);
+  const photo = await card.locator('.product-photo').boundingBox();
+  const bounds = await card.boundingBox();
+  expect(photo!.height).toBeLessThanOrEqual(photo!.width * .6);
+  expect(bounds!.height).toBeLessThan(265);
+  const save = card.getByRole('button', { name: 'Save for later' });
+  await expect(save).toBeVisible();
+  await expect(save.getByText('Save', { exact: true })).toBeHidden();
+  const target = await save.boundingBox();
+  expect(target!.width).toBeGreaterThanOrEqual(44);
+  expect(target!.height).toBeGreaterThanOrEqual(44);
+});
+
 for (const path of ['/', '/explore']) {
   test(`price and seller rows align across listings with different amounts of detail on ${path}`, async ({ page }) => {
     await mockMarketplace(page, 'buyer');
     const items = [
-      { ...syntheticListing, images: [photo], title: 'Calculus textbook with practice exercises and student notes' },
+      { ...syntheticListing, images: [photo], title: 'Calculus textbook with practice exercises and student notes', category: { ...syntheticListing.category, name: 'Textbooks and supplementary learning materials' } },
       { ...syntheticListing, id: 92, images: [photo], title: 'Tutoring', type: 'service', condition: null, stockQuantity: null, priceBasis: 'per session' },
     ];
     if (path === '/') await homeListings(page, items);
@@ -71,7 +105,20 @@ for (const path of ['/', '/explore']) {
     await expect(cards.nth(1).locator('.market-card__status')).toHaveCount(0);
     await expect(cards.nth(1).locator('.market-card__badge')).toHaveText('Service');
 
-    for (const row of ['.market-card__price', '.market-card__seller']) {
+    const category = cards.first().locator('.market-card__category');
+    if (test.info().project.name === 'mobile-chrome') {
+      await expect(category).toBeHidden();
+      await expect(cards.first().locator('.listing-view-count')).toBeHidden();
+      const campus = await cards.first().locator('.market-card__campus').boundingBox();
+      const like = await cards.first().locator('.listing-appreciation-action').boundingBox();
+      expect(campus!.x + campus!.width).toBeLessThanOrEqual(like!.x);
+      expect(campus!.y).toBeGreaterThanOrEqual(like!.y);
+      expect(campus!.y + campus!.height).toBeLessThanOrEqual(like!.y + like!.height);
+    } else {
+      await expect(category).toBeVisible();
+    }
+
+    for (const row of ['.market-card__price', '.market-card__seller', '.market-card__footer', '.market-card__campus', '.listing-card-engagement']) {
       const positions = await cards.locator(row).evaluateAll(rows => rows.map(r => r.getBoundingClientRect().top));
       expect(Math.abs(positions[0] - positions[1]), row).toBeLessThan(1);
     }

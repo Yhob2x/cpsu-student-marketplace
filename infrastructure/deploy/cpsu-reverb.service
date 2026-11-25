@@ -1,0 +1,16 @@
+[Unit]
+Description=CPSU Market private Reverb websocket service
+After=network.target
+
+[Service]
+Type=simple
+User=marketplace
+WorkingDirectory=/var/www/cpsu-marketplace
+ExecStart=/usr/bin/php artisan reverb:start --host=127.0.0.1 --port=8080
+Restart=on-failure
+RestartSec=3
+NoNewPrivileges=true
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target

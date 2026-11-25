@@ -20,7 +20,7 @@ const approvedSpacing = [4, 8, 12, 16, 24, 32, 48, 64];
 test('migrated spacing declarations use shared scale when within 2px of a token', () => {
   const offenders: string[] = [];
   for (const name of migratedStyles) {
-    const source = readFileSync(new URL('../../resources/js/' + name, import.meta.url), 'utf8');
+    const source = readFileSync(new URL('../../resources/css/' + name, import.meta.url), 'utf8');
     const sheet = postcss.parse(source, { from: name });
     sheet.walkDecls(decl => {
       if (!/^(?:padding|margin|gap|row-gap|column-gap)(?:-|$)/.test(decl.prop)) return;

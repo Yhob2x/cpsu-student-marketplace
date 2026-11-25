@@ -35,9 +35,18 @@ for (const width of [320, 360, 768, 1280]) {
       .analyze();
     expect(results.violations.map(v => ({ id: v.id, selectors: v.nodes.map(n => n.target) }))).toEqual([]);
 
+    const composer = page.locator('.listing-composer').first();
+    await expect(composer).toBeHidden();
     await listing.click();
-    await expect(page.locator('.listing-composer').first()).toBeVisible();
+    await expect(listing).toHaveAttribute('aria-expanded', 'true');
+    await expect(composer).toBeVisible();
     await expect(page.getByRole('button', { name: 'Save draft' })).toBeVisible();
+    await composer.getByRole('textbox', { name: 'Title' }).fill('Used campus textbook');
+    await page.getByRole('button', { name: 'Close listing form' }).click();
+    await expect(composer).toBeHidden();
+    await expect(listing).toBeFocused();
+    await listing.click();
+    await expect(composer.getByRole('textbox', { name: 'Title' })).toHaveValue('Used campus textbook');
     expect(errors).toEqual([]);
     expect(state.unknownWrites).toEqual([]);
   });

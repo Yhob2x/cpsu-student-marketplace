@@ -13,11 +13,12 @@ describe('analytics components', () => {
       { key: 'a', label: 'Nov 23', value: 0, display: '₱0' },
       { key: 'b', label: 'Nov 24', value: 1250, display: '₱1,250' },
     ]} />);
-    expect(html).toContain('Highest: Nov 24, ₱1,250.');
+    expect(html).toContain('Peak: ₱1,250 (Nov 24)');
     expect(html).toContain('<caption');
     expect(html).toContain('<th scope="row">Nov 24</th><td>₱1,250</td>');
     expect(html).toContain('<th scope="row">Total</th><td>₱1,250</td>');
-    expect(html).toContain('class="analytics-bars" aria-hidden="true"');
+    expect(html).toContain('class="analytics-chart-plot" aria-hidden="true"');
+    expect(html).toContain('class="analytics-bars"');
   });
 
   test('hidden small counts are drawn as placeholders and never totalled', () => {

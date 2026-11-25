@@ -48,3 +48,37 @@ test('Home, Explore and Profile tabs scroll to top both when switched and resele
   await expect(page).toHaveURL(/\/$/);
   await expectAtTop(page);
 });
+
+test('mobile navigation keeps Sell inside the bar and aligns the tab labels', async ({ page }) => {
+  await page.setViewportSize({ width: 320, height: 720 });
+  await mockMarketplace(page, 'buyer');
+  await page.goto('/');
+
+  const nav = page.getByRole('navigation', { name: 'Primary' });
+  await expect(nav.getByRole('link', { name: 'Home' })).toHaveAttribute('aria-current', 'page');
+  await expect(nav.getByRole('link')).toHaveCount(5);
+
+  const bounds = await nav.evaluate(bar => ({
+    top: bar.getBoundingClientRect().top,
+    tabs: [...bar.querySelectorAll('a')].map(link => ({
+      width: link.getBoundingClientRect().width,
+      height: link.getBoundingClientRect().height,
+      iconTop: link.querySelector('svg')!.getBoundingClientRect().top,
+      labelTop: link.lastElementChild!.getBoundingClientRect().top,
+    })),
+  }));
+  for (const tab of bounds.tabs) {
+    expect(tab.width).toBeGreaterThanOrEqual(44);
+    expect(tab.height).toBeGreaterThanOrEqual(44);
+    expect(tab.iconTop).toBeGreaterThanOrEqual(bounds.top);
+    expect(tab.labelTop).toBeCloseTo(bounds.tabs[0].labelTop, 0);
+  }
+
+  await nav.getByRole('link', { name: 'Home' }).focus();
+  await page.keyboard.press('Tab');
+  const explore = nav.getByRole('link', { name: 'Explore' });
+  await expect(explore).toBeFocused();
+  await expect(explore).toHaveCSS('outline-style', 'solid');
+  await page.keyboard.press('Enter');
+  await expect(explore).toHaveAttribute('aria-current', 'page');
+});

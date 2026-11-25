@@ -253,6 +253,18 @@ class MessagingTransactionsAdminApiTest extends TestCase
         $this->as($this->admin)->getJson('/api/v1/admin/users')->assertOk();
     }
 
+    public function test_university_admin_can_find_students_by_store_name(): void
+    {
+        $this->as($this->admin)->getJson('/api/v1/admin/users?q=Test%20Sto&status=active')
+            ->assertOk()
+            ->assertJsonPath('total', 1)
+            ->assertJsonPath('items.0.id', $this->seller->id)
+            ->assertJsonPath('items.0.storeNames', ['Test Store']);
+
+        $this->as($this->admin)->getJson('/api/v1/admin/users?q=Test%20Sto&status=suspended')
+            ->assertOk()->assertJsonPath('total', 0);
+    }
+
     public function test_suspension_revokes_sessions_and_protects_staff_and_self(): void
     {
         Session::create(['userId' => $this->buyer->id, 'refreshTokenHash' => str_repeat('c', 64), 'device' => 'test', 'expiresAt' => Carbon::now()->addDay()]);

@@ -1,0 +1,11 @@
+[Unit]
+Description=Periodic CPSU photo service health check
+
+[Timer]
+OnBootSec=60
+OnUnitActiveSec=30
+AccuracySec=5
+Unit=cpsu-photo-health.service
+
+[Install]
+WantedBy=timers.target

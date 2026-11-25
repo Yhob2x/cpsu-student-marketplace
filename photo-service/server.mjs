@@ -154,4 +154,29 @@ const server = http.createServer(async (req, res) => {
   }
 });
 
+if (process.argv.includes('--check-existing')) {
+  server.once('error', async error => {
+    if (error.code !== 'EADDRINUSE') throw error;
+
+    const address = `127.0.0.1:${PORT}`;
+    const options = { redirect: 'error', signal: AbortSignal.timeout(2000) };
+    try {
+      const health = await fetch(`http://${address}/health`, options);
+      if (health.status === 200 && (await health.json()).ok === true) {
+        // Identify the existing service without sending its token to an unknown listener.
+        const probe = await fetch(`http://${address}/sanitize?mime=image/png`, { ...options, method: 'POST' });
+        if (probe.status === 401 && (await probe.json()).error?.code === 'unauthorized') {
+          console.log(`Photo service is already running on ${address}.`);
+          return;
+        }
+      }
+    } catch {
+      // A listener on the port may not speak HTTP.
+    }
+
+    console.error(`Cannot start photo service: ${address} is in use. Free the port or configure PHOTO_SERVICE_PORT and PHOTO_SERVICE_URL together.`);
+    process.exitCode = 2;
+  });
+}
+
 server.listen(PORT, '127.0.0.1', () => console.log(`Photo service listening on 127.0.0.1:${PORT}`));

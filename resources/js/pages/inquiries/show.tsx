@@ -7,6 +7,7 @@ import { Icon } from '@/components/icons';
 import { LegacyButton } from '@/components/ui/legacy-button';
 import { Panel } from '@/components/ui/primitives';
 import { api, explain } from '@/lib/api';
+import { listenRealtime, shouldPollRealtime } from '@/lib/realtime';
 import { decodeMeetupLocation, openStreetMapPinUrl } from '@/lib/meetup/meetup-location';
 import { mergeMessageHistory } from '@/lib/messaging/message-history';
 import { hasNewIncomingMessage, messageReceiveSoundEnabled, playMessageReceiveSound, prepareMessageReceiveSound, setMessageReceiveSoundEnabled, unlockMessageReceiveSound } from '@/lib/messaging/message-receive-sound';
@@ -151,9 +152,13 @@ export function Thread() {
     };
     refreshRef.current = refresh;
     void refresh();
-    const timer = window.setInterval(() => { if (!document.hidden) void refresh(); }, 3000);
+    const stopRealtime = listenRealtime(() => void refresh(), ['chat', 'transaction']);
+    let lastPollAt = Date.now();
+    const timer = window.setInterval(() => {
+      if (!document.hidden && shouldPollRealtime(lastPollAt)) { lastPollAt = Date.now(); void refresh(); }
+    }, 3000);
     return () => {
-      active = false; newestRequest++; clearInterval(timer);
+      stopRealtime(); active = false; newestRequest++; clearInterval(timer);
       window.removeEventListener('blur', onBlur);
       document.removeEventListener('visibilitychange', onVisibility);
       refreshRef.current = async () => {};

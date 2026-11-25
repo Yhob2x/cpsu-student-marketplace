@@ -3,26 +3,6 @@
   gap: 16px;
   color: var(--ink);
 }
-.my-store .listing-composer-intro {
-  padding: var(--ui-space-3) var(--ui-space-4);
-  border: 1px solid var(--line);
-  border-radius: var(--ui-radius-md);
-  background: var(--surface-soft);
-}
-.my-store .listing-composer-intro span {
-  display: block;
-  margin-bottom: var(--ui-space-1);
-  color: var(--forest);
-  font-size: var(--ui-type-xs);
-  font-weight: var(--ui-weight-bold);
-  letter-spacing: .09em;
-}
-.my-store .listing-composer-intro p {
-  margin: 0;
-  color: var(--ink-soft);
-  font-size: var(--ui-type-sm);
-  line-height: 1.55;
-}
 .my-store .listing-kind-field {
   min-width: 0;
   margin: 0;
@@ -148,12 +128,6 @@
   gap: 14px;
   padding-top: 14px;
   border-top: 1px solid var(--line);
-}
-.my-store .listing-composer-footer p {
-  margin: 0;
-  color: var(--ink-soft);
-  font-size: var(--ui-type-xs);
-  line-height: 1.5;
 }
 .my-store .listing-composer-footer .btn { min-height: 46px; min-width: 138px; }
 @media (hover: hover) {

@@ -31,6 +31,20 @@ class Notification extends MarketplaceModel
         ];
     }
 
+    protected static function booted(): void
+    {
+        static::created(function (self $notice) {
+            $scope = str_starts_with($notice->type, 'transaction.') ? 'transaction' : 'account';
+            \App\Services\Realtime::changed($notice->userId, $scope);
+            try {
+                app(\App\Services\PushDelivery::class)->enqueue($notice);
+            } catch (\Throwable) {
+                // In-app notification remains canonical; never retry a committed student action.
+                \Illuminate\Support\Facades\Log::warning('Marketplace push enqueue unavailable.');
+            }
+        });
+    }
+
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class, 'userId', 'id');

@@ -30,6 +30,7 @@ return [
         'vapid_private_key' => env('VAPID_PRIVATE_KEY'),
         'vapid_subject' => env('VAPID_SUBJECT'),
         'origins' => (string) env('CORS_ORIGINS', 'http://localhost:5173'),
+        'local_test_enabled' => filter_var(env('PUSH_LOCAL_TEST_ENABLED', false), FILTER_VALIDATE_BOOLEAN),
     ],
     'rate_limits' => [
         'reads_per_minute' => 900,

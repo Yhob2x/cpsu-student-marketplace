@@ -158,16 +158,17 @@ export function MobileBrowseControls({ targetRef, itemCount, label }: ControlsPr
   </div>;
 }
 
-export function SwipeableListingRail({ children, itemCount, label }: {
+export function SwipeableListingRail({ children, itemCount, label, showControls = true }: {
   children: ReactNode;
   itemCount: number;
   label: string;
+  showControls?: boolean;
 }) {
   const ref = useRef<HTMLDivElement>(null);
   const mouseDrag = useMouseDragToScroll(ref);
   return <>
     <div className="rail browse-drag-scroll" ref={ref} role="region" aria-label={label} tabIndex={0}
       {...mouseDrag}>{children}</div>
-    <MobileBrowseControls targetRef={ref} itemCount={itemCount} label={label} />
+    {showControls && <MobileBrowseControls targetRef={ref} itemCount={itemCount} label={label} />}
   </>;
 }

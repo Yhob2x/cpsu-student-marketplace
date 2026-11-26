@@ -232,7 +232,19 @@ header.top .site-masthead .brand-short { font: 700 19px/1.2 var(--font-body); co
 .home-listing-section .sec-head h2 { display: inline-flex; align-items: center; gap: 6px; margin: 0; font: 700 clamp(19px, 2.4vw, 24px)/1.2 var(--font-body); letter-spacing: -.01em; }
 .home-listing-section .sec-head > a, .home-listing-section .sec-head > div + a { color: var(--forest); font-weight: 700; font-size: 14px; white-space: nowrap; display: inline-flex; align-items: center; gap: 4px; text-decoration: none; }
 .sec-sub { margin: 4px 0 0; color: var(--ink-soft); font-size: 14px; }
+.home-listing-section.trending .sec-head {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0 var(--ui-space-2);
+}
+.trending .sec-head > a { min-height: 44px; padding-inline: 0; }
+.trending .sec-sub { grid-column: 1 / -1; margin: 0; }
 .trending__flame { color: #e8762b; display: inline-flex; }
+.home-listing-section.trending .rail { padding-block-end: var(--ui-space-2); }
+.home-listing-section:is(.trending, .fresh-listings) .rail {
+  scrollbar-width: none;
+}
 
 .explore-ways { display: grid; gap: var(--ui-space-4); margin: var(--ui-space-7) 0 var(--ui-space-6); padding: var(--ui-space-5) var(--ui-space-4); border-radius: var(--c2-radius-lg);
   background: linear-gradient(120deg, var(--c2-surface-tint-strong), var(--c2-surface-tint)); border: 1px solid color-mix(in srgb, var(--leaf) 14%, var(--line)); }

@@ -194,7 +194,7 @@ final class ListingPresenter
               ((4 * COALESCE(likes.total, 0) + LOG2(1 + COALESCE(views.viewCount, 0))) /
                 (1 + GREATEST(0, TIMESTAMPDIFF(HOUR, l.createdAt, UTC_TIMESTAMP())) / 720.0)) DESC,
               COALESCE(likes.total, 0) DESC, COALESCE(views.viewCount, 0) DESC, l.createdAt DESC, l.id DESC
-            LIMIT 8
+            LIMIT 10
         "));
     }
 }

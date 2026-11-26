@@ -4,7 +4,7 @@ namespace App\Services;
 
 /**
  * Fail-closed release gates for browser push. Enrollment needs valid keys, an approved contact
- * and a production HTTPS origin. Outbound delivery additionally requires explicit
+ * and a production HTTPS origin (or isolated, opt-in local HTTPS QA). Production delivery requires explicit
  * configuration and a recorded institutional delivery approval.
  */
 class PushPolicy
@@ -17,19 +17,42 @@ class PushPolicy
         return (bool) $push['subscriptions_enabled']
             && $this->validPair($push['vapid_public_key'], $push['vapid_private_key'])
             && $this->validContact((string) $push['vapid_subject'], $qa)
-            && ($qa || $this->productionReady((string) $push['origins']));
+            && ($qa || $this->localTestingReady() || $this->productionReady((string) $push['origins']));
     }
 
     public function deliveryEnabled(): bool
     {
         $push = config('marketplace.push');
         return $this->subscriptionsEnabled() && (bool) ($push['delivery_enabled'] ?? false)
-            && trim((string) ($push['delivery_approval_ref'] ?? '')) !== '';
+            && ($this->localTestingReady() || trim((string) ($push['delivery_approval_ref'] ?? '')) !== '');
     }
 
     public function publicKey(): ?string
     {
         return $this->subscriptionsEnabled() ? config('marketplace.push.vapid_public_key') : null;
+    }
+
+    /** Real-device QA is opt-in and must never use the normal marketplace database. */
+    private function localTestingReady(): bool
+    {
+        if (! app()->environment('local', 'push-qa') || ! config('marketplace.push.local_test_enabled')
+            || config('app.debug') || ! config('marketplace.cookie_secure')) {
+            return false;
+        }
+
+        $connection = config('database.default');
+        $database = config('database.connections.'.$connection, []);
+        if (! in_array($connection, ['mysql', 'mariadb'], true)
+            || ! empty($database['url'])
+            || ! empty($database['unix_socket'])
+            || ! in_array($database['host'] ?? null, ['127.0.0.1', 'localhost', '::1'], true)
+            || ($database['database'] ?? null) !== 'cpsu_marketplace_laravel_push_test') {
+            return false;
+        }
+
+        $origin = rtrim((string) config('app.url'), '/');
+        return $this->validOrigin($origin)
+            && rtrim(trim((string) config('marketplace.push.origins')), '/') === $origin;
     }
 
     private function productionReady(string $origins): bool

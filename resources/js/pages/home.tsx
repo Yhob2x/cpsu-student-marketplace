@@ -46,27 +46,34 @@ export function Home() {
     const refreshPopular = () => {
       api<{ items: Listing[] }>('/listings/popular')
         .then(result => setPopular(result.items))
-        // Preserve the last successful rail during an intermittent refresh failure.
+        // Preserve the last successful results during an intermittent refresh failure.
         .catch(() => {});
     };
     window.addEventListener('listing-appreciation-committed', refreshPopular);
     return () => window.removeEventListener('listing-appreciation-committed', refreshPopular);
   }, []);
-  const rail = (rows: Listing[], label: string) => <SwipeableListingRail itemCount={rows.length} label={label}>
-    {rows.map((l, index) => <ListingCard key={l.id} l={l} priority={label === 'Trending on Campus' && index < 2} />)}
-  </SwipeableListingRail>;
-  const skeletons = <div className="rail">{Array.from({ length: 4 }, (_, i) => <div key={i} className="skel card" aria-hidden="true" />)}</div>;
+  const skeletonCards = Array.from({ length: 4 }, (_, i) => <div key={i} className="skel card" aria-hidden="true" />);
+  const skeletons = <div className="rail">{skeletonCards}</div>;
   // Skeletons while loading; once loaded, an empty section disappears instead of leaving a dead heading.
-  const block = (title: string, to: string, rows: Listing[] | null) => rows === null
-    ? <section className="home-listing-section" aria-label={title}><div className="sec-head"><h2>{title}</h2></div>{skeletons}</section>
-    : rows.length > 0 ? <section className="home-listing-section" aria-label={title}><div className="sec-head"><h2>{title}</h2><Link to={to}>See all <Icon name="arrow" size={14} /></Link></div>{rail(rows, title)}</section> : null;
+  const block = (title: string, to: string, rows: Listing[] | null, {
+    className = 'home-listing-section', showControls = true,
+  }: { className?: string; showControls?: boolean } = {}) => {
+    if (rows?.length === 0) return null;
+    return <section className={className} aria-label={title}>
+      <div className="sec-head">
+        <h2>{title}</h2>
+        {rows && <Link to={to}>See all <Icon name="arrow" size={14} /></Link>}
+      </div>
+      {rows === null ? skeletons : <SwipeableListingRail itemCount={rows.length} label={title} showControls={showControls}>
+        {rows.map(listing => <ListingCard key={listing.id} l={listing} />)}
+      </SwipeableListingRail>}
+    </section>;
+  };
   const homeContent = resolveHomePageContent(managedContent);
   const copy = homeContent.copy;
-  // Fresh listings always show the newest public listings, even when one is also popular.
-  const { popular: top, fresh, services: serviceRows } = selectHomeListings(feed, popular, services);
+  const { trending, fresh, services: serviceRows } = selectHomeListings(feed, popular, services);
   const canSell = Boolean(me) ? !staff : true;
-  // Trending prefers popular listings and falls back to the newest ones until likes accumulate.
-  const trending = top && top.length > 0 ? top : (fresh ?? []);
+  const trendingLoading = feed === null || popular === null;
   return <>
     {homeError && <Panel className="" role="alert">Some marketplace content could not load. {homeError} <LegacyButton type="button" className="ghost" onClick={loadHome}>Retry</LegacyButton></Panel>}
     <div className="home-top">
@@ -79,17 +86,19 @@ export function Home() {
     </div>
 
     <div className="home-discovery-flow">
-      {feed === null || popular === null
-        ? <section className="home-listing-section trending" aria-label="Trending on Campus"><div className="sec-head"><h2>Trending on Campus</h2></div>{skeletons}</section>
-        : trending.length > 0 && <section className="home-listing-section trending" aria-labelledby="trending-title">
-          <div className="sec-head">
-            <div><h2 id="trending-title">Trending on Campus <span className="trending__flame" aria-hidden="true"><Icon name="flame" size={22} filled /></span></h2>
-              <p className="sec-sub">Popular items, services, and skills among CPSU students.</p></div>
-            <Link to="/explore">View more <Icon name="arrow" size={14} /></Link>
-          </div>
-          {rail(trending, 'Trending on Campus')}
-        </section>}
-      {top && top.length > 0 && block('Fresh listings', '/explore', fresh?.filter(item => !trending.some(shown => shown.id === item.id)) ?? null)}
+      {(trendingLoading || trending.length > 0) && <section className="home-listing-section trending" aria-labelledby="trending-title" aria-busy={trendingLoading}>
+        <div className="sec-head">
+          <h2 id="trending-title">Trending on Campus <span className="trending__flame" aria-hidden="true"><Icon name="flame" size={22} filled /></span></h2>
+          <Link to="/explore">View more <Icon name="arrow" size={14} /></Link>
+          <p className="sec-sub">Popular items, services, and skills among CPSU students.</p>
+        </div>
+        {trendingLoading ? skeletons : <SwipeableListingRail itemCount={trending.length} label="Trending listings" showControls={false}>
+          {trending.map((listing, index) => (
+            <ListingCard key={listing.id} l={listing} priority={index < 2} />
+          ))}
+        </SwipeableListingRail>}
+      </section>}
+      {block('Fresh listings', '/explore', fresh, { className: 'home-listing-section fresh-listings', showControls: false })}
       {block('Student services', '/explore?type=service', serviceRows)}
     </div>
 

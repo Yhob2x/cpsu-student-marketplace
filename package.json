@@ -5,7 +5,7 @@
     "type": "module",
     "scripts": {
         "setup": "composer install && bun install && cd photo-service && bun install",
-        "serve": "php artisan serve",
+        "serve": "bun --no-orphans scripts/serve-local.mjs",
         "photo": "cd photo-service && bun run start",
         "db:migrate": "php artisan migrate",
         "db:seed": "php artisan db:seed",

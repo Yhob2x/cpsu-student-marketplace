@@ -21,19 +21,18 @@ Run every command from the repository root.
 1. Install dependencies once: `bun run setup` (Composer, Bun and the photo service).
 2. In `.env`, set your MySQL `DB_*` values, `JWT_SECRET` (32+ characters) and a random `PHOTO_SERVICE_TOKEN`. Start from `.env.example` on a new machine.
 3. Prepare the database: `bun run db:migrate`, then optionally `bun run db:seed` for demo data.
-4. Start these in **separate terminals**:
+4. Start the app. Run Vite in a second terminal if you want hot reload:
 
 ```powershell
-bun run serve   # Laravel app and API on http://127.0.0.1:8000
+bun run serve   # Laravel on http://127.0.0.1:8000 and the private photo service
 bun run dev     # Vite dev server with hot reload (optional)
-bun run photo   # Private photo service, needed for photo uploads
 ```
 
 Without `bun run dev`, Laravel serves the last build. Run `bun run build` after frontend changes.
 
 Demo accounts from the seeder are `seller@dev.test`, `buyer@dev.test`, `reviewer@dev.test` and `admin@dev.test` with password `DevPassword!123`. Use them only in development.
 
-For phone layout checks on trusted Wi-Fi, run `php artisan serve --host=0.0.0.0` and open `http://<YOUR-PC-LAN-IP>:8000/`. **PWA installation and service workers require HTTPS (or localhost).**
+For phone layout checks on trusted Wi-Fi, run `bun run serve --host=0.0.0.0` and open `http://<YOUR-PC-LAN-IP>:8000/`. The photo service stays bound to loopback. **PWA installation and service workers require HTTPS (or localhost).**
 
 ## Test
 

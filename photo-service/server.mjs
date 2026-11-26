@@ -179,4 +179,7 @@ if (process.argv.includes('--check-existing')) {
   });
 }
 
-server.listen(PORT, '127.0.0.1', () => console.log(`Photo service listening on 127.0.0.1:${PORT}`));
+server.listen(PORT, '127.0.0.1', () => {
+  console.log(`Photo service listening on 127.0.0.1:${PORT}`);
+  process.send?.('photo-ready');
+});
